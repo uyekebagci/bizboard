@@ -1,0 +1,551 @@
+// ===========================================
+// BizBoard - Type Definitions
+// ===========================================
+
+// ---- Enums ----
+export type BusinessCategory =
+  | "construction"
+  | "food_truck"
+  | "restaurant"
+  | "car_dealership"
+  | "retail"
+  | "real_estate"
+  | "services"
+  | "manufacturing"
+  | "logistics"
+  | "healthcare"
+  | "education"
+  | "technology"
+  | "other";
+
+export type MemberRole = "owner" | "manager" | "accountant" | "viewer";
+
+export type ModuleType =
+  | "finance"
+  | "inventory"
+  | "staff"
+  | "projects"
+  | "documents"
+  | "reservations"
+  | "vehicles"
+  | "menu"
+  | "crm"
+  | "debt"
+  | "notes";
+
+export type TransactionDirection = "income" | "expense";
+
+export type NotificationType = "info" | "warning" | "alert" | "success";
+
+// ---- Core Models ----
+export interface Profile {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  phone: string | null;
+  preferred_currency: string;
+  preferred_language: string;
+  onboarding_completed: boolean;
+  role: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  full_name: string;
+  role: string;
+  is_active: boolean;
+  business_ids: string[];
+  business_names: string[];
+  created_at: string;
+}
+
+export interface BusinessType {
+  id: string;
+  category: BusinessCategory;
+  label: string;
+  icon: string;
+  color: string;
+  default_modules: string[];
+  default_categories: { name: string; type: TransactionDirection }[];
+  created_at: string;
+}
+
+export interface Business {
+  id: string;
+  owner_id: string;
+  business_type_id: string;
+  name: string;
+  description: string | null;
+  logo_url: string | null;
+  color: string | null;
+  currency: string;
+  is_active: boolean;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  business_type?: BusinessType;
+  members?: BusinessMember[];
+  modules?: BusinessModule[];
+}
+
+export interface BusinessMember {
+  id: string;
+  business_id: string;
+  user_id: string;
+  role: MemberRole;
+  invited_email: string | null;
+  is_accepted: boolean;
+  permissions: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  profile?: Profile;
+}
+
+export interface BusinessModule {
+  id: string;
+  business_id: string;
+  module: ModuleType;
+  is_enabled: boolean;
+  config: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface Category {
+  id: string;
+  business_id: string;
+  name: string;
+  direction: TransactionDirection;
+  icon: string | null;
+  color: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Transaction {
+  id: string;
+  business_id: string;
+  category_id: string | null;
+  direction: TransactionDirection;
+  amount: number;
+  currency: string;
+  description: string | null;
+  date: string;
+  receipt_url: string | null;
+  tags: string[];
+  metadata: Record<string, unknown>;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  category?: Category;
+  business_name?: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  business_id: string | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  is_read: boolean;
+  action_url: string | null;
+  created_at: string;
+}
+
+export interface MonthlySummary {
+  id: string;
+  business_id: string;
+  year: number;
+  month: number;
+  total_income: number;
+  total_expense: number;
+  net_profit: number;
+  transaction_count: number;
+  breakdown_by_category: Record<
+    string,
+    { income: number; expense: number }
+  >;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PeriodSummary {
+  business_id: string;
+  period: "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "custom";
+  period_start: string;
+  period_end: string;
+  total_income: number;
+  total_expense: number;
+  net_profit: number;
+  transaction_count: number;
+  is_closed: boolean;
+  breakdown_by_category: Record<
+    string,
+    { income?: number; expense?: number }
+  >;
+  fixed_cost_total: number;
+  total_expense_with_fixed: number;
+  net_profit_with_fixed: number;
+}
+
+// ---- Debt Models ----
+export type DebtDirection = "RECEIVABLE" | "PAYABLE";
+
+export interface Debt {
+  id: string;
+  business_id: string;
+  business_name: string;
+  direction: DebtDirection;
+  counterparty: string;
+  amount: number;
+  currency: string;
+  instrument_type: string;
+  due_date: string | null;
+  is_settled: boolean;
+  settled_at: string | null;
+  description: string | null;
+  document_url: string | null;
+  admin_only: boolean;
+  created_by_name: string | null;
+  created_at: string;
+}
+
+export interface DebtSummary {
+  total_receivable: number;
+  total_payable: number;
+  net_balance: number;
+  settled_receivable: number;
+  settled_payable: number;
+  pending_receivable: number;
+  pending_payable: number;
+  receivable_count: number;
+  payable_count: number;
+}
+
+export interface BusinessNote {
+  id: string;
+  business_id: string;
+  content: string;
+  is_pinned: boolean;
+  color: string | null;
+  admin_only: boolean;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ---- File Upload Models ----
+export interface FileUploadInfo {
+  id: string;
+  original_name: string;
+  content_type: string;
+  size: number;
+  category: string;
+  description: string | null;
+  admin_only: boolean;
+  entity_type: string | null;
+  entity_id: string | null;
+  business_name: string | null;
+  url: string;
+  uploaded_by_name: string | null;
+  created_at: string;
+}
+
+// ---- Employee Models ----
+export interface Employee {
+  id: string;
+  business_id: string;
+  business_name: string;
+  full_name: string;
+  position: string | null;
+  tc_no: string | null;
+  phone: string | null;
+  salary: number;
+  insurance_cost: number;
+  total_cost: number;
+  start_date: string | null;
+  end_date: string | null;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmployeeSummary {
+  total_employees: number;
+  active_employees: number;
+  total_salary: number;
+  total_insurance: number;
+  total_cost: number;
+}
+
+// ---- Fixed Cost Models ----
+export interface FixedCost {
+  id: string;
+  business_id: string;
+  business_name: string;
+  name: string;
+  type: string;
+  amount: number;
+  frequency: string;
+  is_auto: boolean;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FixedCostSummary {
+  total_monthly_cost: number;
+  rent_cost: number;
+  personnel_cost: number;
+  other_cost: number;
+  fixed_costs: FixedCost[];
+}
+
+// ---- Vehicle Models ----
+export interface Vehicle {
+  id: string;
+  business_id: string;
+  business_name: string;
+  plate_number: string;
+  brand: string | null;
+  model: string | null;
+  model_year: number | null;
+  color: string | null;
+  chassis_number: string | null;
+  engine_number: string | null;
+  fuel_type: string | null;
+  engine_displacement: number | null;
+  horse_power: number | null;
+  transmission: string | null;
+  vehicle_type: string | null;
+  current_km: number;
+  avg_fuel_consumption: number | null;
+  registration_serial: string | null;
+  registration_number: string | null;
+  traffic_insurance_expiry: string | null;
+  kasko_expiry: string | null;
+  inspection_expiry: string | null;
+  ownership_type: string;
+  rental_cost: number;
+  rental_period: string | null;
+  rental_start_date: string | null;
+  rental_end_date: string | null;
+  rental_company: string | null;
+  monthly_rental_cost: number;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleSummary {
+  total_vehicles: number;
+  active_vehicles: number;
+  owned_count: number;
+  rented_count: number;
+  leased_count: number;
+  total_monthly_rental_cost: number;
+}
+
+// ---- API / View Models ----
+export interface PortfolioSummary {
+  total_income: number;
+  total_expense: number;
+  net_profit: number;
+  business_count: number;
+  fixed_cost_total: number;
+  total_expense_with_fixed: number;
+  net_profit_with_fixed: number;
+  businesses: {
+    business_id: string;
+    income: number;
+    expense: number;
+    profit: number;
+    fixed_cost: number;
+  }[];
+}
+
+// ---- Inventory Models ----
+export interface InventoryItem {
+  id: string;
+  business_id: string;
+  name: string;
+  category: string; // HEAVY_VEHICLE, LIGHT_EQUIPMENT, SITE_SETUP, CONSUMABLE
+  status: string; // ACTIVE, BROKEN, IN_REPAIR, SCRAPPED, IN_STOCK
+  serial_number: string | null;
+  company_barcode: string | null;
+  brand: string | null;
+  model: string | null;
+  power_capacity: string | null;
+  energy_source: string | null;
+  dimensions: string | null;
+  material_type: string | null;
+  module_count: number | null;
+  interior_details: string | null;
+  sku: string | null;
+  unit: string | null;
+  minimum_stock: number | null;
+  current_stock: number | null;
+  warehouse_location: string | null;
+  batch_number: string | null;
+  expiry_date: string | null;
+  stock_category: string | null;
+  assigned_to: string | null;
+  assigned_type: string | null;
+  location: string | null;
+  warranty_expiry: string | null;
+  last_maintenance_date: string | null;
+  purchase_price: number | null;
+  purchase_date: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  business_name?: string;
+}
+
+export interface InventorySummary {
+  total_items: number;
+  heavy_vehicle_count: number;
+  light_equipment_count: number;
+  site_setup_count: number;
+  consumable_count: number;
+  active_count: number;
+  broken_count: number;
+  in_repair_count: number;
+  low_stock_count: number;
+  warranty_expiring_count: number;
+  total_value: number;
+}
+
+export interface MaintenanceLog {
+  id: string;
+  inventory_item_id: string;
+  maintenance_type: string;
+  description: string | null;
+  cost: number | null;
+  date: string;
+  performed_by: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface FuelLog {
+  id: string;
+  inventory_item_id: string;
+  fuel_type: string;
+  amount: number;
+  cost: number;
+  date: string;
+  odometer_km: number | null;
+  station: string | null;
+  receipt_url: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface BusinessCard {
+  id: string;
+  name: string;
+  category: BusinessCategory;
+  icon: string;
+  color: string;
+  monthlyIncome: number;
+  monthlyExpense: number;
+  netProfit: number;
+  trend: number; // percentage change from previous month
+  status: "healthy" | "warning" | "critical";
+  notificationCount: number;
+}
+
+export interface DashboardData {
+  portfolio: PortfolioSummary;
+  businesses: BusinessCard[];
+  recentTransactions: Transaction[];
+  notifications: Notification[];
+}
+
+// ---- Finance Module Models ----
+export interface FinanceOverview {
+  current_period: FinancePeriodData;
+  previous_period: FinancePeriodData;
+  monthly_trend: FinanceMonthData[];
+  expense_by_category: FinanceCategoryData[];
+  income_by_category: FinanceCategoryData[];
+  business_breakdown: BusinessFinanceData[];
+  top_expenses: TopTransactionData[];
+  top_incomes: TopTransactionData[];
+  daily_cash_flow: DailyCashFlowData[];
+}
+
+export interface FinancePeriodData {
+  income: number;
+  expense: number;
+  net_profit: number;
+  fixed_cost: number;
+  total_expense_with_fixed: number;
+  net_profit_with_fixed: number;
+  transaction_count: number;
+  income_change_pct?: number;
+  expense_change_pct?: number;
+  profit_change_pct?: number;
+}
+
+export interface FinanceMonthData {
+  year: number;
+  month: number;
+  label: string;
+  income: number;
+  expense: number;
+  net_profit: number;
+  fixed_cost: number;
+  transaction_count: number;
+}
+
+export interface FinanceCategoryData {
+  name: string;
+  icon: string | null;
+  color: string | null;
+  amount: number;
+  percentage: number;
+  transaction_count: number;
+}
+
+export interface BusinessFinanceData {
+  business_id: string;
+  business_name: string;
+  color: string | null;
+  income: number;
+  expense: number;
+  net_profit: number;
+  fixed_cost: number;
+  profit_margin: number;
+  transaction_count: number;
+}
+
+export interface TopTransactionData {
+  id: string;
+  business_name: string;
+  description: string | null;
+  category_name: string;
+  amount: number;
+  date: string;
+  direction: string;
+}
+
+export interface DailyCashFlowData {
+  date: string;
+  income: number;
+  expense: number;
+  net: number;
+  cumulative: number;
+}

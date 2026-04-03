@@ -1,0 +1,687 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import {
+  Plus,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Check,
+  Trash2,
+  X,
+  Eye,
+  EyeOff,
+  FileImage,
+  Calendar,
+  Building2,
+  Filter,
+} from "lucide-react";
+import { api } from "@/lib/api/client";
+import { useAppStore } from "@/lib/store";
+import { InlineFileUpload } from "@/components/shared/FileUploadButton";
+import type { Debt, DebtSummary, FileUploadInfo } from "@/types";
+
+const INSTRUMENT_OPTIONS = ["CEK", "SENET", "NAKIT"];
+
+function formatMoney(n: number) {
+  return new Intl.NumberFormat("tr-TR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+function formatDate(d: string | null) {
+  if (!d) return "-";
+  return new Date(d).toLocaleDateString("tr-TR");
+}
+
+interface Props {
+  businessId: string;
+  currency: string;
+}
+
+export function DebtModule({ businessId, currency }: Props) {
+  const { profile } = useAppStore();
+  const isAdmin = profile?.role === "admin";
+
+  const [debts, setDebts] = useState<Debt[]>([]);
+  const [summary, setSummary] = useState<DebtSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "RECEIVABLE" | "PAYABLE">("all");
+  const [showSettled, setShowSettled] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [settleConfirm, setSettleConfirm] = useState<Debt | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Debt | null>(null);
+
+  useEffect(() => {
+    fetchData();
+  }, [businessId]);
+
+  async function fetchData() {
+    setLoading(true);
+    try {
+      const [debtsData, summaryData] = await Promise.all([
+        api.get<Debt[]>(`/businesses/${businessId}/debts`),
+        api.get<DebtSummary>(`/businesses/${businessId}/debts/summary`),
+      ]);
+      setDebts(debtsData || []);
+      setSummary(summaryData || null);
+    } catch (err) {
+      console.error("Debt fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSettle(debtId: string) {
+    try {
+      await api.patch(`/debts/${debtId}/settle`, {});
+      setSettleConfirm(null);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
+
+  async function handleDelete(debtId: string) {
+    try {
+      await api.delete(`/debts/${debtId}`);
+      setDeleteConfirm(null);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
+
+  const filteredDebts = debts
+    .filter((d) => filter === "all" || d.direction === filter)
+    .filter((d) => showSettled || !d.is_settled);
+
+  if (loading) {
+    return (
+      <div className="space-y-3 animate-pulse">
+        <div className="h-24 bg-surface-600 rounded-xl" />
+        <div className="h-16 bg-surface-600 rounded-xl" />
+        <div className="h-16 bg-surface-600 rounded-xl" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary Cards */}
+      {summary && (
+        <div className="grid grid-cols-3 gap-3">
+          <div className="card p-3">
+            <p className="text-xs text-surface-400 mb-1">Alacak</p>
+            <p className="text-base font-bold text-emerald-600">
+              {currency === "TRY" ? "₺" : currency}
+              {formatMoney(summary.pending_receivable)}
+            </p>
+            <p className="text-[10px] text-surface-400 mt-0.5">
+              {summary.receivable_count} kayit
+            </p>
+          </div>
+          <div className="card p-3">
+            <p className="text-xs text-surface-400 mb-1">Verecek</p>
+            <p className="text-base font-bold text-red-500">
+              {currency === "TRY" ? "₺" : currency}
+              {formatMoney(summary.pending_payable)}
+            </p>
+            <p className="text-[10px] text-surface-400 mt-0.5">
+              {summary.payable_count} kayit
+            </p>
+          </div>
+          <div className="card p-3">
+            <p className="text-xs text-surface-400 mb-1">Net</p>
+            <p
+              className={`text-base font-bold ${
+                summary.net_balance >= 0 ? "text-emerald-600" : "text-red-500"
+              }`}
+            >
+              {summary.net_balance >= 0 ? "+" : ""}
+              {currency === "TRY" ? "₺" : currency}
+              {formatMoney(summary.net_balance)}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Action Bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* Filter */}
+          <div className="flex gap-1 bg-surface-700 rounded-xl p-0.5">
+            {(
+              [
+                { key: "all", label: "Tumu" },
+                { key: "RECEIVABLE", label: "Alacak" },
+                { key: "PAYABLE", label: "Verecek" },
+              ] as const
+            ).map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  filter === f.key
+                    ? "bg-surface-800 text-white shadow-sm"
+                    : "text-surface-400 hover:text-surface-200"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {/* Toggle settled */}
+          <button
+            onClick={() => setShowSettled(!showSettled)}
+            className={`p-1.5 rounded-lg transition-colors ${
+              showSettled ? "bg-surface-600 text-surface-200" : "bg-surface-700 text-surface-400"
+            }`}
+            title={showSettled ? "Kapatilanlari gizle" : "Kapatilanlari goster"}
+          >
+            {showSettled ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+        </div>
+
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-1.5 px-3 py-2 bg-brand-600 text-white text-xs font-medium rounded-xl hover:bg-brand-700 transition-colors"
+        >
+          <Plus size={14} />
+          Ekle
+        </button>
+      </div>
+
+      {/* Debt List */}
+      {filteredDebts.length === 0 ? (
+        <div className="card p-6 text-center">
+          <p className="text-surface-400 text-sm">Kayit bulunamadi</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredDebts.map((debt) => (
+            <div
+              key={debt.id}
+              className={`card p-3.5 group ${debt.is_settled ? "opacity-60" : ""}`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3 min-w-0">
+                  {/* Direction icon */}
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                      debt.direction === "RECEIVABLE"
+                        ? "bg-emerald-100 text-emerald-600"
+                        : "bg-red-100 text-red-500"
+                    }`}
+                  >
+                    {debt.direction === "RECEIVABLE" ? (
+                      <ArrowDownLeft size={18} />
+                    ) : (
+                      <ArrowUpRight size={18} />
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-white text-sm truncate">
+                        {debt.counterparty}
+                      </p>
+                      {debt.is_settled && (
+                        <span className="px-1.5 py-0.5 text-[10px] bg-emerald-100 text-emerald-700 rounded-full font-medium">
+                          Kapatildi
+                        </span>
+                      )}
+                      {debt.admin_only && (
+                        <span className="px-1.5 py-0.5 text-[10px] bg-yellow-100 text-yellow-700 rounded-full font-medium">
+                          Gizli
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-surface-400">
+                        {debt.instrument_type}
+                      </span>
+                      {debt.due_date && (
+                        <span className="flex items-center gap-0.5 text-xs text-surface-400">
+                          <Calendar size={10} />
+                          {formatDate(debt.due_date)}
+                        </span>
+                      )}
+                    </div>
+                    {debt.description && (
+                      <p className="text-xs text-surface-400 mt-1 truncate max-w-[200px]">
+                        {debt.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Amount + Actions */}
+                <div className="flex items-center gap-2">
+                  <p
+                    className={`font-bold text-sm whitespace-nowrap ${
+                      debt.direction === "RECEIVABLE"
+                        ? "text-emerald-600"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {debt.direction === "RECEIVABLE" ? "+" : "-"}
+                    {currency === "TRY" ? "₺" : currency}
+                    {formatMoney(debt.amount)}
+                  </p>
+
+                  {/* Actions (hover) */}
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!debt.is_settled && (
+                      <button
+                        onClick={() => setSettleConfirm(debt)}
+                        className="p-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+                        title={
+                          debt.direction === "RECEIVABLE"
+                            ? "Tahsil edildi"
+                            : "Odendi"
+                        }
+                      >
+                        <Check size={14} className="text-emerald-600" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setDeleteConfirm(debt)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                      title="Sil"
+                    >
+                      <Trash2 size={14} className="text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <CreateDebtModal
+          businessId={businessId}
+          currency={currency}
+          isAdmin={isAdmin}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {/* Settle Confirmation */}
+      {settleConfirm && (
+        <ConfirmModal
+          title={
+            settleConfirm.direction === "RECEIVABLE"
+              ? "Tahsil Edildi"
+              : "Odendi"
+          }
+          message={`${settleConfirm.counterparty} - ${formatMoney(
+            settleConfirm.amount
+          )} TL borcu ${
+            settleConfirm.direction === "RECEIVABLE"
+              ? "tahsil edildi"
+              : "odendi"
+          } olarak isaretlensin mi?`}
+          confirmLabel={
+            settleConfirm.direction === "RECEIVABLE"
+              ? "Tahsil Edildi"
+              : "Odendi"
+          }
+          confirmColor="emerald"
+          onCancel={() => setSettleConfirm(null)}
+          onConfirm={() => handleSettle(settleConfirm.id)}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <ConfirmModal
+          title="Borcu Sil"
+          message={`${deleteConfirm.counterparty} - ${formatMoney(
+            deleteConfirm.amount
+          )} TL kaydi silinsin mi? Bu islem geri alinamaz.`}
+          confirmLabel="Sil"
+          confirmColor="red"
+          onCancel={() => setDeleteConfirm(null)}
+          onConfirm={() => handleDelete(deleteConfirm.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Confirm Modal ───────────────────────────────────────────
+function ConfirmModal({
+  title,
+  message,
+  confirmLabel,
+  confirmColor,
+  onCancel,
+  onConfirm,
+}: {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  confirmColor: "red" | "emerald";
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 p-6 max-w-sm w-full">
+        <h3 className="text-lg font-semibold text-white mb-2">
+          {title}
+        </h3>
+        <p className="text-surface-300 text-sm mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors"
+          >
+            Iptal
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`flex-1 px-4 py-2.5 text-white rounded-xl text-sm font-medium transition-colors ${
+              confirmColor === "red"
+                ? "bg-red-600 hover:bg-red-500"
+                : "bg-emerald-600 hover:bg-emerald-500"
+            }`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Create Debt Modal ───────────────────────────────────────
+function CreateDebtModal({
+  businessId,
+  currency,
+  isAdmin,
+  onClose,
+  onSuccess,
+}: {
+  businessId: string;
+  currency: string;
+  isAdmin: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [direction, setDirection] = useState<"RECEIVABLE" | "PAYABLE">(
+    "RECEIVABLE"
+  );
+  const [counterparty, setCounterparty] = useState("");
+  const [amount, setAmount] = useState("");
+  const [instrumentType, setInstrumentType] = useState("NAKIT");
+  const [customInstrument, setCustomInstrument] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [description, setDescription] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
+  const [adminOnly, setAdminOnly] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const effectiveInstrument =
+    instrumentType === "DIGER" ? customInstrument : instrumentType;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!counterparty.trim()) {
+      setError("Karsi taraf adi zorunludur");
+      return;
+    }
+    if (!amount || parseMoneyInput(amount) <= 0) {
+      setError("Gecerli bir tutar girin");
+      return;
+    }
+    if (!effectiveInstrument.trim()) {
+      setError("Borc tipi zorunludur");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const debt = await api.post<{ id: string }>(`/businesses/${businessId}/debts`, {
+        direction,
+        counterparty: counterparty.trim(),
+        amount: parseMoneyInput(amount),
+        currency,
+        instrument_type: effectiveInstrument.trim(),
+        due_date: dueDate || null,
+        description: description.trim() || null,
+        document_url: uploadedFiles.length > 0 ? `/files/${uploadedFiles[0].id}` : null,
+        admin_only: adminOnly,
+      });
+
+      // Dosyaları borç ile ilişkilendir
+      if (uploadedFiles.length > 0 && debt?.id) {
+        for (const f of uploadedFiles) {
+          try {
+            await api.patch(`/files/${f.id}/link`, {
+              entity_type: "debt",
+              entity_id: debt.id,
+            });
+          } catch {}
+        }
+      }
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-surface-700">
+          <h3 className="text-lg font-semibold text-white">
+            Yeni Borc / Alacak
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
+          >
+            <X size={18} className="text-surface-400" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Direction Toggle */}
+          <div>
+            <label className="label">Tur</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setDirection("RECEIVABLE")}
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
+                  direction === "RECEIVABLE"
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                    : "bg-surface-700 border-surface-600 text-surface-400"
+                }`}
+              >
+                <ArrowDownLeft size={16} />
+                Alacak
+              </button>
+              <button
+                type="button"
+                onClick={() => setDirection("PAYABLE")}
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
+                  direction === "PAYABLE"
+                    ? "bg-red-50 border-red-300 text-red-700"
+                    : "bg-surface-700 border-surface-600 text-surface-400"
+                }`}
+              >
+                <ArrowUpRight size={16} />
+                Verecek
+              </button>
+            </div>
+          </div>
+
+          {/* Counterparty */}
+          <div>
+            <label className="label">
+              {direction === "RECEIVABLE" ? "Kimden Alinacak" : "Kime Verilecek"}
+            </label>
+            <input
+              type="text"
+              value={counterparty}
+              onChange={(e) => setCounterparty(e.target.value)}
+              className="input"
+              placeholder="Ad Soyad veya Firma"
+            />
+          </div>
+
+          {/* Amount */}
+          <div>
+            <label className="label">Tutar ({currency})</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={amount}
+              onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
+              className="input"
+              placeholder="0"
+            />
+          </div>
+
+          {/* Instrument Type */}
+          <div>
+            <label className="label">Borc Tipi</label>
+            <div className="flex flex-wrap gap-2">
+              {[...INSTRUMENT_OPTIONS, "DIGER"].map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setInstrumentType(opt)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                    instrumentType === opt
+                      ? "bg-brand-50 border-brand-300 text-brand-700"
+                      : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300"
+                  }`}
+                >
+                  {opt === "CEK"
+                    ? "Cek"
+                    : opt === "SENET"
+                    ? "Senet"
+                    : opt === "NAKIT"
+                    ? "Nakit"
+                    : "Diger"}
+                </button>
+              ))}
+            </div>
+            {instrumentType === "DIGER" && (
+              <input
+                type="text"
+                value={customInstrument}
+                onChange={(e) => setCustomInstrument(e.target.value)}
+                className="input mt-2"
+                placeholder="Borc tipini girin"
+              />
+            )}
+          </div>
+
+          {/* Due Date */}
+          <div>
+            <label className="label">Vade Tarihi (Opsiyonel)</label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="input"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="label">Aciklama (Opsiyonel)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="input min-h-[80px] resize-none"
+              placeholder="Not ekleyin..."
+            />
+          </div>
+
+          {/* Document Upload */}
+          <div>
+            <label className="label">
+              <span className="flex items-center gap-1.5">
+                <FileImage size={14} />
+                Belge / Fotograf (Opsiyonel)
+              </span>
+            </label>
+            <InlineFileUpload
+              category="debt_doc"
+              entityType="business"
+              entityId={businessId}
+              uploadedFiles={uploadedFiles}
+              onUploaded={(f) => setUploadedFiles((prev) => [...prev, f])}
+              onRemoveFile={(fid) => {
+                setUploadedFiles((prev) => prev.filter((fl) => fl.id !== fid));
+                api.delete(`/files/${fid}`).catch(() => {});
+              }}
+            />
+          </div>
+
+          {/* Admin Only (only for admin) */}
+          {isAdmin && (
+            <div className="flex items-center justify-between p-3 bg-surface-700 border border-surface-600 rounded-xl">
+              <div>
+                <p className="text-sm font-medium text-surface-200">
+                  Sadece Admin Gorsun
+                </p>
+                <p className="text-xs text-surface-400">
+                  Bu kayit diger kullanicilara gizli olacak
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminOnly(!adminOnly)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${
+                  adminOnly ? "bg-brand-600" : "bg-surface-300"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 bg-surface-800 rounded-full transition-transform shadow-sm ${
+                    adminOnly ? "left-[22px]" : "left-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary w-full"
+          >
+            {submitting ? "Kaydediliyor..." : "Kaydet"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

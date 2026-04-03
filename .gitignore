@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════
+# Backend (Java / Spring Boot / Maven)
+# ═══════════════════════════════════════════════════════════
+backend/**/target/
+backend/**/*.class
+backend/**/*.jar
+backend/**/*.war
+backend/**/*.log
+backend/**/uploads/
+backend/**/.mvn/
+backend/**/mvnw
+backend/**/mvnw.cmd
+
+# ═══════════════════════════════════════════════════════════
+# Frontend (Next.js / Node.js)
+# ═══════════════════════════════════════════════════════════
+frontend/**/node_modules/
+frontend/**/.next/
+frontend/**/out/
+frontend/**/.vercel/
+frontend/**/sw.js
+frontend/**/workbox-*.js
+frontend/**/sw.js.map
+frontend/**/workbox-*.js.map
+frontend/**/swe-worker-*.js
+frontend/**/.env.local
+frontend/**/.env.production
+frontend/**/tsconfig.tsbuildinfo
+
+# ═══════════════════════════════════════════════════════════
+# IDE & OS
+# ═══════════════════════════════════════════════════════════
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.DS_Store
+Thumbs.db
+
+# ═══════════════════════════════════════════════════════════
+# Environment & Secrets
+# ═══════════════════════════════════════════════════════════
+.env
+.env.*
+!.env.example
+*.pem
+*.key

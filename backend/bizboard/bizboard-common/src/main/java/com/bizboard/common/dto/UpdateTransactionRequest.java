@@ -1,0 +1,31 @@
+package com.bizboard.common.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@Data
+public class UpdateTransactionRequest {
+
+    private String direction;
+
+    private BigDecimal amount;
+
+    private String currency;
+
+    private String description;
+
+    private LocalDate date;
+
+    @JsonProperty("category_id")
+    private UUID categoryId;
+
+    private List<String> tags;
+
+    private Map<String, Object> metadata;
+}

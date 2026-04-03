@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-brand: 92 124 250;
+    --color-surface: 255 255 255;
+    --radius: 0.75rem;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface-900 text-surface-900;
+    min-height: 100dvh;
+  }
+
+  /* Mobile-friendly touch targets */
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-800 rounded-2xl shadow-card transition-shadow duration-200
+           border border-surface-700/50 text-surface-200;
+  }
+
+  .card:hover {
+    @apply shadow-card-hover;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
+           bg-brand-600 text-white font-medium
+           hover:bg-brand-700 active:bg-brand-800
+           transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
+           bg-surface-700 text-surface-200 font-medium
+           hover:bg-surface-600 active:bg-surface-500
+           transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-offset-2;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-surface-600
+           bg-surface-700 text-surface-100 placeholder:text-surface-400
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500
+           transition-colors duration-150;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-surface-300 mb-1.5;
+  }
+
+  /* Status indicator dot */
+  .status-dot {
+    @apply w-2.5 h-2.5 rounded-full inline-block;
+  }
+
+  /* Mobile bottom navigation */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-surface-800 border-t border-surface-700
+           flex items-center justify-around px-2 py-2
+           safe-area-pb;
+  }
+
+  /* Safe area for notched phones */
+  .safe-area-pb {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* PWA standalone mode */
+@media all and (display-mode: standalone) {
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
