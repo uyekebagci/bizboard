@@ -28,10 +28,20 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.12.6</jjwt.version>
+        <aws.sdk.version>2.30.0</aws.sdk.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- AWS SDK v2 BOM (S3, plus shared dependencies) -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Internal modules -->
             <dependency>
                 <groupId>com.bizboard</groupId>

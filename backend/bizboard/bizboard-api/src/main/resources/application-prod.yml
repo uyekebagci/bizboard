@@ -1,0 +1,77 @@
+# Production overrides for BizBoard backend on Sevalla (or any container PaaS).
+#
+# Activated via SPRING_PROFILES_ACTIVE=prod.
+#
+# Required env vars (set them in Sevalla → App → Environment Variables):
+#
+#   SPRING_DATASOURCE_URL         Managed PostgreSQL URL (e.g. jdbc:postgresql://…)
+#   DB_USERNAME, DB_PASSWORD      Managed PostgreSQL credentials
+#   JWT_SECRET                    openssl rand -base64 48
+#   APP_CORS_ALLOWED_ORIGINS      https://app.yourdomain.com,https://test.yourdomain.com
+#   APP_STORAGE_TYPE              s3
+#   APP_STORAGE_S3_BUCKET         bizboard-prod-uploads
+#   APP_STORAGE_S3_REGION         e.g. eu-central-1 (or "auto" for R2)
+#   APP_STORAGE_S3_ENDPOINT       e.g. https://<sevalla-object-storage-endpoint>
+#   APP_STORAGE_S3_ACCESS_KEY     S3 access key
+#   APP_STORAGE_S3_SECRET_KEY     S3 secret key
+#   APP_STORAGE_S3_PATH_STYLE     true for Sevalla / R2 / B2 / MinIO
+#   APP_STORAGE_S3_PREFIX         prod/  (optional, when sharing one bucket)
+#
+# Recommended:
+#   JPA_DDL_AUTO=validate         after the first deploy with Flyway/manual schema
+#   AUDIT_LOG_FILE_DOWNLOADS=true
+#   APP_EXTERNAL_INTEGRATIONS_ENABLED=true
+#   VIRTUAL_THREADS_ENABLED=true
+
+spring:
+  jpa:
+    # Switch to "validate" once Flyway / manual migrations own the schema.
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: false
+    open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:10MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:15MB}
+
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  compression:
+    enabled: true
+  error:
+    include-message: never
+    include-stacktrace: never
+  shutdown: graceful
+
+logging:
+  level:
+    root: INFO
+    com.bizboard: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %-5level [%X{requestId:-}] %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+app:
+  storage:
+    type: ${APP_STORAGE_TYPE:s3}
+  audit:
+    log-file-downloads: true
+  external-integrations:
+    enabled: ${APP_EXTERNAL_INTEGRATIONS_ENABLED:true}
