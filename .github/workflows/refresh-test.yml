@@ -1,0 +1,40 @@
+name: Refresh test environment from prod
+
+on:
+  schedule:
+    # 03:30 UTC = 06:30 Europe/Istanbul. Adjust to taste.
+    - cron: '30 3 * * *'
+  workflow_dispatch:   # manual trigger from Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      S3_ENDPOINT:       ${{ secrets.S3_ENDPOINT }}
+      PROD_S3_BUCKET:    ${{ secrets.PROD_S3_BUCKET }}
+      TEST_S3_BUCKET:    ${{ secrets.TEST_S3_BUCKET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
+      AWS_DEFAULT_REGION:    ${{ secrets.S3_REGION }}
+      TEST_API_HEALTH_URL:   ${{ secrets.TEST_API_HEALTH_URL }}
+      ANONYMIZE:             "true"
+      HEALTHCHECK_PING_URL:  ${{ secrets.HEALTHCHECK_PING_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client + AWS CLI
+        run: |
+          sudo apt-get update -qq
+          # postgresql-client-16 isn't always in default repos on ubuntu-latest;
+          # the apt 'postgresql-client' meta-package picks the latest available.
+          sudo apt-get install -y --no-install-recommends postgresql-client awscli
+
+      - name: Run refresh script
+        run: bash scripts/refresh-test-from-prod.sh
