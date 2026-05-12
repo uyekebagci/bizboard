@@ -9,27 +9,25 @@
     --radius: 0.75rem;
   }
 
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-
   html {
+    background-color: #212529;
+    color-scheme: dark;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-surface-900 text-surface-900;
+    background-color: #212529;
+    color: #dee2e6;
     min-height: 100dvh;
   }
 
-  /* Mobile-friendly touch targets */
+  *,
   button,
   a,
   [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
@@ -62,6 +60,15 @@
   .input {
     @apply w-full px-4 py-3 rounded-xl border border-surface-600
            bg-surface-700 text-surface-100 placeholder:text-surface-400
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500
+           transition-colors duration-150;
+  }
+
+  /* Compact input for dense forms (audit filters, table editors). */
+  .input-sm {
+    @apply w-full px-3 py-2 rounded-lg border border-surface-600
+           bg-surface-700 text-surface-100 placeholder:text-surface-400
+           text-sm
            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500
            transition-colors duration-150;
   }

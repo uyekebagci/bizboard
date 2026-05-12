@@ -17,6 +17,8 @@ interface AppState {
   setBusinesses: (businesses: Business[]) => void;
   activeBusiness: Business | null;
   setActiveBusiness: (business: Business | null) => void;
+  /** AUTH-403 yakalandiginda store temizleme + login akisi reset. */
+  clearActiveBusiness: () => void;
 
   // Dashboard
   portfolio: PortfolioSummary | null;
@@ -50,6 +52,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setBusinesses: (businesses) => set({ businesses }),
   activeBusiness: null,
   setActiveBusiness: (business) => set({ activeBusiness: business }),
+  clearActiveBusiness: () => set({ activeBusiness: null }),
 
   // Dashboard
   portfolio: null,

@@ -9,6 +9,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { Business, ModuleType } from "@/types";
 import { DebtModule } from "@/components/business/DebtModule";
@@ -190,7 +191,7 @@ function ModuleManagerModal({
       }
       setChanged(true);
     } catch (err) {
-      console.error("Module toggle error:", err);
+      logger.error("api", "Module toggle error", undefined, err);
     } finally {
       setLoading(null);
     }

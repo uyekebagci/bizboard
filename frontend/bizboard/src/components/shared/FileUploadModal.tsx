@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { X, Upload, Loader2, Check, FileText, EyeOff } from "lucide-react";
-import { api } from "@/lib/api/client";
+import { api, ApiError } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  CATEGORY_LABELS,
+  FILE_CATEGORIES,
+  MAX_FILE_SIZE_BYTES,
+  defaultCategoryFor,
+  type FileCategory,
+} from "@/lib/files";
 import type { Business, FileUploadInfo } from "@/types";
 
 interface FileUploadModalProps {
@@ -25,11 +33,13 @@ export function FileUploadModal({
   const [businessId, setBusinessId] = useState(preselectedBusinessId || "");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [category, setCategory] = useState<FileCategory>("document");
   const [description, setDescription] = useState("");
   const [adminOnly, setAdminOnly] = useState(isAdmin);
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState<FileUploadInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorRequestId, setErrorRequestId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!preselectedBusinessId) {
@@ -45,14 +55,17 @@ export function FileUploadModal({
     const f = e.target.files?.[0];
     if (!f) return;
 
-    if (f.size > 10 * 1024 * 1024) {
+    if (f.size > MAX_FILE_SIZE_BYTES) {
       setError("Dosya boyutu 10 MB'yi asamaz");
       return;
     }
 
     setFile(f);
     setError(null);
+    setErrorRequestId(null);
     setUploaded(null);
+    // Akilli default — MIME'a gore kategori sec. Kullanici degistirebilir.
+    setCategory(defaultCategoryFor(f));
 
     if (f.type.startsWith("image/")) {
       const reader = new FileReader();
@@ -68,11 +81,12 @@ export function FileUploadModal({
 
     setUploading(true);
     setError(null);
+    setErrorRequestId(null);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("category", file.type.startsWith("image/") ? "image" : "document");
+      formData.append("category", category);
       formData.append("entity_type", "business");
       formData.append("entity_id", businessId);
       if (description.trim()) formData.append("description", description.trim());
@@ -81,8 +95,32 @@ export function FileUploadModal({
       const result = await api.upload<FileUploadInfo>("/files", formData);
       setUploaded(result);
       onUploaded?.(result);
-    } catch (err: any) {
-      setError(err.message || "Yukleme hatasi");
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        // Backend code'a göre kullanıcı dostu mesaj.
+        switch (err.code) {
+          case "FILE-413":
+            setError("Dosya boyutu izin verilen limiti asiyor (max 10 MB).");
+            break;
+          case "AUTH-403":
+            setError("Bu isletmeye dosya yukleme yetkiniz yok.");
+            break;
+          case "RATE-429":
+            setError(getErrorMessage(err));
+            break;
+          case "VAL-400":
+            // Backend gercek hata mesajini gonderiyor (kategori, MIME, vb.)
+            setError(getErrorMessage(err));
+            break;
+          default:
+            setError(err.message || "Yukleme hatasi");
+        }
+        setErrorRequestId(err.requestId ?? null);
+      } else if (err instanceof Error) {
+        setError(err.message || "Yukleme hatasi");
+      } else {
+        setError("Yukleme hatasi");
+      }
     } finally {
       setUploading(false);
     }
@@ -170,6 +208,30 @@ export function FileUploadModal({
             </label>
           </div>
 
+          {/* Category */}
+          <div>
+            <label
+              htmlFor="file-category"
+              className="block text-sm font-medium text-surface-200 mb-1.5"
+            >
+              Kategori *
+            </label>
+            <select
+              id="file-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value as FileCategory)}
+              className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                         transition-all text-sm"
+            >
+              {FILE_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {CATEGORY_LABELS[c]}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-surface-200 mb-1.5">
@@ -224,6 +286,11 @@ export function FileUploadModal({
           {error && (
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
               <p className="text-red-600 text-sm">{error}</p>
+              {errorRequestId && (
+                <p className="mt-1 text-[10px] font-mono text-red-400/80">
+                  Destek icin referans: {errorRequestId}
+                </p>
+              )}
             </div>
           )}
 

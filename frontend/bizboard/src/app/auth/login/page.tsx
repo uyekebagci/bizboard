@@ -2,32 +2,73 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api, setToken } from "@/lib/api/client";
+import { api, ApiError, setToken } from "@/lib/api/client";
+import { safeRedirectOr } from "@/lib/safe-redirect";
+import { getErrorMessage } from "@/lib/errors";
+
+interface LoginResponse {
+  token: string;
+  expires_in: number;
+  force_password_change: boolean;
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  const redirect = safeRedirectOr(searchParams.get("redirect"), "/dashboard");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorRequestId, setErrorRequestId] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setErrorRequestId(null);
 
     try {
-      const { token } = await api.post<{ token: string }>("/auth/login", {
-        username,
-        password,
-      });
-      setToken(token);
-      router.push(redirect);
-    } catch (err: any) {
-      setError(err.message || "Giris yapilamadi");
+      const res = await api.post<LoginResponse>(
+        "/auth/login",
+        { username, password },
+        { skipRefresh: true }
+      );
+      setToken(res.token, res.expires_in);
+      // İlk girişte parola değişikliği zorunlu ise direkt o ekrana yönlendir.
+      if (res.force_password_change) {
+        router.push("/dashboard/change-password");
+      } else {
+        router.push(redirect);
+      }
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        switch (err.code) {
+          case "AUTH-LOCK":
+            setError(
+              "Hesabiniz cok fazla hatali denemeden dolayi gecici olarak kilitlendi. " +
+                "Lutfen 15 dakika sonra tekrar deneyin."
+            );
+            break;
+          case "AUTH-DIS":
+            setError(
+              "Hesabiniz aktif degil. Lutfen yoneticiniz ile iletisime gecin."
+            );
+            break;
+          case "RATE-429":
+            setError(getErrorMessage(err));
+            break;
+          case "AUTH-401":
+          default:
+            setError("Kullanici adi veya sifre hatali.");
+        }
+        setErrorRequestId(err.requestId ?? null);
+      } else if (err instanceof Error) {
+        setError(err.message || "Giris yapilamadi");
+      } else {
+        setError("Giris yapilamadi");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -35,7 +76,6 @@ function LoginForm() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 bg-surface-50">
-      {/* Logo */}
       <div className="mb-8 text-center">
         <div className="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
           <span className="text-white font-bold text-2xl">BB</span>
@@ -44,11 +84,19 @@ function LoginForm() {
         <p className="text-surface-500 mt-1">BizBoard hesabiniza giris yapin</p>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         {error && (
-          <div className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">
-            {error}
+          <div
+            className="p-3 rounded-xl bg-red-50 text-red-700 text-sm"
+            role="alert"
+            aria-live="polite"
+          >
+            <div>{error}</div>
+            {errorRequestId && (
+              <div className="mt-1 text-[10px] text-red-500/80 font-mono">
+                Destek icin referans: {errorRequestId}
+              </div>
+            )}
           </div>
         )}
 

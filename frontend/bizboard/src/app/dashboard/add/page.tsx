@@ -33,6 +33,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 import type { BusinessType, ModuleType } from "@/types";
 
 // ===== ICON MAPS =====
@@ -219,8 +220,8 @@ export default function AddBusinessPage() {
 
       localStorage.removeItem("bizboard_draft_business");
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Isletme olusturulamadi");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Isletme olusturulamadi"));
     } finally {
       setIsSubmitting(false);
     }
@@ -240,7 +241,7 @@ export default function AddBusinessPage() {
   }
 
   return (
-    <div className="space-y-5 animate-fade-in pb-24">
+    <div className="space-y-5 pb-24">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
@@ -770,7 +771,7 @@ function StepPreview({
               Varsayilan Kategoriler
             </p>
             <div className="space-y-2">
-              {selectedType.default_categories.map((cat: any, i: number) => (
+              {selectedType.default_categories.map((cat, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-2 text-sm"

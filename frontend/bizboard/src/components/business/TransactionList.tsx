@@ -9,6 +9,7 @@ import {
 import { formatCurrency, formatRelativeDate, cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import type { Transaction, Category, FileUploadInfo } from "@/types";
 
@@ -187,8 +188,8 @@ export function TransactionDetailModal({
 
       triggerRefresh();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Guncelleme sirasinda hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Guncelleme sirasinda hata olustu"));
     } finally {
       setSaving(false);
     }
@@ -554,8 +555,8 @@ function DeleteTransactionModal({
       );
       triggerRefresh();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Islem silinirken bir hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Islem silinirken bir hata olustu"));
     } finally {
       setIsDeleting(false);
     }

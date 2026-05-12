@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Upload, X, Loader2, FileText, Image as ImageIcon, Check } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { getErrorMessage } from "@/lib/errors";
 import type { FileUploadInfo } from "@/types";
 
 interface FileUploadButtonProps {
@@ -67,8 +68,8 @@ export function FileUploadButton({
       setUploaded(true);
       onUploaded?.(result);
       setTimeout(() => setUploaded(false), 2000);
-    } catch (err: any) {
-      setError(err.message || "Yukleme hatasi");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Yukleme hatasi"));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -156,8 +157,8 @@ export function InlineFileUpload({
 
       const result = await api.upload<FileUploadInfo>("/files", formData);
       onUploaded?.(result);
-    } catch (err: any) {
-      setError(err.message || "Yukleme hatasi");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Yukleme hatasi"));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

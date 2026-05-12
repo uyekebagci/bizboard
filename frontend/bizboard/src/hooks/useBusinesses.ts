@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { Business } from "@/types";
 
@@ -16,9 +17,11 @@ export function useBusinesses() {
       try {
         const data = await api.get<Business[]>("/businesses");
         setBusinesses(data || []);
-      } catch (err: any) {
-        console.error("Failed to fetch businesses:", err);
-        setError(err.message);
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Isletmeler yuklenemedi";
+        logger.error("api", "Failed to fetch businesses", undefined, err);
+        setError(message);
       } finally {
         setIsLoading(false);
       }

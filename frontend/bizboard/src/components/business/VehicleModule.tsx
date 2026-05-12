@@ -7,8 +7,10 @@ import {
   Key, Settings, Hash, FileText, Building2, Clock,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 import type { Vehicle, VehicleSummary } from "@/types";
 
 function formatMoney(n: number) {
@@ -70,7 +72,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
       setVehicles(vData || []);
       setSummary(sData || null);
     } catch (err) {
-      console.error("Arac fetch error:", err);
+      logger.error("api", "Vehicle fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -208,7 +210,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
           onClose={() => setDetailTarget(null)}
           onEdit={() => { setDetailTarget(null); setEditTarget(detailTarget); }}
           onToggleActive={async () => {
-            try { await api.patch(`/vehicles/${detailTarget.id}/toggle-active`); setDetailTarget(null); fetchData(); triggerRefresh(); } catch (err) { console.error(err); }
+            try { await api.patch(`/vehicles/${detailTarget.id}/toggle-active`); setDetailTarget(null); fetchData(); triggerRefresh(); } catch (err) { logger.error("api", "Vehicle toggle-active failed", undefined, err); }
           }}
           onDelete={() => { setDetailTarget(null); setDeleteTarget(detailTarget); }} />
       )}
@@ -583,8 +585,8 @@ function CreateVehicleModal({
         await api.post(`/businesses/${businessId}/vehicles`, body);
       }
       onCreated();
-    } catch (err: any) {
-      setError(err.message || "Bir hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Bir hata olustu"));
     } finally {
       setSaving(false);
     }
@@ -773,8 +775,8 @@ function DeleteVehicleModal({
     try {
       await api.delete(`/vehicles/${vehicle.id}`);
       onDeleted();
-    } catch (err: any) {
-      setError(err.message || "Arac silinirken bir hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Arac silinirken bir hata olustu"));
     } finally {
       setIsDeleting(false);
     }

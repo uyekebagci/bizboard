@@ -13,7 +13,9 @@ import {
   Eye,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import type { BusinessNote } from "@/types";
 
 const NOTE_COLORS = [
@@ -69,7 +71,7 @@ export function NotesModule({ businessId }: Props) {
       );
       setNotes(data || []);
     } catch (err) {
-      console.error("Notes fetch error:", err);
+      logger.error("api", "Notes fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -79,8 +81,8 @@ export function NotesModule({ businessId }: Props) {
     try {
       await api.patch(`/businesses/${businessId}/notes/${noteId}/pin`, {});
       fetchNotes();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err));
     }
   }
 
@@ -89,8 +91,8 @@ export function NotesModule({ businessId }: Props) {
       await api.delete(`/businesses/${businessId}/notes/${noteId}`);
       setDeleteConfirm(null);
       fetchNotes();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err));
     }
   }
 
@@ -315,8 +317,8 @@ function NoteFormModal({
         await api.post(`/businesses/${businessId}/notes`, body);
       }
       onSuccess();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

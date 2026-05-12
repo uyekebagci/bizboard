@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { PortfolioSummary } from "@/types";
 
@@ -19,9 +20,10 @@ export function usePortfolio() {
           `/portfolio?year=${now.getFullYear()}&month=${now.getMonth() + 1}`
         );
         setPortfolio(data);
-      } catch (err: any) {
-        console.error("Failed to fetch portfolio:", err);
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Portfoy yuklenemedi";
+        logger.error("api", "Failed to fetch portfolio", undefined, err);
+        setError(message);
         setPortfolio({
           total_income: 0,
           total_expense: 0,

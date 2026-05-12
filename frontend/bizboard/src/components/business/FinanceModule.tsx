@@ -15,6 +15,7 @@ import {
   Activity,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { PeriodSummary, Transaction, FixedCostSummary } from "@/types";
 
@@ -77,7 +78,7 @@ export function FinanceModule({ businessId, currency }: Props) {
         }
         setMonthlyTrend(trend);
       } catch (err) {
-        console.error("Finance module data fetch failed:", err);
+        logger.error("api", "Finance module data fetch failed", undefined, err);
       } finally {
         setLoading(false);
       }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, getToken } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { Profile } from "@/types";
 
@@ -21,9 +22,10 @@ export function useProfile() {
       try {
         const data = await api.get<Profile>("/me");
         setProfile(data);
-      } catch (err: any) {
-        console.error("Failed to fetch profile:", err);
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Profil yuklenemedi";
+        logger.error("api", "Failed to fetch profile", undefined, err);
+        setError(message);
       } finally {
         setIsLoading(false);
       }
