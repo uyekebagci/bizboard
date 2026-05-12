@@ -1,15 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Calendar, Tag, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Calendar, Clock, Tag, FileText, Loader2 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import type { Business, Category, FileUploadInfo } from "@/types";
 
-export default function AddTransactionPage() {
+export default function AddTransactionPageWrapper() {
+  return (
+    <Suspense>
+      <AddTransactionPage />
+    </Suspense>
+  );
+}
+
+function AddTransactionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { triggerRefresh } = useAppStore();
@@ -30,6 +40,10 @@ export default function AddTransactionPage() {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [time, setTime] = useState(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  });
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
@@ -43,8 +57,8 @@ export default function AddTransactionPage() {
         if (data.length === 1 && !businessId) {
           setBusinessId(data[0].id);
         }
-      } catch (err: any) {
-        console.error(err);
+      } catch (err: unknown) {
+        logger.error("api", "Add transaction businesses fetch failed", undefined, err);
       } finally {
         setIsLoadingBiz(false);
       }
@@ -76,7 +90,7 @@ export default function AddTransactionPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!businessId || !amount || !date) return;
+    if (!businessId || !amount || !date || !time) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -109,20 +123,20 @@ export default function AddTransactionPage() {
       setSuccess(true);
       triggerRefresh();
       setTimeout(() => router.push("/dashboard"), 1200);
-    } catch (err: any) {
-      setError(err.message || "Islem eklenirken bir hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Islem eklenirken bir hata olustu"));
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6 animate-fade-in pb-24">
+    <div className="max-w-lg mx-auto space-y-6 pb-24">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl hover:bg-surface-600 transition-colors"
+          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
         >
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
@@ -248,20 +262,37 @@ export default function AddTransactionPage() {
           )}
         </div>
 
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">
-            <Calendar size={14} className="inline mr-1" />
-            Tarih *
-          </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
-                       focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-          />
+        {/* Date + Time */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-surface-200 mb-1.5">
+              <Calendar size={14} className="inline mr-1" />
+              Tarih *
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-200 mb-1.5">
+              <Clock size={14} className="inline mr-1" />
+              Saat *
+            </label>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all
+                         [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
+            />
+          </div>
         </div>
 
         {/* Description */}

@@ -26,38 +26,38 @@ export function StatsRow({ portfolio, debtData, employeeData }: Props) {
       label: "Toplam Gelir",
       value: formatCurrency(total_income),
       icon: TrendingUp,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-green-400",
+      bg: "bg-green-500/15",
       sub: null,
     },
     {
       label: "Toplam Gider",
       value: formatCurrency(totalExpenseAll),
       icon: TrendingDown,
-      color: "text-red-600",
-      bg: "bg-red-50",
+      color: "text-red-400",
+      bg: "bg-red-500/15",
       sub: fixedCost > 0 ? `Sabit: ${formatCurrency(fixedCost)}` : null,
     },
     {
       label: "Personel",
       value: employeeData ? `${employeeData.count} kisi` : "—",
       icon: Users,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-blue-400",
+      bg: "bg-blue-500/15",
       sub: employeeData && employeeData.cost > 0 ? formatCurrency(employeeData.cost) + "/ay" : null,
     },
     {
       label: "Kar Marji",
       value: `%${margin.toFixed(1)}`,
       icon: Landmark,
-      color: margin >= 20 ? "text-green-600" : margin >= 0 ? "text-amber-600" : "text-red-600",
-      bg: margin >= 20 ? "bg-green-50" : margin >= 0 ? "bg-amber-50" : "bg-red-50",
+      color: margin >= 20 ? "text-green-400" : margin >= 0 ? "text-amber-400" : "text-red-400",
+      bg: margin >= 20 ? "bg-green-500/15" : margin >= 0 ? "bg-amber-500/15" : "bg-red-500/15",
       sub: null,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (

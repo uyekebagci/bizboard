@@ -40,6 +40,8 @@ export type NotificationType = "info" | "warning" | "alert" | "success";
 // ---- Core Models ----
 export interface Profile {
   id: string;
+  username: string;
+  email: string | null;
   full_name: string;
   avatar_url: string | null;
   phone: string | null;
@@ -47,6 +49,9 @@ export interface Profile {
   preferred_language: string;
   onboarding_completed: boolean;
   role: string;
+  /** Backend AdminBootstrapService veya admin-reset sonrasi true.
+   *  Frontend bunu gorunce kullaniciyi /dashboard/change-password'a yonlendirir. */
+  force_password_change: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -69,7 +74,14 @@ export interface BusinessType {
   icon: string;
   color: string;
   default_modules: string[];
-  default_categories: { name: string; type: TransactionDirection }[];
+  default_categories: {
+    name: string;
+    /** Backend bazi yerlerde "type", bazi yerlerde "direction" dondurebilir — ikisini de kabul et. */
+    type?: TransactionDirection;
+    direction?: TransactionDirection;
+    icon?: string;
+    color?: string;
+  }[];
   created_at: string;
 }
 
@@ -149,14 +161,41 @@ export interface Transaction {
 
 export interface Notification {
   id: string;
-  user_id: string;
+  /** business_id artik backend NotificationDto'da. user_id frontend'e expose edilmiyor. */
   business_id: string | null;
-  type: NotificationType;
+  business_name?: string | null;
+  type: NotificationType | string;
   title: string;
   message: string;
   is_read: boolean;
   action_url: string | null;
   created_at: string;
+}
+
+/** /admin/audit-logs sonucu. */
+export interface AuditLog {
+  id: string;
+  occurred_at: string;
+  trace_id: string | null;
+  actor_user_id: string | null;
+  actor_username: string | null;
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  business_id: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  metadata: Record<string, unknown> | null;
+}
+
+/** Backend PagedResponse<T>. */
+export interface PagedResponse<T> {
+  items: T[];
+  page: number;
+  size: number;
+  total_elements: number;
+  total_pages: number;
+  has_next: boolean;
 }
 
 export interface MonthlySummary {

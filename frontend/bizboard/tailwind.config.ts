@@ -53,9 +53,9 @@ const config: Config = {
         glow: "0 0 20px rgba(92,124,250,0.15)",
       },
       animation: {
-        "fade-in": "fadeIn 0.5s ease-out",
-        "slide-up": "slideUp 0.4s ease-out",
-        "slide-in-right": "slideInRight 0.3s ease-out",
+        "fade-in": "fadeIn 0.15s ease-out",
+        "slide-up": "slideUp 0.2s ease-out",
+        "slide-in-right": "slideInRight 0.15s ease-out",
       },
       keyframes: {
         fadeIn: {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api/client";
+import { api, ApiError } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { Business, Transaction, PeriodSummary } from "@/types";
 
@@ -38,9 +39,19 @@ export function useBusiness(businessId: string) {
         setBusiness(bizData);
         setTransactions(txData || []);
         setSummary(sumData);
-      } catch (err: any) {
-        console.error("Failed to fetch business:", err);
-        setError(err.message);
+      } catch (err: unknown) {
+        const message =
+          err instanceof ApiError && err.code === "AUTH-403"
+            ? "Bu isletmeye erisim yetkiniz yok."
+            : err instanceof Error
+              ? err.message
+              : "Isletme yuklenemedi";
+        logger.error("api", "Failed to fetch business", { businessId }, err);
+        setError(message);
+        // AUTH-403: stale activeBusiness yi temizle.
+        if (err instanceof ApiError && err.code === "AUTH-403") {
+          useAppStore.getState().clearActiveBusiness();
+        }
       } finally {
         setIsLoading(false);
       }

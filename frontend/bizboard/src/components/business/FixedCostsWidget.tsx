@@ -5,7 +5,8 @@ import {
   Plus, X, Loader2, Home, Users, Zap, MoreHorizontal,
   Trash2, Edit3, AlertTriangle, TrendingDown,
 } from "lucide-react";
-import { api } from "@/lib/api/client";
+import { api, ApiError } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
@@ -49,7 +50,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
       const data = await api.get<FixedCostSummary>(`/businesses/${businessId}/fixed-costs/summary`);
       setSummary(data || null);
     } catch (err) {
-      console.error("Sabit gider fetch error:", err);
+      logger.error("api", "Fixed cost fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -248,6 +249,7 @@ function CreateFixedCostModal({
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -255,6 +257,7 @@ function CreateFixedCostModal({
 
     setSaving(true);
     setError(null);
+    setFieldErrors({});
 
     const body = {
       name: name.trim(),
@@ -288,8 +291,25 @@ function CreateFixedCostModal({
       }
 
       onCreated();
-    } catch (err: any) {
-      setError(err.message || "Bir hata olustu");
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.code === "CONF-409") {
+          // Otomatik yonetilen FixedCost (personel/arac) manuel duzenlenemez.
+          setError(
+            "Bu kayit personel veya arac modulunden otomatik yonetiliyor. " +
+              "Degisiklik icin ilgili modulu kullanin."
+          );
+        } else if (err.code === "VAL-400" && err.fieldErrors) {
+          setFieldErrors(err.fieldErrors);
+          setError("Lutfen formdaki hatalari duzeltin.");
+        } else {
+          setError(err.message || "Bir hata olustu");
+        }
+      } else if (err instanceof Error) {
+        setError(err.message || "Bir hata olustu");
+      } else {
+        setError("Bir hata olustu");
+      }
     } finally {
       setSaving(false);
     }
@@ -315,10 +335,16 @@ function CreateFixedCostModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ornegin: Ofis Kirasi, Elektrik, vb."
-              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+              aria-invalid={!!fieldErrors.name}
+              className={`w-full px-4 py-3 rounded-xl border bg-surface-800 text-white
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
-                         focus:border-transparent transition-all"
+                         focus:border-transparent transition-all ${
+                fieldErrors.name ? "border-red-500" : "border-surface-600"
+              }`}
             />
+            {fieldErrors.name && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.name}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -343,10 +369,16 @@ function CreateFixedCostModal({
                 value={amount}
                 onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                 placeholder="0"
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                aria-invalid={!!fieldErrors.amount}
+                className={`w-full px-4 py-3 rounded-xl border bg-surface-800 text-white
                            placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
-                           focus:border-transparent transition-all"
+                           focus:border-transparent transition-all ${
+                  fieldErrors.amount ? "border-red-500" : "border-surface-600"
+                }`}
               />
+              {fieldErrors.amount && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.amount}</p>
+              )}
             </div>
           </div>
 
@@ -425,8 +457,16 @@ function DeleteFixedCostModal({
     try {
       await api.delete(`/fixed-costs/${fixedCost.id}`);
       onDeleted();
-    } catch (err: any) {
-      setError(err.message || "Sabit gider silinirken hata olustu");
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.code === "CONF-409") {
+        setError(
+          "Bu kayit otomatik yonetiliyor; personel/arac modulunden silinmeden buradan silinemez."
+        );
+      } else if (err instanceof Error) {
+        setError(err.message || "Sabit gider silinirken hata olustu");
+      } else {
+        setError("Sabit gider silinirken hata olustu");
+      }
     } finally {
       setIsDeleting(false);
     }

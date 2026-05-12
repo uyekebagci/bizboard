@@ -7,8 +7,10 @@ import {
   AlertTriangle, Briefcase, Shield,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 import type { Employee, EmployeeSummary } from "@/types";
 
 function formatMoney(n: number) {
@@ -55,7 +57,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
       setEmployees(empData || []);
       setSummary(sumData || null);
     } catch (err) {
-      console.error("Personel fetch error:", err);
+      logger.error("api", "Personnel fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -214,7 +216,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
               fetchData();
               triggerRefresh();
             } catch (err) {
-              console.error(err);
+              logger.error("api", "Personnel toggle-active failed", undefined, err);
             }
           }}
           onDelete={() => { setDetailTarget(null); setDeleteTarget(detailTarget); }}
@@ -447,8 +449,8 @@ function CreateEmployeeModal({
         await api.post(`/businesses/${businessId}/employees`, body);
       }
       onCreated();
-    } catch (err: any) {
-      setError(err.message || "Bir hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Bir hata olustu"));
     } finally {
       setSaving(false);
     }
@@ -666,8 +668,8 @@ function DeleteEmployeeModal({
     try {
       await api.delete(`/employees/${employee.id}`);
       onDeleted();
-    } catch (err: any) {
-      setError(err.message || "Personel silinirken bir hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Personel silinirken bir hata olustu"));
     } finally {
       setIsDeleting(false);
     }

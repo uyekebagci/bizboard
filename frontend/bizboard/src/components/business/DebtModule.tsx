@@ -17,7 +17,9 @@ import {
   Filter,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import type { Debt, DebtSummary, FileUploadInfo } from "@/types";
 
@@ -67,7 +69,7 @@ export function DebtModule({ businessId, currency }: Props) {
       setDebts(debtsData || []);
       setSummary(summaryData || null);
     } catch (err) {
-      console.error("Debt fetch error:", err);
+      logger.error("api", "Debt fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -78,8 +80,8 @@ export function DebtModule({ businessId, currency }: Props) {
       await api.patch(`/debts/${debtId}/settle`, {});
       setSettleConfirm(null);
       fetchData();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err));
     }
   }
 
@@ -88,8 +90,8 @@ export function DebtModule({ businessId, currency }: Props) {
       await api.delete(`/debts/${debtId}`);
       setDeleteConfirm(null);
       fetchData();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err));
     }
   }
 
@@ -478,8 +480,8 @@ function CreateDebtModal({
         }
       }
       onSuccess();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

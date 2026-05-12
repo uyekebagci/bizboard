@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Plus, Search, X, Loader2, Truck, Wrench, Building, Package,
@@ -11,7 +11,9 @@ import {
 } from "lucide-react";
 import { formatCurrency, cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import type { Business, InventoryItem, MaintenanceLog, FuelLog, Employee, FileUploadInfo } from "@/types";
 import type { LucideIcon } from "lucide-react";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
@@ -31,33 +33,33 @@ interface CategoryDef {
 const ALL_TAB: CategoryDef = { key: "ALL", label: "Tumu", icon: Boxes, color: "text-surface-300", bg: "bg-surface-700" };
 
 const CONSTRUCTION_CATEGORIES: CategoryDef[] = [
-  { key: "HEAVY_VEHICLE", label: "Agir Arac / Makine", icon: Truck, color: "text-orange-600", bg: "bg-orange-50" },
-  { key: "LIGHT_EQUIPMENT", label: "Hafif Ekipman", icon: Wrench, color: "text-blue-600", bg: "bg-blue-50" },
-  { key: "SITE_SETUP", label: "Santiye Kurulum", icon: Building, color: "text-teal-600", bg: "bg-teal-50" },
-  { key: "CONSUMABLE", label: "Sarf Malzeme", icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
+  { key: "HEAVY_VEHICLE",   label: "Agir Arac / Makine", icon: Truck,          color: "text-orange-400", bg: "bg-orange-500/15" },
+  { key: "LIGHT_EQUIPMENT", label: "Hafif Ekipman",       icon: Wrench,         color: "text-blue-400",   bg: "bg-blue-500/15" },
+  { key: "SITE_SETUP",      label: "Santiye Kurulum",     icon: Building,       color: "text-teal-400",   bg: "bg-teal-500/15" },
+  { key: "CONSUMABLE",      label: "Sarf Malzeme",        icon: Package,        color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
 const RESTAURANT_CATEGORIES: CategoryDef[] = [
-  { key: "KITCHEN_EQUIPMENT", label: "Mutfak Ekipman", icon: UtensilsCrossed, color: "text-orange-600", bg: "bg-orange-50" },
-  { key: "FURNITURE", label: "Mobilya / Dekor", icon: Sofa, color: "text-teal-600", bg: "bg-teal-50" },
-  { key: "CONSUMABLE", label: "Sarf Malzeme", icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
+  { key: "KITCHEN_EQUIPMENT", label: "Mutfak Ekipman",  icon: UtensilsCrossed, color: "text-orange-400", bg: "bg-orange-500/15" },
+  { key: "FURNITURE",         label: "Mobilya / Dekor", icon: Sofa,            color: "text-teal-400",   bg: "bg-teal-500/15" },
+  { key: "CONSUMABLE",        label: "Sarf Malzeme",    icon: Package,         color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
 const TECHNOLOGY_CATEGORIES: CategoryDef[] = [
-  { key: "IT_EQUIPMENT", label: "Bilisim Ekipman", icon: Monitor, color: "text-blue-600", bg: "bg-blue-50" },
-  { key: "FURNITURE", label: "Ofis Mobilya", icon: Sofa, color: "text-teal-600", bg: "bg-teal-50" },
-  { key: "CONSUMABLE", label: "Sarf Malzeme", icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
+  { key: "IT_EQUIPMENT", label: "Bilisim Ekipman", icon: Monitor, color: "text-blue-400",   bg: "bg-blue-500/15" },
+  { key: "FURNITURE",    label: "Ofis Mobilya",    icon: Sofa,    color: "text-teal-400",   bg: "bg-teal-500/15" },
+  { key: "CONSUMABLE",   label: "Sarf Malzeme",    icon: Package, color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
 const RETAIL_CATEGORIES: CategoryDef[] = [
-  { key: "STORE_EQUIPMENT", label: "Magaza Ekipman", icon: ShoppingCart, color: "text-orange-600", bg: "bg-orange-50" },
-  { key: "CONSUMABLE", label: "Sarf Malzeme", icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
+  { key: "STORE_EQUIPMENT", label: "Magaza Ekipman", icon: ShoppingCart, color: "text-orange-400", bg: "bg-orange-500/15" },
+  { key: "CONSUMABLE",      label: "Sarf Malzeme",   icon: Package,      color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
 const GENERIC_CATEGORIES: CategoryDef[] = [
-  { key: "EQUIPMENT", label: "Ekipman", icon: Wrench, color: "text-blue-600", bg: "bg-blue-50" },
-  { key: "FURNITURE", label: "Mobilya", icon: Sofa, color: "text-teal-600", bg: "bg-teal-50" },
-  { key: "CONSUMABLE", label: "Sarf Malzeme", icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
+  { key: "EQUIPMENT",  label: "Ekipman",     icon: Wrench,  color: "text-blue-400",   bg: "bg-blue-500/15" },
+  { key: "FURNITURE",  label: "Mobilya",     icon: Sofa,    color: "text-teal-400",   bg: "bg-teal-500/15" },
+  { key: "CONSUMABLE", label: "Sarf Malzeme", icon: Package, color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
 function getCategoriesForBusinessType(category?: string): CategoryDef[] {
@@ -89,11 +91,11 @@ const FUEL_CATEGORIES = new Set(["HEAVY_VEHICLE", "LIGHT_EQUIPMENT"]);
 // ══════════════════════════════════════════════════════════
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  ACTIVE: { label: "Aktif", color: "text-green-700", bg: "bg-green-50 border-green-200" },
-  IN_STOCK: { label: "Stokta", color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-  BROKEN: { label: "Arizali", color: "text-red-400", bg: "bg-red-500/10 border-red-500/30" },
-  IN_REPAIR: { label: "Tamirde", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
-  SCRAPPED: { label: "Hurda", color: "text-surface-400", bg: "bg-surface-700 border-surface-300" },
+  ACTIVE:   { label: "Aktif",    color: "text-green-400",  bg: "bg-green-500/10 border-green-500/30" },
+  IN_STOCK: { label: "Stokta",   color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/30" },
+  BROKEN:   { label: "Arizali",  color: "text-red-400",    bg: "bg-red-500/10 border-red-500/30" },
+  IN_REPAIR:{ label: "Tamirde",  color: "text-amber-400",  bg: "bg-amber-500/10 border-amber-500/30" },
+  SCRAPPED: { label: "Hurda",    color: "text-surface-400", bg: "bg-surface-700 border-surface-600" },
 };
 
 const ENERGY_LABELS: Record<string, string> = {
@@ -142,7 +144,15 @@ function getFieldsForCategory(category: string): string[] {
 // Ana Sayfa
 // ══════════════════════════════════════════════════════════
 
-export default function InventoryPage() {
+export default function InventoryPageWrapper() {
+  return (
+    <Suspense>
+      <InventoryPage />
+    </Suspense>
+  );
+}
+
+function InventoryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshKey, triggerRefresh } = useAppStore();
@@ -161,13 +171,12 @@ export default function InventoryPage() {
   const [detailItem, setDetailItem] = useState<InventoryItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  useEffect(() => { fetchData(); }, [refreshKey, activeCategory, filterBusiness]);
+  useEffect(() => { fetchData(); }, [refreshKey, filterBusiness]);
 
   async function fetchData() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (activeCategory !== "ALL") params.set("category", activeCategory);
       if (filterBusiness) params.set("business_id", filterBusiness);
 
       const [itemsData, bizData] = await Promise.all([
@@ -177,7 +186,7 @@ export default function InventoryPage() {
       setItems(itemsData || []);
       setBusinesses(bizData || []);
     } catch (err) {
-      console.error("Inventory fetch error:", err);
+      logger.error("api", "Inventory fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -206,6 +215,7 @@ export default function InventoryPage() {
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
+      if (activeCategory !== "ALL" && item.category !== activeCategory) return false;
       if (filterStatus && item.status !== filterStatus) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -216,7 +226,7 @@ export default function InventoryPage() {
       }
       return true;
     });
-  }, [items, filterStatus, searchQuery]);
+  }, [items, activeCategory, filterStatus, searchQuery]);
 
   const totalCount = filtered.length;
   const brokenCount = filtered.filter((i) => i.status === "BROKEN").length;
@@ -226,11 +236,11 @@ export default function InventoryPage() {
   ).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5 animate-fade-in pb-24">
+    <div className="max-w-4xl mx-auto space-y-5 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-xl hover:bg-surface-600 transition-colors">
+          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
@@ -1250,8 +1260,8 @@ function CreateInventoryModal({ businesses, presetBusinessId, onClose, onCreated
         notes: notes || null,
       });
       onCreated();
-    } catch (err: any) {
-      setError(err.message || "Hata olustu");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Hata olustu"));
     } finally {
       setSaving(false);
     }

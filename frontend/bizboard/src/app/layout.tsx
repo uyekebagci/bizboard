@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "@/styles/globals.css";
+import { ClientProviders } from "@/components/layout/ClientProviders";
+import { EnvironmentBanner } from "@/components/layout/EnvironmentBanner";
+import { PwaUpdatePrompt } from "@/components/layout/PwaUpdatePrompt";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -40,8 +43,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans">{children}</body>
+    <html
+      lang="tr"
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      style={{ backgroundColor: "#212529", colorScheme: "dark" }}
+    >
+      <head>
+        <style>{`html,body{background-color:#212529!important;color-scheme:dark}`}</style>
+      </head>
+      <body className="font-sans" style={{ backgroundColor: "#212529" }}>
+        <ClientProviders>
+          <EnvironmentBanner />
+          {children}
+          <PwaUpdatePrompt />
+        </ClientProviders>
+      </body>
     </html>
   );
 }
