@@ -186,59 +186,103 @@ bizboard/
 
 ---
 
-## Kurulum
+## Yerel Kurulum (Geliştirme)
 
 ### Gereksinimler
 - Java 21+
-- Node.js 18+
-- PostgreSQL 15+
+- Node.js 20+
+- PostgreSQL 16+
 - Maven 3.9+
 
-### Veritabani
+### 1. Veritabanı
 
 ```bash
-# PostgreSQL'de veritabani olustur
 createdb bizboard
 ```
 
-### Backend
+### 2. Backend
 
 ```bash
-cd backend/bizboard
+cd backend
 
-# Bagimlliklari yukle ve derle
+# Env örneğini kopyala ve değerleri kendinkilerle değiştir
+cp .env.example bizboard/.env
+
+cd bizboard
 mvn clean install -DskipTests
-
-# Uygulamayi calistir (port 8080)
-mvn spring-boot:run -pl bizboard-api
+mvn spring-boot:run -pl bizboard-api          # http://localhost:8080
 ```
 
-Varsayilan veritabani ayarlari (`application.yml`):
-- URL: `jdbc:postgresql://localhost:5432/bizboard`
-- Kullanici: `postgres`
-- Sifre: `postgres`
-- DDL: `update` (tablolar otomatik olusturulur)
+Yerel için varsayılanlar (`application.yml`):
+- DB: `jdbc:postgresql://localhost:5432/bizboard` (kullanıcı `postgres` / parola `postgres`)
+- Storage: **local** (`./uploads`) — S3 istemiyorsan değiştirmen gerekmez
+- DDL: `update`
 
-### Frontend
+S3'ü lokalde de kullanmak istersen `APP_STORAGE_TYPE=s3` ile birlikte `APP_STORAGE_S3_*` değişkenlerini ayarla.
+
+### 3. Frontend
 
 ```bash
-cd frontend/bizboard
+cd frontend
 
-# Bagimlliklari yukle
+# Env örneği
+cp .env.example bizboard/.env.local
+
+cd bizboard
 npm install
-
-# Gelistirme sunucusunu baslat (port 3000)
-npm run dev
+npm run dev                                    # http://localhost:3000
 ```
 
-`.env.local` dosyasi:
+### Varsayılan Giriş
+- **Kullanıcı:** `admin`
+- **Şifre:** `admin123`
+
+---
+
+## Production Deploy (Sevalla)
+
+Tam adım adım rehber: [`docs/devops_setup.md`](docs/devops_setup.md). Kısa özet:
+
+| Servis | Sevalla'da nasıl | Root dir | Build |
+|---|---|---|---|
+| **bizboard-postgres** | Managed PostgreSQL (Hobby) | — | otomatik |
+| **bizboard-storage** | Object Storage bucket (S3-compat) | — | otomatik |
+| **bizboard-api** | Application → From GitHub | `backend` | `backend/Dockerfile` |
+| **bizboard-web** | Application → From GitHub | `frontend` | `frontend/Dockerfile` |
+| **bizboard-api-test** | Aynı imaj, farklı env'ler | `backend` | `backend/Dockerfile` |
+| **bizboard-web-test** | Aynı imaj, farklı env'ler | `frontend` | `frontend/Dockerfile` |
+
+### Kritik Production Env Değişkenleri
+
+Backend (`bizboard-api`, `bizboard-api-test`):
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8080
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:postgresql://bizboard-postgres.sevalla.app:5432/bizboard_prod
+DB_USERNAME, DB_PASSWORD                            # Sevalla DB linklenince otomatik
+JWT_SECRET                                          # openssl rand -base64 48
+APP_CORS_ALLOWED_ORIGINS=https://app.cakirdag.com
+APP_STORAGE_TYPE=s3
+APP_STORAGE_S3_BUCKET=bizboard-prod-uploads
+APP_STORAGE_S3_ENDPOINT=https://eu-central.storage.sevalla.app
+APP_STORAGE_S3_ACCESS_KEY, APP_STORAGE_S3_SECRET_KEY
 ```
 
-### Varsayilan Giris Bilgileri
-- **Kullanici Adi:** `admin`
-- **Sifre:** `admin123`
+Frontend (`bizboard-web`, `bizboard-web-test`) — build args:
+```
+NEXT_PUBLIC_API_URL=https://api.cakirdag.com
+NEXT_PUBLIC_ENV=prod
+```
+
+Tüm değişken listesi için `backend/.env.example` ve `frontend/.env.example`.
+
+### Test Verisi Senkronu
+
+Her gece 03:30 UTC'de prod → test refresh, GitHub Actions workflow ile:
+- Tetik: cron `30 3 * * *` veya manuel
+- Script: [`scripts/refresh-test-from-prod.sh`](scripts/refresh-test-from-prod.sh)
+- Anonimleştirme: email/telefon fake, admin = `admin@bizboard.test`/`admin123`
+
+GitHub Secrets gerekli: `PROD_DATABASE_URL`, `TEST_DATABASE_URL`, `S3_ENDPOINT`, `PROD_S3_BUCKET`, `TEST_S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `TEST_API_HEALTH_URL`.
 
 ---
 
