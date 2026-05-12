@@ -55,7 +55,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-5">
       {/* Greeting */}
       <section>
         <h1 className="text-2xl font-bold text-white">{getGreeting()} 👋</h1>
@@ -64,21 +64,19 @@ export default function DashboardPage() {
         </p>
       </section>
 
-      {/* Portfolio + Side Widgets (70/30) */}
-      <section className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-4">
+      {/* Portfolio (50%) + Stats 2x2 (50%) */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <PortfolioCard portfolio={portfolio} />
-        <div className="flex flex-col gap-4">
-          <ExpenseChart portfolio={portfolio} />
-          <DebtWidget
-            businesses={businesses}
-            onTotalChange={(data) => setDebtData(data)}
-          />
-        </div>
+        <StatsRow portfolio={portfolio} debtData={debtData} employeeData={employeeData} />
       </section>
 
-      {/* Stats Row */}
-      <section>
-        <StatsRow portfolio={portfolio} debtData={debtData} employeeData={employeeData} />
+      {/* Charts + Debt */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <ExpenseChart portfolio={portfolio} />
+        <DebtWidget
+          businesses={businesses}
+          onTotalChange={(data) => setDebtData(data)}
+        />
       </section>
 
       {/* Quick Actions */}
@@ -123,12 +121,13 @@ function DashboardSkeleton() {
         <div className="h-5 bg-surface-200 rounded-lg w-64 mt-2" />
       </div>
       <div className="h-44 bg-surface-200 rounded-2xl" />
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[1, 2, 3, 4].map((i) => <div key={i} className="h-24 bg-surface-200 rounded-2xl" />)}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="h-44 bg-surface-200 rounded-2xl" />
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 bg-surface-200 rounded-2xl" />)}
+        </div>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="h-20 bg-surface-200 rounded-2xl" />)}
-      </div>
+      <div className="h-16 bg-surface-200 rounded-2xl" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="h-40 bg-surface-200 rounded-2xl" />
         <div className="h-40 bg-surface-200 rounded-2xl" />

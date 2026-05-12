@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, X, ExternalLink } from "lucide-react";
 import { formatCurrency, formatRelativeDate, cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { TransactionDetailModal } from "@/components/business/TransactionList";
 import type { Transaction } from "@/types";
@@ -21,7 +22,7 @@ export function RecentActivity() {
         const data = await api.get<Transaction[]>("/portfolio/transactions/recent?limit=10");
         setTransactions(data || []);
       } catch (err) {
-        console.error("Failed to fetch recent transactions:", err);
+        logger.error("api", "Failed to fetch recent transactions", undefined, err);
       } finally {
         setIsLoading(false);
       }

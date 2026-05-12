@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import type { AdminUser, Business } from "@/types";
 
 // ── Role Labels ─────────────────────────────────────────────
@@ -65,8 +66,8 @@ export default function AdminPage() {
       ]);
       setUsers(usersData || []);
       setBusinesses(businessesData || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -77,8 +78,8 @@ export default function AdminPage() {
       await api.delete(`/admin/users/${userId}`);
       setDeleteConfirm(null);
       fetchData();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err));
     }
   }
 
@@ -120,13 +121,21 @@ export default function AdminPage() {
               ({users.length})
             </span>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold text-sm rounded-xl transition-colors"
-          >
-            <Plus size={16} />
-            Yeni Kullanici
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href="/admin/audit"
+              className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
+            >
+              Audit Log
+            </a>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold text-sm rounded-xl transition-colors"
+            >
+              <Plus size={16} />
+              Yeni Kullanici
+            </button>
+          </div>
         </div>
 
         {/* User List */}
@@ -342,8 +351,8 @@ function CreateUserModal({
             : selectedBusinessIds,
       });
       onSuccess();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -559,8 +568,8 @@ function EditUserModal({
         is_active: isActive,
       });
       onSuccess();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

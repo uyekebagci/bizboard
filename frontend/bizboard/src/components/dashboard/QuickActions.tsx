@@ -59,33 +59,35 @@ export function QuickActions() {
 
   return (
     <>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        {actions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <button
-              key={action.label}
-              onClick={() => {
-                if (action.href === "__upload__") {
-                  setShowUploadModal(true);
-                } else {
-                  router.push(action.href);
-                }
-              }}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl hover:bg-white/10 transition-all group active:scale-95"
-            >
-              <div
-                className={`w-11 h-11 rounded-2xl ${action.bg} flex items-center justify-center
-                           group-hover:scale-105 transition-transform`}
+      <div className="card px-2 py-3">
+        <div className="flex items-center justify-around">
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.label}
+                onClick={() => {
+                  if (action.href === "__upload__") {
+                    setShowUploadModal(true);
+                  } else {
+                    router.push(action.href);
+                  }
+                }}
+                className="flex flex-col items-center gap-1.5 px-2 py-2 rounded-2xl hover:bg-white/10 transition-all group active:scale-95 min-w-0"
               >
-                <Icon size={20} className={action.color} />
-              </div>
-              <span className="text-[11px] font-medium text-surface-300 group-hover:text-green-400 leading-tight text-center transition-colors">
-                {action.label}
-              </span>
-            </button>
-          );
-        })}
+                <div
+                  className={`w-10 h-10 rounded-xl ${action.bg} flex items-center justify-center
+                             group-hover:scale-105 transition-transform shrink-0`}
+                >
+                  <Icon size={18} className={action.color} />
+                </div>
+                <span className="text-[10px] font-medium text-surface-300 group-hover:text-green-400 leading-tight text-center transition-colors whitespace-nowrap">
+                  {action.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {showUploadModal && (

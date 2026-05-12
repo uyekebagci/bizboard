@@ -21,7 +21,9 @@ import {
   Layers,
   Calendar,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import type {
   FinanceOverview,
@@ -66,7 +68,7 @@ export default function FinancePage() {
         const result = await api.get<FinanceOverview>(`/finance/overview?months=${months}`);
         setData(result);
       } catch (err) {
-        console.error("Finance overview fetch failed:", err);
+        logger.error("api", "Finance overview fetch failed", undefined, err);
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -82,7 +84,7 @@ export default function FinancePage() {
   const prev = data.previous_period;
 
   return (
-    <div className="space-y-5 animate-fade-in pb-8">
+    <div className="space-y-5 pb-8">
       {/* Header */}
       <section className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -229,7 +231,7 @@ function SummaryCard({
   title: string;
   value: number;
   change?: number | null;
-  icon: any;
+  icon: LucideIcon;
   iconBg: string;
   iconColor: string;
   valueColor: string;
@@ -383,7 +385,7 @@ function TopTransactionsList({
 }: {
   title: string;
   items: TopTransactionData[];
-  icon: any;
+  icon: LucideIcon;
   iconColor: string;
   amountColor: string;
 }) {

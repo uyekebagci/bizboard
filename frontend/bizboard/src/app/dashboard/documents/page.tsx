@@ -6,12 +6,12 @@ import {
   ArrowLeft, FileText, Image as ImageIcon, Download, Trash2,
   X, EyeOff, Calendar, User, Building2, Filter, Search, Plus,
 } from "lucide-react";
-import { api } from "@/lib/api/client";
+import { api, API_URL } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
 import type { Business, FileUploadInfo } from "@/types";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return bytes + " B";
@@ -58,7 +58,7 @@ export default function DocumentsPage() {
       setFiles(filesData || []);
       setBusinesses(bizData || []);
     } catch (err) {
-      console.error("Documents fetch error:", err);
+      logger.error("api", "Documents fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -70,8 +70,8 @@ export default function DocumentsPage() {
       setDeleteConfirm(null);
       setSelectedFile(null);
       fetchData();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err));
     }
   }
 
@@ -105,13 +105,13 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 animate-fade-in pb-24">
+    <div className="max-w-2xl mx-auto space-y-5 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl hover:bg-surface-600 transition-colors"
+            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
           >
             <ArrowLeft size={20} className="text-surface-300" />
           </button>

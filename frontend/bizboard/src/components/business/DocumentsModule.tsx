@@ -5,12 +5,12 @@ import {
   Plus, FileText, Image as ImageIcon, Trash2, X, Download,
   EyeOff, Calendar, User, Building2, ExternalLink,
 } from "lucide-react";
-import { api } from "@/lib/api/client";
+import { api, API_URL } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
 import type { FileUploadInfo } from "@/types";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return bytes + " B";
@@ -59,7 +59,7 @@ export function DocumentsModule({ businessId }: Props) {
       );
       setFiles(data || []);
     } catch (err) {
-      console.error("Files fetch error:", err);
+      logger.error("api", "Files fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -71,8 +71,8 @@ export function DocumentsModule({ businessId }: Props) {
       setDeleteConfirm(null);
       setSelectedFile(null);
       fetchFiles();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err));
     }
   }
 

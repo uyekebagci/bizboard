@@ -33,7 +33,7 @@ export default function BusinessDetailPage() {
   }
 
   return (
-    <div className="space-y-5 animate-fade-in pb-24 overflow-x-hidden max-w-full">
+    <div className="space-y-5 pb-24 overflow-x-hidden max-w-full">
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <button

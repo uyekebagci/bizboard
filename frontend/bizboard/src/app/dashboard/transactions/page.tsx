@@ -8,7 +8,9 @@ import {
 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import { TransactionDetailModal } from "@/components/business/TransactionList";
 import type { Business, Transaction, FixedCostSummary } from "@/types";
 
@@ -60,7 +62,7 @@ export default function AllTransactionsPage() {
       const fcResults = (await Promise.all(fcPromises)).filter(Boolean) as typeof fixedCosts;
       setFixedCosts(fcResults);
     } catch (err) {
-      console.error("Transactions fetch error:", err);
+      logger.error("api", "Transactions fetch error", undefined, err);
     } finally {
       setLoading(false);
     }
@@ -117,13 +119,13 @@ export default function AllTransactionsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 animate-fade-in pb-24">
+    <div className="max-w-2xl mx-auto space-y-5 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl hover:bg-surface-600 transition-colors"
+            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
           >
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
@@ -383,8 +385,8 @@ function DeleteModal({
         { reason: reason.trim() }
       );
       onDeleted();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setIsDeleting(false);
     }
