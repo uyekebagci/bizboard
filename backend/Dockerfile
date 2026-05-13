@@ -11,18 +11,15 @@
 FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /src
 
-# Pre-copy POMs and Maven wrapper for dependency caching.
+# Pre-copy POMs for dependency caching (Maven wrapper is gitignored, not shipped).
 COPY bizboard/pom.xml ./pom.xml
 COPY bizboard/bizboard-common/pom.xml     bizboard-common/pom.xml
 COPY bizboard/bizboard-repository/pom.xml bizboard-repository/pom.xml
 COPY bizboard/bizboard-security/pom.xml   bizboard-security/pom.xml
 COPY bizboard/bizboard-service/pom.xml    bizboard-service/pom.xml
 COPY bizboard/bizboard-api/pom.xml        bizboard-api/pom.xml
-COPY bizboard/.mvn .mvn 2>/dev/null || true
-COPY bizboard/mvnw mvnw 2>/dev/null || true
 
-# Use Maven from the base image (we don't ship the wrapper to keep image lean).
-# Spring Boot Maven plugin will be inherited via the parent POM.
+# Use Maven from apt (image-installed). Spring Boot Maven plugin comes from parent POM.
 RUN apt-get update && apt-get install -y --no-install-recommends maven && rm -rf /var/lib/apt/lists/*
 
 # Warm dependency cache (no source yet → Maven downloads everything once).
