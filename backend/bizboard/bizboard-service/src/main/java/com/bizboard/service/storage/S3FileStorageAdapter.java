@@ -64,17 +64,24 @@ public class S3FileStorageAdapter implements FileStorage {
 
         this.client = builder.build();
 
-        // Verify bucket access early — fail fast on bad creds / wrong region / typo.
+        log.info("[storage] backend=s3 bucket={} endpoint={} prefix='{}' pathStyle={}",
+                props.getBucket(),
+                isBlank(props.getEndpoint()) ? "<aws default>" : props.getEndpoint(),
+                props.getPrefix(),
+                props.isPathStyle());
+
+        // Soft connectivity probe — Cloudflare R2 and some other S3-compatible providers
+        // scope tokens at the bucket level and may reject head-bucket calls even when
+        // standard object operations are allowed. We log a warning but do NOT fail the
+        // application: the real test is the first upload/download.
         try {
             client.headBucket(HeadBucketRequest.builder().bucket(props.getBucket()).build());
-            log.info("[storage] backend=s3 bucket={} endpoint={} prefix='{}' pathStyle={}",
-                    props.getBucket(),
-                    isBlank(props.getEndpoint()) ? "<aws default>" : props.getEndpoint(),
-                    props.getPrefix(),
-                    props.isPathStyle());
+            log.info("[storage] bucket head-check OK");
         } catch (Exception e) {
-            throw new StorageException(
-                    "Cannot access S3 bucket '" + props.getBucket() + "': " + e.getMessage(), e);
+            log.warn("[storage] bucket head-check failed ({}). " +
+                            "This is often harmless on Cloudflare R2 / scoped tokens — " +
+                            "first object operation will surface real issues.",
+                    e.getMessage());
         }
     }
 
