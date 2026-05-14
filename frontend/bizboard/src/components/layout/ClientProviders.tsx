@@ -49,7 +49,12 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
         await refreshAccessToken();
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
-          // Refresh cookie geçersiz/yok → login'e yönlendir
+          // Refresh cookie geçersiz/yok → frontend session bayrağını da temizle,
+          // aksi takdirde middleware login sayfasını "zaten login" sanıp dashboard'a
+          // yönlendirir ve sonsuz döngü oluşur.
+          if (typeof document !== "undefined") {
+            document.cookie = "bb_session=; path=/; max-age=0; samesite=lax; secure";
+          }
           router.replace("/auth/login");
         } else {
           logger.error("auth", "Silent refresh failed", undefined, err);

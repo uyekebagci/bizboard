@@ -144,11 +144,10 @@ export async function logout(): Promise<void> {
     // Sessizce sürdür: network yoksa bile yerel state'i temizle.
   }
   clearToken();
-  // Login sayfasinda frontend-tarafindan set ettigimiz `rt` cookie'sini temizle.
-  // Bu cookie middleware'in login durumunu anlamasi icin. Backend HttpOnly
-  // refresh cookie'sine gectigimizde bu satir gerek kalmadan kaldirilabilir.
+  // Middleware'in baktığı session bayrağını temizle. Backend HttpOnly refresh
+  // cookie'sini de aynı /auth/logout çağrısı temizledi (Set-Cookie ile).
   if (typeof document !== "undefined") {
-    document.cookie = "rt=; path=/; max-age=0; samesite=lax; secure";
+    document.cookie = "bb_session=; path=/; max-age=0; samesite=lax; secure";
   }
 }
 

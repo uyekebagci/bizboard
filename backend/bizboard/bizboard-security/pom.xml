@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bizboard</groupId>
         <artifactId>bizboard-parent</artifactId>
-        <version>1.0.3</version>
+        <version>1.1.0</version>
     </parent>
 
     <artifactId>bizboard-security</artifactId>

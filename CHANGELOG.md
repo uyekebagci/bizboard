@@ -34,6 +34,60 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.1.0] — 2026-05-15
+
+İlk büyük güvenlik sıkılaştırması: gerçek refresh token akışı + kısa access TTL.
+
+### Added
+
+#### Backend
+- **`RefreshToken` entity** — uzun ömürlü token, sadece SHA-256 hash DB'de saklanıyor (DB sızıntısı ≠ token sızıntısı).
+- **`RefreshTokenRepository`** — lookup, expired cleanup, kullanıcı bazlı toplu revoke.
+- **`RefreshTokenService`** — 256-bit secure random + SHA-256 hash, rotation chain, IP/UA audit, theft detection sinyali (revoke edilmiş token tekrar kullanılırsa log warning — v1.x patch'inde tüm zincir revoke).
+- **`/auth/refresh` endpoint** — cookie'deki refresh token'ı doğrular, **rotate** eder (eski revoke, yeni issue), yeni access token döner. Geçersiz/expired/revoked token → 401 + cookie temizle.
+- **`/auth/logout` endpoint** — refresh token'ı DB'de revoke + cookie'yi `Max-Age=0` ile sil.
+- Refresh token cookie: `HttpOnly; Secure; SameSite=None; Path=/auth` — JS okuyamaz, cross-site AJAX'ta gönderilir, sadece /auth/* yollar görür.
+- Yeni env değişkenleri: `APP_REFRESH_DURATION_DAYS`, `APP_REFRESH_COOKIE_{NAME,SECURE,SAME_SITE,PATH,DOMAIN}`.
+
+#### Frontend
+- `ClientProviders` bootstrap akışı artık gerçek bir backend endpoint'ine konuşuyor (önceki sürümlerde endpoint yoktu, ölü kod).
+- 401 refresh fail durumunda `bb_session` flag cookie'si de temizleniyor → login redirect loop'u engellendi.
+
+### Changed
+
+#### Backend
+- **Access token TTL: 7 gün → 30 dakika.** Çalınmış token'ın işe yaradığı pencere 336× kısaldı. Aktif kullanıcı silent refresh ile şeffaf yenilenir; idle kullanıcı 30 dk sonra refresh akışına düşer.
+- `AuthService.login()` artık `LoginResult { body, refreshIssued }` döndürüyor. Controller refreshIssued ile Set-Cookie kurar.
+
+#### Frontend
+- **`rt` cookie hack kaldırıldı.** Önceki sürümlerde frontend access token'ın kendisini non-HttpOnly cookie olarak set ediyordu (XSS sızıntı yüzeyi). Artık sadece `bb_session=1` BAYRAK cookie'si var — içinde token yok, middleware'in "yakın zamanda login olundu" sorusunu yanıtlamak için.
+- `middleware.ts` `rt` yerine `bb_session` flag'ini kontrol ediyor.
+- `LoginPage.setLoginCookie` → `setSessionFlag` olarak yeniden adlandırıldı + içeriği temizlendi.
+- `api/client.ts` logout artık `bb_session` flag'ini temizliyor (backend Set-Cookie ile gerçek refresh cookie'sini zaten temizliyor).
+
+### Security
+
+Yeni saldırı yüzeyi durumu (önce vs sonra):
+
+| Vektör | Önce | Sonra |
+|---|---|---|
+| XSS access token oku | ❌ Memory'de (sayfa kapanınca gider) — aynı | ✅ aynı |
+| XSS refresh token oku | ⚠️ JS-readable cookie'de baked | ✅ HttpOnly cookie, JS göremez |
+| Token sızıntısı (URL, log) | ✅ yok | ✅ yok |
+| Çalınmış token kullanım penceresi | 7 gün | **30 dk** |
+| Logout server-side revoke | ❌ yok | ✅ DB'de revoke |
+| Theft detection sinyali | ❌ yok | ⚠️ log warning (otomatik zincir-revoke v1.x patch'de) |
+| Multi-tab logout senkron | ✅ vardı | ✅ aynı |
+
+### Known follow-ups
+
+- Refresh token cleanup cron (v1.2.0): expired kayıtları periyodik sil
+- Theft detection auto-response (v1.2.0): revoked token reuse → tüm zinciri otomatik revoke
+- Parola değiştirme akışında tüm refresh token'ları revoke et (v1.2.0)
+- Login attempt rate limiting (v1.3.0)
+
+---
+
 ## [1.0.3] — 2026-05-15
 
 ### Changed
@@ -131,7 +185,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.1.0
 [1.0.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.3
 [1.0.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.2
 [1.0.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.1
