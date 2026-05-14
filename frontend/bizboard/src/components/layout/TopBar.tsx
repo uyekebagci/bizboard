@@ -7,7 +7,11 @@ import { getInitials } from "@/lib/utils";
 import { logout } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+// import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+// ↑ TODO(post-v1.x): Backend notifications endpoint'leri (GET /notifications,
+// /notifications/unread-count, /notifications/{id}/read, /notifications/read-all)
+// implement edilince yorum açılır. Şu an entity var, controller yok — 403 spam'i
+// önlemek için UI'dan gizlendi.
 
 export function TopBar() {
   const profile = useAppStore((s) => s.profile);
@@ -46,9 +50,19 @@ export function TopBar() {
           <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center">
             <span className="text-white font-bold text-sm">BB</span>
           </div>
-          <span className="font-bold text-lg text-white hidden sm:block">
-            BizBoard
-          </span>
+          <div className="hidden sm:flex flex-col leading-tight">
+            <span className="font-bold text-lg text-white leading-none">
+              BizBoard
+            </span>
+            {profile?.role === "admin" && process.env.NEXT_PUBLIC_APP_VERSION && (
+              <span
+                className="mt-0.5 text-[10px] text-surface-400 font-mono leading-none tracking-tight"
+                title="Frontend sürümü"
+              >
+                v{process.env.NEXT_PUBLIC_APP_VERSION}
+              </span>
+            )}
+          </div>
         </Link>
 
         <div className="flex items-center gap-2">
@@ -60,7 +74,8 @@ export function TopBar() {
             <Search size={20} className="text-surface-300" />
           </button>
 
-          <NotificationDropdown />
+          {/* TODO(post-v1.x): backend notifications endpoint'leri implement edilince yorum açılır */}
+          {/* <NotificationDropdown /> */}
 
           <div className="relative ml-1" ref={menuRef}>
             <button

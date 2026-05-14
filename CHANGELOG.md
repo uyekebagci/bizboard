@@ -34,6 +34,17 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.0.2] — 2026-05-15
+
+### Added
+- **Admin için sürüm göstergesi:** TopBar'da "BizBoard" başlığının altında, sadece `role=admin` kullanıcılara çok küçük fontla (`v1.0.2`) yansır.
+- `next.config.js` artık `package.json.version`'u `NEXT_PUBLIC_APP_VERSION` olarak bundle'a otomatik enjekte ediyor. Her release'de sadece `npm version X.Y.Z` ile bump yapmak yeterli — UI sürümü otomatik güncellenir, Dockerfile'a dokunmaya gerek yok.
+
+### Changed
+- **NotificationDropdown geçici olarak devre dışı.** Backend'de notification endpoint'leri (`GET /notifications`, `/unread-count`, `/{id}/read`, `/read-all`) henüz implement edilmediği için dropdown 403 spam'ine sebep oluyordu. Entity ve frontend kullanıcı arayüzü kalıyor; backend hazır olduğunda TopBar'daki tek satır yorum kaldırılacak.
+
+---
+
 ## [1.0.1] — 2026-05-15
 
 ### Changed
@@ -107,6 +118,7 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.2
 [1.0.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.1
 [1.0.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.0
