@@ -34,6 +34,19 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.0.3] — 2026-05-15
+
+### Changed
+
+- **PWA service worker artık deploy sonrası otomatik güncelleniyor.** `next-pwa` ayarları `skipWaiting: true` + `clientsClaim: true` olarak değiştirildi. Yeni SW yüklendiği an aktive olur, mevcut sayfaların kontrolünü ele alır, `PwaUpdatePrompt`'taki `controllerchange` listener `window.location.reload()` çağırır. Kullanıcı hiçbir butona basmadan fresh sürümü görür.
+- **Trade-off:** Uzun form doldururken deploy gerçekleşirse sayfa yenilenebilir. Mevcut kullanıcı sayısı (10-50) ve form süreleri için kabul edilebilir; ileride autosave gelirse veya form süreleri uzarsa `skipWaiting: false` + manuel prompt akışına dönülebilir (PwaUpdatePrompt component'i o akışı da destekliyor).
+
+### Notes
+
+`PwaUpdatePrompt` componentinin UI'i pratik olarak artık çıkmaz (waiting state yaşanmıyor). Component yine de tree'de duruyor — `controllerchange` listener'ı aktif ve reload akışını yönetiyor.
+
+---
+
 ## [1.0.2] — 2026-05-15
 
 ### Added
@@ -118,7 +131,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.3
 [1.0.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.2
 [1.0.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.1
 [1.0.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.0

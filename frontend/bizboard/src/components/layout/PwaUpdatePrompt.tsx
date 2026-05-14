@@ -4,12 +4,17 @@ import { useEffect, useState } from "react";
 import { RefreshCw, X } from "lucide-react";
 
 /**
- * Service worker yeni versiyon yuklendiginde "waiting" state'inde olur. Bu
- * bilesen kullaniciya prompt gosterip onun onayiyla skipWaiting + reload yapar.
- * Aksi takdirde yeni SW sadece tum tab'lar kapaninca aktive olur (uzun
- * surebilir) ve kullanici eski sayfayi gormeye devam eder.
+ * Service worker yenilemesini takip eden bilesen.
  *
- * Form doldururken otomatik refresh edilmemesi icin onaylama kritik.
+ * Mevcut konfigurasyonda next-pwa `skipWaiting: true` + `clientsClaim: true`
+ * ile kuruldu: yeni SW yuklenir yuklenmez aktive olur. Bu durumda "waiting"
+ * state'i pratik olarak gerceklesmez, asagidaki prompt UI'i nadiren cikar.
+ * Buradaki esas mekanizma `controllerchange` listener'i — yeni SW kontrolu
+ * eline alinca window.location.reload() ile sayfayi yeniler. Boylece deploy
+ * sonrasi kullanici hiçbir butona basmadan fresh surumu gorur.
+ *
+ * skipWaiting: false akisina geri donulurse asagidaki prompt UI'i devreye
+ * girer ve kullanici manuel "Yenile" ile guncellemeyi tetikler.
  */
 export function PwaUpdatePrompt() {
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
