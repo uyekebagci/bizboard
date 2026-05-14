@@ -25,6 +25,9 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    /* eslint-disable no-console */
+    console.log("[bizboard][login] submit clicked, username =", username);
+    /* eslint-enable no-console */
     setIsLoading(true);
     setError(null);
     setErrorRequestId(null);
@@ -35,14 +38,31 @@ function LoginForm() {
         { username, password },
         { skipRefresh: true }
       );
+      /* eslint-disable no-console */
+      console.log("[bizboard][login] api.post returned:", {
+        hasToken: !!res?.token,
+        tokenLen: res?.token?.length ?? 0,
+        expiresIn: res?.expires_in,
+        forcePasswordChange: res?.force_password_change,
+      });
+      /* eslint-enable no-console */
       setToken(res.token, res.expires_in);
       // İlk girişte parola değişikliği zorunlu ise direkt o ekrana yönlendir.
       if (res.force_password_change) {
+        /* eslint-disable no-console */
+        console.log("[bizboard][login] force_password_change → router.push(/dashboard/change-password)");
+        /* eslint-enable no-console */
         router.push("/dashboard/change-password");
       } else {
+        /* eslint-disable no-console */
+        console.log("[bizboard][login] router.push →", redirect);
+        /* eslint-enable no-console */
         router.push(redirect);
       }
     } catch (err: unknown) {
+      /* eslint-disable no-console */
+      console.error("[bizboard][login] caught error:", err);
+      /* eslint-enable no-console */
       if (err instanceof ApiError) {
         switch (err.code) {
           case "AUTH-LOCK":
