@@ -27,6 +27,11 @@ public class JwtUtil {
         this.expirationMs = expirationMs;
     }
 
+    /** Token geçerlilik süresi (saniye) — clientlar expiry hesabı için kullanır. */
+    public long getExpirationSeconds() {
+        return expirationMs / 1000L;
+    }
+
     public String generateToken(UUID userId, String username, String role, String accessibleBusinesses) {
         Date now = new Date();
         var builder = Jwts.builder()
