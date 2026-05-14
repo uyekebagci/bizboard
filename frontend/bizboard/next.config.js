@@ -4,9 +4,15 @@ const pkg = require("./package.json");
 const withPWA = require("next-pwa")({
   dest: "public",
   register: true,
-  // Otomatik skipWaiting kapali — yeni SW yuklendiginde kullaniciya prompt
-  // gosterip onun onayiyla aktive ediyoruz (PwaUpdatePrompt component).
-  skipWaiting: false,
+  // Agresif otomatik guncelleme: yeni SW yuklenir yuklenmez aktive ol,
+  // varolan sayfalarin kontrolunu da hemen ele al. PwaUpdatePrompt component'i
+  // `controllerchange` event'ini dinleyip otomatik window.location.reload()
+  // yapacak — kullanici hiçbir butona basmadan deploy sonrasi fresh surumu
+  // alir. Trade-off: kullanici uzun bir form doldururken aniden sayfa yenilenebilir.
+  // Ileride autosave eklenirse veya kullanicilar yogun form is yaparlarsa
+  // skipWaiting: false + prompt akisina geri donulebilir.
+  skipWaiting: true,
+  clientsClaim: true,
   disable: process.env.NODE_ENV === "development",
 });
 
