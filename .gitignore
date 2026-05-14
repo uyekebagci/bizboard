@@ -47,6 +47,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+# Sevalla env import files (visible variant of .env.sevalla.*)
+env.sevalla.*
 *.pem
 *.key
 
