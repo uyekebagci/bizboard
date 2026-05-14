@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const pkg = require("./package.json");
+
 const withPWA = require("next-pwa")({
   dest: "public",
   register: true,
@@ -49,6 +51,12 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: false,
+  // package.json'daki version'u client bundle'a NEXT_PUBLIC_APP_VERSION olarak enjekte
+  // eder. Dockerfile ARG'sini override ettigi icin her release'de sadece package.json
+  // bump'i yeterli olur — sürüm UI'a otomatik yansir.
+  env: {
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+  },
   experimental: {
     staleTimes: {
       dynamic: 30,
