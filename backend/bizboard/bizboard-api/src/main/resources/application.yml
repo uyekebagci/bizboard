@@ -52,7 +52,27 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET:bizboard-super-secret-key-that-is-at-least-256-bits-long-for-hs256}
-    expiration-ms: ${JWT_EXPIRATION_MS:604800000}  # 7 days
+    # Access token TTL — 30 dakika. Refresh akışı eklendi (v1.1.0); access kısa
+    # tutmak çalınmış token'ın penceresini daraltır. Aktif kullanıcı sessiz refresh
+    # ile yenilenir; idle kullanıcı 30 dk sonra erişimini kaybeder, bir sonraki
+    # API çağrısında otomatik refresh çalışır (refresh süresi içindeyken).
+    expiration-ms: ${JWT_EXPIRATION_MS:1800000}  # 30 min
+
+  refresh:
+    # Refresh token toplam süresi. Bu süre içinde silent refresh ile access token
+    # yenilenebilir; süre dolunca tekrar login gerekir.
+    duration-days: ${APP_REFRESH_DURATION_DAYS:30}
+    cookie:
+      name:      ${APP_REFRESH_COOKIE_NAME:rt}
+      # Production HTTPS'de Secure zorunlu. Local dev için override edilebilir.
+      secure:    ${APP_REFRESH_COOKIE_SECURE:true}
+      # Frontend ile backend farklı subdomain'lerdeyse (sevalla.app) cross-site AJAX
+      # için "None" gerekiyor. Aynı parent domain'e geçilirse "Lax" yapılabilir.
+      same-site: ${APP_REFRESH_COOKIE_SAME_SITE:None}
+      # Cookie sadece /auth/* path'ine gönderilir → diğer endpoint'ler asla görmez.
+      path:      ${APP_REFRESH_COOKIE_PATH:/auth}
+      # Boş bırakıldığında host'a bağlı. Parent domain ile paylaşmak için: ".cakirdag.com".
+      domain:    ${APP_REFRESH_COOKIE_DOMAIN:}
 
   cors:
     # Comma-separated list of allowed origins for production frontend(s).

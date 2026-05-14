@@ -12,16 +12,19 @@ interface LoginResponse {
   forcePasswordChange: boolean;
 }
 
-// Middleware'in (server-side) login durumunu anlamasi icin set ettigimiz cookie.
-// Backend henuz HttpOnly refresh cookie set etmedigi icin, frontend bunu kendi
-// domain'inde olusturuyor. Custom domain'e gectigimizde HttpOnly + Domain=.bizboard.com
-// ile backend tarafindan set edilecek; o zaman bu satir kaldirilir.
-function setLoginCookie(token: string, expiresInSeconds: number) {
+/**
+ * Frontend middleware'i için sadece bir session BAYRAĞI set ediyoruz; içinde
+ * token YOK. Asıl auth backend refresh token (HttpOnly, backend domain'inde)
+ * ve in-memory JWT ile yapılıyor. Bayrak XSS okusa bile sıfır token sızıntısı
+ * sağlar, sadece "yakın zamanda login olundu" sinyalidir.
+ */
+function setSessionFlag() {
   if (typeof document === "undefined") return;
-  const maxAge = Math.max(60, expiresInSeconds);
-  // SameSite=Lax: cross-site formdan da yollanir, normal navigation guvenli.
-  // Secure: production HTTPS sart.
-  document.cookie = `rt=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; samesite=lax; secure`;
+  // 30 gün — backend refresh token süresiyle paralel. Frontend bu süre boyunca
+  // korumalı sayfalara redirect-flash olmadan erişebilir. Gerçek auth yine
+  // /auth/refresh ile her sayfa açılışında doğrulanır (ClientProviders bootstrap).
+  const maxAge = 60 * 60 * 24 * 30;
+  document.cookie = `bb_session=1; path=/; max-age=${maxAge}; samesite=lax; secure`;
 }
 
 function LoginForm() {
@@ -48,7 +51,7 @@ function LoginForm() {
         { skipRefresh: true }
       );
       setToken(res.token, res.expiresInSeconds);
-      setLoginCookie(res.token, res.expiresInSeconds);
+      setSessionFlag();
       // İlk girişte parola değişikliği zorunlu ise direkt o ekrana yönlendir.
       if (res.forcePasswordChange) {
         router.push("/dashboard/change-password");
