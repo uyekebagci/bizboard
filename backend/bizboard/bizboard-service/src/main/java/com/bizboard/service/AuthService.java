@@ -25,7 +25,15 @@ public class AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole(), user.getAccessibleBusinesses());
-        return new AuthResponse(token);
+        String token = jwtUtil.generateToken(
+                user.getId(), user.getUsername(), user.getRole(), user.getAccessibleBusinesses());
+
+        return AuthResponse.builder()
+                .token(token)
+                .expiresInSeconds(jwtUtil.getExpirationSeconds())
+                // "İlk girişte parola değiştir" akışı henüz yok; her zaman false.
+                // User entity'ye `force_password_change` kolonu eklenince burası true dönebilir.
+                .forcePasswordChange(false)
+                .build();
     }
 }

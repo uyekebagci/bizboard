@@ -8,15 +8,9 @@ import { getErrorMessage } from "@/lib/errors";
 
 interface LoginResponse {
   token: string;
-  // Backend şu anda sadece `token` doner. Asagidaki alanlar ileride backend
-  // refresh-token akisini gerceklestirince eklenir; yoksa default'larla devam.
-  expires_in?: number;
-  force_password_change?: boolean;
+  expiresInSeconds: number;
+  forcePasswordChange: boolean;
 }
-
-// Default access token suresi (saniye) — backend `expires_in` dondurmezse kullanilir.
-// JWT_EXPIRATION_MS = 604800000 (7 gun) ile uyumlu; daha kisa tutmak istersek burada azalt.
-const DEFAULT_EXPIRES_IN_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 // Middleware'in (server-side) login durumunu anlamasi icin set ettigimiz cookie.
 // Backend henuz HttpOnly refresh cookie set etmedigi icin, frontend bunu kendi
@@ -53,12 +47,10 @@ function LoginForm() {
         { username, password },
         { skipRefresh: true }
       );
-      const expiresIn = res.expires_in ?? DEFAULT_EXPIRES_IN_SECONDS;
-      const forceChange = res.force_password_change ?? false;
-      setToken(res.token, expiresIn);
-      setLoginCookie(res.token, expiresIn);
+      setToken(res.token, res.expiresInSeconds);
+      setLoginCookie(res.token, res.expiresInSeconds);
       // İlk girişte parola değişikliği zorunlu ise direkt o ekrana yönlendir.
-      if (forceChange) {
+      if (res.forcePasswordChange) {
         router.push("/dashboard/change-password");
       } else {
         router.push(redirect);

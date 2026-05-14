@@ -95,8 +95,8 @@ export class ApiError extends Error {
 
 interface RefreshResponse {
   token: string;
-  expires_in: number;
-  force_password_change: boolean;
+  expiresInSeconds: number;
+  forcePasswordChange: boolean;
 }
 
 let inflightRefresh: Promise<RefreshResponse> | null = null;
@@ -117,12 +117,12 @@ export async function refreshAccessToken(): Promise<RefreshResponse> {
           res.status,
           body?.code ?? "AUTH-401",
           body?.message ?? "Oturum suresi doldu",
-          body?.request_id ?? undefined,
+          body?.requestId ?? undefined,
           body?.errors
         );
       }
       const data = (await res.json()) as RefreshResponse;
-      setToken(data.token, data.expires_in);
+      setToken(data.token, data.expiresInSeconds);
       return data;
     } finally {
       inflightRefresh = null;
@@ -237,7 +237,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     const code = body?.code ?? defaultCodeForStatus(res.status);
     const message = body?.message ?? res.statusText ?? "Istek basarisiz";
     const responseReqId =
-      body?.request_id ?? res.headers.get("X-Request-ID") ?? reqId;
+      body?.requestId ?? res.headers.get("X-Request-ID") ?? reqId;
     const fieldErrors =
       body?.errors && typeof body.errors === "object" ? body.errors : undefined;
 
@@ -349,7 +349,7 @@ export const api = {
       const code = body?.code ?? defaultCodeForStatus(res.status);
       const message = body?.message ?? res.statusText ?? "Yukleme basarisiz";
       const responseReqId =
-        body?.request_id ?? res.headers.get("X-Request-ID") ?? reqId;
+        body?.requestId ?? res.headers.get("X-Request-ID") ?? reqId;
       const fieldErrors =
         body?.errors && typeof body.errors === "object" ? body.errors : undefined;
       throw new ApiError(res.status, code, message, responseReqId, fieldErrors);

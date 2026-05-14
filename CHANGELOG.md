@@ -34,6 +34,24 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.0.1] — 2026-05-15
+
+### Changed
+
+#### Backend
+- `AuthResponse` artık `token` yanında `expiresInSeconds` ve `forcePasswordChange` alanlarını da döndürür (Spring Jackson default camelCase).
+- `JwtUtil.getExpirationSeconds()` getter'ı eklendi; AuthService bunu kullanarak gerçek token TTL'sini cliente bildirir.
+
+#### Frontend
+- `LoginResponse` ve `RefreshResponse` interface'leri snake_case'den camelCase'e geçirildi (`expires_in` → `expiresInSeconds`, `force_password_change` → `forcePasswordChange`). Backend ile sözleşme artık simetrik.
+- Geçici "missing field ise default kullan" mantığı kaldırıldı — backend kontratı net olduğu için artık gerekli değil.
+- `ApiError.requestId` okuması da camelCase'e geçti (`body.request_id` → `body.requestId`).
+
+### Removed
+- Login akışındaki geçici default sabit `DEFAULT_EXPIRES_IN_SECONDS`.
+
+---
+
 ## [1.0.0] — 2026-05-15
 
 İlk production sürümü. BizBoard tek-bedenli kurumsal yönetim paneli olarak
@@ -89,5 +107,6 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.1
 [1.0.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.0
