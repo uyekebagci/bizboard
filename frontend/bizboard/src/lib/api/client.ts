@@ -17,19 +17,6 @@ function resolveApiUrl(): string {
 
 export const API_URL = resolveApiUrl();
 
-// ── DIAGNOSTIC (geçici) ──────────────────────────────────────────────────
-// Sevalla deploy sonrası "API URL gerçekten doğru mu" sorusunu hızlı
-// cevaplamak için API_URL'i hem konsola yazarız hem `window` üzerinden
-// erişilebilir yaparız. Production'da rahatsız değil — sadece prod build'de
-// browser tarafında log eder.
-if (typeof window !== "undefined") {
-  /* eslint-disable no-console */
-  console.log("[bizboard] api/client module loaded. API_URL =", API_URL);
-  /* eslint-enable no-console */
-  // @ts-expect-error: debug-only global
-  window.__BIZBOARD_API_URL__ = API_URL;
-}
-
 // ── Token mimarisi ─────────────────────────────────────────────────────────
 //
 // - Access token: 15 dakika TTL, BELLEKTE tutulur (XSS yüzeyi minimum).
@@ -199,11 +186,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(options.headers as Record<string, string>),
     };
-    const fullUrl = `${API_URL}${path}`;
-    /* eslint-disable no-console */
-    console.log(`[bizboard] [${reqId}] → ${options.method ?? "GET"} ${fullUrl}`);
-    /* eslint-enable no-console */
-    return fetch(fullUrl, {
+    return fetch(`${API_URL}${path}`, {
       ...options,
       credentials: "include", // refresh cookie /auth path'inde gönderiliyor
       headers,
@@ -213,15 +196,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   let res: Response;
   try {
     res = await doFetch();
-    /* eslint-disable no-console */
-    console.log(
-      `[bizboard] [${reqId}] ← ${res.status} ${res.statusText} (content-type: ${res.headers.get("content-type")})`
-    );
-    /* eslint-enable no-console */
-  } catch (e) {
-    /* eslint-disable no-console */
-    console.error(`[bizboard] [${reqId}] ✗ network error`, e);
-    /* eslint-enable no-console */
+  } catch {
     throw new ApiError(
       0,
       "NET-0",

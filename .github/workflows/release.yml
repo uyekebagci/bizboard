@@ -1,0 +1,84 @@
+name: Release
+
+# v*.*.* formatındaki tag push'unda otomatik GitHub Release oluşturur.
+# CHANGELOG.md'den ilgili sürümün bölümünü çıkartıp release notes'a koyar.
+#
+# Sevalla deploy tetikleme için (opsiyonel — bkz. docs/RELEASES.md §Tag-Based Deploy):
+#   • Repo Secrets'a SEVALLA_DEPLOY_WEBHOOK ekle (varsa Sevalla'nın verdiği URL)
+#   • Aşağıdaki "Trigger Sevalla deploy" step'ini etkinleştir
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write   # GitHub Release oluşturmak için
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tüm tag'leri ve geçmişi çek
+
+      - name: Extract version from tag
+        id: ver
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG"         >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog section for this version
+        id: changelog
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          # CHANGELOG'da "## [X.Y.Z]" satırından bir sonraki "## " satırına kadar olan blok.
+          awk -v ver="$VERSION" '
+            BEGIN { found = 0 }
+            /^## \[/ {
+              if (found) { exit }
+              if ($0 ~ "^## \\[" ver "\\]") { found = 1; print; next }
+            }
+            found { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "CHANGELOG'da [$VERSION] bölümü bulunamadı — fallback notlar kullanılıyor"
+            printf "## %s\n\nDetay için: CHANGELOG.md\n" "$VERSION" > /tmp/release-notes.md
+          fi
+
+          echo "---- release notes ----"
+          cat /tmp/release-notes.md
+          echo "-----------------------"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: ${{ steps.ver.outputs.tag }}
+          body_path: /tmp/release-notes.md
+          draft: false
+          prerelease: ${{ contains(steps.ver.outputs.version, '-') }}
+          # "-" içeren tag'ler (v1.0.0-rc.1) otomatik prerelease işaretlenir
+
+      # Opsiyonel: Sevalla deploy webhook tetikleme.
+      # Sevalla App → Settings → "Deploy webhook URL" sunarsa secret olarak ekle,
+      # sonra aşağıdaki bloğun yorumunu kaldır.
+      #
+      # - name: Trigger Sevalla deploy (bizboard-api)
+      #   if: env.SEVALLA_API_WEBHOOK != ''
+      #   env:
+      #     SEVALLA_API_WEBHOOK: ${{ secrets.SEVALLA_API_WEBHOOK }}
+      #   run: curl -fsS -X POST "$SEVALLA_API_WEBHOOK"
+      #
+      # - name: Trigger Sevalla deploy (bizboard-web)
+      #   if: env.SEVALLA_WEB_WEBHOOK != ''
+      #   env:
+      #     SEVALLA_WEB_WEBHOOK: ${{ secrets.SEVALLA_WEB_WEBHOOK }}
+      #   run: curl -fsS -X POST "$SEVALLA_WEB_WEBHOOK"
