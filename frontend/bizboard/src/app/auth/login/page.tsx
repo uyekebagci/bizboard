@@ -8,8 +8,26 @@ import { getErrorMessage } from "@/lib/errors";
 
 interface LoginResponse {
   token: string;
-  expires_in: number;
-  force_password_change: boolean;
+  // Backend şu anda sadece `token` doner. Asagidaki alanlar ileride backend
+  // refresh-token akisini gerceklestirince eklenir; yoksa default'larla devam.
+  expires_in?: number;
+  force_password_change?: boolean;
+}
+
+// Default access token suresi (saniye) — backend `expires_in` dondurmezse kullanilir.
+// JWT_EXPIRATION_MS = 604800000 (7 gun) ile uyumlu; daha kisa tutmak istersek burada azalt.
+const DEFAULT_EXPIRES_IN_SECONDS = 7 * 24 * 60 * 60; // 7 days
+
+// Middleware'in (server-side) login durumunu anlamasi icin set ettigimiz cookie.
+// Backend henuz HttpOnly refresh cookie set etmedigi icin, frontend bunu kendi
+// domain'inde olusturuyor. Custom domain'e gectigimizde HttpOnly + Domain=.bizboard.com
+// ile backend tarafindan set edilecek; o zaman bu satir kaldirilir.
+function setLoginCookie(token: string, expiresInSeconds: number) {
+  if (typeof document === "undefined") return;
+  const maxAge = Math.max(60, expiresInSeconds);
+  // SameSite=Lax: cross-site formdan da yollanir, normal navigation guvenli.
+  // Secure: production HTTPS sart.
+  document.cookie = `rt=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; samesite=lax; secure`;
 }
 
 function LoginForm() {
@@ -38,17 +56,20 @@ function LoginForm() {
         { username, password },
         { skipRefresh: true }
       );
+      const expiresIn = res.expires_in ?? DEFAULT_EXPIRES_IN_SECONDS;
+      const forceChange = res.force_password_change ?? false;
       /* eslint-disable no-console */
       console.log("[bizboard][login] api.post returned:", {
         hasToken: !!res?.token,
         tokenLen: res?.token?.length ?? 0,
-        expiresIn: res?.expires_in,
-        forcePasswordChange: res?.force_password_change,
+        expiresIn,
+        forceChange,
       });
       /* eslint-enable no-console */
-      setToken(res.token, res.expires_in);
+      setToken(res.token, expiresIn);
+      setLoginCookie(res.token, expiresIn);
       // İlk girişte parola değişikliği zorunlu ise direkt o ekrana yönlendir.
-      if (res.force_password_change) {
+      if (forceChange) {
         /* eslint-disable no-console */
         console.log("[bizboard][login] force_password_change → router.push(/dashboard/change-password)");
         /* eslint-enable no-console */
