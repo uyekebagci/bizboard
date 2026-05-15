@@ -4,6 +4,7 @@ import com.bizboard.common.dto.AuthRequest;
 import com.bizboard.common.dto.AuthResponse;
 import com.bizboard.service.AuthService;
 import com.bizboard.service.AuthService.LoginResult;
+import com.bizboard.service.LoginRateLimiter;
 import com.bizboard.service.RefreshTokenService.InvalidRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -90,6 +93,21 @@ public class AuthController {
                     .header(HttpHeaders.SET_COOKIE, cleared.toString())
                     .build();
         }
+    }
+
+    /**
+     * Rate-limit kilidi devreye girince 429 dön. Body'de yeniden deneme süresi
+     * (saniye) hem JSON'da hem {@code Retry-After} header'ında var.
+     */
+    @ExceptionHandler(LoginRateLimiter.TooManyAttemptsException.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyAttempts(LoginRateLimiter.TooManyAttemptsException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(Map.of(
+                        "code", "AUTH-LOCKED",
+                        "message", "Cok fazla basarisiz deneme. Lutfen " + ex.getRetryAfterSeconds() + " saniye sonra tekrar deneyin.",
+                        "retryAfterSeconds", ex.getRetryAfterSeconds()
+                ));
     }
 
     /** Logout: refresh token'ı DB'de revoke + cookie temizle. */
