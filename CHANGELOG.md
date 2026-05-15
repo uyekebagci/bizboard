@@ -34,6 +34,32 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.0] — 2026-05-15
+
+Audit log genişletmesi: artık tüm güvenlik-kritik aksiyonlar `audit_logs` tablosuna düşer ve admin paneli üzerinden filtreli olarak okunur.
+
+### Added
+
+#### Backend
+- **Genel `AuditLogService.recordEntityAction(...)` API'si.** Servisler bir aksiyon kaydetmek için artık bu tek metodu çağırır; request-scoped `HttpServletRequest` proxy'si üzerinden IP/User-Agent otomatik yakalanır, controller'ların request'i thread etmesi gerekmez. `recordAuthEvent` ayrıca login/logout için.
+- **`AuditAction` sabitleri** kapsamlı listeyle: `USER_LOGIN_SUCCESS`, `USER_LOGIN_FAILED`, `USER_LOGOUT`, `USER_CREATE/UPDATE/DELETE/ROLE_CHANGE`, `BUSINESS_CREATE/UPDATE/DELETE/MODULE_*`, `TRANSACTION_CREATE/UPDATE/DELETE`, `EMPLOYEE_*`, `DEBT_CREATE/DELETE/SETTLED`.
+- **Audit hook'ları** entegre edilen servisler:
+  - `AuthService` → `USER_LOGIN_SUCCESS`, `USER_LOGIN_FAILED` (bad credentials için username + reason), `USER_LOGOUT`
+  - `TransactionService` → `CREATE`, `UPDATE`, `DELETE` (delete'te silme sebebi metadata'da)
+  - `BusinessService` → `BUSINESS_CREATE`
+  - `DebtService` → `DEBT_CREATE`, `DEBT_DELETE`, `DEBT_SETTLED`
+- **`AuditLogRepository.search(...)`** — filtreli pagination query: user / action / resource_type / from / to opsiyonel.
+- **`AuditLogQueryService`** — read-only DTO mapping katmanı; metadata'daki `businessId` çıkartılıp DTO seviyesinde sunulur (frontend filter için).
+- **`GET /admin/audit-logs`** — admin viewer endpoint. Parametreler frontend `admin/audit/page.tsx`'in beklediği snake_case formatta: `actor_id`, `action`, `entity_type`, `from`, `to`, `page` (default 0), `size` (default 50, max 200). `SecurityConfig`'deki `/admin/**` kuralı yalnız ADMIN'e izin verir.
+
+### Notes
+
+- Bu sürümde audit hook'ları sadece **CREATE / DELETE / SETTLE** aksiyonlarına eklendi; UPDATE'ler ve EMPLOYEE delete'i (servis imzasında userId yok) sonraki patch sürümünde tamamlanacak.
+- Audit kayıtları best-effort yazılır; herhangi bir hata business operation'u rollback ETMEZ (`REQUIRES_NEW` propagation). Bu uyumluluk modeli `AuditLogService` doc'unda yazılı.
+- İleri seviye logging için (correlation IDs, log shipping, real-time stream, alerting, tamper-proof zincir, OpenTelemetry, KVKK anonymization) Çatı projesi v2 iş paketinde 10 yeni TODO planlandı.
+
+---
+
 ## [1.2.0] — 2026-05-15
 
 Auth tamamlama paketi: refresh token yaşam döngüsü tamamlandı, kullanıcı yönetimi sıkılaştı, in-app notification akışı backend tarafıyla canlı.
@@ -220,7 +246,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.0
 [1.2.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.2.0
 [1.1.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.1.0
 [1.0.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.3

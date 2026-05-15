@@ -1,5 +1,6 @@
 package com.bizboard.service;
 
+import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.CreateDebtRequest;
 import com.bizboard.common.dto.DebtDto;
 import com.bizboard.common.dto.DebtSummaryDto;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -29,6 +31,7 @@ public class DebtService {
     private final DebtRepository debtRepository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
     // ─── İşletmeye ait borçları getir ──────────────────────────
 
@@ -124,6 +127,19 @@ public class DebtService {
                 direction, request.getCounterparty(), request.getAmount(),
                 request.getInstrumentType(), business.getName());
 
+        auditLogService.recordEntityAction(
+                AuditAction.DEBT_CREATE,
+                user.getId(), user.getUsername(),
+                "DEBT", debt.getId(),
+                business.getName() + " — " + direction.name() + " " + request.getAmount() + " (" + request.getCounterparty() + ")",
+                Map.of(
+                        "businessId", businessId,
+                        "amount", request.getAmount(),
+                        "direction", direction.name(),
+                        "currency", debt.getCurrency(),
+                        "counterparty", request.getCounterparty()
+                ));
+
         return toDto(debt);
     }
 
@@ -142,10 +158,29 @@ public class DebtService {
             throw new SecurityException("Bu borcu sadece admin silebilir");
         }
 
+        UUID businessId = debt.getBusiness().getId();
+        String businessName = debt.getBusiness().getName();
+        String counterparty = debt.getCounterparty();
+        BigDecimal amount = debt.getAmount();
+        String currency = debt.getCurrency();
+        String direction = debt.getDirection().name();
+
         debtRepository.delete(debt);
         log.info("Borc silindi: {} - {} {} TL silen={}",
-                debt.getDirection(), debt.getCounterparty(),
-                debt.getAmount(), user.getFullName());
+                direction, counterparty, amount, user.getFullName());
+
+        auditLogService.recordEntityAction(
+                AuditAction.DEBT_DELETE,
+                user.getId(), user.getUsername(),
+                "DEBT", debtId,
+                businessName + " — " + direction + " " + amount + " " + currency + " (" + counterparty + ") silindi",
+                Map.of(
+                        "businessId", businessId,
+                        "amount", amount,
+                        "direction", direction,
+                        "currency", currency,
+                        "counterparty", counterparty
+                ));
     }
 
     // ─── Tahsil et / Öde ──────────────────────────────────────
@@ -155,12 +190,28 @@ public class DebtService {
         Debt debt = debtRepository.findById(debtId)
                 .orElseThrow(() -> new IllegalArgumentException("Borc bulunamadi"));
 
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         debt.setSettled(true);
         debt.setSettledAt(LocalDateTime.now());
         debt = debtRepository.save(debt);
 
         log.info("Borc kapatildi: {} - {} {} TL",
                 debt.getDirection(), debt.getCounterparty(), debt.getAmount());
+
+        auditLogService.recordEntityAction(
+                AuditAction.DEBT_SETTLED,
+                actor.getId(), actor.getUsername(),
+                "DEBT", debt.getId(),
+                debt.getBusiness().getName() + " — " + debt.getDirection().name() + " " + debt.getAmount() + " " + debt.getCurrency() + " (" + debt.getCounterparty() + ") kapatildi",
+                Map.of(
+                        "businessId", debt.getBusiness().getId(),
+                        "amount", debt.getAmount(),
+                        "direction", debt.getDirection().name(),
+                        "currency", debt.getCurrency(),
+                        "counterparty", debt.getCounterparty()
+                ));
 
         return toDto(debt);
     }

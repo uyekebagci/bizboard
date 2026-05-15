@@ -1,5 +1,6 @@
 package com.bizboard.service;
 
+import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.BusinessDto;
 import com.bizboard.common.dto.BusinessTypeDto;
 import com.bizboard.common.dto.CategoryDto;
@@ -28,6 +29,7 @@ public class BusinessService {
     private final BusinessTypeRepository businessTypeRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public List<BusinessDto> getBusinessesForUser(UUID userId) {
@@ -174,6 +176,18 @@ public class BusinessService {
                 categoryRepository.save(category);
             }
         }
+
+        auditLogService.recordEntityAction(
+                AuditAction.BUSINESS_CREATE,
+                owner.getId(), owner.getUsername(),
+                "BUSINESS", business.getId(),
+                "Isletme olusturuldu: " + business.getName() + " (" + businessType.getLabel() + ")",
+                Map.of(
+                        "businessTypeId", businessType.getId(),
+                        "businessTypeLabel", businessType.getLabel(),
+                        "modules", moduleNames != null ? moduleNames : List.of(),
+                        "currency", business.getCurrency()
+                ));
 
         return DtoMapper.toBusinessDto(business);
     }
