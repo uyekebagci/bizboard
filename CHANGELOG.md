@@ -34,6 +34,23 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.4.2] — 2026-05-15
+
+**Acil hotfix — v1.4.0 schema migration build hatası.** v1.4.0'da `User.mustChangePassword` field'ında `@Column(columnDefinition = "boolean default false")` + `@ColumnDefault("false")` birlikte tanımlanmıştı. Hibernate ikisini de SQL'e koyuyor (`add column must_change_password boolean default false default false not null`) → Postgres "multiple default values specified for column" diye reddediyor → kolon hiç eklenmedi → sonraki tüm SELECT'ler `column must_change_password does not exist` ile patladı, login akışı dahil.
+
+Önceki teşhis (v1.4.1'de `is_active` NULL backfill) yanlıştı: backfill `no NULL rows` döndü, `is_active` zaten doluydu. Asıl hata schema migration'da.
+
+### Fixed
+
+- **`User.mustChangePassword`**: `@Column`'dan `columnDefinition = "boolean default false"` kaldırıldı. `@ColumnDefault("false")` + `nullable = false` yeterli — Hibernate temiz SQL üretir: `add column must_change_password boolean default false not null`.
+
+### Notes
+
+- v1.4.1'deki `UserActiveBackfill` ApplicationRunner kalıyor; idempotent, zarar vermez, gelecekteki NULL temizliklerinde yine işe yarayabilir.
+- Bu sürüm deploy olduktan sonra Hibernate ddl-auto=update kolonu nihayet ekleyecek; mevcut satırlar için `must_change_password=false` default'u Postgres tarafından otomatik backfill. Sonraki login'ler tekrar 200 dönmeli.
+
+---
+
 ## [1.4.1] — 2026-05-15
 
 **Acil hotfix — login sonrası 403 regresyonu.** v1.3.4'te `UserPrincipal.isEnabled()` gerçek `user.isActive()` döndürmeye başladı (Y1 fix). Eski sürümlerden kalma `users.is_active = NULL` değerleri Java primitive `boolean` map'inde `false` olarak okunduğu için bu kullanıcılar v1.4.0 deploy'undan sonra giriş yapsa bile her authenticated request `403` aldı.
@@ -492,7 +509,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.2
 [1.4.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.1
 [1.4.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.0
 [1.3.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.8
