@@ -34,6 +34,28 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.5] — 2026-05-15
+
+**Güvenlik hotfix — Employee modülü IDOR kapatma.** v1.3.x serisinin K1 (kritik) açığı: önceki sürümlerde personel endpoint'leri yetkilendirme kontrolü yapmıyordu; bir kullanıcı erişimi olmayan işletmenin personel listesini (TC kimlik no, telefon, maaş, SGK) UUID üzerinden okuyabiliyor + update/delete edebiliyordu.
+
+### Security
+
+- **`EmployeeService` tüm metodları artık `BusinessAccessGuard` kontrolü yapıyor.** Etkilenen metodlar: `getEmployeesForBusiness`, `getEmployee`, `getEmployeeSummary`, `createEmployee`, `updateEmployee`, `toggleEmployeeActive`, `deleteEmployee`. Her biri ya path'teki `businessId`'yi ya da bulunan `employee.business.id`'sini guard'a doğrulatır; erişim yoksa `SecurityException("Access denied")` ile 403 döner.
+- **`EmployeeController` tüm endpoint'lerinde `@AuthenticationPrincipal UserPrincipal` zorunlu.** `GET /businesses/{businessId}/employees`, `/summary`, `GET /employees/{id}` önceden principal almıyordu — artık alıyor + service'e iletiyor. Bu üç endpoint **public-shaped** görünüyordu çünkü Spring Security tarafında `authenticated()` zorlamasını geçince hiçbir resource-level check yoktu; service refactor + controller principal'i bu boşluğu kapattı.
+
+### Changed
+
+#### Backend
+- `EmployeeService` mutation+read metodlarının imzaları actor `UUID actorUserId` alacak şekilde genişledi (zaten mutation tarafında v1.3.1'de eklenmişti; read tarafına da yayıldı).
+- Davranışta dış etki yok: erişim hakkı olan kullanıcı için her şey aynı çalışır. Frontend'de değişiklik gerekmez (controller endpoint shape'i aynı; Authorization header zaten gönderiliyor).
+
+### Notes
+
+- Bu sürümde sadece `EmployeeService` ele alındı. Aynı tipte sorun **Debt, Vehicle, FixedCost, Inventory, BusinessNote** servislerinde de var; v1.3.6–v1.3.8'de tek tek kapatılacak. File operations için v1.3.7 ayrı planlandı çünkü ownership modeli farklı (uploader-based + business-link). Login rate limit ve force-password-change v1.4.0'a bırakıldı.
+- KVKK perspektifinden: bu açık üretimde çalışırken aktif olduğu süre boyunca personel verileri (TC kimlik no dahil) ihlal kapsamına girer. Audit log retention 90 gün olduğundan tarihsel erişim denetimi 1.3.0+ için yapılabilir.
+
+---
+
 ## [1.3.4] — 2026-05-15
 
 **Güvenlik hotfix — foundation katmanı.** Auth + yetkilendirme denetiminde tespit edilen kritik IDOR açıklarını kapatmak için başlatılan **v1.3.x güvenlik patch serisinin ilk sürümü.** Bu sürüm tek başına bir IDOR'u kapatmaz; sonraki patch'lerin (v1.3.5+) kullanacağı ortak guard mekanizmasını + iki bağımsız security fix'i içerir.
@@ -342,7 +364,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.4...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.5...HEAD
+[1.3.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.5
 [1.3.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.4
 [1.3.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.3
 [1.3.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.2

@@ -24,14 +24,16 @@ public class EmployeeController {
 
     @GetMapping("/businesses/{businessId}/employees")
     public ResponseEntity<List<EmployeeDto>> getEmployees(
-            @PathVariable UUID businessId) {
-        return ResponseEntity.ok(employeeService.getEmployeesForBusiness(businessId));
+            @PathVariable UUID businessId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(employeeService.getEmployeesForBusiness(businessId, principal.getId()));
     }
 
     @GetMapping("/businesses/{businessId}/employees/summary")
     public ResponseEntity<EmployeeSummaryDto> getEmployeeSummary(
-            @PathVariable UUID businessId) {
-        return ResponseEntity.ok(employeeService.getEmployeeSummary(businessId));
+            @PathVariable UUID businessId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(employeeService.getEmployeeSummary(businessId, principal.getId()));
     }
 
     @PostMapping("/businesses/{businessId}/employees")
@@ -47,8 +49,9 @@ public class EmployeeController {
 
     @GetMapping("/employees/{employeeId}")
     public ResponseEntity<EmployeeDto> getEmployee(
-            @PathVariable UUID employeeId) {
-        return ResponseEntity.ok(employeeService.getEmployee(employeeId));
+            @PathVariable UUID employeeId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(employeeService.getEmployee(employeeId, principal.getId()));
     }
 
     @PutMapping("/employees/{employeeId}")
