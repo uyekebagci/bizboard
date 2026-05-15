@@ -34,6 +34,40 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.0] — 2026-05-16
+
+**Firmalar & Cari Hesap iş paketinin ilk dilimi — backend domain.** İki yeni varlık tanıtılıyor: **MyCompany** (tüzel kişi — "Benim Firmalarım") ve **Counterpart** (karşı firma — "Karşı Firmalar"). v1.5.0 yalnız backend CRUD'u + entity şemasını + bootstrap'i içerir; cari hesap motoru v1.5.1, frontend UI v1.5.2, mevcut borç string'lerini counterpart'a migrate etmek v1.5.3, recurring tx engine v1.6.0 ile gelecek.
+
+### Added
+
+#### Backend
+- **`MyCompany` entity** (`my_companies` tablosu) — `legal_name`, `tax_id` (VKN/TCKN), `tax_office`, `trade_registry_no`, `company_type` (AS/LTD/SAHIS/KOOP/DERNEK/OTHER enum), `activity_code` (NACE), `incorporated_at`, `mersis_no`, `address`, `contact_{name,phone,email}`, `is_default`. Tüzel kişi paydaş yönetimi için.
+- **`Counterpart` entity** (`counterparts` tablosu) — `name`, `tax_id` (opsiyonel), `tax_office`, `role` (CUSTOMER/SUPPLIER/BOTH/OTHER enum), `contact_*`, `address`, `current_balance` (cached, v1.5.1'de compute), `payment_terms_days`, `notes`. Müşteri/tedarikçi tabanlı cari hesap akışının çekirdek varlığı.
+- **`TaxIdValidator` utility** — VKN (10 hane, modüler checksum) ve TCKN (11 hane, klasik T.C. algoritması) format + checksum kontrolü. Service katmanında `MyCompany` ve `Counterpart` create/update'lerinde zorunlu. Frontend'de aynı algoritma olacak ama backend son söz — UI bypass edilse de geçersiz tax id 400 ile reddedilir.
+- **`Business.myCompany` FK** — `businesses.my_company_id` nullable, bir işletme tek bir tüzel kişiye bağlanır.
+- **`Debt.counterpartRef` FK** — `debts.counterpart_id` nullable. Eski `counterparty` string kolonu geriye uyum için kalır (free-text yedek); yeni borçlar counterpart entity'sine bağlanır. Migration utility v1.5.3'te string → counterpart taşıyacak.
+- **Endpoints:**
+  - `GET/POST /admin/my-companies`, `GET/PUT/DELETE /admin/my-companies/{id}` — admin-only (SecurityConfig `/admin/**`).
+  - `GET/POST /counterparts`, `GET/PUT/DELETE /counterparts/{id}`, `GET /counterparts?role=CUSTOMER|SUPPLIER|...` — tüm authenticated kullanıcılar erişir.
+- **`DefaultMyCompanyBootstrap` startup runner** — `ApplicationRunner` idempotent: (1) hiç `MyCompany` yoksa "Default Firmam" oluşturur (`is_default=true`), (2) `businesses.my_company_id IS NULL` satırları default firmaya bağlar. Mevcut işletmeler kullanıcı yeniden atayana kadar default'a takılı kalır.
+- **Audit hooks** — `MY_COMPANY_CREATE/UPDATE/DELETE`, `COUNTERPART_CREATE/UPDATE/DELETE`. Update'lerde alan diff'i `changes` metadata'sında (PII alanlar — tax_id, contact, address — diff'te değer tutmaz, sadece `"changed"` bayrağı).
+
+### Changed
+
+#### Backend
+- `Debt` entity'sinde `counterparty` string kolonu zorunlu kalmaya devam ediyor; yeni borç akışında counterpart_id var ise onun `name`'i bu alana yansıtılacak. Geriye uyumluluk için iki alanı paralel tutuyoruz; v1.5.3 migration utility'sinden sonra string'i deprecate'leme planlanır.
+- Hibernate `ddl-auto=update` ile prod'da iki yeni tablo + iki yeni kolon ALTER TABLE üretilir. Tüm yeni boolean/numeric kolonlarda `@ColumnDefault` set edildi — v1.4.0/v1.4.2'de yaşanan "multiple default values" tipi hataların tekrar etmemesi için tek `default` kaynağı kullanıldı.
+
+### Notes
+
+- Bu sürüm `Counterpart.currentBalance`'ı default 0 olarak okur — gerçek bakiye hesabı v1.5.1'de gelecek (cari motor: alacak - borç, tx history'den).
+- `MyCompany` silmek — `is_default=true` kayıt silinemez; çağıran `409 Conflict` benzeri yerine 400 alır.
+- `Counterpart` silmek — şu an FK constraint kontrolü Postgres tarafında: bağlı borç varsa silme reddedilir (500). v1.5.x'te UX iyileştirilebilir ("şu kadar borç bağlı, devam etmek için onları kaldır").
+- Hassas alanlar (tax_id, contact_email/phone, mersis_no, trade_registry_no, address) audit log diff'inde değer olarak değil `"changed"` bayrağı olarak işlenir — KVKK perspektifi.
+- Roadmap WP başlığı planlamada "v1.6.0 — Firmalar" idi; gerçek release sırası v1.5.x oldu (güvenlik patch serisi 1.3.x–1.4.x'i kapladı). Bankalar paketi sıraya yeniden alınacak.
+
+---
+
 ## [1.4.2] — 2026-05-15
 
 **Acil hotfix — v1.4.0 schema migration build hatası.** v1.4.0'da `User.mustChangePassword` field'ında `@Column(columnDefinition = "boolean default false")` + `@ColumnDefault("false")` birlikte tanımlanmıştı. Hibernate ikisini de SQL'e koyuyor (`add column must_change_password boolean default false default false not null`) → Postgres "multiple default values specified for column" diye reddediyor → kolon hiç eklenmedi → sonraki tüm SELECT'ler `column must_change_password does not exist` ile patladı, login akışı dahil.
@@ -509,7 +543,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.0
 [1.4.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.2
 [1.4.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.1
 [1.4.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.0

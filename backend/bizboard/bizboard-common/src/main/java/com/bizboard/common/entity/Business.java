@@ -64,6 +64,14 @@ public class Business {
     @Builder.Default
     private List<BusinessModule> modules = new ArrayList<>();
 
+    /**
+     * v1.5.0: işletme bağlı olduğu tüzel kişi ("Benim Firmam").
+     * Nullable — eski kayıtlar bootstrap runner ile "Default Firmam"a bağlanır.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "my_company_id")
+    private MyCompany myCompany;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
