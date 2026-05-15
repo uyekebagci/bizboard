@@ -137,7 +137,7 @@ public class BusinessController {
         if (!principal.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(businessService.addModule(id, module));
+        return ResponseEntity.ok(businessService.addModule(id, module, principal.getId()));
     }
 
     @DeleteMapping("/{id}/modules/{module}")
@@ -148,6 +148,6 @@ public class BusinessController {
         if (!principal.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(businessService.removeModule(id, module));
+        return ResponseEntity.ok(businessService.removeModule(id, module, principal.getId()));
     }
 }

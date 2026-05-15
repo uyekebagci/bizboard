@@ -210,7 +210,7 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessDto addModule(UUID businessId, String moduleName) {
+    public BusinessDto addModule(UUID businessId, String moduleName, UUID actorUserId) {
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Business not found"));
 
@@ -218,6 +218,7 @@ public class BusinessService {
 
         // Zaten varsa enable et
         var existing = businessModuleRepository.findByBusinessIdAndModule(businessId, moduleType);
+        boolean wasEnabled = existing.map(BusinessModule::isEnabled).orElse(false);
         if (existing.isPresent()) {
             existing.get().setEnabled(true);
             businessModuleRepository.save(existing.get());
@@ -231,15 +232,29 @@ public class BusinessService {
             businessRepository.save(business);
         }
 
+        if (!wasEnabled) {
+            User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+            auditLogService.recordEntityAction(
+                    AuditAction.BUSINESS_MODULE_ADD,
+                    actorUserId, actor != null ? actor.getUsername() : null,
+                    "BUSINESS", businessId,
+                    business.getName() + " — modul eklendi: " + moduleType.name(),
+                    Map.of(
+                            "businessId", businessId,
+                            "module", moduleType.name()
+                    ));
+        }
+
         // Güncel hali döndür
         return DtoMapper.toBusinessDto(businessRepository.findById(businessId).orElseThrow());
     }
 
     @Transactional
-    public BusinessDto removeModule(UUID businessId, String moduleName) {
+    public BusinessDto removeModule(UUID businessId, String moduleName, UUID actorUserId) {
         ModuleType moduleType = ModuleType.valueOf(moduleName.toUpperCase(java.util.Locale.ENGLISH));
 
         var existing = businessModuleRepository.findByBusinessIdAndModule(businessId, moduleType);
+        boolean wasEnabled = existing.map(BusinessModule::isEnabled).orElse(false);
         if (existing.isPresent()) {
             existing.get().setEnabled(false);
             businessModuleRepository.save(existing.get());
@@ -247,6 +262,20 @@ public class BusinessService {
 
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Business not found"));
+
+        if (wasEnabled) {
+            User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+            auditLogService.recordEntityAction(
+                    AuditAction.BUSINESS_MODULE_REMOVE,
+                    actorUserId, actor != null ? actor.getUsername() : null,
+                    "BUSINESS", businessId,
+                    business.getName() + " — modul kaldirildi: " + moduleType.name(),
+                    Map.of(
+                            "businessId", businessId,
+                            "module", moduleType.name()
+                    ));
+        }
+
         return DtoMapper.toBusinessDto(business);
     }
 }

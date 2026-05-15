@@ -37,9 +37,10 @@ public class EmployeeController {
     @PostMapping("/businesses/{businessId}/employees")
     public ResponseEntity<EmployeeDto> createEmployee(
             @PathVariable UUID businessId,
-            @RequestBody CreateEmployeeRequest request) {
+            @RequestBody CreateEmployeeRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(employeeService.createEmployee(businessId, request));
+                .body(employeeService.createEmployee(businessId, request, principal.getId()));
     }
 
     // ─── Tekil personel işlemleri ─────────────────────────────
@@ -53,20 +54,23 @@ public class EmployeeController {
     @PutMapping("/employees/{employeeId}")
     public ResponseEntity<EmployeeDto> updateEmployee(
             @PathVariable UUID employeeId,
-            @RequestBody CreateEmployeeRequest request) {
-        return ResponseEntity.ok(employeeService.updateEmployee(employeeId, request));
+            @RequestBody CreateEmployeeRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(employeeService.updateEmployee(employeeId, request, principal.getId()));
     }
 
     @PatchMapping("/employees/{employeeId}/toggle-active")
     public ResponseEntity<EmployeeDto> toggleActive(
-            @PathVariable UUID employeeId) {
-        return ResponseEntity.ok(employeeService.toggleEmployeeActive(employeeId));
+            @PathVariable UUID employeeId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(employeeService.toggleEmployeeActive(employeeId, principal.getId()));
     }
 
     @DeleteMapping("/employees/{employeeId}")
     public ResponseEntity<Void> deleteEmployee(
-            @PathVariable UUID employeeId) {
-        employeeService.deleteEmployee(employeeId);
+            @PathVariable UUID employeeId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        employeeService.deleteEmployee(employeeId, principal.getId());
         return ResponseEntity.noContent().build();
     }
 }

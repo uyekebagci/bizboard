@@ -172,45 +172,73 @@ public class TransactionService {
             throw new SecurityException("Access denied");
         }
 
+        // ── Eski değerleri yakala (diff için) ───────────────────────────
+        Map<String, Object> changes = new HashMap<>();
+
         if (request.getDirection() != null) {
-            transaction.setDirection(TransactionDirection.valueOf(
-                    request.getDirection().toUpperCase(java.util.Locale.ENGLISH)));
+            TransactionDirection newDir = TransactionDirection.valueOf(
+                    request.getDirection().toUpperCase(java.util.Locale.ENGLISH));
+            if (transaction.getDirection() != newDir) {
+                changes.put("direction", Map.of("from", transaction.getDirection().name(), "to", newDir.name()));
+                transaction.setDirection(newDir);
+            }
         }
-        if (request.getAmount() != null) {
+        if (request.getAmount() != null && !request.getAmount().equals(transaction.getAmount())) {
+            changes.put("amount", Map.of("from", transaction.getAmount(), "to", request.getAmount()));
             transaction.setAmount(request.getAmount());
         }
-        if (request.getCurrency() != null) {
+        if (request.getCurrency() != null && !request.getCurrency().equals(transaction.getCurrency())) {
+            changes.put("currency", Map.of("from", transaction.getCurrency(), "to", request.getCurrency()));
             transaction.setCurrency(request.getCurrency());
         }
-        if (request.getDescription() != null) {
+        if (request.getDescription() != null && !java.util.Objects.equals(request.getDescription(), transaction.getDescription())) {
+            changes.put("description", Map.of(
+                    "from", transaction.getDescription() != null ? transaction.getDescription() : "",
+                    "to", request.getDescription()));
             transaction.setDescription(request.getDescription());
         }
-        if (request.getDate() != null) {
+        if (request.getDate() != null && !request.getDate().equals(transaction.getDate())) {
+            changes.put("date", Map.of("from", transaction.getDate().toString(), "to", request.getDate().toString()));
             transaction.setDate(request.getDate());
         }
         if (request.getCategoryId() != null) {
-            Category category = categoryRepository.findById(request.getCategoryId()).orElse(null);
-            transaction.setCategory(category);
+            UUID oldCategoryId = transaction.getCategory() != null ? transaction.getCategory().getId() : null;
+            if (!java.util.Objects.equals(oldCategoryId, request.getCategoryId())) {
+                Category category = categoryRepository.findById(request.getCategoryId()).orElse(null);
+                changes.put("categoryId", Map.of(
+                        "from", oldCategoryId != null ? oldCategoryId.toString() : "null",
+                        "to", request.getCategoryId().toString()));
+                transaction.setCategory(category);
+            }
         }
-        if (request.getTags() != null) {
+        if (request.getTags() != null && !request.getTags().equals(transaction.getTags())) {
+            changes.put("tags", Map.of(
+                    "from", transaction.getTags() != null ? transaction.getTags() : List.of(),
+                    "to", request.getTags()));
             transaction.setTags(request.getTags());
         }
         if (request.getMetadata() != null) {
+            // Metadata diff'i taşımıyoruz (JSONB serbest yapı); sadece güncellendi bayrağı.
+            changes.put("metadataUpdated", true);
             transaction.setMetadata(request.getMetadata());
         }
 
         transaction = transactionRepository.save(transaction);
 
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("businessId", transaction.getBusiness().getId());
+        meta.put("amount", transaction.getAmount());
+        meta.put("direction", transaction.getDirection().name());
+        meta.put("changes", changes);
+        meta.put("fieldsChanged", changes.size());
+
         auditLogService.recordEntityAction(
                 AuditAction.TRANSACTION_UPDATE,
                 user.getId(), user.getUsername(),
                 "TRANSACTION", transaction.getId(),
-                transaction.getBusiness().getName() + " — islem guncellendi: " + transaction.getAmount() + " " + transaction.getCurrency(),
-                Map.of(
-                        "businessId", transaction.getBusiness().getId(),
-                        "amount", transaction.getAmount(),
-                        "direction", transaction.getDirection().name()
-                ));
+                transaction.getBusiness().getName() + " — islem guncellendi (" + changes.size() + " alan): "
+                        + transaction.getAmount() + " " + transaction.getCurrency(),
+                meta);
 
         TransactionDto dto = DtoMapper.toTransactionDto(transaction);
         dto.setBusinessName(transaction.getBusiness().getName());
