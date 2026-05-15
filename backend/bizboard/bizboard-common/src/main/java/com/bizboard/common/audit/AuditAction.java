@@ -12,4 +12,10 @@ public final class AuditAction {
     public static final String USER_LOGIN_SUCCESS = "USER_LOGIN_SUCCESS";
     public static final String USER_LOGIN_FAILED  = "USER_LOGIN_FAILED";
     public static final String USER_LOGOUT        = "USER_LOGOUT";
+
+    /** Şifre değiştirme — başarılı operasyon. */
+    public static final String PASSWORD_CHANGED   = "PASSWORD_CHANGED";
+
+    /** Revoke edilmiş refresh token tekrar kullanılmaya çalışıldı (potansiyel hırsızlık). */
+    public static final String REFRESH_TOKEN_THEFT_DETECTED = "REFRESH_TOKEN_THEFT_DETECTED";
 }

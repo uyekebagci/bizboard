@@ -40,6 +40,24 @@ public class AuditLogService {
         }
     }
 
+    /** Convenience: password change action. */
+    public void recordPasswordChange(UUID userId, String userName,
+                                     int revokedSessions,
+                                     HttpServletRequest request) {
+        AuditLog entry = AuditLog.builder()
+                .userId(userId)
+                .userName(userName)
+                .action(com.bizboard.common.audit.AuditAction.PASSWORD_CHANGED)
+                .resourceType("USER")
+                .resourceId(userId)
+                .ipAddress(clientIp(request))
+                .userAgent(truncate(request != null ? request.getHeader("User-Agent") : null, 512))
+                .detail("Password changed; all active sessions revoked.")
+                .metadata(Map.of("revokedSessions", revokedSessions))
+                .build();
+        record(entry);
+    }
+
     /** Convenience builder for the common case of a file action. */
     public void recordFileAction(String action,
                                  UUID userId, String userName,

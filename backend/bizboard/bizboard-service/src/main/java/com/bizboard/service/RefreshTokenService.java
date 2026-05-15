@@ -1,5 +1,7 @@
 package com.bizboard.service;
 
+import com.bizboard.common.audit.AuditAction;
+import com.bizboard.common.entity.AuditLog;
 import com.bizboard.common.entity.RefreshToken;
 import com.bizboard.repository.RefreshTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -37,6 +41,7 @@ import java.util.UUID;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository repository;
+    private final AuditLogService auditLogService;
 
     @Value("${app.refresh.duration-days:30}")
     private long durationDays;
@@ -64,10 +69,17 @@ public class RefreshTokenService {
     /**
      * Sunulan plaintext token'ı doğrula.
      *
+     * <p><b>Theft detection:</b> Revoke edilmiş bir token tekrar kullanılırsa
+     * bu, başarılı bir token sızıntısının kanıtıdır (gerçek kullanıcı zaten
+     * yenilemiş, eski token'ı yalnız hırsız taşıyor olabilir). Bu durumda
+     * o kullanıcının TÜM aktif refresh token'larını revoke edip oturumu
+     * agresif şekilde kapatırız. Audit log düşülür ki güvenlik ekibi olayı
+     * görebilsin.</p>
+     *
      * @return geçerli entity
      * @throws InvalidRefreshTokenException token yok/revoke/expired
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public RefreshToken validate(String plaintext) {
         if (plaintext == null || plaintext.isBlank()) {
             throw new InvalidRefreshTokenException("missing");
@@ -76,16 +88,36 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new InvalidRefreshTokenException("not found"));
 
         if (stored.isRevoked()) {
-            // Revoke edilmiş bir token tekrar kullanıldı → potansiyel theft.
-            // v1.x patch'inde: bu kullanıcının tüm aktif token'larını revoke et.
-            log.warn("[refresh] revoked token reuse attempt user={} ip={}",
-                    stored.getUserId(), stored.getIpAddress());
+            handleTheft(stored);
             throw new InvalidRefreshTokenException("revoked");
         }
         if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new InvalidRefreshTokenException("expired");
         }
         return stored;
+    }
+
+    /**
+     * Revoke edilmiş bir token tekrar geldi → tüm zinciri yık.
+     */
+    private void handleTheft(RefreshToken revokedReuse) {
+        int revoked = repository.revokeAllForUser(revokedReuse.getUserId(), LocalDateTime.now());
+        log.warn("[refresh] THEFT DETECTED user={} reused-token-id={} revoked-active-count={} ip={}",
+                revokedReuse.getUserId(), revokedReuse.getId(), revoked, revokedReuse.getIpAddress());
+
+        auditLogService.record(AuditLog.builder()
+                .userId(revokedReuse.getUserId())
+                .action(AuditAction.REFRESH_TOKEN_THEFT_DETECTED)
+                .resourceType("REFRESH_TOKEN")
+                .resourceId(revokedReuse.getId())
+                .ipAddress(revokedReuse.getIpAddress())
+                .userAgent(revokedReuse.getUserAgent())
+                .detail("Reuse of revoked refresh token detected; all active sessions for this user have been revoked.")
+                .metadata(Map.of(
+                        "revokedSessions", revoked,
+                        "reusedTokenCreatedAt", revokedReuse.getCreatedAt().toString()
+                ))
+                .build());
     }
 
     /**
