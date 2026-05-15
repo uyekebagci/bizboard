@@ -34,6 +34,39 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.4.0] — 2026-05-15
+
+**v1.3.x güvenlik patch serisinin kapanış sürümü.** Davranış değişikliği içeren son üç güvenlik konusu: login brute-force koruması (Y2), zorunlu ilk-giriş parola değişikliği (Y5), `accessibleBusinesses` strict validation (Y3). Minor bump çünkü auth response shape değişiyor (`forcePasswordChange` artık gerçek değer döner) + 429 yeni HTTP durumu + create-user davranışı genişledi.
+
+### Added
+
+#### Backend
+- **`LoginRateLimiter` (Y2)** — username başına in-memory token bucket. Default politika: 5 dakikalık pencerede 5 başarısız → 15 dakika lockout. Env override: `APP_AUTH_LOGIN_MAX_FAILURES`, `APP_AUTH_LOGIN_WINDOW_SECONDS`, `APP_AUTH_LOGIN_LOCKOUT_SECONDS`. Başarılı login sayacı sıfırlar. Kilitliyken yapılan deneme `429 Too Many Requests` + `Retry-After` header döner; ayrıca `USER_LOGIN_FAILED` audit'e `reason=RateLimited` + `retryAfterSeconds` metadata'sıyla düşer. Tek-instance Sevalla'ya uygun; multi-instance veya Redis fan-out v2'de değerlendirilecek.
+- **`User.mustChangePassword` kolonu (Y5)** — `boolean default false`, Hibernate `ddl-auto=update` ile mevcut tabloya `NOT NULL DEFAULT false` olarak eklenir (Postgres ALTER TABLE ADD COLUMN). Admin `POST /admin/users` ile oluşturduğu yeni kullanıcılarda otomatik `true` set edilir. Login response'ta `forcePasswordChange` bu kolonu yansıtır; frontend kullanıcıyı parola değiştirme ekranına yönlendirir. `UserService.changePassword` başarılı olduğunda flag false'a çekilir + tüm refresh token'lar revoke edilir (mevcut davranış).
+
+### Security
+
+- **Y2 — Brute-force koruması canlı.** Önceden `/auth/login` permitAll + sınırsız deneme. Şimdi 5 fail / 5 dk pencerede otomatik kilit. Audit retention 90 gün olduğundan kilitlenmiş hesaplar geriye dönük forensik için izlenebilir.
+- **Y3 — `accessibleBusinesses` strict validation.** `AdminUserService.createUser`/`updateUser`:
+  - `role=admin` ise her zaman `"all"` ezilir (request'te ne gelirse gelsin).
+  - Non-admin için `"all"` literal'i artık reddedilir (privilege escalation vektörü kapanır; eski sürümlerde herhangi bir admin manuel olarak `accessibleBusinesses="all"` set edebiliyordu).
+  - UUID listesi geçerli UUID olmak zorunda; ham string formatı sızması yok.
+- **Y5 — Force password change.** Admin'in verdiği başlangıç parolası kullanıcı tarafından mutlaka değiştirilmek zorunda. Operasyonel risk: admin "Önce parolayı 123 yap, sonra söylerim değişti diye" diyemez; sistem dayatır.
+
+### Changed
+
+#### Backend
+- `AuthResponse.forcePasswordChange` artık gerçek bir değer döner (önceden her zaman `false`'tu).
+- `User` entity'sine yeni kolon eklendiği için cold start sırasında Hibernate ALTER TABLE çalışır — bu, Sevalla deploy'unun ilk request'inde 1-2 saniye gecikme yaratabilir, bilinen tradeoff.
+- `AdminUserService` accessible businesses normalize/validate yardımcı metodu (`normalizeAccessibleBusinesses`) merkezi noktada. v2.0.0 Flyway iş paketinde bu sütun normalize tabloya migrate olduğunda tek nokta değişir.
+
+### Notes
+
+- **v1.3.x güvenlik serisi tamamlandı.** Bu commit'in ardından artık serinin patch sürümleri kalmadı; backend tarafındaki tüm tespit edilen K* ve Y* açıkları kapalı. Frontend tarafı için ek bir TODO: login response'da `forcePasswordChange=true` gelirse parola değiştirme sayfasına yönlendirme akışını test et — frontend zaten alanı okuyor (v1.0.1'den beri), ama mevcut sürüm her zaman false döndürüyordu, dolayısıyla yönlendirme hiç tetiklenmedi.
+- Sevalla multi-instance'a geçilirse `LoginRateLimiter` Redis-backed bir implementasyona evrilmeli; aksi takdirde her instance bağımsız sayar ve effective limit instance sayısı kadar büyür. Çatı v2 iş paketi altında bu not düşülmeli.
+
+---
+
 ## [1.3.8] — 2026-05-15
 
 **Güvenlik hotfix — geri kalan iş-paketleri.** v1.3.x serisinin K4–K7 açıkları toplu kapatılıyor: Vehicle, FixedCost, Inventory (item + maintenance + fuel logs), BusinessNote. Hepsi aynı pattern: service'lere `BusinessAccessGuard` enjeksiyonu, mutation+read metodlarına actor `UUID` parametresi, controller'larda `@AuthenticationPrincipal` zorunlu.
@@ -443,7 +476,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.8...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.0
 [1.3.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.8
 [1.3.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.7
 [1.3.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.6

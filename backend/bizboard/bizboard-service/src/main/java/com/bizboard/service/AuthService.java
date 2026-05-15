@@ -35,6 +35,7 @@ public class AuthService {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
     private final AuditLogService auditLogService;
+    private final LoginRateLimiter loginRateLimiter;
 
     /**
      * Login: erişim token'ı + yeni refresh token üretir.
@@ -42,24 +43,48 @@ public class AuthService {
      */
     @Transactional
     public LoginResult login(AuthRequest request, HttpServletRequest httpRequest) {
+        String username = request.getUsername();
+
+        // Rate-limit kontrolü: çok fazla başarısız denemeden sonra kilit. Kullanıcı adı
+        // mevcut olsun olmasın aynı limit uygulanır — username enumeration azaltır.
+        if (loginRateLimiter.isLocked(username)) {
+            long retry = loginRateLimiter.secondsUntilUnlock(username);
+            auditLogService.recordAuthEvent(
+                    AuditAction.USER_LOGIN_FAILED,
+                    null,
+                    username,
+                    "Login blocked by rate limit for '" + username + "' (retry after " + retry + "s)",
+                    Map.of(
+                            "attemptedUsername", username != null ? username : "",
+                            "reason", "RateLimited",
+                            "retryAfterSeconds", retry
+                    ));
+            throw new LoginRateLimiter.TooManyAttemptsException(retry);
+        }
+
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                    new UsernamePasswordAuthenticationToken(username, request.getPassword()));
         } catch (AuthenticationException ex) {
-            // Login fail audit — null userId, username yine de yazılır forensik için.
+            // Sayacı artır.
+            loginRateLimiter.recordFailure(username);
+
             Map<String, Object> meta = new HashMap<>();
-            meta.put("attemptedUsername", request.getUsername());
+            meta.put("attemptedUsername", username);
             meta.put("reason", ex.getClass().getSimpleName());
             auditLogService.recordAuthEvent(
                     AuditAction.USER_LOGIN_FAILED,
                     null,
-                    request.getUsername(),
-                    "Login failed for username '" + request.getUsername() + "': " + ex.getMessage(),
+                    username,
+                    "Login failed for username '" + username + "': " + ex.getMessage(),
                     meta);
             throw ex;
         }
 
-        User user = userRepository.findByUsername(request.getUsername())
+        // Başarılı → kilit sayacını sıfırla.
+        loginRateLimiter.recordSuccess(username);
+
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
         String accessToken = jwtUtil.generateToken(
@@ -80,8 +105,7 @@ public class AuthService {
         AuthResponse body = AuthResponse.builder()
                 .token(accessToken)
                 .expiresInSeconds(jwtUtil.getExpirationSeconds())
-                // "İlk girişte parola değiştir" akışı henüz yok; her zaman false.
-                .forcePasswordChange(false)
+                .forcePasswordChange(user.isMustChangePassword())
                 .build();
 
         return new LoginResult(body, refresh);

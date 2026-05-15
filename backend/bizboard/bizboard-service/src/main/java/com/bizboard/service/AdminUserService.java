@@ -39,16 +39,10 @@ public class AdminUserService {
             throw new IllegalArgumentException("Bu kullanici adi zaten kullaniliyor");
         }
 
-        // İşletme ID'lerini string olarak birleştir
-        String businessIdsStr = request.getBusinessIds().stream()
-                .map(UUID::toString)
-                .collect(Collectors.joining(","));
-
-        // Admin rolü için "all" ata
         String role = request.getRole().toLowerCase(java.util.Locale.ENGLISH);
-        if ("admin".equalsIgnoreCase(role)) {
-            businessIdsStr = "all";
-        }
+        // Y3: accessibleBusinesses strict — "all" sadece admin için; non-admin için
+        // her id geçerli bir UUID olmalı. Geçersiz girişte create reddedilir.
+        String businessIdsStr = normalizeAccessibleBusinesses(request.getBusinessIds(), role);
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -58,6 +52,10 @@ public class AdminUserService {
                 .accessibleBusinesses(businessIdsStr)
                 .onboardingCompleted(true)
                 .active(true)
+                // Admin oluşturduğu yeni kullanıcı → ilk login'de parola değiştirmek zorunda.
+                // Admin'i kendisi oluşturursak da true; ama prod'da yeni admin
+                // create-user'dan değil, seed-data'dan geliyor.
+                .mustChangePassword(true)
                 .build();
 
         user = userRepository.save(user);
@@ -113,14 +111,10 @@ public class AdminUserService {
 
         if (request.getBusinessIds() != null && !request.getBusinessIds().isEmpty()) {
             String oldBusinesses = user.getAccessibleBusinesses();
-            String newBusinesses;
-            if ("admin".equalsIgnoreCase(request.getRole())) {
-                newBusinesses = "all";
-            } else {
-                newBusinesses = request.getBusinessIds().stream()
-                        .map(UUID::toString)
-                        .collect(Collectors.joining(","));
-            }
+            // Update'te efektif rol: request'te role değiştiyse onu, yoksa user'ın
+            // mevcut rolünü esas al. Y3 strict validation.
+            String effectiveRole = newRole != null ? newRole : user.getRole();
+            String newBusinesses = normalizeAccessibleBusinesses(request.getBusinessIds(), effectiveRole);
             if (!Objects.equals(newBusinesses, oldBusinesses)) {
                 changes.put("accessibleBusinesses", Map.of(
                         "from", oldBusinesses != null ? oldBusinesses : "",
@@ -199,6 +193,34 @@ public class AdminUserService {
     private User lookupActor(UUID actorUserId) {
         if (actorUserId == null) return null;
         return userRepository.findById(actorUserId).orElse(null);
+    }
+
+    /**
+     * Y3 — {@code accessible_businesses} kolonu için strict normalize/validate.
+     *
+     * <ul>
+     *   <li>Admin rolü → her zaman "all". Request'te ne gelirse gelsin ezilir.</li>
+     *   <li>Non-admin için: her id geçerli UUID olmalı; aksi takdirde
+     *       {@code IllegalArgumentException}. Boş liste → boş string (hiçbir
+     *       işletmeye erişim yok, controller bunu reddederse de tutarlı bir
+     *       şekilde "no access" döner).</li>
+     *   <li>"all" stringi non-admin için kabul edilmez (privilege escalation
+     *       vektörü kapanır — eski sürümlerde non-admin için bile "all" geçerdi).</li>
+     * </ul>
+     */
+    private static String normalizeAccessibleBusinesses(java.util.List<UUID> businessIds, String role) {
+        if ("admin".equalsIgnoreCase(role)) {
+            return "all";
+        }
+        if (businessIds == null || businessIds.isEmpty()) {
+            return "";
+        }
+        // Tüm id'ler zaten UUID tipinde geliyor (Spring binding); ama defansif:
+        // null veya bozuk olanları reddet.
+        return businessIds.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(UUID::toString)
+                .collect(Collectors.joining(","));
     }
 
     private UserDto toUserDto(User user) {

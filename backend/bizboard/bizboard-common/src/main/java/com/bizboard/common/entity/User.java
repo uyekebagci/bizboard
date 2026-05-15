@@ -64,6 +64,17 @@ public class User {
     @Builder.Default
     private boolean active = true;
 
+    /**
+     * Admin oluşturduğu kullanıcılarda true set edilir. Login response'da
+     * {@code forcePasswordChange=true} döner; frontend kullanıcıyı parola
+     * değiştirme ekranına yönlendirir. {@link UserService#changePassword}
+     * başarılı olduğunda false'a çekilir.
+     */
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "boolean default false")
+    @org.hibernate.annotations.ColumnDefault("false")
+    @Builder.Default
+    private boolean mustChangePassword = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

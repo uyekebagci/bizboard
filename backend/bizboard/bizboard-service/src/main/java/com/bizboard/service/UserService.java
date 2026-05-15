@@ -59,6 +59,10 @@ public class UserService {
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        // İlk-giriş zorunlu parola değişikliği akışı tamamlandı — bayrağı sıfırla.
+        if (user.isMustChangePassword()) {
+            user.setMustChangePassword(false);
+        }
         userRepository.save(user);
 
         int revoked = refreshTokenService.revokeAllForUser(user.getId());
