@@ -98,7 +98,8 @@ public class AuthService {
                         "BizBoard'a hos geldin!",
                         "Hesabin hazir. Sol panelden yeni isletme ekleyerek baslayabilirsin.",
                         "/dashboard",
-                        null
+                        null,
+                        "first-login"
                 );
             }
         } catch (Exception e) {

@@ -44,4 +44,7 @@ public final class AuditAction {
     public static final String DEBT_CREATE        = "DEBT_CREATE";
     public static final String DEBT_DELETE        = "DEBT_DELETE";
     public static final String DEBT_SETTLED       = "DEBT_SETTLED";
+
+    // ── Notifications ────────────────────────────────────────────────────
+    public static final String NOTIFICATION_SENT  = "NOTIFICATION_SENT";
 }
