@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -38,6 +40,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Spring Security'nin AuthenticationManager akışından geçtiğimiz için
             // her request'te kendi başımıza da doğruluyoruz.
             if (!userDetails.isEnabled()) {
+                log.warn("[auth-filter] rejecting request: user '{}' is not enabled (active=false). "
+                        + "If this happens for an existing user post-deploy, check users.is_active "
+                        + "for NULL — see UserActiveBackfill.", username);
                 filterChain.doFilter(request, response);
                 return;
             }

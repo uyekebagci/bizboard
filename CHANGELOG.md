@@ -34,6 +34,22 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.4.1] — 2026-05-15
+
+**Acil hotfix — login sonrası 403 regresyonu.** v1.3.4'te `UserPrincipal.isEnabled()` gerçek `user.isActive()` döndürmeye başladı (Y1 fix). Eski sürümlerden kalma `users.is_active = NULL` değerleri Java primitive `boolean` map'inde `false` olarak okunduğu için bu kullanıcılar v1.4.0 deploy'undan sonra giriş yapsa bile her authenticated request `403` aldı.
+
+### Fixed
+
+- **`UserActiveBackfill` startup runner.** `ApplicationRunner` ile her boot'ta idempotent çalışır: `UPDATE users SET is_active = TRUE WHERE is_active IS NULL`. NULL değerleri TRUE'ya çeker. Backend logs'a `[backfill] users.is_active NULL → TRUE: N rows updated` veya `no NULL rows` düşer; deploy sonrası doğrulama için bu satırlara bakılır.
+- **`JwtAuthenticationFilter` artık reddedilen request için warn log atıyor.** Önceden sessizce SecurityContext set etmeden geçiyordu — neden 403 aldığını bulmak gözlemlenebilir değildi. Artık `[auth-filter] rejecting request: user 'X' is not enabled` görünür.
+
+### Notes
+
+- Bu fix Y1 davranışını (pasifleştirilmiş kullanıcı sistem dışı) DEĞİŞTİRMEZ — sadece NULL'ları doğru semantiğe (`active=true`) çeker. Açıkça `is_active=false` olan kullanıcılar hâlâ sistem dışı kalır.
+- v2.0.0 Flyway iş paketinde `is_active` sütununa `NOT NULL DEFAULT TRUE` kalıcı constraint eklenecek ve `UserActiveBackfill` sınıfı silinecek. Şimdilik idempotent ve düşük maliyetli.
+
+---
+
 ## [1.4.0] — 2026-05-15
 
 **v1.3.x güvenlik patch serisinin kapanış sürümü.** Davranış değişikliği içeren son üç güvenlik konusu: login brute-force koruması (Y2), zorunlu ilk-giriş parola değişikliği (Y5), `accessibleBusinesses` strict validation (Y3). Minor bump çünkü auth response shape değişiyor (`forcePasswordChange` artık gerçek değer döner) + 429 yeni HTTP durumu + create-user davranışı genişledi.
@@ -476,7 +492,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.1
 [1.4.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.0
 [1.3.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.8
 [1.3.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.7
