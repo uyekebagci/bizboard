@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 public class CreateDebtRequest {
@@ -15,8 +16,18 @@ public class CreateDebtRequest {
     @NotBlank
     private String direction; // RECEIVABLE or PAYABLE
 
+    /**
+     * Geriye uyumluluk için free-text. v1.5.1+: {@link #counterpartId} verilirse
+     * ondaki name otomatik kullanılır ve bu alan opsiyonel kabul edilir (controller
+     * tarafında validation şu an @NotBlank, ama service counterpart varsa onun
+     * adıyla auto-fill eder). Eski client'lar yine string ile devam edebilir.
+     */
     @NotBlank
     private String counterparty;
+
+    /** v1.5.1: normalize edilmiş karşı firma kaydı (opsiyonel). */
+    @JsonProperty("counterpart_id")
+    private UUID counterpartId;
 
     @NotNull
     @Positive

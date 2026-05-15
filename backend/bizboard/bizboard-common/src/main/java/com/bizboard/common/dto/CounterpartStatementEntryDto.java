@@ -9,11 +9,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Cari hesap ekstresinin tek satırı (bir borç hareketi).
+ *
+ * <p>Statement endpoint'i bunları kronolojik sırada döner; her satır
+ * sonrası bakiye {@link #runningBalance} ile gösterilir.</p>
+ */
 @Data
 @Builder
-public class DebtDto {
+public class CounterpartStatementEntryDto {
 
-    private UUID id;
+    @JsonProperty("debt_id")
+    private UUID debtId;
 
     @JsonProperty("business_id")
     private UUID businessId;
@@ -21,18 +28,8 @@ public class DebtDto {
     @JsonProperty("business_name")
     private String businessName;
 
-    private String direction; // RECEIVABLE or PAYABLE
-
-    /** Free-text karşı taraf adı (geriye uyumluluk). */
-    private String counterparty;
-
-    /** v1.5.1: normalize counterpart entity referansı (varsa). */
-    @JsonProperty("counterpart_id")
-    private UUID counterpartId;
-
-    /** v1.5.1: normalize counterpart adı (varsa; client tarafı ekstre vs için kullanabilir). */
-    @JsonProperty("counterpart_name")
-    private String counterpartName;
+    /** RECEIVABLE → alacak (firma bize borçlu); PAYABLE → verecek (biz firmaya borçluyuz). */
+    private String direction;
 
     private BigDecimal amount;
 
@@ -44,7 +41,6 @@ public class DebtDto {
     @JsonProperty("due_date")
     private LocalDate dueDate;
 
-    @JsonProperty("is_settled")
     private boolean settled;
 
     @JsonProperty("settled_at")
@@ -52,15 +48,10 @@ public class DebtDto {
 
     private String description;
 
-    @JsonProperty("document_url")
-    private String documentUrl;
-
-    @JsonProperty("admin_only")
-    private boolean adminOnly;
-
-    @JsonProperty("created_by_name")
-    private String createdByName;
-
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
+
+    /** Bu satırdan sonraki kümülatif bakiye (yalnız aktif/settled olmayanlar dahil). */
+    @JsonProperty("running_balance")
+    private BigDecimal runningBalance;
 }

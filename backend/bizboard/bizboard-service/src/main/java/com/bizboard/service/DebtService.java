@@ -5,10 +5,12 @@ import com.bizboard.common.dto.CreateDebtRequest;
 import com.bizboard.common.dto.DebtDto;
 import com.bizboard.common.dto.DebtSummaryDto;
 import com.bizboard.common.entity.Business;
+import com.bizboard.common.entity.Counterpart;
 import com.bizboard.common.entity.Debt;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.DebtDirection;
 import com.bizboard.repository.BusinessRepository;
+import com.bizboard.repository.CounterpartRepository;
 import com.bizboard.repository.DebtRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,8 @@ public class DebtService {
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
     private final BusinessAccessGuard accessGuard;
+    private final CounterpartRepository counterpartRepository;
+    private final CounterpartLedgerService counterpartLedger;
 
     // ─── İşletmeye ait borçları getir ──────────────────────────
 
@@ -111,10 +115,24 @@ public class DebtService {
         DebtDirection direction = DebtDirection.valueOf(
                 request.getDirection().toUpperCase(java.util.Locale.ENGLISH));
 
+        // v1.5.1: counterpart_id verilmişse normalize ref kur; counterparty string'i
+        // counterpart.name ile auto-fill et (frontend her ikisini de geçmek zorunda
+        // kalmasın). Eski client'lar yine sadece string ile create eder.
+        Counterpart counterpart = null;
+        String counterpartyName = request.getCounterparty();
+        if (request.getCounterpartId() != null) {
+            counterpart = counterpartRepository.findById(request.getCounterpartId())
+                    .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi"));
+            if (counterpartyName == null || counterpartyName.isBlank()) {
+                counterpartyName = counterpart.getName();
+            }
+        }
+
         Debt debt = Debt.builder()
                 .business(business)
                 .direction(direction)
-                .counterparty(request.getCounterparty())
+                .counterparty(counterpartyName)
+                .counterpartRef(counterpart)
                 .amount(request.getAmount())
                 .currency(request.getCurrency() != null ? request.getCurrency() : business.getCurrency())
                 .instrumentType(request.getInstrumentType())
@@ -127,21 +145,28 @@ public class DebtService {
 
         debt = debtRepository.save(debt);
         log.info("Borc olusturuldu: {} - {} {} TL ({}) isletme={}",
-                direction, request.getCounterparty(), request.getAmount(),
+                direction, counterpartyName, request.getAmount(),
                 request.getInstrumentType(), business.getName());
 
+        Map<String, Object> meta = new java.util.HashMap<>();
+        meta.put("businessId", businessId);
+        meta.put("amount", request.getAmount());
+        meta.put("direction", direction.name());
+        meta.put("currency", debt.getCurrency());
+        meta.put("counterparty", counterpartyName);
+        if (counterpart != null) {
+            meta.put("counterpartId", counterpart.getId());
+        }
         auditLogService.recordEntityAction(
                 AuditAction.DEBT_CREATE,
                 user.getId(), user.getUsername(),
                 "DEBT", debt.getId(),
-                business.getName() + " — " + direction.name() + " " + request.getAmount() + " (" + request.getCounterparty() + ")",
-                Map.of(
-                        "businessId", businessId,
-                        "amount", request.getAmount(),
-                        "direction", direction.name(),
-                        "currency", debt.getCurrency(),
-                        "counterparty", request.getCounterparty()
-                ));
+                business.getName() + " — " + direction.name() + " " + request.getAmount() + " (" + counterpartyName + ")",
+                meta);
+
+        if (counterpart != null) {
+            counterpartLedger.recomputeIfPresent(counterpart.getId());
+        }
 
         return toDto(debt);
     }
@@ -169,10 +194,15 @@ public class DebtService {
         BigDecimal amount = debt.getAmount();
         String currency = debt.getCurrency();
         String direction = debt.getDirection().name();
+        UUID counterpartId = debt.getCounterpartRef() != null ? debt.getCounterpartRef().getId() : null;
 
         debtRepository.delete(debt);
         log.info("Borc silindi: {} - {} {} TL silen={}",
                 direction, counterparty, amount, user.getFullName());
+
+        if (counterpartId != null) {
+            counterpartLedger.recomputeIfPresent(counterpartId);
+        }
 
         auditLogService.recordEntityAction(
                 AuditAction.DEBT_DELETE,
@@ -224,6 +254,10 @@ public class DebtService {
                         "currency", debt.getCurrency(),
                         "counterparty", debt.getCounterparty()
                 ));
+
+        if (debt.getCounterpartRef() != null) {
+            counterpartLedger.recomputeIfPresent(debt.getCounterpartRef().getId());
+        }
 
         return toDto(debt);
     }
@@ -324,12 +358,15 @@ public class DebtService {
     }
 
     private DebtDto toDto(Debt d) {
+        Counterpart cp = d.getCounterpartRef();
         return DebtDto.builder()
                 .id(d.getId())
                 .businessId(d.getBusiness().getId())
                 .businessName(d.getBusiness().getName())
                 .direction(d.getDirection().name())
                 .counterparty(d.getCounterparty())
+                .counterpartId(cp != null ? cp.getId() : null)
+                .counterpartName(cp != null ? cp.getName() : null)
                 .amount(d.getAmount())
                 .currency(d.getCurrency())
                 .instrumentType(d.getInstrumentType())

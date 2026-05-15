@@ -26,4 +26,12 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
 
     /** Bir işletmenin yönüne göre borçları */
     List<Debt> findByBusinessIdAndDirection(UUID businessId, DebtDirection direction);
+
+    // ── v1.5.1: counterpart bazlı sorgular (cari hesap motoru) ─────────────
+
+    /** Bir counterpart'a bağlı tüm borçlar (settle dahil). */
+    List<Debt> findByCounterpartRefIdOrderByCreatedAtAsc(UUID counterpartId);
+
+    /** Bir counterpart'a bağlı borç sayısı — delete guard'ı için. */
+    long countByCounterpartRefId(UUID counterpartId);
 }
