@@ -24,9 +24,11 @@ public class BusinessNoteService {
     private final BusinessNoteRepository noteRepository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
+    private final BusinessAccessGuard accessGuard;
 
     @Transactional(readOnly = true)
-    public List<BusinessNoteDto> getNotesForBusiness(UUID businessId, boolean isAdmin) {
+    public List<BusinessNoteDto> getNotesForBusiness(UUID businessId, UUID actorUserId, boolean isAdmin) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         List<BusinessNote> notes;
         if (isAdmin) {
             notes = noteRepository.findByBusinessIdOrderByPinnedDescCreatedAtDesc(businessId);
@@ -38,6 +40,7 @@ public class BusinessNoteService {
 
     @Transactional
     public BusinessNoteDto createNote(UUID businessId, CreateNoteRequest request, UUID userId, boolean isAdmin) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Business not found"));
         User user = userRepository.findById(userId)
@@ -64,9 +67,10 @@ public class BusinessNoteService {
     }
 
     @Transactional
-    public BusinessNoteDto updateNote(UUID noteId, CreateNoteRequest request, boolean isAdmin) {
+    public BusinessNoteDto updateNote(UUID noteId, CreateNoteRequest request, UUID actorUserId, boolean isAdmin) {
         BusinessNote note = noteRepository.findById(noteId)
                 .orElseThrow(() -> new IllegalArgumentException("Not bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, note.getBusiness().getId());
 
         if (request.getContent() != null && !request.getContent().isBlank()) {
             note.setContent(request.getContent());
@@ -86,18 +90,20 @@ public class BusinessNoteService {
     }
 
     @Transactional
-    public BusinessNoteDto togglePin(UUID noteId) {
+    public BusinessNoteDto togglePin(UUID noteId, UUID actorUserId) {
         BusinessNote note = noteRepository.findById(noteId)
                 .orElseThrow(() -> new IllegalArgumentException("Not bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, note.getBusiness().getId());
         note.setPinned(!note.isPinned());
         note = noteRepository.save(note);
         return toDto(note);
     }
 
     @Transactional
-    public void deleteNote(UUID noteId) {
+    public void deleteNote(UUID noteId, UUID actorUserId) {
         BusinessNote note = noteRepository.findById(noteId)
                 .orElseThrow(() -> new IllegalArgumentException("Not bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, note.getBusiness().getId());
         noteRepository.delete(note);
         log.info("Not silindi: id={}", noteId);
     }

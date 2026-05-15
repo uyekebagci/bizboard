@@ -24,22 +24,25 @@ public class FixedCostController {
 
     @GetMapping("/businesses/{businessId}/fixed-costs")
     public ResponseEntity<List<FixedCostDto>> getFixedCosts(
-            @PathVariable UUID businessId) {
-        return ResponseEntity.ok(fixedCostService.getFixedCostsForBusiness(businessId));
+            @PathVariable UUID businessId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(fixedCostService.getFixedCostsForBusiness(businessId, principal.getId()));
     }
 
     @GetMapping("/businesses/{businessId}/fixed-costs/summary")
     public ResponseEntity<FixedCostSummaryDto> getFixedCostSummary(
-            @PathVariable UUID businessId) {
-        return ResponseEntity.ok(fixedCostService.getFixedCostSummary(businessId));
+            @PathVariable UUID businessId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(fixedCostService.getFixedCostSummary(businessId, principal.getId()));
     }
 
     @PostMapping("/businesses/{businessId}/fixed-costs")
     public ResponseEntity<FixedCostDto> createFixedCost(
             @PathVariable UUID businessId,
-            @RequestBody CreateFixedCostRequest request) {
+            @RequestBody CreateFixedCostRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(fixedCostService.createFixedCost(businessId, request));
+                .body(fixedCostService.createFixedCost(businessId, request, principal.getId()));
     }
 
     // ─── Tekil sabit gider işlemleri ──────────────────────────
@@ -47,14 +50,16 @@ public class FixedCostController {
     @PutMapping("/fixed-costs/{fixedCostId}")
     public ResponseEntity<FixedCostDto> updateFixedCost(
             @PathVariable UUID fixedCostId,
-            @RequestBody CreateFixedCostRequest request) {
-        return ResponseEntity.ok(fixedCostService.updateFixedCost(fixedCostId, request));
+            @RequestBody CreateFixedCostRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(fixedCostService.updateFixedCost(fixedCostId, request, principal.getId()));
     }
 
     @DeleteMapping("/fixed-costs/{fixedCostId}")
     public ResponseEntity<Void> deleteFixedCost(
-            @PathVariable UUID fixedCostId) {
-        fixedCostService.deleteFixedCost(fixedCostId);
+            @PathVariable UUID fixedCostId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        fixedCostService.deleteFixedCost(fixedCostId, principal.getId());
         return ResponseEntity.noContent().build();
     }
 }

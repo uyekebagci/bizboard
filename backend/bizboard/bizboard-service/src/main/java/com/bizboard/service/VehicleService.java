@@ -28,11 +28,13 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     private final BusinessRepository businessRepository;
     private final FixedCostRepository fixedCostRepository;
+    private final BusinessAccessGuard accessGuard;
 
     // ─── İşletmeye ait araçları getir ───────────────────────
 
     @Transactional(readOnly = true)
-    public List<VehicleDto> getVehiclesForBusiness(UUID businessId) {
+    public List<VehicleDto> getVehiclesForBusiness(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         return vehicleRepository.findByBusinessIdOrderByPlateNumberAsc(businessId)
                 .stream().map(this::toDto).toList();
     }
@@ -40,16 +42,18 @@ public class VehicleService {
     // ─── Araç detayı ───────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public VehicleDto getVehicle(UUID vehicleId) {
+    public VehicleDto getVehicle(UUID vehicleId, UUID actorUserId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalArgumentException("Arac bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, vehicle.getBusiness().getId());
         return toDto(vehicle);
     }
 
     // ─── Araç oluştur ──────────────────────────────────────
 
     @Transactional
-    public VehicleDto createVehicle(UUID businessId, CreateVehicleRequest request) {
+    public VehicleDto createVehicle(UUID businessId, CreateVehicleRequest request, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Isletme bulunamadi"));
 
@@ -98,9 +102,10 @@ public class VehicleService {
     // ─── Araç güncelle ─────────────────────────────────────
 
     @Transactional
-    public VehicleDto updateVehicle(UUID vehicleId, CreateVehicleRequest request) {
+    public VehicleDto updateVehicle(UUID vehicleId, CreateVehicleRequest request, UUID actorUserId) {
         Vehicle v = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalArgumentException("Arac bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, v.getBusiness().getId());
 
         if (request.getPlateNumber() != null) v.setPlateNumber(request.getPlateNumber());
         if (request.getBrand() != null) v.setBrand(request.getBrand());
@@ -140,9 +145,10 @@ public class VehicleService {
     // ─── Araç aktif/pasif ──────────────────────────────────
 
     @Transactional
-    public VehicleDto toggleVehicleActive(UUID vehicleId) {
+    public VehicleDto toggleVehicleActive(UUID vehicleId, UUID actorUserId) {
         Vehicle v = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalArgumentException("Arac bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, v.getBusiness().getId());
 
         v.setActive(!v.isActive());
         v = vehicleRepository.save(v);
@@ -156,9 +162,10 @@ public class VehicleService {
     // ─── Araç sil ──────────────────────────────────────────
 
     @Transactional
-    public void deleteVehicle(UUID vehicleId) {
+    public void deleteVehicle(UUID vehicleId, UUID actorUserId) {
         Vehicle v = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalArgumentException("Arac bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, v.getBusiness().getId());
 
         UUID businessId = v.getBusiness().getId();
         vehicleRepository.delete(v);
@@ -170,7 +177,8 @@ public class VehicleService {
     // ─── Araç özeti ────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public VehicleSummaryDto getVehicleSummary(UUID businessId) {
+    public VehicleSummaryDto getVehicleSummary(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         List<Vehicle> vehicles = vehicleRepository.findByBusinessIdOrderByPlateNumberAsc(businessId);
 
         int total = vehicles.size();
