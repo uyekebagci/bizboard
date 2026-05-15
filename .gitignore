@@ -56,3 +56,8 @@ env.sevalla.*
 # Claude Code working state
 # ═══════════════════════════════════════════════════════════
 .claude/
+
+# ═══════════════════════════════════════════════════════════
+# Personal scratch / brainstorm notes (kept local only)
+# ═══════════════════════════════════════════════════════════
+isim önerileri.md
