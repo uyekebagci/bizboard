@@ -20,6 +20,7 @@ public class UserPrincipal implements UserDetails {
     private final String password;
     private final String fullName;
     private final String role;
+    private final boolean active;
     private final List<String> accessibleBusinesses;
     private final Collection<? extends GrantedAuthority> authorities;
 
@@ -29,6 +30,7 @@ public class UserPrincipal implements UserDetails {
         this.password = user.getPassword();
         this.fullName = user.getFullName();
         this.role = user.getRole() != null ? user.getRole() : "viewer";
+        this.active = user.isActive();
 
         // Role -> Spring Security authority
         String springRole = "ROLE_" + this.role.toUpperCase(java.util.Locale.ENGLISH);
@@ -69,8 +71,12 @@ public class UserPrincipal implements UserDetails {
         return true;
     }
 
+    /**
+     * Spring Security bunu false bulursa auth reddedilir.
+     * {@code User.active=false} → admin pasifleştirdiyse kullanıcı sistem dışı.
+     */
     @Override
     public boolean isEnabled() {
-        return true;
+        return active;
     }
 }

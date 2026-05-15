@@ -34,6 +34,36 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.4] — 2026-05-15
+
+**Güvenlik hotfix — foundation katmanı.** Auth + yetkilendirme denetiminde tespit edilen kritik IDOR açıklarını kapatmak için başlatılan **v1.3.x güvenlik patch serisinin ilk sürümü.** Bu sürüm tek başına bir IDOR'u kapatmaz; sonraki patch'lerin (v1.3.5+) kullanacağı ortak guard mekanizmasını + iki bağımsız security fix'i içerir.
+
+### Security
+
+- **`User.active=false` artık gerçekten kullanıcıyı sistemden çıkarıyor.** Önceden `UserPrincipal.isEnabled()` her zaman `true` dönüyordu — admin bir kullanıcıyı pasifleştirse bile elindeki JWT 30 dk geçerli kalıyor, refresh token akışı da çalışıyordu. Düzeltildi:
+  - `UserPrincipal.isEnabled()` artık `user.isActive()` döner. Spring Security `DaoAuthenticationProvider` `DisabledException` atar → login akışı kapanır.
+  - `JwtAuthenticationFilter` defense-in-depth: token geçerli olsa bile `userDetails.isEnabled()` false ise `SecurityContext` set etmeden geçer → her korumalı endpoint 401.
+  - `AuthService.refresh` artık `user.isActive()` kontrolü yapıyor; pasif kullanıcının refresh token'ı varsa bile 401 + cookie clear.
+
+### Added
+
+#### Backend
+- **`BusinessAccessGuard` component.** Tek noktadan "bu kullanıcı bu işletmeye erişebilir mi?" cevabını döndüren ortak helper. `canAccessBusiness(userId, businessId)` boolean, `assertCanAccessBusiness(userId, businessId)` SecurityException atar. Tüm domain servisleri (v1.3.5–v1.3.8'de eklenecek) bunu çağırarak yetkilendirme kontrolünü merkezileştirecek. `accessibleBusinesses` string kolonu v2'de normalize tabloya migrate olduğunda iç mantık tek yerden güncellenecek; çağıran servislerin imzası değişmeyecek.
+- **`TransactionService` `BusinessAccessGuard`'a delege edildi.** Eski `hasAccessToBusiness(User, UUID)` private helper kaldırıldı; create/update/delete metodları artık `accessGuard.assertCanAccessBusiness(userId, businessId)` çağırıyor. Davranış aynı, kod tek noktada.
+
+### Notes
+
+- Bu serideki sonraki sürümler:
+  - **v1.3.5** — Employee modülü (TC kimlik no, maaş PII sızıntısı)
+  - **v1.3.6** — Debt + Transaction list path
+  - **v1.3.7** — File operations
+  - **v1.3.8** — Vehicle + FixedCost + Inventory + BusinessNote
+  - **v1.4.0** — Login rate limit + forcePasswordChange flow + `accessibleBusinesses` strict validation
+- Tek tek geliyor çünkü her patch sonrası smoke test penceresi bırakılıyor — büyük tek-commit refactor yerine kontrollü ilerleme tercih edildi.
+- KVKK perspektifinden Y1 fix'i (pasif kullanıcı sistem dışı) tek başına bile değerli: "veri sorumlusu kullanıcı erişimini durdurmak için ne yapabilir?" sorusunun cevabı artık "1 satır SQL veya admin paneli toggle" değil; aksi şu ana kadar JWT TTL'i (30 dk) kadar açık kalıyordu.
+
+---
+
 ## [1.3.3] — 2026-05-15
 
 Audit Log iş paketinin son boşluğu: admin paneli kullanıcı CRUD aksiyonları artık audit'e düşer. Bu sürümle birlikte **"Audit Log expansion" work package'ı DONE**.
@@ -312,7 +342,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.4...HEAD
+[1.3.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.4
 [1.3.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.3
 [1.3.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.2
 [1.3.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.1

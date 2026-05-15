@@ -39,6 +39,7 @@ public class TransactionService {
     private final DeletedTransactionLogRepository deletedTransactionLogRepository;
     private final LedgerService ledgerService;
     private final AuditLogService auditLogService;
+    private final BusinessAccessGuard accessGuard;
 
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit) {
@@ -110,9 +111,7 @@ public class TransactionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (!hasAccessToBusiness(user, businessId)) {
-            throw new SecurityException("Access denied");
-        }
+        accessGuard.assertCanAccessBusiness(userId, businessId);
 
         Category category = null;
         if (request.getCategoryId() != null) {
@@ -168,9 +167,7 @@ public class TransactionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (!hasAccessToBusiness(user, transaction.getBusiness().getId())) {
-            throw new SecurityException("Access denied");
-        }
+        accessGuard.assertCanAccessBusiness(userId, transaction.getBusiness().getId());
 
         // ── Eski değerleri yakala (diff için) ───────────────────────────
         Map<String, Object> changes = new HashMap<>();
@@ -259,9 +256,7 @@ public class TransactionService {
         User deletedByUser = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (!hasAccessToBusiness(deletedByUser, business.getId())) {
-            throw new SecurityException("Access denied");
-        }
+        accessGuard.assertCanAccessBusiness(userId, business.getId());
 
         // Silinen işlemin tam kaydını oluştur
         DeletedTransactionLog deleteLog = DeletedTransactionLog.builder()
@@ -347,31 +342,4 @@ public class TransactionService {
         return businessRepository.findAllAccessibleByUser(userId);
     }
 
-    /**
-     * Kullanıcının belirli bir işletmeye erişimi var mı?
-     */
-    private boolean hasAccessToBusiness(User user, UUID businessId) {
-        if ("admin".equalsIgnoreCase(user.getRole())) {
-            return true;
-        }
-
-        String accessible = user.getAccessibleBusinesses();
-        if (accessible != null && !accessible.isBlank()) {
-            if ("all".equalsIgnoreCase(accessible.trim())) {
-                return true;
-            }
-            return Arrays.stream(accessible.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .anyMatch(s -> s.equals(businessId.toString()));
-        }
-
-        // Fallback: eski owner/member kontrolü
-        Business business = businessRepository.findById(businessId).orElse(null);
-        if (business == null) return false;
-
-        return business.getOwner().getId().equals(user.getId())
-                || business.getMembers().stream()
-                .anyMatch(m -> m.getUser().getId().equals(user.getId()));
-    }
 }
