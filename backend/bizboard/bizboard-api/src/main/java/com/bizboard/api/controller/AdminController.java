@@ -3,10 +3,12 @@ package com.bizboard.api.controller;
 import com.bizboard.common.dto.CreateUserRequest;
 import com.bizboard.common.dto.UpdateUserRequest;
 import com.bizboard.common.dto.UserDto;
+import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.AdminUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,20 +31,25 @@ public class AdminController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
-        return ResponseEntity.ok(adminUserService.createUser(request));
+    public ResponseEntity<UserDto> createUser(
+            @Valid @RequestBody CreateUserRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(adminUserService.createUser(request, principal.getId()));
     }
 
     @PutMapping("/{userId}")
     public ResponseEntity<UserDto> updateUser(
             @PathVariable UUID userId,
-            @Valid @RequestBody UpdateUserRequest request) {
-        return ResponseEntity.ok(adminUserService.updateUser(userId, request));
+            @Valid @RequestBody UpdateUserRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(adminUserService.updateUser(userId, request, principal.getId()));
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
-        adminUserService.deleteUser(userId);
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        adminUserService.deleteUser(userId, principal.getId());
         return ResponseEntity.noContent().build();
     }
 }
