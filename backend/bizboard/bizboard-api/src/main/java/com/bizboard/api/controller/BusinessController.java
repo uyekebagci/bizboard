@@ -56,8 +56,9 @@ public class BusinessController {
     @GetMapping("/{id}/transactions")
     public ResponseEntity<List<TransactionDto>> getTransactions(
             @PathVariable UUID id,
-            @RequestParam(defaultValue = "20") int limit) {
-        return ResponseEntity.ok(transactionService.getTransactions(id, limit));
+            @RequestParam(defaultValue = "20") int limit,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(transactionService.getTransactions(id, limit, principal.getId()));
     }
 
     @PostMapping("/{id}/transactions")
