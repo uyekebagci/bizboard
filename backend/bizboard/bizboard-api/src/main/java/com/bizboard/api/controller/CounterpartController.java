@@ -1,16 +1,20 @@
 package com.bizboard.api.controller;
 
 import com.bizboard.common.dto.CounterpartDto;
+import com.bizboard.common.dto.CounterpartStatementDto;
 import com.bizboard.common.dto.CreateCounterpartRequest;
 import com.bizboard.security.UserPrincipal;
+import com.bizboard.service.CounterpartLedgerService;
 import com.bizboard.service.CounterpartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +28,7 @@ import java.util.UUID;
 public class CounterpartController {
 
     private final CounterpartService service;
+    private final CounterpartLedgerService ledgerService;
 
     @GetMapping
     public ResponseEntity<List<CounterpartDto>> list(
@@ -59,4 +64,18 @@ public class CounterpartController {
         service.delete(id, principal.getId());
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Cari hesap ekstresi. {@code from}/{@code to} ISO tarih, opsiyonel.
+     * {@code from} verilmezse counterpart'ın ilk borcundan, {@code to} verilmezse
+     * bugüne kadar.
+     */
+    @GetMapping("/{id}/statement")
+    public ResponseEntity<CounterpartStatementDto> statement(
+            @PathVariable UUID id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ResponseEntity.ok(ledgerService.getStatement(id, from, to));
+    }
 }
+

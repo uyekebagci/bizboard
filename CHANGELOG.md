@@ -34,6 +34,38 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.1] — 2026-05-16
+
+**Firmalar WP dilim 2 — cari hesap motoru.** Karşı firma bazlı bakiye hesabı + ekstre + Debt akışı entegrasyonu. Bu sürümden sonra yeni borçlar bir `Counterpart`'a bağlanabiliyor, bakiyeleri otomatik güncelleniyor, period bazlı ekstre alınabiliyor. Eski string-only borçlar v1.5.3 migration utility'ye kadar yine paralel çalışmaya devam ediyor.
+
+### Added
+
+#### Backend
+- **`CounterpartLedgerService`** — cari hesap motoru.
+  - `recompute(counterpartId)`: tüm aktif (settled=false) borçların net'i = RECEIVABLE − PAYABLE. `Counterpart.currentBalance` cached kolonu güncellenir.
+  - `getStatement(counterpartId, from, to)`: kronolojik hareket listesi + opening/closing bakiye + period içi toplam alacak/borç. Her satır running balance ile.
+- **`GET /counterparts/{id}/statement?from=&to=`** — authenticated kullanıcılar için cari ekstre JSON. PDF v1.5.2'de (frontend ile birlikte). Period parametreleri opsiyonel.
+- **`POST /admin/counterparts/{id}/recompute`** — admin-only manuel cari bakiye yeniden hesaplama. Event-driven update herhangi bir nedenle (manuel SQL, restore, race) drift ettiğinde devreye girer.
+- **`CreateDebtRequest.counterpart_id`** — opsiyonel UUID. Verilirse Counterpart entity'sine bağlanır + `counterparty` string'i counterpart name ile auto-fill edilir.
+- **`DebtDto.counterpart_id` + `counterpart_name`** — frontend cari listelerinde kullanmak için.
+
+### Changed
+
+#### Backend
+- **`DebtService.createDebt/settleDebt/deleteDebt`** event-driven: counterpart_id bağlıysa her mutation sonrası `CounterpartLedgerService.recomputeIfPresent` çağrılır. Bakiye DB'de cached olarak güncel kalır; statement endpoint cached değeri closing balance olarak kullanır.
+- **`CounterpartService.delete`** artık temiz 409 Conflict dönüyor: "Bu firmaya bağlı N borç kaydı var; önce onları kaldırın veya başka firmaya taşıyın." Önceden FK constraint'i Postgres seviyesinde 500'e dönüşüyordu.
+- **`GlobalExceptionHandler`** `IllegalStateException → 409 Conflict` ekledi. v1.5.0'da gelen "Varsayılan firma silinemez" + bu sürümün "bağlı borç var" mesajları + eski `FixedCostService`'in "otomatik hesaplanan sabit gider manuel güncellenemez" durumu hepsi tek mekanizmadan 409 + Türkçe mesaj döner.
+- **`DebtRepository`** iki yeni metod: `findByCounterpartRefIdOrderByCreatedAtAsc`, `countByCounterpartRefId`.
+
+### Notes
+
+- **Bakiye anlamı:** sadece **aktif** (settled=false) borçlar bakiyeye girer. Settle edilen borç cari'yi kapatır — geçmiş hareket olarak ekstrede görünür ama balance'a katkı yapmaz. Bu UX'ten "bana hâlâ ne kadar borçlu / ben hâlâ ne kadar borçluyum" sorusunun net cevabını verir.
+- Bir counterpart'a birden fazla işletmenin borcu olabilir (counterpart cross-business). Ekstre endpoint tüm bağlı borçları döner; per-business filter v1.6+'da değerlendirilebilir.
+- Schema değişikliği yok — bu sürümün hiçbir DB ALTER'i yok, sadece kod ekleme. Cold start riski sıfıra yakın.
+- `Counterpart.currentBalance` event-driven güncellenir; recompute drift ihtimaline karşı admin endpoint elden. v1.5.x boyunca scheduled drift recompute eklenebilir (`@Scheduled` her gece tüm counterpart'ları recompute → drift sıfırlanır).
+
+---
+
 ## [1.5.0] — 2026-05-16
 
 **Firmalar & Cari Hesap iş paketinin ilk dilimi — backend domain.** İki yeni varlık tanıtılıyor: **MyCompany** (tüzel kişi — "Benim Firmalarım") ve **Counterpart** (karşı firma — "Karşı Firmalar"). v1.5.0 yalnız backend CRUD'u + entity şemasını + bootstrap'i içerir; cari hesap motoru v1.5.1, frontend UI v1.5.2, mevcut borç string'lerini counterpart'a migrate etmek v1.5.3, recurring tx engine v1.6.0 ile gelecek.
@@ -543,7 +575,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.1
 [1.5.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.0
 [1.4.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.2
 [1.4.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.1

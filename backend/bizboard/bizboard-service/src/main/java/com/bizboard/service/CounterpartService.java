@@ -8,6 +8,7 @@ import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.CounterpartRole;
 import com.bizboard.common.util.TaxIdValidator;
 import com.bizboard.repository.CounterpartRepository;
+import com.bizboard.repository.DebtRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class CounterpartService {
     private final CounterpartRepository repository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final DebtRepository debtRepository;
 
     @Transactional(readOnly = true)
     public List<CounterpartDto> list(String role) {
@@ -180,9 +182,14 @@ public class CounterpartService {
         Counterpart c = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi"));
         String name = c.getName();
-        // Not: Debt entity'sinde counterpart_id FK var; cascade tanımlı değil.
-        // Mevcut borçlar varken silinmek istenirse Postgres FK constraint reddeder.
-        // v1.5.x'te "şu kadar borç bağlı, önce taşı/sil" UX'i eklenebilir.
+
+        // v1.5.1: bağlı borç varsa Postgres FK 500 yerine temiz 400 dön.
+        long linkedDebts = debtRepository.countByCounterpartRefId(id);
+        if (linkedDebts > 0) {
+            throw new IllegalStateException(
+                    "Bu firmaya bagli " + linkedDebts + " borc kaydi var; once onlari kaldirin veya baska firmaya tasiyin.");
+        }
+
         repository.delete(c);
         log.info("Counterpart silindi: {} (id={})", name, id);
 
