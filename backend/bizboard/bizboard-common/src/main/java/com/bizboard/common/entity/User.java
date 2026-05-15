@@ -70,7 +70,7 @@ public class User {
      * değiştirme ekranına yönlendirir. {@link UserService#changePassword}
      * başarılı olduğunda false'a çekilir.
      */
-    @Column(name = "must_change_password", nullable = false, columnDefinition = "boolean default false")
+    @Column(name = "must_change_password", nullable = false)
     @org.hibernate.annotations.ColumnDefault("false")
     @Builder.Default
     private boolean mustChangePassword = false;
