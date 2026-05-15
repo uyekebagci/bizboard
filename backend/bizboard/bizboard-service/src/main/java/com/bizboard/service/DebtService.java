@@ -32,11 +32,13 @@ public class DebtService {
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final BusinessAccessGuard accessGuard;
 
     // ─── İşletmeye ait borçları getir ──────────────────────────
 
     @Transactional(readOnly = true)
     public List<DebtDto> getDebtsForBusiness(UUID businessId, UUID userId) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -99,6 +101,7 @@ public class DebtService {
 
     @Transactional
     public DebtDto createDebt(UUID businessId, CreateDebtRequest request, UUID userId) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Business not found"));
 
@@ -150,6 +153,8 @@ public class DebtService {
         Debt debt = debtRepository.findById(debtId)
                 .orElseThrow(() -> new IllegalArgumentException("Borc bulunamadi"));
 
+        accessGuard.assertCanAccessBusiness(userId, debt.getBusiness().getId());
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -190,8 +195,15 @@ public class DebtService {
         Debt debt = debtRepository.findById(debtId)
                 .orElseThrow(() -> new IllegalArgumentException("Borc bulunamadi"));
 
+        accessGuard.assertCanAccessBusiness(userId, debt.getBusiness().getId());
+
         User actor = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // admin_only borçları sadece admin settle edebilir — silmedeki ile aynı kural
+        if (debt.isAdminOnly() && !"admin".equalsIgnoreCase(actor.getRole())) {
+            throw new SecurityException("Bu borcu sadece admin settle edebilir");
+        }
 
         debt.setSettled(true);
         debt.setSettledAt(LocalDateTime.now());
@@ -220,6 +232,7 @@ public class DebtService {
 
     @Transactional(readOnly = true)
     public DebtSummaryDto getBusinessDebtSummary(UUID businessId, UUID userId) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 

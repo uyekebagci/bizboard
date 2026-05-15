@@ -34,6 +34,32 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.6] — 2026-05-15
+
+**Güvenlik hotfix — Debt + Transaction list IDOR kapatma.** v1.3.x serisinin K2 ve K8 açıkları. Önceden bir kullanıcı erişimi olmayan işletmenin borç listesini görebiliyor, borç oluşturabiliyor, settle edebiliyor, silebiliyordu; aynı şekilde `GET /businesses/{id}/transactions` liste endpoint'i yetkilendirme kontrolü yapmıyordu.
+
+### Security
+
+- **`DebtService` tüm business-scoped + tek-borç metodları `BusinessAccessGuard` kontrolü yapıyor.** Etkilenen metodlar:
+  - `getDebtsForBusiness(businessId, userId)` — listede erişim yoksa 403
+  - `getBusinessDebtSummary(businessId, userId)` — özet 403
+  - `createDebt(businessId, request, userId)` — yabancı işletmeye borç eklenemez
+  - `settleDebt(debtId, userId)` — borcun ait olduğu işletmeye erişim yoksa 403, ayrıca `adminOnly` borçlar artık sadece admin tarafından settle edilebilir (önceden delete'te kontrol vardı, settle'da yoktu — boşluk kapandı)
+  - `deleteDebt(debtId, userId)` — guard kontrolü eklendi (mevcut `adminOnly` kontrolü korundu)
+- **`TransactionService.getTransactions(businessId, limit, actorUserId)` artık guard kontrolü yapıyor.** `BusinessController.getTransactions` `@AuthenticationPrincipal` alıp `principal.getId()`'yi service'e geçiyor. Bu, K8 olarak işaretlenen list path açığını kapatır.
+
+### Changed
+
+#### Backend
+- `TransactionService.getTransactions` imzası `(UUID businessId, int limit) → (UUID businessId, int limit, UUID actorUserId)`. Tek caller `BusinessController` güncellendi; başka caller yok.
+- `DebtService.settleDebt` `adminOnly` koruması artık fiilen var. Mevcut bir adminOnly borcu non-admin biri settle ettiyse (önceki sürümlerde mümkündü) audit log retrospektif olarak `DEBT_SETTLED` kayıtlarında görünür.
+
+### Notes
+
+- Kalan açıklar v1.3.7 (File) + v1.3.8 (Vehicle, FixedCost, Inventory, BusinessNote) + v1.4.0 (rate limit, force password change) ile kapanacak.
+
+---
+
 ## [1.3.5] — 2026-05-15
 
 **Güvenlik hotfix — Employee modülü IDOR kapatma.** v1.3.x serisinin K1 (kritik) açığı: önceki sürümlerde personel endpoint'leri yetkilendirme kontrolü yapmıyordu; bir kullanıcı erişimi olmayan işletmenin personel listesini (TC kimlik no, telefon, maaş, SGK) UUID üzerinden okuyabiliyor + update/delete edebiliyordu.
@@ -364,7 +390,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.5...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.6...HEAD
+[1.3.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.6
 [1.3.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.5
 [1.3.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.4
 [1.3.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.3

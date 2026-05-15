@@ -42,7 +42,8 @@ public class TransactionService {
     private final BusinessAccessGuard accessGuard;
 
     @Transactional(readOnly = true)
-    public List<TransactionDto> getTransactions(UUID businessId, int limit) {
+    public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         List<Transaction> transactions = transactionRepository
                 .findByBusinessIdOrderByDateDesc(businessId, PageRequest.of(0, limit));
         return transactions.stream()
