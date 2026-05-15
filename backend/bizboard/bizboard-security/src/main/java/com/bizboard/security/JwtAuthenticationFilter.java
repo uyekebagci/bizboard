@@ -33,6 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = jwtUtil.getUsernameFromToken(token);
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
+            // Defense-in-depth: pasifleştirilmiş kullanıcının elindeki JWT hâlâ geçerli
+            // olsa bile burada reddet. UserPrincipal.isEnabled de kontrol eder ama
+            // Spring Security'nin AuthenticationManager akışından geçtiğimiz için
+            // her request'te kendi başımıza da doğruluyoruz.
+            if (!userDetails.isEnabled()) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

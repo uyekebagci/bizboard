@@ -117,6 +117,13 @@ public class AuthService {
         User user = userRepository.findById(stored.getUserId())
                 .orElseThrow(() -> new IllegalStateException("User no longer exists"));
 
+        // Pasifleştirilmiş kullanıcı refresh edemez. RefreshToken aktif olsa bile
+        // user.active=false ise token sahibi sistem dışı; controller 401 + cookie clear yapar.
+        if (!user.isActive()) {
+            throw new com.bizboard.service.RefreshTokenService.InvalidRefreshTokenException(
+                    "user is not active");
+        }
+
         Issued rotated = refreshTokenService.rotate(stored, httpRequest);
 
         String accessToken = jwtUtil.generateToken(
