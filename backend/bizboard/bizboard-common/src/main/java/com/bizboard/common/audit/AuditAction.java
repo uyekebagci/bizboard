@@ -4,18 +4,44 @@ package com.bizboard.common.audit;
 public final class AuditAction {
     private AuditAction() {}
 
-    public static final String FILE_UPLOAD       = "FILE_UPLOAD";
-    public static final String FILE_DOWNLOAD     = "FILE_DOWNLOAD";
-    public static final String FILE_DELETE       = "FILE_DELETE";
+    // ── File operations ──────────────────────────────────────────────────
+    public static final String FILE_UPLOAD          = "FILE_UPLOAD";
+    public static final String FILE_DOWNLOAD        = "FILE_DOWNLOAD";
+    public static final String FILE_DELETE          = "FILE_DELETE";
     public static final String FILE_DOWNLOAD_DENIED = "FILE_DOWNLOAD_DENIED";
 
+    // ── Auth / session ───────────────────────────────────────────────────
     public static final String USER_LOGIN_SUCCESS = "USER_LOGIN_SUCCESS";
     public static final String USER_LOGIN_FAILED  = "USER_LOGIN_FAILED";
     public static final String USER_LOGOUT        = "USER_LOGOUT";
-
-    /** Şifre değiştirme — başarılı operasyon. */
     public static final String PASSWORD_CHANGED   = "PASSWORD_CHANGED";
-
-    /** Revoke edilmiş refresh token tekrar kullanılmaya çalışıldı (potansiyel hırsızlık). */
     public static final String REFRESH_TOKEN_THEFT_DETECTED = "REFRESH_TOKEN_THEFT_DETECTED";
+
+    // ── User management (admin actions) ──────────────────────────────────
+    public static final String USER_CREATE        = "USER_CREATE";
+    public static final String USER_UPDATE        = "USER_UPDATE";
+    public static final String USER_DELETE        = "USER_DELETE";
+    public static final String USER_ROLE_CHANGE   = "USER_ROLE_CHANGE";
+
+    // ── Business ─────────────────────────────────────────────────────────
+    public static final String BUSINESS_CREATE    = "BUSINESS_CREATE";
+    public static final String BUSINESS_UPDATE    = "BUSINESS_UPDATE";
+    public static final String BUSINESS_DELETE    = "BUSINESS_DELETE";
+    public static final String BUSINESS_MODULE_ADD    = "BUSINESS_MODULE_ADD";
+    public static final String BUSINESS_MODULE_REMOVE = "BUSINESS_MODULE_REMOVE";
+
+    // ── Transactions (financial) ─────────────────────────────────────────
+    public static final String TRANSACTION_CREATE = "TRANSACTION_CREATE";
+    public static final String TRANSACTION_UPDATE = "TRANSACTION_UPDATE";
+    public static final String TRANSACTION_DELETE = "TRANSACTION_DELETE";
+
+    // ── Employees (HR / payroll) ─────────────────────────────────────────
+    public static final String EMPLOYEE_CREATE    = "EMPLOYEE_CREATE";
+    public static final String EMPLOYEE_UPDATE    = "EMPLOYEE_UPDATE";
+    public static final String EMPLOYEE_DELETE    = "EMPLOYEE_DELETE";
+
+    // ── Debts / receivables ──────────────────────────────────────────────
+    public static final String DEBT_CREATE        = "DEBT_CREATE";
+    public static final String DEBT_DELETE        = "DEBT_DELETE";
+    public static final String DEBT_SETTLED       = "DEBT_SETTLED";
 }

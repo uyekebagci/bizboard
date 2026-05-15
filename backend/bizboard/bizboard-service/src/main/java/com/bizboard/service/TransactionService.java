@@ -1,5 +1,6 @@
 package com.bizboard.service;
 
+import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.CreateTransactionRequest;
 import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.common.dto.UpdateTransactionRequest;
@@ -21,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -35,6 +38,7 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final DeletedTransactionLogRepository deletedTransactionLogRepository;
     private final LedgerService ledgerService;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit) {
@@ -139,6 +143,20 @@ public class TransactionService {
                     business.getName(), year, month);
         }
 
+        auditLogService.recordEntityAction(
+                AuditAction.TRANSACTION_CREATE,
+                user.getId(), user.getUsername(),
+                "TRANSACTION", transaction.getId(),
+                business.getName() + " — " + transaction.getDirection() + " " + transaction.getAmount() + " " + transaction.getCurrency(),
+                Map.of(
+                        "businessId", businessId,
+                        "amount", transaction.getAmount(),
+                        "direction", transaction.getDirection().name(),
+                        "currency", transaction.getCurrency(),
+                        "date", transaction.getDate().toString(),
+                        "categoryId", transaction.getCategory() != null ? transaction.getCategory().getId() : "null"
+                ));
+
         return DtoMapper.toTransactionDto(transaction);
     }
 
@@ -182,6 +200,18 @@ public class TransactionService {
         }
 
         transaction = transactionRepository.save(transaction);
+
+        auditLogService.recordEntityAction(
+                AuditAction.TRANSACTION_UPDATE,
+                user.getId(), user.getUsername(),
+                "TRANSACTION", transaction.getId(),
+                transaction.getBusiness().getName() + " — islem guncellendi: " + transaction.getAmount() + " " + transaction.getCurrency(),
+                Map.of(
+                        "businessId", transaction.getBusiness().getId(),
+                        "amount", transaction.getAmount(),
+                        "direction", transaction.getDirection().name()
+                ));
+
         TransactionDto dto = DtoMapper.toTransactionDto(transaction);
         dto.setBusinessName(transaction.getBusiness().getName());
         return dto;
@@ -245,6 +275,22 @@ public class TransactionService {
             log.info("Gecmis donemden islem silindi: {} {}/{} -> wait list'e eklendi",
                     business.getName(), year, month);
         }
+
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("businessId", businessId);
+        meta.put("amount", deleteLog.getAmount());
+        meta.put("direction", deleteLog.getDirection().name());
+        meta.put("currency", deleteLog.getCurrency());
+        meta.put("reason", reason);
+        if (deleteLog.getCategoryName() != null) {
+            meta.put("categoryName", deleteLog.getCategoryName());
+        }
+        auditLogService.recordEntityAction(
+                AuditAction.TRANSACTION_DELETE,
+                deletedByUser.getId(), deletedByUser.getUsername(),
+                "TRANSACTION", transactionId,
+                business.getName() + " — islem silindi: " + deleteLog.getAmount() + " " + deleteLog.getCurrency() + " (sebep: " + reason + ")",
+                meta);
     }
 
     /**
