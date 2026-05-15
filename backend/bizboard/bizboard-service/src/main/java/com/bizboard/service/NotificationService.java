@@ -1,5 +1,6 @@
 package com.bizboard.service;
 
+import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.NotificationDto;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Notification;
@@ -13,7 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -38,6 +41,7 @@ public class NotificationService {
 
     private final NotificationRepository repository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public List<NotificationDto> listForUser(UUID userId, int size) {
@@ -80,12 +84,18 @@ public class NotificationService {
     /**
      * Yeni bildirim oluştur ve kaydet.
      *
+     * <p>Bu metod ayrıca {@code NOTIFICATION_SENT} audit log kaydı düşer — kime ne
+     * gönderildi, hangi trigger'ın tetiklediği. Audit kaydı best-effort'tur (REQUIRES_NEW);
+     * audit hatası bildirim oluşumunu rollback etmez.</p>
+     *
      * @param userId      kim alacak
      * @param type        seviye (INFO / WARNING / ALERT / SUCCESS)
      * @param title       başlık (kısa)
      * @param message     içerik (1-2 cümle)
      * @param actionUrl   tıklanınca gidilecek frontend rotası (örn. "/dashboard/transactions/{id}")
      * @param businessId  ilişkili işletme (opsiyonel)
+     * @param trigger     bildirimi üreten kaynak kodu (örn. "first-login", "debt-due-soon");
+     *                    audit metadata'sına düşer, forensic için. {@code null} verilebilir.
      */
     @Transactional
     public NotificationDto create(UUID userId,
@@ -93,7 +103,8 @@ public class NotificationService {
                                   String title,
                                   String message,
                                   String actionUrl,
-                                  UUID businessId) {
+                                  UUID businessId,
+                                  String trigger) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -113,8 +124,45 @@ public class NotificationService {
         }
 
         n = repository.save(n);
-        log.debug("[notification] created id={} user={} type={}", n.getId(), userId, type);
+        log.debug("[notification] created id={} user={} type={} trigger={}",
+                n.getId(), userId, type, trigger);
+
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("recipientUserId", userId);
+        meta.put("notificationId", n.getId());
+        meta.put("type", type.name());
+        if (trigger != null && !trigger.isBlank()) {
+            meta.put("trigger", trigger);
+        }
+        if (businessId != null) {
+            meta.put("businessId", businessId);
+        }
+        if (actionUrl != null && !actionUrl.isBlank()) {
+            meta.put("actionUrl", actionUrl);
+        }
+
+        auditLogService.recordEntityAction(
+                AuditAction.NOTIFICATION_SENT,
+                // Alıcı kullanıcının username'i — bildirimi sistem ürettiği için ayrı bir
+                // "actor" yok; resourceId notification id'si, userId/userName alıcıyı işaret eder.
+                userId, user.getUsername(),
+                "NOTIFICATION", n.getId(),
+                user.getUsername() + " <- [" + type.name() + "] " + title
+                        + (trigger != null ? " (trigger=" + trigger + ")" : ""),
+                meta);
+
         return toDto(n);
+    }
+
+    /** Geriye uyumlu overload — trigger bilinmiyorsa. */
+    @Transactional
+    public NotificationDto create(UUID userId,
+                                  NotificationType type,
+                                  String title,
+                                  String message,
+                                  String actionUrl,
+                                  UUID businessId) {
+        return create(userId, type, title, message, actionUrl, businessId, null);
     }
 
     // ── helpers ────────────────────────────────────────────────────────────

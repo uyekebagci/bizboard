@@ -34,6 +34,24 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.2] — 2026-05-15
+
+Bildirim kanalı için audit kapsaması: artık sistem her bildirim ürettiğinde audit'e düşer.
+
+### Added
+
+#### Backend
+- **`NOTIFICATION_SENT` audit aksiyonu.** `NotificationService.create(...)` her başarılı bildirim üretiminden sonra audit'e satır yazar; metadata'da `recipientUserId`, `notificationId`, `type`, `trigger`, `businessId`, `actionUrl` bulunur. Audit, mevcut `recordEntityAction` pipeline'ı üzerinden best-effort yazılır (REQUIRES_NEW); bir başarısızlık bildirim oluşumunu rollback etmez.
+- **`create(...)` overload — `trigger` parametresi.** Bildirim üreten kaynak kodun adı (örn. `"first-login"`, ileride `"debt-due-soon"`, `"low-stock"`) audit metadata'sına işlenir. Forensic değerini artırır — "kim/ne neden gönderdi" sorgusu tek satır JSON'dan cevaplanır. Geriye uyumluluk için `trigger` parametresi olmayan eski imza overload olarak korundu.
+- **`AuthService.tryCreateFirstLoginNotification`** artık `trigger="first-login"` parametresini geçiriyor; audit log'ta canary'nin niye attığı görünür.
+
+### Notes
+
+- Notification audit log'u kullanıcı seviyesinde değil sistem seviyesinde tutulur — `userId` alanı _alıcı_ kullanıcıyı işaret eder, çünkü bildirimi sistem otomatik üretir (aksiyon yapan başka bir kullanıcı yoktur). Bu, dosya audit'iyle uyumlu konvansiyondur.
+- Audit retention v1.3.1'de eklendiği için bu yeni `NOTIFICATION_SENT` satırları da 90 günden sonra otomatik silinir.
+
+---
+
 ## [1.3.1] — 2026-05-15
 
 v1.3.0'ın bıraktığı audit kuyruğunun tamamı: UPDATE aksiyonları, Employee servisi için tam audit kapsaması ve audit tablosu retention temizliği.
@@ -273,7 +291,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.2
 [1.3.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.1
 [1.3.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.0
 [1.2.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.2.0
