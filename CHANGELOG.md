@@ -34,6 +34,27 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.3] — 2026-05-15
+
+Audit Log iş paketinin son boşluğu: admin paneli kullanıcı CRUD aksiyonları artık audit'e düşer. Bu sürümle birlikte **"Audit Log expansion" work package'ı DONE**.
+
+### Added
+
+#### Backend
+- **`USER_CREATE` / `USER_UPDATE` / `USER_DELETE` / `USER_ROLE_CHANGE` audit hook'ları.** `AdminUserService` mutasyon metodları artık actor `UUID` alıyor; her aksiyon audit'e satır yazar. Rol değişimi varsa `USER_ROLE_CHANGE` AYRI bir satır olarak da düşer (security-kritik aksiyon olduğu için tek başına sorgulanabilmesi gerekiyor). Update'te alan diff'i `changes: {field: {from, to}}` formatında metadata'ya işlenir.
+- `AdminController` artık `@AuthenticationPrincipal UserPrincipal` ile aksiyonu yapan admin'in id'sini service'e geçiriyor.
+
+### Security
+
+- **Şifre değeri audit'e ASLA girmez.** `updateUser` request'inde password gelirse audit metadata'sında sadece `"password": "changed"` bayrağı işlenir; eski/yeni şifre hash'leri bile JSON'a yazılmaz.
+
+### Notes
+
+- Audit log work package TODO listesi tamamen kapandı; backend tarafında security-kritik aksiyonların tümü artık `audit_logs` tablosuna düşüyor: auth (login/logout/password/refresh-theft), user CRUD + rol, business create + module add/remove, transaction CRUD + delete-reason, employee CRUD, debt create/delete/settle, file upload/download/delete, notification sent. Retention 90 gün (v1.3.1).
+- Bundan sonraki audit kapsam genişletmeleri (correlation IDs, log shipping, real-time stream, alerting, tamper-proof chain, OpenTelemetry, KVKK anonymization) Çatı v2 iş paketi altındaki ileri seviye logging TODO'larında listeli.
+
+---
+
 ## [1.3.2] — 2026-05-15
 
 Bildirim kanalı için audit kapsaması: artık sistem her bildirim ürettiğinde audit'e düşer.
@@ -291,7 +312,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.3...HEAD
+[1.3.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.3
 [1.3.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.2
 [1.3.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.1
 [1.3.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.0
