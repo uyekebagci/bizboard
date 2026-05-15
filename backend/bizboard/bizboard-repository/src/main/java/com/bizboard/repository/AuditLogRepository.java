@@ -4,6 +4,7 @@ import com.bizboard.common.entity.AuditLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -42,4 +43,12 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to,
             Pageable pageable);
+
+    /**
+     * Retention cleanup — {@code cutoff} tarihinden eski tüm audit kayıtlarını siler.
+     * Silinen satır sayısını döndürür. Bulk delete, JPA cache'ini bypass eder.
+     */
+    @Modifying
+    @Query("delete from AuditLog a where a.createdAt < :cutoff")
+    long deleteCreatedBefore(@Param("cutoff") LocalDateTime cutoff);
 }

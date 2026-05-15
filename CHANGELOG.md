@@ -34,6 +34,33 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.1] — 2026-05-15
+
+v1.3.0'ın bıraktığı audit kuyruğunun tamamı: UPDATE aksiyonları, Employee servisi için tam audit kapsaması ve audit tablosu retention temizliği.
+
+### Added
+
+#### Backend
+- **`EMPLOYEE_CREATE / UPDATE / DELETE` audit hook'ları.** `EmployeeService` artık `AuditLogService`'i kullanıyor; controller `@AuthenticationPrincipal UserPrincipal` üzerinden actor userId'sini her mutasyon metoduna geçiriyor. `toggleEmployeeActive` da `EMPLOYEE_UPDATE` olarak audit'e düşer (`active: from/to` metadata'sıyla). TC kimlik no ve telefon gibi PII alanlar diff'te "changed" bayrağı olarak görünür — değer JSON'a koymuyoruz.
+- **`BUSINESS_MODULE_ADD / REMOVE` audit hook'ları.** `BusinessService.addModule/removeModule` modül durumu gerçekten değiştiğinde audit'e düşer (zaten enable olan modülü tekrar enable etmek audit üretmez). Controller principal'ı thread eder.
+- **`AuditLogCleanupTask`** — `@Scheduled` retention görevi. Her gün UTC 03:45 (Europe/Istanbul) çalışır, `app.audit.retention-days` (default 90) günden eski `audit_log` satırlarını toplu siler. `0` verilirse görev iptal olur. Cron pattern env üzerinden override edilebilir (`APP_AUDIT_CLEANUP_CRON`).
+- **`AuditLogRepository.deleteCreatedBefore(cutoff)`** — `@Modifying` JPQL bulk delete; cleanup task'in çağırdığı tek hat.
+
+### Changed
+
+#### Backend
+- **`TransactionService.updateTransaction` audit metadata'sı şimdi alan bazlı diff içeriyor.** Önceki sürümde sadece son hali yazılıyordu (`amount`, `direction`). Şimdi her değişen alan için `{from, to}` çifti `changes` altında JSON'a düşer, `fieldsChanged` sayacı eklendi. Aynı değerle update isteği gelirse o alan diff'e girmez. `metadata` alanı JSONB serbest yapı olduğu için diff yerine "güncellendi" bayrağıyla işaretlenir.
+- **`EmployeeService` mutasyon metodlarının imzası genişledi:** `createEmployee/updateEmployee/toggleEmployeeActive/deleteEmployee` artık actor `UUID` alıyor. Bu, audit hook'larının username'i denormalize edebilmesi için zorunluydu.
+- **`BusinessService.addModule/removeModule` imzası genişledi:** İkisi de actor `UUID` alıyor.
+
+### Notes
+
+- Audit log retention default'u 90 gün; agresif silinme istenmiyorsa env'de değiştirilebilir. KVKK perspektifinden 90 gün uygun bir baseline — daha kısa tutmak isteyen kurumlar `APP_AUDIT_RETENTION_DAYS=30` set edebilir.
+- `DEBT_UPDATE` audit aksiyonu **eklenmedi** çünkü `DebtService`'in update metodu yok ve `DebtController`'da PUT endpoint'i bulunmuyor; sadece settle (DEBT_SETTLED) + delete (DEBT_DELETE) akışları var. Borç düzenleme UI'a girince ayrı bir patch'te eklenir.
+- Audit tablosu büyüme metriği prod'da takip edilmeli; ilk birkaç ay 90 günlük retention'ın ne kadar satır tutacağı görüldükten sonra ayar yapılır.
+
+---
+
 ## [1.3.0] — 2026-05-15
 
 Audit log genişletmesi: artık tüm güvenlik-kritik aksiyonlar `audit_logs` tablosuna düşer ve admin paneli üzerinden filtreli olarak okunur.
@@ -246,7 +273,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.1
 [1.3.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.0
 [1.2.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.2.0
 [1.1.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.1.0
