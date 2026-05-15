@@ -23,11 +23,13 @@ public class FixedCostService {
 
     private final FixedCostRepository fixedCostRepository;
     private final BusinessRepository businessRepository;
+    private final BusinessAccessGuard accessGuard;
 
     // ─── İşletmeye ait sabit giderleri getir ────────────────────
 
     @Transactional(readOnly = true)
-    public List<FixedCostDto> getFixedCostsForBusiness(UUID businessId) {
+    public List<FixedCostDto> getFixedCostsForBusiness(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         return fixedCostRepository.findByBusinessIdOrderByCreatedAtDesc(businessId)
                 .stream().map(this::toDto).toList();
     }
@@ -35,7 +37,8 @@ public class FixedCostService {
     // ─── Sabit gider özeti ──────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public FixedCostSummaryDto getFixedCostSummary(UUID businessId) {
+    public FixedCostSummaryDto getFixedCostSummary(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         List<FixedCost> costs = fixedCostRepository
                 .findByBusinessIdAndActiveTrueOrderByCreatedAtDesc(businessId);
 
@@ -63,7 +66,8 @@ public class FixedCostService {
     // ─── Sabit gider oluştur ────────────────────────────────────
 
     @Transactional
-    public FixedCostDto createFixedCost(UUID businessId, CreateFixedCostRequest request) {
+    public FixedCostDto createFixedCost(UUID businessId, CreateFixedCostRequest request, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Isletme bulunamadi"));
 
@@ -86,9 +90,10 @@ public class FixedCostService {
     // ─── Sabit gider güncelle ───────────────────────────────────
 
     @Transactional
-    public FixedCostDto updateFixedCost(UUID fixedCostId, CreateFixedCostRequest request) {
+    public FixedCostDto updateFixedCost(UUID fixedCostId, CreateFixedCostRequest request, UUID actorUserId) {
         FixedCost fc = fixedCostRepository.findById(fixedCostId)
                 .orElseThrow(() -> new IllegalArgumentException("Sabit gider bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, fc.getBusiness().getId());
 
         // Otomatik hesaplanan giderleri manual güncellemeye izin verme
         if (fc.isAuto()) {
@@ -109,9 +114,10 @@ public class FixedCostService {
     // ─── Sabit gider sil ────────────────────────────────────────
 
     @Transactional
-    public void deleteFixedCost(UUID fixedCostId) {
+    public void deleteFixedCost(UUID fixedCostId, UUID actorUserId) {
         FixedCost fc = fixedCostRepository.findById(fixedCostId)
                 .orElseThrow(() -> new IllegalArgumentException("Sabit gider bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, fc.getBusiness().getId());
 
         if (fc.isAuto()) {
             throw new IllegalStateException("Otomatik hesaplanan sabit giderler silinemez");

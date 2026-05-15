@@ -25,7 +25,7 @@ public class BusinessNoteController {
     public ResponseEntity<List<BusinessNoteDto>> getNotes(
             @PathVariable UUID businessId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(noteService.getNotesForBusiness(businessId, principal.isAdmin()));
+        return ResponseEntity.ok(noteService.getNotesForBusiness(businessId, principal.getId(), principal.isAdmin()));
     }
 
     @PostMapping
@@ -43,21 +43,23 @@ public class BusinessNoteController {
             @PathVariable UUID noteId,
             @Valid @RequestBody CreateNoteRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(noteService.updateNote(noteId, request, principal.isAdmin()));
+        return ResponseEntity.ok(noteService.updateNote(noteId, request, principal.getId(), principal.isAdmin()));
     }
 
     @PatchMapping("/{noteId}/pin")
     public ResponseEntity<BusinessNoteDto> togglePin(
             @PathVariable UUID businessId,
-            @PathVariable UUID noteId) {
-        return ResponseEntity.ok(noteService.togglePin(noteId));
+            @PathVariable UUID noteId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(noteService.togglePin(noteId, principal.getId()));
     }
 
     @DeleteMapping("/{noteId}")
     public ResponseEntity<Void> deleteNote(
             @PathVariable UUID businessId,
-            @PathVariable UUID noteId) {
-        noteService.deleteNote(noteId);
+            @PathVariable UUID noteId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        noteService.deleteNote(noteId, principal.getId());
         return ResponseEntity.noContent().build();
     }
 }

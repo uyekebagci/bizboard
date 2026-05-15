@@ -34,6 +34,30 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.8] — 2026-05-15
+
+**Güvenlik hotfix — geri kalan iş-paketleri.** v1.3.x serisinin K4–K7 açıkları toplu kapatılıyor: Vehicle, FixedCost, Inventory (item + maintenance + fuel logs), BusinessNote. Hepsi aynı pattern: service'lere `BusinessAccessGuard` enjeksiyonu, mutation+read metodlarına actor `UUID` parametresi, controller'larda `@AuthenticationPrincipal` zorunlu.
+
+### Security
+
+- **`VehicleService`** — `getVehiclesForBusiness`, `getVehicleSummary`, `getVehicle`, `createVehicle`, `updateVehicle`, `toggleVehicleActive`, `deleteVehicle` hepsi guard kontrolünden geçer. Önceden hiçbir endpoint yetkilendirme yapmıyordu; herhangi bir authenticated kullanıcı UUID ile yabancı işletmenin araçlarını (plaka, şasi numarası, motor no, kira sözleşmesi) okuyabilir + güncelleyebilir + silebilirdi.
+- **`FixedCostService`** — `getFixedCostsForBusiness`, `getFixedCostSummary`, `createFixedCost`, `updateFixedCost`, `deleteFixedCost`. Otomatik hesaplanan personel/araç sabit giderleri görünüyordu — artık erişim filtreli.
+- **`InventoryService`** — tüm item endpoint'leri (`getItems`, `getItemsByCategory`, `getItem`, `createItem`, `updateItem`, `deleteItem`, `getSummary`) + sub-resource'lar `MaintenanceLog` ve `FuelLog` (read + write). Parent inventory item'ın business'ı guard'a doğrulatılır.
+- **`BusinessNoteService`** — `getNotesForBusiness`, `createNote`, `updateNote`, `togglePin`, `deleteNote`. Mevcut `adminOnly` flag'i korunur; ek olarak işletmeye erişim artık zorunlu.
+
+### Changed
+
+#### Backend
+- Yukarıdaki 4 service'in mutation+read metod imzaları actor `UUID` alacak şekilde genişledi. İlgili controller'lar (`VehicleController`, `FixedCostController`, `InventoryController`, `BusinessNoteController`) `@AuthenticationPrincipal UserPrincipal principal` parametresini her endpoint'e ekledi ve `principal.getId()` (gerekirse `principal.isAdmin()`) iletiyor.
+
+### Notes
+
+- **v1.3.x güvenlik serisi backend tarafında tamamlandı.** Geriye kalan iki açık (Y2 — login rate limit, Y5 — forcePasswordChange flow) feature-shaped davranış değişiklikleri içerdiği için v1.4.0'da ele alınacak.
+- Y3 (`accessibleBusinesses` string kolonu kırılganlığı) v1.4.0'da strict validation ile kapatılacak; tam normalize tablo migration'ı v2.0.0 Flyway iş paketinde.
+- Audit log retention 90 gün; serideki tüm fix'ler audit'e düşmüş "Access denied" 403'leri retrospektif olarak görünür kalır.
+
+---
+
 ## [1.3.7] — 2026-05-15
 
 **Güvenlik hotfix — File operations yetkilendirmesi.** v1.3.x serisinin K3 açığı. Önceden dosya download/info, delete ve link endpoint'leri ya hiç ya da yalnız `adminOnly` flag'i ile korunuyordu. Authenticated herhangi bir kullanıcı, UUID'sini bildiği başka kullanıcının dosyasını indirebiliyor, silebiliyor, başka bir entity'ye link'leyebiliyordu.
@@ -419,7 +443,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.7...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.8...HEAD
+[1.3.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.8
 [1.3.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.7
 [1.3.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.6
 [1.3.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.5

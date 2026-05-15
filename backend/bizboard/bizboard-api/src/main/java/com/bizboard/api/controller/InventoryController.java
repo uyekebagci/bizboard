@@ -24,74 +24,89 @@ public class InventoryController {
     @GetMapping("/businesses/{businessId}/inventory")
     public ResponseEntity<List<InventoryItemDto>> getItems(
             @PathVariable UUID businessId,
-            @RequestParam(required = false) String category) {
+            @RequestParam(required = false) String category,
+            @AuthenticationPrincipal UserPrincipal principal) {
         if (category != null && !category.isBlank()) {
-            return ResponseEntity.ok(inventoryService.getItemsByCategory(businessId, category));
+            return ResponseEntity.ok(inventoryService.getItemsByCategory(businessId, category, principal.getId()));
         }
-        return ResponseEntity.ok(inventoryService.getItems(businessId));
+        return ResponseEntity.ok(inventoryService.getItems(businessId, principal.getId()));
     }
 
     @GetMapping("/businesses/{businessId}/inventory/summary")
-    public ResponseEntity<InventorySummaryDto> getSummary(@PathVariable UUID businessId) {
-        return ResponseEntity.ok(inventoryService.getSummary(businessId));
+    public ResponseEntity<InventorySummaryDto> getSummary(
+            @PathVariable UUID businessId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(inventoryService.getSummary(businessId, principal.getId()));
     }
 
     @PostMapping("/businesses/{businessId}/inventory")
     public ResponseEntity<InventoryItemDto> createItem(
             @PathVariable UUID businessId,
-            @Valid @RequestBody CreateInventoryItemRequest request) {
+            @Valid @RequestBody CreateInventoryItemRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(inventoryService.createItem(businessId, request));
+                .body(inventoryService.createItem(businessId, request, principal.getId()));
     }
 
     // ── Tekil envanter kalemi ──
 
     @GetMapping("/inventory/{itemId}")
-    public ResponseEntity<InventoryItemDto> getItem(@PathVariable UUID itemId) {
-        return ResponseEntity.ok(inventoryService.getItem(itemId));
+    public ResponseEntity<InventoryItemDto> getItem(
+            @PathVariable UUID itemId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(inventoryService.getItem(itemId, principal.getId()));
     }
 
     @PutMapping("/inventory/{itemId}")
     public ResponseEntity<InventoryItemDto> updateItem(
             @PathVariable UUID itemId,
-            @RequestBody CreateInventoryItemRequest request) {
-        return ResponseEntity.ok(inventoryService.updateItem(itemId, request));
+            @RequestBody CreateInventoryItemRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(inventoryService.updateItem(itemId, request, principal.getId()));
     }
 
     @DeleteMapping("/inventory/{itemId}")
-    public ResponseEntity<Void> deleteItem(@PathVariable UUID itemId) {
-        inventoryService.deleteItem(itemId);
+    public ResponseEntity<Void> deleteItem(
+            @PathVariable UUID itemId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        inventoryService.deleteItem(itemId, principal.getId());
         return ResponseEntity.noContent().build();
     }
 
     // ── Bakım kayıtları ──
 
     @GetMapping("/inventory/{itemId}/maintenance")
-    public ResponseEntity<List<MaintenanceLogDto>> getMaintenanceLogs(@PathVariable UUID itemId) {
-        return ResponseEntity.ok(inventoryService.getMaintenanceLogs(itemId));
+    public ResponseEntity<List<MaintenanceLogDto>> getMaintenanceLogs(
+            @PathVariable UUID itemId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(inventoryService.getMaintenanceLogs(itemId, principal.getId()));
     }
 
     @PostMapping("/inventory/{itemId}/maintenance")
     public ResponseEntity<MaintenanceLogDto> addMaintenanceLog(
             @PathVariable UUID itemId,
-            @Valid @RequestBody CreateMaintenanceLogRequest request) {
+            @Valid @RequestBody CreateMaintenanceLogRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(inventoryService.addMaintenanceLog(itemId, request));
+                .body(inventoryService.addMaintenanceLog(itemId, request, principal.getId()));
     }
 
     // ── Yakıt kayıtları ──
 
     @GetMapping("/inventory/{itemId}/fuel-logs")
-    public ResponseEntity<List<FuelLogDto>> getFuelLogs(@PathVariable UUID itemId) {
-        return ResponseEntity.ok(inventoryService.getFuelLogs(itemId));
+    public ResponseEntity<List<FuelLogDto>> getFuelLogs(
+            @PathVariable UUID itemId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(inventoryService.getFuelLogs(itemId, principal.getId()));
     }
 
     @PostMapping("/inventory/{itemId}/fuel-logs")
     public ResponseEntity<FuelLogDto> addFuelLog(
             @PathVariable UUID itemId,
-            @Valid @RequestBody CreateFuelLogRequest request) {
+            @Valid @RequestBody CreateFuelLogRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(inventoryService.addFuelLog(itemId, request));
+                .body(inventoryService.addFuelLog(itemId, request, principal.getId()));
     }
 
     // ── Tüm işletmelerin envanteri (portfolio) ──

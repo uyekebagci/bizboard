@@ -29,17 +29,20 @@ public class InventoryService {
     private final FuelLogRepository fuelLogRepository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
+    private final BusinessAccessGuard accessGuard;
 
     // ── Envanter Kalemleri ──
 
     @Transactional(readOnly = true)
-    public List<InventoryItemDto> getItems(UUID businessId) {
+    public List<InventoryItemDto> getItems(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         return inventoryItemRepository.findByBusinessIdAndActiveTrueOrderByCreatedAtDesc(businessId)
                 .stream().map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<InventoryItemDto> getItemsByCategory(UUID businessId, String category) {
+    public List<InventoryItemDto> getItemsByCategory(UUID businessId, String category, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         return inventoryItemRepository
                 .findByBusinessIdAndCategoryAndActiveTrueOrderByCreatedAtDesc(businessId, category.toUpperCase(java.util.Locale.ENGLISH))
                 .stream().map(this::toDto).toList();
@@ -56,14 +59,16 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public InventoryItemDto getItem(UUID itemId) {
+    public InventoryItemDto getItem(UUID itemId, UUID actorUserId) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory item not found"));
+        accessGuard.assertCanAccessBusiness(actorUserId, item.getBusiness().getId());
         return toDto(item);
     }
 
     @Transactional
-    public InventoryItemDto createItem(UUID businessId, CreateInventoryItemRequest request) {
+    public InventoryItemDto createItem(UUID businessId, CreateInventoryItemRequest request, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Business not found"));
 
@@ -104,9 +109,10 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryItemDto updateItem(UUID itemId, CreateInventoryItemRequest request) {
+    public InventoryItemDto updateItem(UUID itemId, CreateInventoryItemRequest request, UUID actorUserId) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory item not found"));
+        accessGuard.assertCanAccessBusiness(actorUserId, item.getBusiness().getId());
 
         if (request.getName() != null) item.setName(request.getName());
         if (request.getCategory() != null) item.setCategory(request.getCategory().toUpperCase(java.util.Locale.ENGLISH));
@@ -142,9 +148,10 @@ public class InventoryService {
     }
 
     @Transactional
-    public void deleteItem(UUID itemId) {
+    public void deleteItem(UUID itemId, UUID actorUserId) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory item not found"));
+        accessGuard.assertCanAccessBusiness(actorUserId, item.getBusiness().getId());
         item.setActive(false);
         inventoryItemRepository.save(item);
     }
@@ -152,7 +159,8 @@ public class InventoryService {
     // ── Özet ──
 
     @Transactional(readOnly = true)
-    public InventorySummaryDto getSummary(UUID businessId) {
+    public InventorySummaryDto getSummary(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         List<InventoryItem> items = inventoryItemRepository
                 .findByBusinessIdAndActiveTrueOrderByCreatedAtDesc(businessId);
 
@@ -256,15 +264,19 @@ public class InventoryService {
     // ── Bakım Kayıtları ──
 
     @Transactional(readOnly = true)
-    public List<MaintenanceLogDto> getMaintenanceLogs(UUID itemId) {
+    public List<MaintenanceLogDto> getMaintenanceLogs(UUID itemId, UUID actorUserId) {
+        InventoryItem item = inventoryItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Inventory item not found"));
+        accessGuard.assertCanAccessBusiness(actorUserId, item.getBusiness().getId());
         return maintenanceLogRepository.findByInventoryItemIdOrderByDateDesc(itemId)
                 .stream().map(this::toMaintenanceDto).toList();
     }
 
     @Transactional
-    public MaintenanceLogDto addMaintenanceLog(UUID itemId, CreateMaintenanceLogRequest request) {
+    public MaintenanceLogDto addMaintenanceLog(UUID itemId, CreateMaintenanceLogRequest request, UUID actorUserId) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory item not found"));
+        accessGuard.assertCanAccessBusiness(actorUserId, item.getBusiness().getId());
 
         MaintenanceLog log = MaintenanceLog.builder()
                 .inventoryItem(item)
@@ -288,15 +300,19 @@ public class InventoryService {
     // ── Yakıt Kayıtları ──
 
     @Transactional(readOnly = true)
-    public List<FuelLogDto> getFuelLogs(UUID itemId) {
+    public List<FuelLogDto> getFuelLogs(UUID itemId, UUID actorUserId) {
+        InventoryItem item = inventoryItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Inventory item not found"));
+        accessGuard.assertCanAccessBusiness(actorUserId, item.getBusiness().getId());
         return fuelLogRepository.findByInventoryItemIdOrderByDateDesc(itemId)
                 .stream().map(this::toFuelDto).toList();
     }
 
     @Transactional
-    public FuelLogDto addFuelLog(UUID itemId, CreateFuelLogRequest request) {
+    public FuelLogDto addFuelLog(UUID itemId, CreateFuelLogRequest request, UUID actorUserId) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory item not found"));
+        accessGuard.assertCanAccessBusiness(actorUserId, item.getBusiness().getId());
 
         FuelLog log = FuelLog.builder()
                 .inventoryItem(item)
