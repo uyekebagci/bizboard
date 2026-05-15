@@ -38,9 +38,23 @@ public class Debt {
     @Column(nullable = false)
     private DebtDirection direction;
 
-    /** Karşı tarafın adı (kimden alınacak / kime verilecek) */
+    /**
+     * Karşı tarafın adı (free-text). v1.5.0 öncesi tek bilgi kaynağıydı;
+     * şimdi yeni borçlar {@link #counterpartRef} (Counterpart entity) ile
+     * normalize ediliyor. Geriye uyumluluk için bu string zorunlu kalır —
+     * counterpart_id varsa onun {@code name}'i buraya yazılır.
+     */
     @Column(name = "counterparty", nullable = false)
     private String counterparty;
+
+    /**
+     * v1.5.0: yeni borçlar bir {@link Counterpart} kaydına bağlanır;
+     * cari hesap motoru bu üzerinden balance hesaplar. Eski kayıtlarda
+     * null olabilir (migration utility v1.5.x'te bağlayacak).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "counterpart_id")
+    private Counterpart counterpartRef;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;

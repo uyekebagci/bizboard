@@ -47,4 +47,14 @@ public final class AuditAction {
 
     // ── Notifications ────────────────────────────────────────────────────
     public static final String NOTIFICATION_SENT  = "NOTIFICATION_SENT";
+
+    // ── MyCompany (legal entity) ─────────────────────────────────────────
+    public static final String MY_COMPANY_CREATE  = "MY_COMPANY_CREATE";
+    public static final String MY_COMPANY_UPDATE  = "MY_COMPANY_UPDATE";
+    public static final String MY_COMPANY_DELETE  = "MY_COMPANY_DELETE";
+
+    // ── Counterpart (karşı firma / cari hesap) ───────────────────────────
+    public static final String COUNTERPART_CREATE = "COUNTERPART_CREATE";
+    public static final String COUNTERPART_UPDATE = "COUNTERPART_UPDATE";
+    public static final String COUNTERPART_DELETE = "COUNTERPART_DELETE";
 }
