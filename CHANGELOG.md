@@ -34,6 +34,35 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.3.7] — 2026-05-15
+
+**Güvenlik hotfix — File operations yetkilendirmesi.** v1.3.x serisinin K3 açığı. Önceden dosya download/info, delete ve link endpoint'leri ya hiç ya da yalnız `adminOnly` flag'i ile korunuyordu. Authenticated herhangi bir kullanıcı, UUID'sini bildiği başka kullanıcının dosyasını indirebiliyor, silebiliyor, başka bir entity'ye link'leyebiliyordu.
+
+### Security
+
+- **Dosya yetkilendirme matrisi (yeni):**
+  - **Read** (download `GET /files/{id}`, info `GET /files/{id}/info`, list `/files/by-entity`, `/files/all`):
+    `admin` OR `uploader` OR (`entityType=business` ve user'ın o işletmeye erişimi var). Eski `adminOnly` bayrağı non-admin'i her durumda kapatır.
+  - **Mutate** (delete `DELETE /files/{id}`, link `PATCH /files/{id}/link`):
+    `admin` OR `uploader`. Business access yetmez — başkasının dosyasını silmek/link'lemek için yükleyen veya admin olmak gerekir.
+- **`POST /files` upload** artık business'a bağlı upload'larda hedef işletmeye erişim kontrolü yapıyor. Yabancı işletmeye dosya yapıştırılamaz.
+- **`PATCH /files/{id}/link`** önceden controller'da `@AuthenticationPrincipal` BİLE almıyordu — kim olduğun bilinmiyordu. Artık zorunlu.
+- **`/files/all` non-admin filtreleme:** önceden non-admin'e tüm non-adminOnly dosyaları döndürüyordu. Artık per-file `canRead` filtresinden geçirilir; user'ın yüklediği veya erişebildiği business'lara bağlı dosyalar görünür.
+
+### Changed
+
+#### Backend
+- `FileStorageService` `canRead(userId, isAdmin, file)` + `canMutate(userId, isAdmin, file)` policy metodları eklendi. Controller doğrudan bunları çağırıyor.
+- `FileStorageService.upload/getFilesByEntity/getAllFiles/linkToEntity/deleteFile` imzaları aktör + admin bayrağı alacak şekilde genişledi.
+- `FileController` her endpoint'te `@AuthenticationPrincipal UserPrincipal` zorunlu.
+
+### Notes
+
+- **Bilinen sınırlama:** transaction/employee/debt gibi sub-entity'lere bağlı dosyalar (entityType ≠ "business") için yetkilendirme policy'si şu an _admin VE uploader_ ile sınırlı. Parent-business çözünürlüğü (örn. dosya bir transaction'a bağlıysa transaction'ın business'ı üzerinden access check) v1.4+ iş paketine bırakıldı. Pratikte BizBoard'da çoğu dosya "business" entity'sine bağlı; bu boşluk dar.
+- Uploader'ın kullandığı user UUID kalıcı bir referans değil — kullanıcı silinirse o dosyaya artık sadece admin erişir. KVKK perspektifinden bu kabul edilebilir: silinen kullanıcının yüklemesi orphan olur, admin yönetir.
+
+---
+
 ## [1.3.6] — 2026-05-15
 
 **Güvenlik hotfix — Debt + Transaction list IDOR kapatma.** v1.3.x serisinin K2 ve K8 açıkları. Önceden bir kullanıcı erişimi olmayan işletmenin borç listesini görebiliyor, borç oluşturabiliyor, settle edebiliyor, silebiliyordu; aynı şekilde `GET /businesses/{id}/transactions` liste endpoint'i yetkilendirme kontrolü yapmıyordu.
@@ -390,7 +419,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.6...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.3.7...HEAD
+[1.3.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.7
 [1.3.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.6
 [1.3.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.5
 [1.3.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.3.4
