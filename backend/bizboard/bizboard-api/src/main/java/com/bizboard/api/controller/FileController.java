@@ -27,10 +27,15 @@ import java.util.UUID;
 /**
  * File upload / download endpoints.
  *
+ * <p>v1.3.7+ ile dosya yetkilendirme matrisi:</p>
+ * <ul>
+ *   <li><b>Read</b> (download / info): admin OR uploader OR (entityType=business
+ *       ve user'ın o işletmeye erişimi); ayrıca {@code adminOnly} bayrağı non-admin'i kapatır.</li>
+ *   <li><b>Mutate</b> (delete, link): admin OR uploader. Business access yetmez.</li>
+ * </ul>
+ *
  * <p>Downloads are served via {@link StreamingResponseBody} — the backend never
- * buffers the whole file in memory, which lets us proxy large objects from S3
- * without OOM risk. Every download is recorded in {@code audit_logs} (when
- * {@code app.audit.log-file-downloads=true}).</p>
+ * buffers the whole file in memory.</p>
  */
 @Slf4j
 @RestController
@@ -44,12 +49,6 @@ public class FileController {
     @Value("${app.audit.log-file-downloads:true}")
     private boolean auditDownloads;
 
-    /** Default streaming buffer (8 KB) — small enough not to spike memory, big enough for throughput. */
-    private static final int STREAM_BUFFER = 8 * 1024;
-
-    /**
-     * Upload a file.
-     */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FileUploadDto> uploadFile(
             @RequestParam("file") MultipartFile file,
@@ -66,7 +65,8 @@ public class FileController {
         FileUploadDto dto = fileStorageService.upload(
                 file, category, entityType, entityId,
                 principal.getId(), principal.getFullName(),
-                description, effectiveAdminOnly
+                description, effectiveAdminOnly,
+                principal.isAdmin()
         );
 
         auditLog.recordFileAction(
@@ -78,9 +78,6 @@ public class FileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    /**
-     * Stream a file back to the client (proxy from storage backend).
-     */
     @GetMapping("/{fileId}")
     public ResponseEntity<StreamingResponseBody> downloadFile(
             @PathVariable UUID fileId,
@@ -89,7 +86,7 @@ public class FileController {
 
         FileUpload entity = fileStorageService.getFileEntity(fileId);
 
-        if (entity.isAdminOnly() && !principal.isAdmin()) {
+        if (!fileStorageService.canRead(principal.getId(), principal.isAdmin(), entity)) {
             if (auditDownloads) {
                 auditLog.recordFileAction(
                         AuditAction.FILE_DOWNLOAD_DENIED,
@@ -130,16 +127,13 @@ public class FileController {
                 .body(body);
     }
 
-    /**
-     * File metadata only (no body).
-     */
     @GetMapping("/{fileId}/info")
     public ResponseEntity<FileUploadDto> getFileInfo(
             @PathVariable UUID fileId,
             @AuthenticationPrincipal UserPrincipal principal) {
         FileUpload entity = fileStorageService.getFileEntity(fileId);
 
-        if (entity.isAdminOnly() && !principal.isAdmin()) {
+        if (!fileStorageService.canRead(principal.getId(), principal.isAdmin(), entity)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -159,22 +153,16 @@ public class FileController {
                 .build());
     }
 
-    /**
-     * Files attached to a particular entity (e.g. business documents tab).
-     */
     @GetMapping("/by-entity")
     public ResponseEntity<List<FileUploadDto>> getFilesByEntity(
             @RequestParam("entity_type") String entityType,
             @RequestParam("entity_id") UUID entityId,
             @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(
-                fileStorageService.getFilesByEntity(entityType, entityId, principal.isAdmin())
+                fileStorageService.getFilesByEntity(entityType, entityId, principal.getId(), principal.isAdmin())
         );
     }
 
-    /**
-     * Optionally filtered list of all files.
-     */
     @GetMapping("/all")
     public ResponseEntity<List<FileUploadDto>> getAllFiles(
             @RequestParam(value = "entity_type", required = false) String entityType,
@@ -183,39 +171,35 @@ public class FileController {
 
         if (entityType != null && entityId != null) {
             return ResponseEntity.ok(
-                    fileStorageService.getFilesByEntity(entityType, entityId, principal.isAdmin())
+                    fileStorageService.getFilesByEntity(entityType, entityId, principal.getId(), principal.isAdmin())
             );
         }
         return ResponseEntity.ok(
-                fileStorageService.getAllFiles(principal.isAdmin())
+                fileStorageService.getAllFiles(principal.getId(), principal.isAdmin())
         );
     }
 
-    /**
-     * Link an existing file to an entity.
-     */
     @PatchMapping("/{fileId}/link")
     public ResponseEntity<Void> linkFile(
             @PathVariable UUID fileId,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserPrincipal principal) {
         String entityType = body.get("entity_type");
         String entityIdStr = body.get("entity_id");
         if (entityType == null || entityIdStr == null) {
             return ResponseEntity.badRequest().build();
         }
-        fileStorageService.linkToEntity(fileId, entityType, UUID.fromString(entityIdStr));
+        fileStorageService.linkToEntity(fileId, entityType, UUID.fromString(entityIdStr),
+                principal.getId(), principal.isAdmin());
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * Delete a file from storage and metadata table.
-     */
     @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> deleteFile(
             @PathVariable UUID fileId,
             @AuthenticationPrincipal UserPrincipal principal,
             HttpServletRequest request) {
-        FileUpload deleted = fileStorageService.deleteFile(fileId);
+        FileUpload deleted = fileStorageService.deleteFile(fileId, principal.getId(), principal.isAdmin());
         auditLog.recordFileAction(
                 AuditAction.FILE_DELETE,
                 principal.getId(), principal.getFullName(),
