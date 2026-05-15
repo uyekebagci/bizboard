@@ -4,16 +4,20 @@ import com.bizboard.common.dto.AuthRequest;
 import com.bizboard.common.dto.AuthResponse;
 import com.bizboard.common.entity.RefreshToken;
 import com.bizboard.common.entity.User;
+import com.bizboard.common.enums.NotificationType;
+import com.bizboard.repository.NotificationRepository;
 import com.bizboard.repository.UserRepository;
 import com.bizboard.security.JwtUtil;
 import com.bizboard.service.RefreshTokenService.Issued;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -22,6 +26,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
+    private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
 
     /**
      * Login: erişim token'ı + yeni refresh token üretir.
@@ -40,6 +46,12 @@ public class AuthService {
 
         Issued refresh = refreshTokenService.issue(user.getId(), httpRequest);
 
+        // İlk-giriş bildirimi tetikleyici: kullanıcının hiç bildirimi yoksa hoş geldin
+        // mesajı oluştur. Bu, pipeline'ın çalıştığını doğrulayan en küçük tetikleyici.
+        // Gelecek trigger'lar (yeni dosya yüklendi, borç vadesi yaklaştı vs.) ayrı
+        // servislerden çağrılacak.
+        tryCreateFirstLoginNotification(user);
+
         AuthResponse body = AuthResponse.builder()
                 .token(accessToken)
                 .expiresInSeconds(jwtUtil.getExpirationSeconds())
@@ -48,6 +60,26 @@ public class AuthService {
                 .build();
 
         return new LoginResult(body, refresh);
+    }
+
+    private void tryCreateFirstLoginNotification(User user) {
+        try {
+            long unread = notificationRepository.countByUserIdAndReadFalse(user.getId());
+            long total = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).size();
+            if (total == 0 && unread == 0) {
+                notificationService.create(
+                        user.getId(),
+                        NotificationType.INFO,
+                        "BizBoard'a hos geldin!",
+                        "Hesabin hazir. Sol panelden yeni isletme ekleyerek baslayabilirsin.",
+                        "/dashboard",
+                        null
+                );
+            }
+        } catch (Exception e) {
+            // Bildirim oluşturulamasa bile login başarısı etkilenmemeli.
+            log.warn("[auth] first-login notification skipped for user {}: {}", user.getId(), e.getMessage());
+        }
     }
 
     /**

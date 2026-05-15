@@ -34,6 +34,41 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.2.0] — 2026-05-15
+
+Auth tamamlama paketi: refresh token yaşam döngüsü tamamlandı, kullanıcı yönetimi sıkılaştı, in-app notification akışı backend tarafıyla canlı.
+
+### Added
+
+#### Backend
+- **`RefreshTokenCleanupTask`** — `@Scheduled` ile her gece 03:30 Europe/Istanbul'da expired refresh token kayıtlarını siler. Cron pattern env üzerinden override edilebilir (`APP_REFRESH_CLEANUP_CRON`).
+- **Theft detection auto-revoke** — `RefreshTokenService.validate` revoke edilmiş bir token'ın tekrar sunulduğunu fark ederse o kullanıcının TÜM aktif refresh token'larını revoke eder + `REFRESH_TOKEN_THEFT_DETECTED` audit log düşer. Önceki sürümde sadece log warning vardı.
+- **`POST /me/password`** — şifre değiştirme. Mevcut şifreyi doğrular, yeni şifreyi `bcrypt` ile hash'ler, **tüm aktif refresh token'ları revoke eder** (tüm cihazlardan otomatik logout), bu tarayıcının cookie'sini de temizler, `PASSWORD_CHANGED` audit log düşer.
+- **`POST /notifications`, `GET /notifications/unread-count`, `PATCH /{id}/read`, `PATCH /read-all`** — in-app notification CRUD. Mevcut entity + repository üzerine `NotificationService` ve `NotificationController` eklendi. Owner-only access kontrolü.
+- **`NotificationService.create(...)` API** — diğer servisler bunu çağırarak bildirim üretir. İlk trigger: **AuthService.login** ilk-giriş kullanıcılarına hoş geldin bildirimi oluşturur.
+- Yeni audit action sabitleri: `PASSWORD_CHANGED`, `REFRESH_TOKEN_THEFT_DETECTED`.
+
+#### Frontend
+- **`NotificationDropdown` TopBar'da geri açıldı.** Bell ikonu + unread badge görünür; tıklayınca son 20 bildirim listelenir, tek tek veya hepsini okundu işaretle.
+
+### Changed
+
+#### Backend
+- `RefreshTokenService.validate` `@Transactional(readOnly = true)` → `@Transactional` (theft detection yazma operasyonu yapıyor).
+- `NotificationDto` Jackson sözleşmesi — frontend type'ıyla uyum için `@JsonProperty` ile snake_case alanlar (`is_read`, `action_url`, `business_id`, `business_name`, `created_at`). Diğer DTO'lar camelCase; bildirim tarihi snake_case kalıyor — v2.0.0 contract sıkılaştırmasında ele alınacak.
+
+### Security
+
+- **Tüm cihazlardan logout** şifre değiştirince otomatik gerçekleşir — çalınmış oturumların yaşam süresi maksimum tek bir parola döngüsü.
+- **Theft detection** artık aktif: hırsızın elindeki revoke edilmiş token'la her tetikleme, gerçek kullanıcının oturumunu da bitirir + audit'e düşer. Saldırgan elinde geçerli bir oturum bırakamaz.
+
+### Notes
+
+- İlk-giriş bildirimi: yeni kullanıcılar dashboard'a girince TR dilinde tek bir hoş geldin bildirimi alır. Tetik mantığı `AuthService.tryCreateFirstLoginNotification` içinde — pipeline çalışırken hata fırlatmaz, login'i etkilemez.
+- Diğer notification trigger'ları (yeni dosya yüklendi, borç vadesi yaklaştı, stok düşük, vb.) v1.3.0+'da eklenecek; bunlar için Çatı/Audit Log iş paketinde TODO açık.
+
+---
+
 ## [1.1.0] — 2026-05-15
 
 İlk büyük güvenlik sıkılaştırması: gerçek refresh token akışı + kısa access TTL.
@@ -185,7 +220,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.2.0
 [1.1.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.1.0
 [1.0.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.3
 [1.0.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.0.2

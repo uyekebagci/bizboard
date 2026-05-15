@@ -7,11 +7,7 @@ import { getInitials } from "@/lib/utils";
 import { logout } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-// import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
-// ↑ TODO(post-v1.x): Backend notifications endpoint'leri (GET /notifications,
-// /notifications/unread-count, /notifications/{id}/read, /notifications/read-all)
-// implement edilince yorum açılır. Şu an entity var, controller yok — 403 spam'i
-// önlemek için UI'dan gizlendi.
+import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 
 export function TopBar() {
   const profile = useAppStore((s) => s.profile);
@@ -74,8 +70,7 @@ export function TopBar() {
             <Search size={20} className="text-surface-300" />
           </button>
 
-          {/* TODO(post-v1.x): backend notifications endpoint'leri implement edilince yorum açılır */}
-          {/* <NotificationDropdown /> */}
+          <NotificationDropdown />
 
           <div className="relative ml-1" ref={menuRef}>
             <button
