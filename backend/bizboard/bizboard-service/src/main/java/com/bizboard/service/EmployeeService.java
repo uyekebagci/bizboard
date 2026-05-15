@@ -34,11 +34,13 @@ public class EmployeeService {
     private final FixedCostRepository fixedCostRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final BusinessAccessGuard accessGuard;
 
     // ─── İşletmeye ait personelleri getir ───────────────────────
 
     @Transactional(readOnly = true)
-    public List<EmployeeDto> getEmployeesForBusiness(UUID businessId) {
+    public List<EmployeeDto> getEmployeesForBusiness(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         return employeeRepository.findByBusinessIdOrderByFullNameAsc(businessId)
                 .stream().map(this::toDto).toList();
     }
@@ -46,9 +48,10 @@ public class EmployeeService {
     // ─── Personel detayı ────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public EmployeeDto getEmployee(UUID employeeId) {
+    public EmployeeDto getEmployee(UUID employeeId, UUID actorUserId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Personel bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, employee.getBusiness().getId());
         return toDto(employee);
     }
 
@@ -56,6 +59,7 @@ public class EmployeeService {
 
     @Transactional
     public EmployeeDto createEmployee(UUID businessId, CreateEmployeeRequest request, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Isletme bulunamadi"));
 
@@ -102,6 +106,7 @@ public class EmployeeService {
     public EmployeeDto updateEmployee(UUID employeeId, CreateEmployeeRequest request, UUID actorUserId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Personel bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, employee.getBusiness().getId());
 
         Map<String, Object> changes = new HashMap<>();
 
@@ -177,6 +182,7 @@ public class EmployeeService {
     public EmployeeDto toggleEmployeeActive(UUID employeeId, UUID actorUserId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Personel bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, employee.getBusiness().getId());
 
         boolean wasActive = employee.isActive();
         employee.setActive(!wasActive);
@@ -207,6 +213,7 @@ public class EmployeeService {
     public void deleteEmployee(UUID employeeId, UUID actorUserId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Personel bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId, employee.getBusiness().getId());
 
         UUID businessId = employee.getBusiness().getId();
         String businessName = employee.getBusiness().getName();
@@ -238,7 +245,8 @@ public class EmployeeService {
     // ─── Personel özeti ─────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public EmployeeSummaryDto getEmployeeSummary(UUID businessId) {
+    public EmployeeSummaryDto getEmployeeSummary(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
         List<Employee> employees = employeeRepository.findByBusinessIdOrderByFullNameAsc(businessId);
 
         int total = employees.size();
