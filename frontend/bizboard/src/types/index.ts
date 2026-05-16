@@ -588,3 +588,74 @@ export interface DailyCashFlowData {
   net: number;
   cumulative: number;
 }
+
+// ---- v1.5.x: Firmalar & Cari ----
+
+export type CompanyType = "AS" | "LTD" | "SAHIS" | "KOOP" | "DERNEK" | "OTHER";
+
+export interface MyCompany {
+  id: string;
+  legal_name: string;
+  tax_id: string | null;
+  tax_office: string | null;
+  trade_registry_no: string | null;
+  company_type: CompanyType;
+  activity_code: string | null;
+  incorporated_at: string | null;
+  mersis_no: string | null;
+  address: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CounterpartRole = "CUSTOMER" | "SUPPLIER" | "BOTH" | "OTHER";
+
+export interface Counterpart {
+  id: string;
+  name: string;
+  tax_id: string | null;
+  tax_office: string | null;
+  role: CounterpartRole;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  address: string | null;
+  current_balance: number;
+  payment_terms_days: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CounterpartStatementEntry {
+  debt_id: string;
+  business_id: string | null;
+  business_name: string | null;
+  direction: DebtDirection;
+  amount: number;
+  currency: string;
+  instrument_type: string;
+  due_date: string | null;
+  settled: boolean;
+  settled_at: string | null;
+  description: string | null;
+  created_at: string;
+  running_balance: number;
+}
+
+export interface CounterpartStatement {
+  counterpart_id: string;
+  counterpart_name: string;
+  from_date: string;
+  to_date: string;
+  opening_balance: number;
+  closing_balance: number;
+  total_receivable: number;
+  total_payable: number;
+  entry_count: number;
+  entries: CounterpartStatementEntry[];
+}
