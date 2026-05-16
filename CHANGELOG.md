@@ -34,6 +34,33 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.2] — 2026-05-16
+
+**Firmalar WP dilim 3a — frontend ilk dilim + mobile 404 fix.** İki frontend sayfa: `/dashboard/businesses` (mobile bottom-nav 404 düzeltmesi) ve `/admin/my-companies` (admin tüzel kişi yönetimi). Counterpart UI + cari ekstre PDF v1.5.3'te (dilim 3b) gelecek.
+
+### Added
+
+#### Frontend
+- **`/dashboard/businesses` sayfası** — mobile bottom-nav'daki "Isletmeler" item'ı önceden 404 atıyordu (sayfa yoktu). Şimdi `useBusinesses` hook'unu çağırıp mevcut `BusinessGrid` komponentini render eden basit bir liste sayfası. Kullanıcının `accessibleBusinesses` filtresinden geçtiği işletmeleri görür; admin tümünü, viewer erişebildiklerini. Desktop'ta da çalışır (responsive).
+- **`/admin/my-companies` admin sayfası** — v1.5.0'da eklenen `MyCompany` (tüzel kişi) entity'sinin tam CRUD UI'ı. Liste + create modal + edit modal + delete onayı. "Varsayılan firma" rozeti + silme butonu disabled. Form alanları: legal_name, company_type (AS/LTD/SAHIS/KOOP/DERNEK/OTHER), VKN/TCKN, vergi dairesi, ticaret sicil no, MERSIS, NACE faaliyet kodu, kuruluş tarihi, adres, iletişim. 409 Conflict (varsayılan firma silinemez) backend mesajı kullanıcıya doğrudan yansıtılır. Admin paneli ana sayfasından "Firmalarim" buton ile erişilir.
+- **`lib/taxId.ts`** — frontend VKN (10 hane) + TCKN (11 hane) format + checksum validation. Backend `TaxIdValidator`'ın TS ayna implementasyonu; sadece UX için (backend son söz). Geçersiz girişte form input kırmızı border + altında hata mesajı; submit engellenir.
+- **TS types** — `MyCompany`, `CompanyType`, `Counterpart`, `CounterpartRole`, `CounterpartStatement`, `CounterpartStatementEntry`. v1.5.3'te Counterpart UI'ı bunları kullanacak.
+
+### Changed
+
+#### Frontend
+- Admin paneli ana sayfasında üst sağ köyede "Firmalarim" linki eklendi (audit log linkinin solunda).
+- Frontend `package.json` 1.5.2 (backend ile senkron).
+
+### Notes
+
+- Yeni Counterpart types + `lib/taxId.ts` v1.5.3 frontend'inde kullanılacak; v1.5.2'de sadece tanımlandı, henüz UI yok.
+- Mobile bottom-nav'daki "Raporlar" ve "Profil" item'ları hâlâ 404 atar — kapsam dışı, ayrı bir patch'te (v1.5.x veya v1.6.x) ele alınacak.
+- Cari hesap ekstresi PDF export v1.5.3 frontend'inde gelecek (jsPDF veya backend endpoint kararı orada verilir).
+- Backend schema değişikliği yok bu sürümde, cold start riski sıfır.
+
+---
+
 ## [1.5.1] — 2026-05-16
 
 **Firmalar WP dilim 2 — cari hesap motoru.** Karşı firma bazlı bakiye hesabı + ekstre + Debt akışı entegrasyonu. Bu sürümden sonra yeni borçlar bir `Counterpart`'a bağlanabiliyor, bakiyeleri otomatik güncelleniyor, period bazlı ekstre alınabiliyor. Eski string-only borçlar v1.5.3 migration utility'ye kadar yine paralel çalışmaya devam ediyor.
@@ -575,7 +602,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.2
 [1.5.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.1
 [1.5.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.0
 [1.4.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.4.2

@@ -123,6 +123,12 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center gap-2">
             <a
+              href="/admin/my-companies"
+              className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
+            >
+              Firmalarim
+            </a>
+            <a
               href="/admin/audit"
               className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
             >
