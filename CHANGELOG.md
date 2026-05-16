@@ -34,6 +34,38 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.3] — 2026-05-16
+
+**Firmalar WP dilim 3b — Counterpart UI (cari hesap front-end).** Karşı firma listesi + detay + cari ekstre arayüzü. Kullanıcılar artık müşteri/tedarikçi/diğer firmaları görüp yönetebiliyor, period bazlı cari ekstre çıkartıp browser üzerinden yazdırabiliyor.
+
+### Added
+
+#### Frontend
+- **`/dashboard/counterparts` liste sayfası** — kart bazlı liste. Her kartta isim + rol rozeti + vergi no + cari bakiye (renk kodlu: yeşil pozitif/alacak, kırmızı negatif/borç). Arama (isim veya vergi no), rol filtresi (Tümü/Müşteri/Tedarikçi/Her ikisi/Diğer). "Yeni" buton + modal CRUD. Backend `/counterparts?role=...` query'sine bağlı.
+- **`/dashboard/counterparts/[id]` detay sayfası**:
+  - Üst panel: isim + rol rozeti + vergi no + ödeme vadesi
+  - Sol kart: güncel bakiye (büyük, renk kodlu) + admin için "Yeniden Hesapla" buton (`POST /admin/counterparts/{id}/recompute`)
+  - Sağ kart: iletişim, vergi dairesi, adres, notlar
+  - Alt panel: **Cari Hesap Ekstresi** — period filter (son 1 ay default), 4'lü summary (açılış / toplam alacak / toplam borç / kapanış), kronolojik tablo (tarih, açıklama, işletme, tutar, running balance). Kapalı (settle) hareketler opaklığı düşük + "KAPALI" rozet ile gösterilir.
+  - **Yazdır butonu** — `window.print()`. `print:hidden` ile filter satırı baskıdan çıkar, sadece özet + tablo görünür. PDF için bu sürümde browser native "PDF olarak kaydet" yeterli; jsPDF/server-side PDF ileride bir patch'te ele alınır.
+- **Dashboard QuickActions**'a "Cari Hesap" kısa yolu eklendi (`Users` ikonu, cyan renk) — `/dashboard/counterparts`'a gider.
+
+### Changed
+
+#### Frontend
+- TS type'ları (`Counterpart`, `CounterpartStatement`, vb.) v1.5.2'de eklenmişti; bu sürümde fiilen kullanılıyor.
+- Bakiye semantiği UI'da net: pozitif = "Firma bize borçlu (alacak)", negatif = "Biz firmaya borçluyuz (verecek)", sıfır = "Cari kapalı".
+
+### Notes
+
+- **Counterpart create/edit/delete tüm authenticated kullanıcılara açık** (backend SecurityConfig). Bu, paylaşımlı bir veri olduğu kabulüyle — küçük ekip için pragmatik, çok-tenant gerektiren durumlarda v1.6+'da admin-only veya role-based daha sıkı yapılabilir.
+- **Bilinen sınırlama:** detay sayfasındaki ekstre sadece counterpart_id ile bağlanmış borçları gösterir. v1.5.0'dan önce free-text "counterparty" string ile oluşturulan eski borçlar ekstrede görünmez. v1.5.4 migration utility eski string borçları counterpart kayıtlarına bağlayacak — sonrasında ekstre tam geçmişi yansıtır.
+- **Borç oluşturma akışında counterpart seçimi UI** v1.5.4'e ertelendi (autocomplete dropdown + "+ yeni karşı firma" inline). Şu an `POST /businesses/{id}/debts` backend'i counterpart_id kabul ediyor; frontend tarafı v1.5.4'te entegre olacak.
+- Mobile bottom-nav'ın diğer 404 sayfaları (Raporlar, Profil) bu dilim kapsamında değil; ayrı patch'te.
+- Backend schema değişikliği yok bu sürümde.
+
+---
+
 ## [1.5.2] — 2026-05-16
 
 **Firmalar WP dilim 3a — frontend ilk dilim + mobile 404 fix.** İki frontend sayfa: `/dashboard/businesses` (mobile bottom-nav 404 düzeltmesi) ve `/admin/my-companies` (admin tüzel kişi yönetimi). Counterpart UI + cari ekstre PDF v1.5.3'te (dilim 3b) gelecek.
@@ -602,7 +634,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.2...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.3...HEAD
+[1.5.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.3
 [1.5.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.2
 [1.5.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.1
 [1.5.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.0

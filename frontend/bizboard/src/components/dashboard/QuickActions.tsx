@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  Plus, Receipt, Camera, FolderOpen, Package, BarChart3,
+  Plus, Receipt, Camera, FolderOpen, Package, BarChart3, Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
@@ -42,6 +42,13 @@ const actions = [
     color: "text-purple-600",
     bg: "bg-purple-50",
     href: "/dashboard/documents",
+  },
+  {
+    label: "Cari Hesap",
+    icon: Users,
+    color: "text-cyan-600",
+    bg: "bg-cyan-50",
+    href: "/dashboard/counterparts",
   },
   {
     label: "Isletme Ekle",
