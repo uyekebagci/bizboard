@@ -21,6 +21,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
+import { CounterpartCombobox } from "@/components/shared/CounterpartCombobox";
 import type { Debt, DebtSummary, FileUploadInfo } from "@/types";
 
 const INSTRUMENT_OPTIONS = ["CEK", "SENET", "NAKIT"];
@@ -424,6 +425,8 @@ function CreateDebtModal({
     "RECEIVABLE"
   );
   const [counterparty, setCounterparty] = useState("");
+  /** v1.5.4: counterpart normalize ref. Combobox seçimine bağlı; null → free-text. */
+  const [counterpartId, setCounterpartId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [instrumentType, setInstrumentType] = useState("NAKIT");
   const [customInstrument, setCustomInstrument] = useState("");
@@ -459,6 +462,7 @@ function CreateDebtModal({
       const debt = await api.post<{ id: string }>(`/businesses/${businessId}/debts`, {
         direction,
         counterparty: counterparty.trim(),
+        counterpart_id: counterpartId,
         amount: parseMoneyInput(amount),
         currency,
         instrument_type: effectiveInstrument.trim(),
@@ -541,19 +545,22 @@ function CreateDebtModal({
             </div>
           </div>
 
-          {/* Counterparty */}
-          <div>
-            <label className="label">
-              {direction === "RECEIVABLE" ? "Kimden Alinacak" : "Kime Verilecek"}
-            </label>
-            <input
-              type="text"
-              value={counterparty}
-              onChange={(e) => setCounterparty(e.target.value)}
-              className="input"
-              placeholder="Ad Soyad veya Firma"
-            />
-          </div>
+          {/* Counterparty — v1.5.4: combobox (autocomplete + inline create) */}
+          <CounterpartCombobox
+            label={direction === "RECEIVABLE" ? "Kimden Alinacak" : "Kime Verilecek"}
+            value={counterpartId}
+            textValue={counterparty}
+            onChange={(id, text) => {
+              setCounterpartId(id);
+              setCounterparty(text);
+            }}
+            defaultNewRole={direction === "RECEIVABLE" ? "CUSTOMER" : "SUPPLIER"}
+            placeholder="Karsi firma sec, ad gir veya yeni olustur"
+          />
+          <p className="text-[10px] text-surface-400 -mt-2">
+            Var olan karsi firmadan sec → cari hesabi otomatik takip edilir.
+            Yoksa adi yaz veya yeni olustur.
+          </p>
 
           {/* Amount */}
           <div>

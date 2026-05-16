@@ -34,6 +34,38 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.4] — 2026-05-16
+
+**Firmalar WP dilim 3c — Borç akışına counterpart bağlama.** Yeni borç oluşturma formunda "Kimden Alınacak / Kime Verilecek" alanı artık karşı firma seçici (combobox). Mevcut firmadan seçilirse `counterpart_id` ile normalize edilir; tıklayınca yeni firma inline modal üzerinden anında oluşturulur ve seçilir. Free-text fallback hâlâ çalışır (eski client/UX akışları bozulmaz).
+
+### Added
+
+#### Frontend
+- **`CounterpartCombobox` shared component** (`components/shared/CounterpartCombobox.tsx`):
+  - Mount'ta tek seferlik `GET /counterparts` ile listeyi çeker, frontend filter
+  - Kullanıcı yazdıkça eşleşen firmalar dropdown'da görünür (max 20)
+  - Tıklayınca `value` set (counterpart_id), free-text counterpart.name'e güncellenir
+  - Tam eşleşme yoksa "{searchText}'i karşı firma olarak oluştur" CTA'sı; tıklayınca inline modal (name + role minimum) — POST sonrası otomatik seçilir
+  - X butonu ile seçim temizlenir, free-text mode'a döner
+- **`DebtModule` "Yeni Borç" akışı combobox ile entegre**:
+  - Eski `<input>` counterparty alanı kaldırıldı
+  - `direction === RECEIVABLE` ise default rol `CUSTOMER` (alacak → müşteri), `PAYABLE` ise `SUPPLIER` (verecek → tedarikçi) — inline create modal bu rolü ön seçer
+  - Submit'te `counterpart_id` (varsa) backend'e gider; `counterparty` string yine yedek olarak gönderilir
+
+### Changed
+
+#### Frontend
+- Borç oluşturma akışında "var olan firmadan seç" + "yeni oluştur" alternatifleri tek bileşende birleştirildi — eskiden ayrı sayfalardan firma yaratıp sonra borç ekran döngüsü yoktu, şimdi inline.
+
+### Notes
+
+- Backend halihazırda (v1.5.1) `counterpart_id` kabul ediyor + counterparty string'i auto-fill ediyordu — bu sürüm sadece frontend tarafını bağlıyor.
+- Borç güncelleme/silme akışları bu sürümde değişmedi; backend mevcut counterpart_id'yi koruyor, cari bakiye event-driven recompute oluyor (v1.5.1).
+- **Bilinen sınırlama:** mevcut (v1.5.0 öncesi) free-text borçlar bu combobox üzerinden retro-bağlanmaz; toplu migration utility v1.5.5'te gelecek.
+- v1.5.5'te ayrıca mobile bottom-nav'ın "Raporlar" + "Profil" 404 sayfaları + migration utility birlikte ele alınır.
+
+---
+
 ## [1.5.3] — 2026-05-16
 
 **Firmalar WP dilim 3b — Counterpart UI (cari hesap front-end).** Karşı firma listesi + detay + cari ekstre arayüzü. Kullanıcılar artık müşteri/tedarikçi/diğer firmaları görüp yönetebiliyor, period bazlı cari ekstre çıkartıp browser üzerinden yazdırabiliyor.
@@ -634,7 +666,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.3...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.4...HEAD
+[1.5.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.4
 [1.5.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.3
 [1.5.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.2
 [1.5.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.1
