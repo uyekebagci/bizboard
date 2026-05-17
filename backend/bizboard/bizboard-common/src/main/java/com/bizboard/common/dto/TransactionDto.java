@@ -32,6 +32,10 @@ public class TransactionDto {
     @JsonProperty("receipt_url")
     private String receiptUrl;
 
+    /** v1.5.6+: bu transaction bir kurulum maliyeti mi (one-time setup). */
+    @JsonProperty("is_setup_cost")
+    private boolean setupCost;
+
     private List<String> tags;
     private Map<String, Object> metadata;
 
