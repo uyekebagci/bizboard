@@ -29,6 +29,8 @@ import {
   Building2,
   Lightbulb,
   Calculator,
+  Plus,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
@@ -84,6 +86,8 @@ interface FormData {
   name: string;
   description: string;
   businessTypeId: string;
+  /** v1.5.7+ serbest metin tipi adı (autocomplete'lik) */
+  businessTypeName: string;
   color: string;
   currency: string;
   modules: string[];
@@ -95,14 +99,46 @@ interface FormData {
   mockupNotes: string;
   /** v1.5.6: kurulum maliyetlerini ekle checkbox'ı */
   includeSetupCosts: boolean;
+  /** v1.5.8: yeni wizard akışı — manuel kuruluş kalemleri */
+  setupCostItems: SetupCostItem[];
+  /** v1.5.8: yeni wizard akışı — aylık sabit masraflar (12 kategori) */
+  monthlyFixedCostItems: MonthlyFixedCostItem[];
 }
 
 const STEPS = [
   { id: 1, label: "Tip Secimi" },
   { id: 2, label: "Temel Bilgiler" },
   { id: 3, label: "Moduller" },
-  { id: 4, label: "Onizleme" },
+  { id: 4, label: "Kurulus" },
+  { id: 5, label: "Aylik Gider" },
+  { id: 6, label: "Onizleme" },
 ];
+
+// v1.5.8: yeni wizard akışı için tipler
+interface SetupCostItem {
+  id: string; // local-only, key olarak
+  name: string;
+  amount: string; // formattedMoneyInput
+}
+
+interface MonthlyFixedCostItem {
+  category: string; // FixedCostCategory key
+  label: string;    // display TR label
+  required: boolean;
+  applicable: boolean; // "Geçerli değil" toggle (default true)
+  amount: string;   // formattedMoneyInput; OTHER için de
+  customName?: string; // OTHER için serbest isim
+}
+
+interface FixedCostCategoryMeta {
+  key: string;
+  label: string;
+  required: boolean;
+}
+
+function makeId() {
+  return Math.random().toString(36).slice(2, 10);
+}
 
 // ===== MAIN COMPONENT =====
 export default function AddBusinessPage() {
@@ -117,6 +153,7 @@ export default function AddBusinessPage() {
     name: "",
     description: "",
     businessTypeId: "",
+    businessTypeName: "",
     color: "",
     currency: "TRY",
     modules: [],
@@ -126,7 +163,13 @@ export default function AddBusinessPage() {
     mockupInitialInvestment: 0,
     mockupNotes: "",
     includeSetupCosts: false,
+    setupCostItems: [],
+    monthlyFixedCostItems: [],
   });
+
+  // v1.5.8: autocomplete + 12 kategori master data
+  const [typeNameSuggestions, setTypeNameSuggestions] = useState<string[]>([]);
+  const [fixedCostCategories, setFixedCostCategories] = useState<FixedCostCategoryMeta[]>([]);
 
   /** v1.5.6: seçili tipin varsayılan kurulum/sabit gider şablonları */
   const [defaultCosts, setDefaultCosts] = useState<BusinessTypeDefaultCost[]>([]);
@@ -179,6 +222,43 @@ export default function AddBusinessPage() {
     return () => { cancelled = true; };
   }, [form.businessTypeId]);
 
+  // v1.5.8: autocomplete listesi + 12 kategori (mount'ta tek seferlik)
+  useEffect(() => {
+    api.get<string[]>("/business-types/names")
+      .then((d) => setTypeNameSuggestions(d || []))
+      .catch(() => setTypeNameSuggestions([]));
+    api.get<FixedCostCategoryMeta[]>("/fixed-cost-categories")
+      .then((cats) => {
+        setFixedCostCategories(cats || []);
+        // İlk yüklemede default monthly items'ı kategorilerle doldur (zaten boşsa).
+        setForm((prev) => {
+          if (prev.monthlyFixedCostItems.length > 0) return prev;
+          return {
+            ...prev,
+            monthlyFixedCostItems: (cats || []).map((c) => ({
+              category: c.key,
+              label: c.label,
+              required: c.required,
+              applicable: c.required, // OTHER default kapalı, 11 zorunlu açık
+              amount: "",
+              customName: "",
+            })),
+          };
+        });
+      })
+      .catch(() => setFixedCostCategories([]));
+  }, []);
+
+  // v1.5.8: tip seçilince businessTypeName'i otomatik doldur (kullanıcı override edebilir)
+  useEffect(() => {
+    if (!form.businessTypeId) return;
+    const t = businessTypes.find((b) => b.id === form.businessTypeId);
+    if (t && !form.businessTypeName.trim()) {
+      setForm((prev) => ({ ...prev, businessTypeName: t.label }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.businessTypeId, businessTypes]);
+
   const selectedType = businessTypes.find(
     (t) => t.id === form.businessTypeId
   );
@@ -206,11 +286,30 @@ export default function AddBusinessPage() {
   function canNext(): boolean {
     switch (step) {
       case 1:
-        return !!form.businessTypeId;
+        // Tip seçimi + serbest metin adı (autocomplete dolu olmalı)
+        return !!form.businessTypeId && form.businessTypeName.trim().length >= 2;
       case 2:
         return form.name.trim().length >= 2;
       case 3:
         return form.modules.length > 0;
+      case 4:
+        // Kuruluş maliyetleri opsiyonel — boş bırakılabilir; ama dolu olanlar valid olmalı
+        return form.setupCostItems.every(
+          (it) => !it.name.trim() || parseMoneyInput(it.amount) >= 0
+        );
+      case 5:
+        // Aylık sabit masraflar: applicable=true olan tüm zorunlu kategorilerde amount > 0
+        // Geçerli değil olanlar atlanır
+        for (const it of form.monthlyFixedCostItems) {
+          if (!it.applicable) continue;
+          if (!it.required && parseMoneyInput(it.amount) <= 0) {
+            // OTHER + applicable + amount=0 → tamamen boş demek, skip ok
+            continue;
+          }
+          if (parseMoneyInput(it.amount) <= 0) return false;
+          if (it.category === "OTHER" && !it.customName?.trim()) return false;
+        }
+        return true;
       default:
         return true;
     }
@@ -230,16 +329,36 @@ export default function AddBusinessPage() {
         metadata.notes = form.mockupNotes;
       }
 
+      // v1.5.8: wizard manuel akış — atomic payload
+      const setupCostsPayload = form.setupCostItems
+        .filter((it) => it.name.trim() && parseMoneyInput(it.amount) > 0)
+        .map((it) => ({
+          name: it.name.trim(),
+          amount: parseMoneyInput(it.amount),
+        }));
+
+      const monthlyFixedCostsPayload = form.monthlyFixedCostItems
+        .filter((it) => it.applicable && parseMoneyInput(it.amount) > 0)
+        .map((it) => ({
+          category: it.category,
+          name: it.category === "OTHER" ? (it.customName?.trim() || null) : null,
+          amount: parseMoneyInput(it.amount),
+          applicable: true,
+        }));
+
       await api.post("/businesses", {
         name: form.name,
         description: form.description || null,
         business_type_id: form.businessTypeId,
+        business_type_name: form.businessTypeName.trim() || null,
         color: form.color,
         currency: form.currency,
         modules: form.modules,
         is_mockup: form.isMockup,
         metadata,
         include_setup_costs: form.includeSetupCosts,
+        setup_costs: setupCostsPayload,
+        monthly_fixed_costs: monthlyFixedCostsPayload,
       });
 
       localStorage.removeItem("bizboard_draft_business");
@@ -355,6 +474,11 @@ export default function AddBusinessPage() {
           types={businessTypes}
           selectedId={form.businessTypeId}
           onSelect={selectType}
+          businessTypeName={form.businessTypeName}
+          onBusinessTypeNameChange={(v) =>
+            setForm((prev) => ({ ...prev, businessTypeName: v }))
+          }
+          nameSuggestions={typeNameSuggestions}
         />
       )}
       {step === 2 && (
@@ -372,6 +496,49 @@ export default function AddBusinessPage() {
         />
       )}
       {step === 4 && (
+        <StepSetupCosts
+          items={form.setupCostItems}
+          currency={form.currency}
+          onAdd={() =>
+            setForm((prev) => ({
+              ...prev,
+              setupCostItems: [
+                ...prev.setupCostItems,
+                { id: makeId(), name: "", amount: "" },
+              ],
+            }))
+          }
+          onChange={(id, patch) =>
+            setForm((prev) => ({
+              ...prev,
+              setupCostItems: prev.setupCostItems.map((it) =>
+                it.id === id ? { ...it, ...patch } : it
+              ),
+            }))
+          }
+          onRemove={(id) =>
+            setForm((prev) => ({
+              ...prev,
+              setupCostItems: prev.setupCostItems.filter((it) => it.id !== id),
+            }))
+          }
+        />
+      )}
+      {step === 5 && (
+        <StepMonthlyFixedCosts
+          items={form.monthlyFixedCostItems}
+          currency={form.currency}
+          onChange={(idx, patch) =>
+            setForm((prev) => ({
+              ...prev,
+              monthlyFixedCostItems: prev.monthlyFixedCostItems.map((it, i) =>
+                i === idx ? { ...it, ...patch } : it
+              ),
+            }))
+          }
+        />
+      )}
+      {step === 6 && (
         <StepPreview
           form={form}
           selectedType={selectedType}
@@ -393,7 +560,7 @@ export default function AddBusinessPage() {
             Geri
           </button>
         )}
-        {step < 4 ? (
+        {step < STEPS.length ? (
           <button
             onClick={() => setStep(step + 1)}
             disabled={!canNext()}
@@ -428,13 +595,22 @@ function StepBusinessType({
   types,
   selectedId,
   onSelect,
+  businessTypeName,
+  onBusinessTypeNameChange,
+  nameSuggestions,
 }: {
   types: BusinessType[];
   selectedId: string;
   onSelect: (id: string) => void;
+  businessTypeName: string;
+  onBusinessTypeNameChange: (v: string) => void;
+  nameSuggestions: string[];
 }) {
+  const [open, setOpen] = useState(false);
+  const filtered = useMemoFiltered(nameSuggestions, businessTypeName);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <p className="text-sm text-surface-300 font-medium">
         Isletme tipini secin
       </p>
@@ -449,7 +625,7 @@ function StepBusinessType({
               key={type.id}
               onClick={() => onSelect(type.id)}
               className={cn(
-                "card p-4 text-left transition-all active:scale-[0.98]",
+                "card p-4 text-left transition-all active:scale-[0.98] relative",
                 isSelected
                   ? "ring-2 ring-brand-600 shadow-card-hover"
                   : "hover:shadow-card-hover"
@@ -476,8 +652,54 @@ function StepBusinessType({
           );
         })}
       </div>
+
+      {/* v1.5.8: business_type_name autocomplete */}
+      <div className="card p-4 space-y-2 relative">
+        <label className="label">Tip Adi (gosterim)</label>
+        <input
+          type="text"
+          value={businessTypeName}
+          onChange={(e) => {
+            onBusinessTypeNameChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="orn. Kafe, Insaat Sirketi, Servis Atolyesi"
+          className="input"
+        />
+        <p className="text-[10px] text-surface-400">
+          Raporlamada ve autocomplete'te kullanilir. Tip secimi otomatik dolurur,
+          istersen ozellestir.
+        </p>
+        {open && filtered.length > 0 && (
+          <div className="absolute z-20 left-4 right-4 top-[100%] mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface-800 border border-surface-600 shadow-card-hover">
+            {filtered.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onBusinessTypeNameChange(s);
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-surface-200 hover:bg-surface-700"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
+}
+
+// Simple in-file memo helper for autocomplete filtering.
+function useMemoFiltered(all: string[], query: string): string[] {
+  const q = query.trim().toLocaleLowerCase("tr");
+  if (!q) return all.slice(0, 10);
+  return all.filter((s) => s.toLocaleLowerCase("tr").includes(q)).slice(0, 10);
 }
 
 // ===== STEP 2: Basic Info =====
@@ -839,6 +1061,90 @@ function StepPreview({
           </div>
         )}
 
+      {/* v1.5.8: Wizard adim 4-5 ozet */}
+      {(form.setupCostItems.length > 0 || form.monthlyFixedCostItems.some((it) => it.applicable && parseMoneyInput(it.amount) > 0)) && (
+        <div className="card p-4 space-y-4">
+          <p className="text-xs text-surface-400 font-medium uppercase tracking-wide">
+            Atomic Olusturulacak Kalemler
+          </p>
+
+          {form.setupCostItems.filter((it) => it.name.trim() && parseMoneyInput(it.amount) > 0).length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] uppercase tracking-wide text-surface-400">
+                  Kurulus tx&apos;leri
+                </p>
+                <p className="text-xs font-semibold text-red-400">
+                  {formatCurrency(
+                    form.setupCostItems.reduce(
+                      (s, it) => s + parseMoneyInput(it.amount), 0
+                    ),
+                    form.currency
+                  )}
+                </p>
+              </div>
+              <div className="space-y-1">
+                {form.setupCostItems
+                  .filter((it) => it.name.trim() && parseMoneyInput(it.amount) > 0)
+                  .map((it) => (
+                    <div
+                      key={it.id}
+                      className="flex items-center justify-between text-xs bg-red-500/10 px-2 py-1.5 rounded"
+                    >
+                      <span className="text-surface-200 truncate">{it.name}</span>
+                      <span className="text-surface-300 font-medium">
+                        {formatCurrency(parseMoneyInput(it.amount), form.currency)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {form.monthlyFixedCostItems.filter((it) => it.applicable && parseMoneyInput(it.amount) > 0).length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] uppercase tracking-wide text-surface-400">
+                  Aylik sabit gider
+                </p>
+                <p className="text-xs font-semibold text-amber-400">
+                  {formatCurrency(
+                    form.monthlyFixedCostItems
+                      .filter((it) => it.applicable)
+                      .reduce((s, it) => s + parseMoneyInput(it.amount), 0),
+                    form.currency
+                  )} / ay
+                </p>
+              </div>
+              <div className="space-y-1">
+                {form.monthlyFixedCostItems
+                  .filter((it) => it.applicable && parseMoneyInput(it.amount) > 0)
+                  .map((it) => (
+                    <div
+                      key={it.category}
+                      className="flex items-center justify-between text-xs bg-amber-500/10 px-2 py-1.5 rounded"
+                    >
+                      <span className="text-surface-200 truncate">
+                        {it.category === "OTHER"
+                          ? (it.customName?.trim() || it.label)
+                          : it.label}
+                      </span>
+                      <span className="text-surface-300 font-medium">
+                        {formatCurrency(parseMoneyInput(it.amount), form.currency)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-[10px] text-surface-500 pt-2 border-t border-surface-700">
+            Bu kalemler isletme olusturma akisina <strong>atomic</strong> olarak dahildir —
+            biri patlarsa hicbir kayit olusturulmaz.
+          </p>
+        </div>
+      )}
+
       {/* v1.5.6: Kurulum Maliyetleri */}
       {(defaultCostsLoading || defaultCosts.length > 0) && (
         <div className="card p-4">
@@ -1044,6 +1350,187 @@ function StepPreview({
           {form.isMockup
             ? "Bu isletme mock-up olarak olusturulacak ve gercek verilerinizle karistirilmayacaktir. Dashboard'da ayri bir etiket ile gorunecektir."
             : "Isletmeniz varsayilan kategoriler ve sectiginiz moduller ile olusturulacaktir. Daha sonra ayarlardan duzenleyebilirsiniz."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ===== STEP 4: Kurulus Maliyetleri (manuel serbest liste) =====
+function StepSetupCosts({
+  items, currency, onAdd, onChange, onRemove,
+}: {
+  items: SetupCostItem[];
+  currency: string;
+  onAdd: () => void;
+  onChange: (id: string, patch: Partial<SetupCostItem>) => void;
+  onRemove: (id: string) => void;
+}) {
+  const total = items.reduce((s, it) => s + parseMoneyInput(it.amount), 0);
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm text-surface-300 font-medium">
+          Kurulus / acilis maliyetleri
+        </p>
+        <p className="text-xs text-surface-400 mt-1">
+          Bu isletmeyi kurmak icin tek seferlik harcamalar. Her kalem ayri bir
+          transaction olarak yazilir ve raporda &quot;kurulum&quot; olarak isaretlenir.
+          Bu adim opsiyonel — sonradan da eklenebilir.
+        </p>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="card p-6 text-center">
+          <p className="text-sm text-surface-400 mb-3">
+            Henuz kalem yok
+          </p>
+          <button
+            onClick={onAdd}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <Plus size={16} />
+            Ilk kalemi ekle
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {items.map((it) => (
+            <div key={it.id} className="card p-3 flex gap-2 items-start">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={it.name}
+                  onChange={(e) => onChange(it.id, { name: e.target.value })}
+                  placeholder="orn. Depozit, Tabela"
+                  className="input"
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={it.amount}
+                  onChange={(e) =>
+                    onChange(it.id, { amount: formatMoneyInput(e.target.value) })
+                  }
+                  placeholder={`Tutar (${currency})`}
+                  className="input text-right"
+                />
+              </div>
+              <button
+                onClick={() => onRemove(it.id)}
+                className="p-2 rounded-lg hover:bg-red-500/10 text-surface-400 hover:text-red-400 shrink-0"
+                title="Sil"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={onAdd}
+            className="w-full card p-3 border-2 border-dashed border-surface-600 hover:border-brand-400 text-sm text-surface-300 hover:text-brand-400 inline-flex items-center justify-center gap-2 transition-colors"
+          >
+            <Plus size={16} />
+            Yeni kalem
+          </button>
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <div className="card p-3 flex items-center justify-between bg-surface-700/50">
+          <p className="text-sm text-surface-300">Toplam kurulum</p>
+          <p className="text-lg font-bold text-red-400">
+            {formatCurrency(total, currency)}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== STEP 5: Aylik Sabit Masraf (12 kategori + Gecerli degil toggle) =====
+function StepMonthlyFixedCosts({
+  items, currency, onChange,
+}: {
+  items: MonthlyFixedCostItem[];
+  currency: string;
+  onChange: (idx: number, patch: Partial<MonthlyFixedCostItem>) => void;
+}) {
+  const monthlyTotal = items
+    .filter((it) => it.applicable)
+    .reduce((s, it) => s + parseMoneyInput(it.amount), 0);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm text-surface-300 font-medium">
+          Aylik sabit masraflar
+        </p>
+        <p className="text-xs text-surface-400 mt-1">
+          Her ay duzenli olarak odenen giderler. Uygulanmayanlar icin
+          &quot;Gecerli degil&quot; togglesini kullan — o kategori bu isletmede
+          olusturulmaz.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {items.map((it, idx) => {
+          const disabled = !it.applicable;
+          return (
+            <div
+              key={it.category}
+              className={cn(
+                "card p-3 transition-opacity",
+                disabled && "opacity-50"
+              )}
+            >
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-white">
+                    {it.label}
+                  </p>
+                  {it.required && (
+                    <p className="text-[10px] text-surface-400">Zorunlu</p>
+                  )}
+                </div>
+                <label className="flex items-center gap-2 text-[11px] text-surface-300 cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={!it.applicable}
+                    onChange={(e) => onChange(idx, { applicable: !e.target.checked })}
+                    className="w-3.5 h-3.5 rounded accent-amber-500"
+                  />
+                  <span>Gecerli degil</span>
+                </label>
+              </div>
+              {it.category === "OTHER" && it.applicable && (
+                <input
+                  type="text"
+                  value={it.customName || ""}
+                  onChange={(e) => onChange(idx, { customName: e.target.value })}
+                  placeholder="Kategori adi (orn. Lisans bedelleri)"
+                  className="input text-sm mb-2"
+                />
+              )}
+              <input
+                type="text"
+                inputMode="decimal"
+                value={it.amount}
+                disabled={disabled}
+                onChange={(e) =>
+                  onChange(idx, { amount: formatMoneyInput(e.target.value) })
+                }
+                placeholder={`Aylik tutar (${currency})`}
+                className="input text-right disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card p-3 flex items-center justify-between bg-surface-700/50">
+        <p className="text-sm text-surface-300">Aylik toplam</p>
+        <p className="text-lg font-bold text-amber-400">
+          {formatCurrency(monthlyTotal, currency)} / ay
         </p>
       </div>
     </div>
