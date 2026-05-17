@@ -34,4 +34,14 @@ public class CreateBusinessRequest {
 
     @JsonProperty("is_mockup")
     private boolean mockup;
+
+    /**
+     * v1.5.6: işletme tipinin {@code business_type_default_costs} kayıtlarından
+     * otomatik kurulum + sabit gider üretmek istenirse {@code true}.
+     * - setup=true kalemler → tek seferlik Transaction (gider yönü, is_setup_cost=true)
+     * - setup=false kalemler → FixedCost (recurring)
+     * Default false (geriye uyumluluk).
+     */
+    @JsonProperty("include_setup_costs")
+    private boolean includeSetupCosts;
 }

@@ -34,7 +34,7 @@ import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
-import type { BusinessType, ModuleType } from "@/types";
+import type { BusinessType, BusinessTypeDefaultCost, ModuleType } from "@/types";
 
 // ===== ICON MAPS =====
 const categoryIconMap: Record<string, LucideIcon> = {
@@ -93,6 +93,8 @@ interface FormData {
   mockupEstimatedExpense: number;
   mockupInitialInvestment: number;
   mockupNotes: string;
+  /** v1.5.6: kurulum maliyetlerini ekle checkbox'ı */
+  includeSetupCosts: boolean;
 }
 
 const STEPS = [
@@ -123,7 +125,12 @@ export default function AddBusinessPage() {
     mockupEstimatedExpense: 0,
     mockupInitialInvestment: 0,
     mockupNotes: "",
+    includeSetupCosts: false,
   });
+
+  /** v1.5.6: seçili tipin varsayılan kurulum/sabit gider şablonları */
+  const [defaultCosts, setDefaultCosts] = useState<BusinessTypeDefaultCost[]>([]);
+  const [defaultCostsLoading, setDefaultCostsLoading] = useState(false);
 
   // Load business types
   useEffect(() => {
@@ -155,6 +162,22 @@ export default function AddBusinessPage() {
       localStorage.setItem("bizboard_draft_business", JSON.stringify(form));
     }
   }, [form]);
+
+  // v1.5.6: tip seçildiğinde default cost şablonlarını çek.
+  useEffect(() => {
+    if (!form.businessTypeId) {
+      setDefaultCosts([]);
+      return;
+    }
+    let cancelled = false;
+    setDefaultCostsLoading(true);
+    api
+      .get<BusinessTypeDefaultCost[]>(`/business-types/${form.businessTypeId}/default-costs`)
+      .then((data) => { if (!cancelled) setDefaultCosts(data || []); })
+      .catch(() => { if (!cancelled) setDefaultCosts([]); })
+      .finally(() => { if (!cancelled) setDefaultCostsLoading(false); });
+    return () => { cancelled = true; };
+  }, [form.businessTypeId]);
 
   const selectedType = businessTypes.find(
     (t) => t.id === form.businessTypeId
@@ -216,6 +239,7 @@ export default function AddBusinessPage() {
         modules: form.modules,
         is_mockup: form.isMockup,
         metadata,
+        include_setup_costs: form.includeSetupCosts,
       });
 
       localStorage.removeItem("bizboard_draft_business");
@@ -348,7 +372,15 @@ export default function AddBusinessPage() {
         />
       )}
       {step === 4 && (
-        <StepPreview form={form} selectedType={selectedType} />
+        <StepPreview
+          form={form}
+          selectedType={selectedType}
+          defaultCosts={defaultCosts}
+          defaultCostsLoading={defaultCostsLoading}
+          onToggleSetupCosts={(checked) =>
+            setForm((prev) => ({ ...prev, includeSetupCosts: checked }))
+          }
+        />
       )}
 
       {/* Navigation */}
@@ -692,10 +724,21 @@ function StepModules({
 function StepPreview({
   form,
   selectedType,
+  defaultCosts,
+  defaultCostsLoading,
+  onToggleSetupCosts,
 }: {
   form: FormData;
   selectedType?: BusinessType;
+  defaultCosts: BusinessTypeDefaultCost[];
+  defaultCostsLoading: boolean;
+  onToggleSetupCosts: (checked: boolean) => void;
 }) {
+  // v1.5.6: setup ve recurring kalemlerin toplam tutarları
+  const setupItems = defaultCosts.filter((c) => c.is_setup);
+  const recurringItems = defaultCosts.filter((c) => !c.is_setup);
+  const setupTotal = setupItems.reduce((s, c) => s + (c.amount || 0), 0);
+  const recurringTotal = recurringItems.reduce((s, c) => s + (c.amount || 0), 0);
   const Icon = selectedType
     ? categoryIconMap[selectedType.icon] || LayoutGrid
     : LayoutGrid;
@@ -795,6 +838,115 @@ function StepPreview({
             </div>
           </div>
         )}
+
+      {/* v1.5.6: Kurulum Maliyetleri */}
+      {(defaultCostsLoading || defaultCosts.length > 0) && (
+        <div className="card p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.includeSetupCosts}
+              onChange={(e) => onToggleSetupCosts(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded accent-brand-600"
+            />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-white">
+                Kurulum maliyetlerini ekle
+              </p>
+              <p className="text-xs text-surface-400 mt-0.5">
+                Bu isletme tipi icin tanimli varsayilan giderler otomatik olusturulur:
+                tek seferlik kalemler {`->`}{" "}<strong>kurulum islemi (Transaction)</strong>;
+                aylik kalemler {`->`}{" "}<strong>sabit gider (FixedCost)</strong> olarak yazilir.
+              </p>
+            </div>
+          </label>
+
+          {defaultCostsLoading ? (
+            <p className="mt-3 text-xs text-surface-500">
+              Sablonlar yukleniyor...
+            </p>
+          ) : (
+            <>
+              {setupItems.length > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] uppercase tracking-wide text-surface-400">
+                      Tek seferlik (kurulum)
+                    </p>
+                    <p className="text-xs font-semibold text-red-400">
+                      {formatCurrency(setupTotal, form.currency)}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {setupItems.map((c) => (
+                      <div
+                        key={c.id}
+                        className={cn(
+                          "flex items-center justify-between text-xs px-2 py-1.5 rounded",
+                          form.includeSetupCosts
+                            ? "bg-red-500/10"
+                            : "bg-surface-700/30 opacity-60"
+                        )}
+                      >
+                        <div>
+                          <span className="text-surface-200">{c.name}</span>
+                          <span className="text-[10px] text-surface-500 ml-2">
+                            {c.category}
+                          </span>
+                        </div>
+                        <span className="text-surface-300 font-medium">
+                          {formatCurrency(c.amount, c.currency || form.currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {recurringItems.length > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] uppercase tracking-wide text-surface-400">
+                      Aylik (sabit gider)
+                    </p>
+                    <p className="text-xs font-semibold text-amber-400">
+                      {formatCurrency(recurringTotal, form.currency)} / ay
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {recurringItems.map((c) => (
+                      <div
+                        key={c.id}
+                        className={cn(
+                          "flex items-center justify-between text-xs px-2 py-1.5 rounded",
+                          form.includeSetupCosts
+                            ? "bg-amber-500/10"
+                            : "bg-surface-700/30 opacity-60"
+                        )}
+                      >
+                        <div>
+                          <span className="text-surface-200">{c.name}</span>
+                          <span className="text-[10px] text-surface-500 ml-2">
+                            {c.category} · {c.frequency}
+                          </span>
+                        </div>
+                        <span className="text-surface-300 font-medium">
+                          {formatCurrency(c.amount, c.currency || form.currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {setupItems.length === 0 && recurringItems.length === 0 && (
+                <p className="mt-3 text-xs text-surface-500">
+                  Bu tip icin tanimli kurulum sablonu yok. Admin paneli uzerinden
+                  eklenebilir.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Mockup Analysis Preview */}
       {form.isMockup && (
