@@ -55,6 +55,25 @@ public class FixedCost {
     @Builder.Default
     private boolean active = true;
 
+    /**
+     * v1.5.9: recurring engine için "her ay otomatik üret" bayrağı.
+     * {@code auto} alanı manuel hesaplanan giderler içindir (örn. personel toplamı);
+     * bu yeni alan kullanıcının sadece "her ay tx olarak da yansısın" tercihidir.
+     * Default false — geriye uyumluluk: mevcut FixedCost'lar otomatik tx üretmez.
+     */
+    @Column(name = "auto_generate", nullable = false)
+    @org.hibernate.annotations.ColumnDefault("false")
+    @Builder.Default
+    private boolean autoGenerate = false;
+
+    /**
+     * v1.5.9: son otomatik üretim zamanı. RecurringTxGeneratorTask her ayın 1'i
+     * çalışınca buraya kaydeder; idempotency için kontrol edilir (aynı YYYY-MM
+     * içinde tekrar tetiklenirse atlanır).
+     */
+    @Column(name = "last_auto_run")
+    private LocalDateTime lastAutoRun;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

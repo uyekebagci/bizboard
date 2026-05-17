@@ -135,6 +135,12 @@ export default function AdminPage() {
               Borc Migration
             </a>
             <a
+              href="/admin/recurring"
+              className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
+            >
+              Recurring
+            </a>
+            <a
               href="/admin/audit"
               className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
             >

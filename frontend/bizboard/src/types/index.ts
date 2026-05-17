@@ -335,6 +335,10 @@ export interface FixedCost {
   amount: number;
   frequency: string;
   is_auto: boolean;
+  /** v1.5.9: recurring engine "her ay otomatik tx üret" tercihi */
+  auto_generate?: boolean;
+  /** v1.5.9: son otomatik üretim zamanı (null → henüz çalışmadı) */
+  last_auto_run?: string | null;
   notes: string | null;
   is_active: boolean;
   created_at: string;

@@ -157,16 +157,26 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-medium text-white truncate">{fc.name}</p>
                       {fc.is_auto && (
                         <span className="px-1.5 py-0.5 bg-blue-50 text-blue-500 text-[9px] rounded-full font-medium">
                           Otomatik
                         </span>
                       )}
+                      {fc.auto_generate && (
+                        <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[9px] rounded-full font-medium">
+                          Aylik tx
+                        </span>
+                      )}
                     </div>
                     {fc.notes && (
                       <p className="text-xs text-surface-400 truncate">{fc.notes}</p>
+                    )}
+                    {fc.auto_generate && fc.last_auto_run && (
+                      <p className="text-[10px] text-emerald-400/80 mt-0.5">
+                        Son uretim: {new Date(fc.last_auto_run).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
+                      </p>
                     )}
                   </div>
 
@@ -246,6 +256,8 @@ function CreateFixedCostModal({
   const [amount, setAmount] = useState(fixedCost?.amount?.toString() || "");
   const [frequency, setFrequency] = useState(fixedCost?.frequency || "MONTHLY");
   const [notes, setNotes] = useState(fixedCost?.notes || "");
+  /** v1.5.9: "her ay otomatik tx üret" tercihi */
+  const [autoGenerate, setAutoGenerate] = useState<boolean>(!!fixedCost?.auto_generate);
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -265,6 +277,7 @@ function CreateFixedCostModal({
       amount: parseMoneyInput(amount),
       frequency,
       notes: notes.trim() || null,
+      auto_generate: autoGenerate,
     };
 
     try {
@@ -393,6 +406,33 @@ function CreateFixedCostModal({
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all resize-none"
             />
+          </div>
+
+          {/* v1.5.9: recurring engine toggle */}
+          <div className="bg-surface-700/50 rounded-xl p-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoGenerate}
+                onChange={(e) => setAutoGenerate(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded accent-brand-600"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-white">
+                  Her ay otomatik tx olustur
+                </p>
+                <p className="text-xs text-surface-400 mt-0.5">
+                  Acikken sistem her ayin 1&apos;inde otomatik bir gider transaction&apos;i
+                  yaratir. Idempotent — ayni ay icinde iki kere uretmez. Audit log&apos;a
+                  source=RECURRING ile dusurulur.
+                </p>
+                {isEdit && fixedCost?.last_auto_run && (
+                  <p className="text-[10px] text-emerald-400 mt-1">
+                    Son otomatik uretim: {new Date(fixedCost.last_auto_run).toLocaleString("tr-TR")}
+                  </p>
+                )}
+              </div>
+            </label>
           </div>
 
           {/* Belge / Sözleşme Yükleme */}

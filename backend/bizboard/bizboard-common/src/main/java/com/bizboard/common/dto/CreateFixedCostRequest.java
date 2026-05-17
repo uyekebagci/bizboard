@@ -12,4 +12,8 @@ public class CreateFixedCostRequest {
     private BigDecimal amount;
     private String frequency;
     private String notes;
+
+    /** v1.5.9: recurring engine "her ay otomatik tx üret" tercihi (opsiyonel, default false). */
+    @JsonProperty("auto_generate")
+    private Boolean autoGenerate;
 }
