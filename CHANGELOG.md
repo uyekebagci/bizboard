@@ -34,6 +34,44 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.9] — 2026-05-17
+
+**Firmalar WP'nin kalan parçası — Recurring tx jeneratörü.** Her ayın 1'inde aktif "Aylık tx" bayraklı sabit giderler için otomatik transaction üretir. Scheduled task + manuel admin endpoint + frontend toggle + son üretim göstergesi + audit log.
+
+### Added
+
+#### Backend
+- **`FixedCost.autoGenerate` (`auto_generate` boolean) + `FixedCost.lastAutoRun` (`last_auto_run` timestamp)** alanları. `autoGenerate=true` olan + active=true FixedCost'lar recurring engine'ın kaynağıdır. `lastAutoRun` idempotency için kullanılır (aynı YYYY-MM'de ikinci tetiklenme atlanır). Hibernate `ddl-auto=update` iki kolonu ALTER ile ekler; mevcut kayıtlar default false / null alır.
+- **`FixedCostRepository.findByAutoGenerateTrueAndActiveTrue()`** — engine kaynak query'si.
+- **`RecurringTxGeneratorService.run(now, actorUserId, actorUsername)`** — tüm autoGenerate=true + active=true FixedCost'lar için bu ay'a Transaction üretir:
+  - Transaction `direction=EXPENSE`, `amount=fc.amount`, `date=ayin-ilk-gunu`
+  - `metadata.source = "RECURRING"`, `metadata.recurring_for = "YYYY-MM"`, `metadata.fixed_cost_id`, `metadata.fixed_cost_type`
+  - Frequency desteği: MONTHLY her ay, QUARTERLY Ocak/Nisan/Temmuz/Ekim, YEARLY sadece Ocak
+  - Idempotency: `lastAutoRun`'un YearMonth'ü mevcut YearMonth'e eşitse o FixedCost atlanır
+  - Audit log'a `TRANSACTION_CREATE` action ile `source=RECURRING` + tüm metadata düşer; "system" username scheduled run için, gerçek admin manuel run için
+- **`RecurringTxGeneratorTask` `@Scheduled(cron = "0 30 2 1 * *", zone = "Europe/Istanbul")`** — her ayın 1'i 02:30 Istanbul. Cron env override: `APP_RECURRING_TX_CRON`.
+- **`POST /admin/recurring/run`** — admin manuel tetikleyici (test / acil senaryolar). Sonuç: `{processed, created, skipped}`.
+
+#### Frontend
+- **FixedCostsWidget formu**: yeni "Her ay otomatik tx oluştur" checkbox + (edit mode'da) son otomatik üretim zamanı küçük emerald yazı.
+- **FixedCostsWidget listesi**: `auto_generate=true` kayıtlarda yeşil "Aylık tx" rozeti, altta "Son üretim: ..." metni (varsa).
+- **`/admin/recurring` admin sayfası**: "Şimdi Çalıştır" buton + sonuç paneli (processed/created/skipped).
+- Admin paneli üst sağ köşede "Recurring" linki eklendi.
+
+### Changed
+
+#### Backend
+- `CreateFixedCostRequest.autoGenerate` opsiyonel alan eklendi; create + update akışlarında set edilir.
+- `FixedCostDto.autoGenerate` + `lastAutoRun` alanları frontend için API'de görünür.
+
+### Notes
+
+- **Idempotency garanti:** scheduled task gece çalışıp lastAutoRun set ettikten sonra admin manuel "Şimdi Çalıştır" basarsa, aynı FixedCost atlanır (`skipped`). Test için lastAutoRun'u sıfırlamak isterse admin DB'den manuel müdahale edebilir.
+- **Schema değişikliği:** Hibernate cold start'ta `fixed_costs.auto_generate boolean default false not null` ve `fixed_costs.last_auto_run timestamp` ALTER çalıştırır. Mevcut kayıtlar etkilenmez (default false → engine onları atlar).
+- **Çıkış:** Firmalar WP'sinde kalan 3 PENDING (recurring engine + admin UI + audit) bu sürümle COMPLETED'a çekildi.
+
+---
+
 ## [1.5.8] — 2026-05-17
 
 **v1.4 WP'sinin frontend tarafı tamamlandı — yeni 6-step wizard.** `/dashboard/add` wizard'ı manuel kuruluş maliyetleri + aylık sabit masraf adımlarıyla genişletildi. Eskiden 4 adım, şimdi 6: Tip + Temel + Modüller + Kuruluş + Aylık Gider + Önizleme. Backend (v1.5.7) atomic POST akışı buradan tetiklenir.
@@ -831,7 +869,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.8...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.9...HEAD
+[1.5.9]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.9
 [1.5.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.8
 [1.5.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.7
 [1.5.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.6

@@ -78,6 +78,7 @@ public class FixedCostService {
                 .amount(request.getAmount())
                 .frequency(request.getFrequency() != null ? request.getFrequency() : "MONTHLY")
                 .notes(request.getNotes())
+                .autoGenerate(Boolean.TRUE.equals(request.getAutoGenerate()))
                 .build();
 
         fixedCost = fixedCostRepository.save(fixedCost);
@@ -104,6 +105,7 @@ public class FixedCostService {
         if (request.getAmount() != null) fc.setAmount(request.getAmount());
         if (request.getFrequency() != null) fc.setFrequency(request.getFrequency());
         if (request.getNotes() != null) fc.setNotes(request.getNotes());
+        if (request.getAutoGenerate() != null) fc.setAutoGenerate(request.getAutoGenerate());
 
         fc = fixedCostRepository.save(fc);
         log.info("Sabit gider guncellendi: {} - {} TL", fc.getName(), fc.getAmount());
@@ -139,6 +141,8 @@ public class FixedCostService {
                 .amount(fc.getAmount())
                 .frequency(fc.getFrequency())
                 .auto(fc.isAuto())
+                .autoGenerate(fc.isAutoGenerate())
+                .lastAutoRun(fc.getLastAutoRun())
                 .notes(fc.getNotes())
                 .active(fc.isActive())
                 .createdAt(fc.getCreatedAt())

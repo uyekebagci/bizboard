@@ -17,4 +17,7 @@ public interface FixedCostRepository extends JpaRepository<FixedCost, UUID> {
     List<FixedCost> findByBusinessIdAndTypeOrderByCreatedAtDesc(UUID businessId, String type);
 
     List<FixedCost> findByBusinessIdIn(List<UUID> businessIds);
+
+    /** v1.5.9: recurring engine kaynak listesi — autoGenerate=true + active=true. */
+    List<FixedCost> findByAutoGenerateTrueAndActiveTrue();
 }

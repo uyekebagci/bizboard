@@ -32,6 +32,14 @@ public class FixedCostDto {
     @JsonProperty("is_active")
     private boolean active;
 
+    /** v1.5.9: recurring engine için "her ay otomatik tx üret" bayrağı. */
+    @JsonProperty("auto_generate")
+    private boolean autoGenerate;
+
+    /** v1.5.9: son otomatik üretim zamanı (null → henüz hiç tetiklenmedi). */
+    @JsonProperty("last_auto_run")
+    private LocalDateTime lastAutoRun;
+
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
