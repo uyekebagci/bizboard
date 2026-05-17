@@ -38,4 +38,13 @@ public class BusinessTypeController {
             @PathVariable UUID businessTypeId) {
         return ResponseEntity.ok(defaultCostService.listForType(businessTypeId));
     }
+
+    /**
+     * v1.5.7: business_type_name autocomplete kaynağı. Master tip etiketleri +
+     * kullanıcıların önceden girdiği distinct serbest adlar birleştirilmiş liste.
+     */
+    @GetMapping("/names")
+    public ResponseEntity<List<String>> getBusinessTypeNames() {
+        return ResponseEntity.ok(businessService.getBusinessTypeNameSuggestions());
+    }
 }

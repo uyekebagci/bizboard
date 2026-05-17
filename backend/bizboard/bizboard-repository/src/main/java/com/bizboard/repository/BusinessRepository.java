@@ -18,4 +18,13 @@ public interface BusinessRepository extends JpaRepository<Business, UUID> {
     List<Business> findAllAccessibleByUser(@Param("userId") UUID userId);
 
     List<Business> findByIdIn(List<UUID> ids);
+
+    /**
+     * v1.5.7: business_type_name autocomplete kaynağı — kullanıcıların
+     * önceden girdiği serbest tip adlarını distinct olarak döndürür.
+     */
+    @Query("SELECT DISTINCT b.businessTypeName FROM Business b " +
+            "WHERE b.businessTypeName IS NOT NULL AND b.businessTypeName <> '' " +
+            "ORDER BY b.businessTypeName ASC")
+    List<String> findDistinctBusinessTypeNames();
 }

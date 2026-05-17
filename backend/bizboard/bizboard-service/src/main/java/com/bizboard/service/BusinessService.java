@@ -131,6 +131,7 @@ public class BusinessService {
                 .owner(owner)
                 .businessType(businessType)
                 .name(request.getName())
+                .businessTypeName(request.getBusinessTypeName())
                 .description(request.getDescription())
                 .color(request.getColor() != null ? request.getColor() : businessType.getColor())
                 .currency(request.getCurrency() != null ? request.getCurrency() : "TRY")
@@ -183,6 +184,51 @@ public class BusinessService {
             }
         }
 
+        // v1.5.7: yeni wizard manuel akışı — setup_costs[] ve monthly_fixed_costs[]
+        // her ikisi de aynı transaction içinde (mevcut @Transactional method) üretilir.
+        // Biri patlarsa Spring tüm akış rollback eder (atomic).
+        int wizardSetupTxs = 0;
+        int wizardFixedCosts = 0;
+        if (request.getSetupCosts() != null) {
+            for (com.bizboard.common.dto.WizardSetupCostItem item : request.getSetupCosts()) {
+                if (item.getName() == null || item.getName().isBlank()) continue;
+                if (item.getAmount() == null || item.getAmount().signum() <= 0) continue;
+                Transaction tx = Transaction.builder()
+                        .business(business)
+                        .direction(TransactionDirection.EXPENSE)
+                        .amount(item.getAmount())
+                        .currency(business.getCurrency())
+                        .description(item.getName() + " (kurulum)")
+                        .date(java.time.LocalDate.now())
+                        .setupCost(true)
+                        .createdBy(owner)
+                        .build();
+                transactionRepository.save(tx);
+                wizardSetupTxs++;
+            }
+        }
+        if (request.getMonthlyFixedCosts() != null) {
+            for (com.bizboard.common.dto.WizardMonthlyFixedCostItem item : request.getMonthlyFixedCosts()) {
+                if (!item.isApplicable()) continue;
+                if (item.getCategory() == null || item.getCategory().isBlank()) continue;
+                if (item.getAmount() == null || item.getAmount().signum() <= 0) continue;
+                com.bizboard.common.enums.FixedCostCategory cat =
+                        com.bizboard.common.enums.FixedCostCategory.parse(item.getCategory());
+                String fcName = item.getName() != null && !item.getName().isBlank()
+                        ? item.getName() : cat.getLabel();
+                FixedCost fc = FixedCost.builder()
+                        .business(business)
+                        .name(fcName)
+                        .type(cat.name())
+                        .amount(item.getAmount())
+                        .frequency("MONTHLY")
+                        .auto(false)
+                        .build();
+                fixedCostRepository.save(fc);
+                wizardFixedCosts++;
+            }
+        }
+
         // v1.5.6: kullanıcı kurulum maliyetlerini ekle dediyse master data'dan üret.
         int createdSetupTxs = 0;
         int createdFixedCosts = 0;
@@ -223,6 +269,7 @@ public class BusinessService {
         Map<String, Object> auditMeta = new HashMap<>();
         auditMeta.put("businessTypeId", businessType.getId());
         auditMeta.put("businessTypeLabel", businessType.getLabel());
+        auditMeta.put("businessTypeName", business.getBusinessTypeName());
         auditMeta.put("modules", moduleNames != null ? moduleNames : List.of());
         auditMeta.put("currency", business.getCurrency());
         auditMeta.put("includeSetupCosts", request.isIncludeSetupCosts());
@@ -230,17 +277,44 @@ public class BusinessService {
             auditMeta.put("createdSetupTransactions", createdSetupTxs);
             auditMeta.put("createdFixedCosts", createdFixedCosts);
         }
+        if (wizardSetupTxs > 0 || wizardFixedCosts > 0) {
+            auditMeta.put("wizardSetupTransactions", wizardSetupTxs);
+            auditMeta.put("wizardMonthlyFixedCosts", wizardFixedCosts);
+        }
+        String extraDetail = "";
+        if (request.isIncludeSetupCosts()) {
+            extraDetail += " + " + createdSetupTxs + " kurulum tx, " + createdFixedCosts + " sabit gider (sablon)";
+        }
+        if (wizardSetupTxs > 0 || wizardFixedCosts > 0) {
+            extraDetail += " + wizard: " + wizardSetupTxs + " kurulum tx, " + wizardFixedCosts + " aylik gider";
+        }
         auditLogService.recordEntityAction(
                 AuditAction.BUSINESS_CREATE,
                 owner.getId(), owner.getUsername(),
                 "BUSINESS", business.getId(),
-                "Isletme olusturuldu: " + business.getName() + " (" + businessType.getLabel() + ")"
-                        + (request.isIncludeSetupCosts()
-                                ? " + " + createdSetupTxs + " kurulum tx, " + createdFixedCosts + " sabit gider"
-                                : ""),
+                "Isletme olusturuldu: " + business.getName() + " (" + businessType.getLabel() + ")" + extraDetail,
                 auditMeta);
 
         return DtoMapper.toBusinessDto(business);
+    }
+
+    /**
+     * v1.5.7: business_type_name autocomplete listesi.
+     * BusinessType.label master listesi + distinct Business.businessTypeName birleşimi.
+     * Frontend ilk girişte gösterir, kullanıcı yazdıkça frontend filtreler.
+     */
+    @Transactional(readOnly = true)
+    public List<String> getBusinessTypeNameSuggestions() {
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        // Önce master tip etiketleri
+        businessTypeRepository.findAll().forEach(t -> {
+            if (t.getLabel() != null && !t.getLabel().isBlank()) {
+                out.add(t.getLabel());
+            }
+        });
+        // Sonra kullanıcıların önceden girdiği distinct adlar
+        out.addAll(businessRepository.findDistinctBusinessTypeNames());
+        return new java.util.ArrayList<>(out);
     }
 
     @Transactional(readOnly = true)
