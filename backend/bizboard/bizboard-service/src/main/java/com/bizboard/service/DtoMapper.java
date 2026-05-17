@@ -83,6 +83,7 @@ public final class DtoMapper {
                 .description(t.getDescription())
                 .date(t.getDate())
                 .receiptUrl(t.getReceiptUrl())
+                .setupCost(t.isSetupCost())
                 .tags(t.getTags())
                 .metadata(t.getMetadata())
                 .createdBy(t.getCreatedBy() != null ? t.getCreatedBy().getId() : null)

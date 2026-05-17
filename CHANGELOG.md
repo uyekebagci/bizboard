@@ -34,6 +34,39 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.10] — 2026-05-17
+
+**v1.4 İşletme Tipleri WP'sinin son 3 PENDING'i kapandı.** Bu sürümle birlikte hem **v1.4 WP** (İşletme Tipleri & Kurulum Maliyetleri) hem **v1.5 WP** (Firmalar & Cari & Otomasyon) **tamamen DONE**. 1.5.x serisinde açık TODO kalmadı.
+
+### Added
+
+#### Backend
+- **`Transaction.isSetupCost` API'de görünür:** `TransactionDto.setupCost` + `DtoMapper.toTransactionDto` mapping eklendi. v1.5.6'da entity'ye eklenmişti ama DTO'da yoktu — şimdi frontend okuyabiliyor.
+- **`ModuleType.FIXED_COSTS` enum sabiti** — yeni dedicated "Sabit Masraflar" sekmesi için backend enum'da yer rezerve. Mevcut işletmelerde modül olarak aktif olmasa bile frontend'de her zaman görünür.
+
+#### Frontend
+- **Mobile bottom-nav "Raporlar" sayfasına yeni widget — "Kurulum Maliyetleri":**
+  - Tüm portfolyo'daki `is_setup_cost=true` transaction'lar toplanır
+  - Toplam tutar + tx sayısı üst panelde
+  - İşletme kırılımı listesi altında (her satır: işletme adı + tx sayısı + toplam)
+  - Hiç kurulum tx'i yoksa açıklayıcı boş durum
+  - Tipler WP'sinin "Raporda kurulum maliyetlerinin ayrı gösterimi" TODO'sunu kapatır.
+- **Business detayında "Sabit Masraflar" sekmesi** — `ModuleTabs` içine `fixed_costs` tipi eklendi; tıklayınca mevcut `FixedCostsWidget` render edilir. Her business için her zaman görünür (modül aktif/değil farketmez).
+- **TS type `Transaction.is_setup_cost`** — backend'den artık gelir, frontend filtre/raporda kullanılır.
+
+### Documentation
+
+- **`docs/test-plans/wizard-atomic.md`** — yeni işletme wizard'ı atomic akışı için 7 test senaryosu (happy path, validation, "Geçerli değil" toggle, atomic rollback, autocomplete, categories endpoint, frontend manuel). curl + postman ile manuel doğrulanabilir; QA regression suite'e dahil edilebilir. Spring Boot integration test infrastructure'ı v2.0 backlog'unda.
+- Tipler WP'sinin "Test: zorunlu alan + 'Geçerli değil' + atomic create senaryoları" TODO'sunu kapatır.
+
+### Notes
+
+- **v1.4 İşletme Tipleri WP fully closed:** 20 TODO toplam, 11 COMPLETED + 6 CANCELLED + 3 yeni COMPLETED (bu sürüm) = 20/20 final.
+- **v1.5 Firmalar WP fully closed:** 12 TODO toplam, 12/12 COMPLETED (v1.5.9'da kapandı).
+- Schema değişikliği yok bu sürümde. Cold start riski sıfır.
+
+---
+
 ## [1.5.9] — 2026-05-17
 
 **Firmalar WP'nin kalan parçası — Recurring tx jeneratörü.** Her ayın 1'inde aktif "Aylık tx" bayraklı sabit giderler için otomatik transaction üretir. Scheduled task + manuel admin endpoint + frontend toggle + son üretim göstergesi + audit log.
@@ -869,7 +902,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.9...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.10...HEAD
+[1.5.10]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.10
 [1.5.9]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.9
 [1.5.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.8
 [1.5.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.7

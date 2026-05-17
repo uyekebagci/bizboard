@@ -31,7 +31,8 @@ export type ModuleType =
   | "menu"
   | "crm"
   | "debt"
-  | "notes";
+  | "notes"
+  | "fixed_costs";
 
 export type TransactionDirection = "income" | "expense";
 
@@ -149,6 +150,8 @@ export interface Transaction {
   description: string | null;
   date: string;
   receipt_url: string | null;
+  /** v1.5.6+: kurulum maliyeti bayrağı */
+  is_setup_cost?: boolean;
   tags: string[];
   metadata: Record<string, unknown>;
   created_by: string | null;

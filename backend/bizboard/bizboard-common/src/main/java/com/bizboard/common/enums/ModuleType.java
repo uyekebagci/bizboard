@@ -11,5 +11,7 @@ public enum ModuleType {
     MENU,
     CRM,
     DEBT,
-    NOTES
+    NOTES,
+    /** v1.5.10: dedicated "Sabit Masraflar" sekmesi (FixedCostsWidget'ı barındırır). */
+    FIXED_COSTS
 }

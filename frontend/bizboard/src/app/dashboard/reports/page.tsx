@@ -1,15 +1,55 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, ArrowRight, FileText, Wrench } from "lucide-react";
+import { BarChart3, ArrowRight, FileText, Wrench, Wallet, Building2 } from "lucide-react";
+import { api } from "@/lib/api/client";
+import { useBusinesses } from "@/hooks/useBusinesses";
+import { formatCurrency } from "@/lib/utils";
+import type { Transaction } from "@/types";
 
 /**
- * Mobile bottom-nav "Raporlar" item'i. Tam rapor merkezi v1.7.0 iş paketinde
- * (muhasebeci paket PDF + Excel export). Bu sürümde mevcut Finans Sayfası'na
- * yönlendiren bir landing.
+ * Mobile bottom-nav "Raporlar" item'i. Tam rapor merkezi v1.7.0 iş paketinde.
+ * v1.5.10: Kurulum maliyetleri ayri gosterim widget'i eklendi (Tipler WP'sinin
+ * "Raporda kurulum maliyetlerinin ayri gosterimi" TODO'sunu kapatir).
  */
 export default function ReportsPage() {
   const router = useRouter();
+  const { businesses } = useBusinesses();
+  const [allTx, setAllTx] = useState<Transaction[]>([]);
+  const [txLoading, setTxLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setTxLoading(true);
+    api.get<Transaction[]>("/portfolio/transactions/all")
+      .then((d) => { if (!cancelled) setAllTx(d || []); })
+      .catch(() => { if (!cancelled) setAllTx([]); })
+      .finally(() => { if (!cancelled) setTxLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // v1.5.10: kurulum maliyetleri ayri ayri toplanir
+  const setupSummary = useMemo(() => {
+    const setupTxs = allTx.filter((t) => t.is_setup_cost);
+    if (setupTxs.length === 0) return null;
+
+    const totalAmount = setupTxs.reduce((s, t) => s + t.amount, 0);
+    const byBusiness = new Map<string, { id: string; name: string; total: number; count: number }>();
+    for (const t of setupTxs) {
+      const bId = t.business_id;
+      const bName = t.business_name || businesses.find((b) => b.id === bId)?.name || "?";
+      const cur = byBusiness.get(bId) ?? { id: bId, name: bName, total: 0, count: 0 };
+      cur.total += t.amount;
+      cur.count++;
+      byBusiness.set(bId, cur);
+    }
+    return {
+      total: totalAmount,
+      count: setupTxs.length,
+      byBusiness: Array.from(byBusiness.values()).sort((a, b) => b.total - a.total),
+    };
+  }, [allTx, businesses]);
 
   return (
     <div className="space-y-5">
@@ -53,6 +93,77 @@ export default function ReportsPage() {
           </p>
         </button>
       </div>
+
+      {/* v1.5.10: Kurulum Maliyetleri widget'i */}
+      <section className="card p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Wallet size={18} className="text-amber-400" />
+          <h2 className="text-base font-semibold text-white">Kurulum Maliyetleri</h2>
+          <span className="text-[10px] uppercase tracking-wide text-surface-500 ml-1">
+            ozet
+          </span>
+        </div>
+
+        {txLoading ? (
+          <p className="text-sm text-surface-400">Yukleniyor...</p>
+        ) : !setupSummary ? (
+          <p className="text-sm text-surface-400">
+            Henuz kurulum maliyeti olarak isaretlenmis transaction yok. Yeni isletme
+            wizard&apos;inda &quot;Kurulus&quot; adimindan veya tek tek tx&apos;leri
+            <code className="text-[10px] mx-1 px-1 py-0.5 bg-surface-700 rounded">is_setup_cost</code>
+            bayragi ile isaretle.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-surface-400">
+                  Toplam Tutar
+                </p>
+                <p className="text-2xl font-bold text-amber-400 mt-1">
+                  {formatCurrency(setupSummary.total)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-surface-400">
+                  Tx Sayisi
+                </p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {setupSummary.count}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] uppercase tracking-wide text-surface-400">
+                Isletme Kirilimi
+              </p>
+              {setupSummary.byBusiness.map((b) => (
+                <div
+                  key={b.id}
+                  className="flex items-center justify-between bg-surface-700/40 px-3 py-2 rounded-lg"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building2 size={14} className="text-surface-400 shrink-0" />
+                    <span className="text-sm text-surface-200 truncate">{b.name}</span>
+                    <span className="text-[10px] text-surface-500">({b.count})</span>
+                  </div>
+                  <span className="text-sm font-semibold text-amber-400 shrink-0">
+                    {formatCurrency(b.total)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-[10px] text-surface-500 mt-4">
+              Kurulum maliyetleri{" "}
+              <code className="px-1 py-0.5 bg-surface-700 rounded">is_setup_cost=true</code>{" "}
+              bayrakli tek seferlik EXPENSE tx&apos;leridir. Rutin operasyonel giderlerden
+              ayri tutmak icin v1.5.6&apos;da eklenen flag.
+            </p>
+          </>
+        )}
+      </section>
 
       {/* Yol haritasi */}
       <div className="card p-5">

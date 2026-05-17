@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Wallet, Package, Users, FolderKanban, FileText,
   CalendarCheck, CarFront, UtensilsCrossed, UserCircle,
-  Landmark, StickyNote, Plus, X, Check, Loader2,
+  Landmark, StickyNote, Plus, X, Check, Loader2, Pin,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ import { PersonnelModule } from "@/components/business/PersonnelModule";
 import { VehicleModule } from "@/components/business/VehicleModule";
 import { InventoryModule } from "@/components/business/InventoryModule";
 import { FinanceModule } from "@/components/business/FinanceModule";
+import { FixedCostsWidget } from "@/components/business/FixedCostsWidget";
 
 const moduleConfig: Record<
   ModuleType,
@@ -35,6 +36,7 @@ const moduleConfig: Record<
   crm: { label: "Musteriler", icon: UserCircle },
   debt: { label: "Borclar", icon: Landmark },
   notes: { label: "Notlar", icon: StickyNote },
+  fixed_costs: { label: "Sabit Masraflar", icon: Pin },
 };
 
 const allModules = Object.keys(moduleConfig) as ModuleType[];
@@ -75,6 +77,8 @@ export function ModuleTabs({ business }: Props) {
         return <InventoryModule businessId={business.id} currency={business.currency} />;
       case "notes":
         return <NotesModule businessId={business.id} />;
+      case "fixed_costs":
+        return <FixedCostsWidget businessId={business.id} currency={business.currency} />;
       default:
         return (
           <div className="card p-6 text-center">
