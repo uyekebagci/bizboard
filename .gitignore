@@ -61,3 +61,7 @@ env.sevalla.*
 # Personal scratch / brainstorm notes (kept local only)
 # ═══════════════════════════════════════════════════════════
 isim önerileri.md
+
+# v2.x feature specs — repo köküne çalışma dosyası olarak konulan tasarım
+# döküman draft'ları. Hazır olunca docs/ altına intentional commit edilir.
+v2*-spec.md

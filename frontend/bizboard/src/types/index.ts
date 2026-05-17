@@ -659,3 +659,20 @@ export interface CounterpartStatement {
   entry_count: number;
   entries: CounterpartStatementEntry[];
 }
+
+// ---- v1.5.6: Business type default costs ----
+
+export interface BusinessTypeDefaultCost {
+  id: string;
+  business_type_id: string;
+  name: string;
+  category: string;
+  amount: number;
+  currency: string;
+  is_setup: boolean;
+  frequency: string;
+  sort_order: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}

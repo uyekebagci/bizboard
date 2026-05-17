@@ -11,8 +11,11 @@ import com.bizboard.common.enums.ModuleType;
 import com.bizboard.common.enums.TransactionDirection;
 import com.bizboard.repository.BusinessModuleRepository;
 import com.bizboard.repository.BusinessRepository;
+import com.bizboard.repository.BusinessTypeDefaultCostRepository;
 import com.bizboard.repository.BusinessTypeRepository;
 import com.bizboard.repository.CategoryRepository;
+import com.bizboard.repository.FixedCostRepository;
+import com.bizboard.repository.TransactionRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +30,10 @@ public class BusinessService {
     private final BusinessRepository businessRepository;
     private final BusinessModuleRepository businessModuleRepository;
     private final BusinessTypeRepository businessTypeRepository;
+    private final BusinessTypeDefaultCostRepository defaultCostRepository;
     private final CategoryRepository categoryRepository;
+    private final FixedCostRepository fixedCostRepository;
+    private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
 
@@ -177,17 +183,62 @@ public class BusinessService {
             }
         }
 
+        // v1.5.6: kullanıcı kurulum maliyetlerini ekle dediyse master data'dan üret.
+        int createdSetupTxs = 0;
+        int createdFixedCosts = 0;
+        if (request.isIncludeSetupCosts()) {
+            var defaults = defaultCostRepository
+                    .findByBusinessTypeIdOrderBySortOrderAscNameAsc(businessType.getId());
+            for (BusinessTypeDefaultCost dc : defaults) {
+                if (dc.getAmount() == null
+                        || dc.getAmount().signum() <= 0) continue;
+                if (dc.isSetup()) {
+                    Transaction tx = Transaction.builder()
+                            .business(business)
+                            .direction(TransactionDirection.EXPENSE)
+                            .amount(dc.getAmount())
+                            .currency(dc.getCurrency() != null ? dc.getCurrency() : business.getCurrency())
+                            .description(dc.getName() + " (kurulum)")
+                            .date(java.time.LocalDate.now())
+                            .setupCost(true)
+                            .createdBy(owner)
+                            .build();
+                    transactionRepository.save(tx);
+                    createdSetupTxs++;
+                } else {
+                    FixedCost fc = FixedCost.builder()
+                            .business(business)
+                            .name(dc.getName())
+                            .type(dc.getCategory() != null ? dc.getCategory() : "OTHER")
+                            .amount(dc.getAmount())
+                            .frequency(dc.getFrequency() != null ? dc.getFrequency() : "MONTHLY")
+                            .auto(false)
+                            .build();
+                    fixedCostRepository.save(fc);
+                    createdFixedCosts++;
+                }
+            }
+        }
+
+        Map<String, Object> auditMeta = new HashMap<>();
+        auditMeta.put("businessTypeId", businessType.getId());
+        auditMeta.put("businessTypeLabel", businessType.getLabel());
+        auditMeta.put("modules", moduleNames != null ? moduleNames : List.of());
+        auditMeta.put("currency", business.getCurrency());
+        auditMeta.put("includeSetupCosts", request.isIncludeSetupCosts());
+        if (request.isIncludeSetupCosts()) {
+            auditMeta.put("createdSetupTransactions", createdSetupTxs);
+            auditMeta.put("createdFixedCosts", createdFixedCosts);
+        }
         auditLogService.recordEntityAction(
                 AuditAction.BUSINESS_CREATE,
                 owner.getId(), owner.getUsername(),
                 "BUSINESS", business.getId(),
-                "Isletme olusturuldu: " + business.getName() + " (" + businessType.getLabel() + ")",
-                Map.of(
-                        "businessTypeId", businessType.getId(),
-                        "businessTypeLabel", businessType.getLabel(),
-                        "modules", moduleNames != null ? moduleNames : List.of(),
-                        "currency", business.getCurrency()
-                ));
+                "Isletme olusturuldu: " + business.getName() + " (" + businessType.getLabel() + ")"
+                        + (request.isIncludeSetupCosts()
+                                ? " + " + createdSetupTxs + " kurulum tx, " + createdFixedCosts + " sabit gider"
+                                : ""),
+                auditMeta);
 
         return DtoMapper.toBusinessDto(business);
     }

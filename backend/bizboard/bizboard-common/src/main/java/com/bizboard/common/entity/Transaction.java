@@ -54,6 +54,17 @@ public class Transaction {
     @Column(name = "receipt_url")
     private String receiptUrl;
 
+    /**
+     * v1.5.6: tek seferlik kurulum maliyeti (business açılış gideri) bayrağı.
+     * Yeni işletme wizard'ında "Kurulum maliyetlerini ekle" seçilirse otomatik
+     * oluşturulan Transaction'lar bu flag ile işaretlenir. Raporlama tarafı
+     * bu sayede setup'ı rutin operasyonel giderden ayırabilir.
+     */
+    @Column(name = "is_setup_cost", nullable = false)
+    @org.hibernate.annotations.ColumnDefault("false")
+    @Builder.Default
+    private boolean setupCost = false;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     @Builder.Default

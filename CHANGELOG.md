@@ -34,6 +34,56 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.6] — 2026-05-17
+
+**v1.4 roadmap WP'sinin geri-doldurulması — "İşletme Tipleri & Kurulum Maliyetleri".** Daha önce v1.4 sürüm slot'u güvenlik patch serisinde kullanıldığı için bu WP atlanmıştı; v1.5.6 olarak shipleniyor. Yeni master data: her işletme tipi için kategorize kurulum + sabit gider şablonları, yeni işletme wizard'ında "Kurulum maliyetlerini ekle" checkbox'ı, kategorize listede her kalem ayrı transaction (raporlamada detaylı görünür).
+
+### Added
+
+#### Backend
+- **`BusinessTypeDefaultCost` entity** + repository. Alanlar: `business_type_id`, `name`, `category` (RENT/PERSONNEL/UTILITY/SUPPLIES/MARKETING/LEGAL/OTHER), `amount`, `currency`, `is_setup` (tek seferlik mi tekrarlayan mı), `frequency` (recurring için MONTHLY/YEARLY/QUARTERLY), `sort_order`, `notes`. Hibernate `ddl-auto=update` ile `business_type_default_costs` tablosu otomatik oluşur; tüm kolonlarda `@ColumnDefault` net — mevcut işletmeleri etkilemez.
+- **`Transaction.isSetupCost` boolean kolon** (`is_setup_cost`, default false). Yeni işletme wizard'ında "kurulum maliyetlerini ekle" seçilirse otomatik üretilen kurulum transaction'ları bu flag ile işaretlenir; raporlama tarafı setup'ı rutin operasyonel giderden ayırabilir. Mevcut Transaction kayıtları DDL backfill ile false alır.
+- **`CreateBusinessRequest.includeSetupCosts` (`include_setup_costs`) flag**. Default false. True ise `BusinessService.createBusiness` akışında master data üzerinden otomatik akış:
+  - `is_setup=true` kalemler → tek seferlik `Transaction` (yön=EXPENSE, `isSetupCost=true`, tarih=bugün)
+  - `is_setup=false` kalemler → `FixedCost` (recurring; `auto=false` — kullanıcı manuel yönetir)
+- **`AdminBusinessTypeController`** — admin-only default cost CRUD:
+  - `GET /admin/business-types/{id}/default-costs`
+  - `POST /admin/business-types/{id}/default-costs` (Upsert request)
+  - `PUT /admin/business-types/default-costs/{id}`
+  - `DELETE /admin/business-types/default-costs/{id}`
+- **`GET /business-types/{id}/default-costs`** — public read-only endpoint (authenticated). Wizard'da non-admin kullanıcıların da önizlemeyi görebilmesi için.
+- **Audit log enrichment:** `BUSINESS_CREATE` action metadata'sında artık `includeSetupCosts`, `createdSetupTransactions`, `createdFixedCosts` sayımları yer alıyor (gerçek üretim için).
+
+#### Frontend
+- **Yeni işletme wizard'ı (`/dashboard/add`) — Step 4 "Önizleme" altında yeni bir kart:**
+  - "Kurulum maliyetlerini ekle" checkbox
+  - Setup ve recurring kalem listeleri ayrı bölümlerde, toplamlarla
+  - Checkbox işaretliyken renkli/odaklı, kapalıyken soluk önizleme
+  - Tip için tanımlı şablon yoksa: "Admin paneli üzerinden eklenebilir" notu
+- **TS type:** `BusinessTypeDefaultCost`
+
+### Changed
+
+#### Backend
+- `BusinessService.createBusiness` artık `BusinessTypeDefaultCostRepository`, `FixedCostRepository`, `TransactionRepository` bağımlılıkları taşıyor.
+- Audit detail string'i: `"Isletme olusturuldu: X (Tip) + N kurulum tx, M sabit gider"` (eğer kurulum maliyetleri eklendiyse).
+
+### Removed
+
+- `v2.2-search-spec.md` (583 satır) main branch'ten kaldırıldı — repo köküne çalışma dosyası olarak konmuştu, yanlışlıkla commit'e dahil olmuştu. `.gitignore`'a `v2*-spec.md` pattern'ı eklendi; bu tip draft spec'ler artık otomatik track-out kalır. Dosyanın local kopyası korundu (git rm --cached).
+
+### Notes
+
+- **Master data başlangıçta boş.** Admin paneli "Borc Migration" yanına bir "İşletme Tipi Şablonları" linki eklenmedi bu sürümde (yer kısıtı). Admin endpoint'leri curl/postman ile veya v1.5.7 frontend admin UI'ı ile yönetilebilir.
+- Bu özellik **opt-in** — checkbox işaretlenmediği sürece davranış değişmez; eski wizard akışı aynı.
+- v1.6 recurring engine devreye girince `FixedCost.auto=true` opsiyonu burada kullanılabilir; v1.5.6'da otomatik üretilen FixedCost'lar `auto=false` (manual ayarlanır).
+- Sevalla cold start'ta Hibernate ALTER TABLE iki yeni kolon/tablo ekleyecek:
+  - `transactions.is_setup_cost boolean default false not null`
+  - `business_type_default_costs` tablosu (yeni)
+  İlk request ~1-2 saniye yavaş olabilir; sonraki request'ler normal.
+
+---
+
 ## [1.5.5] — 2026-05-17
 
 **Firmalar WP dilim 3d — mobile 404'ler tamamen kapandı + debt migration utility.** Mobile bottom-nav'da kalan iki 404 sayfa (Raporlar, Profil) eklendi; eski free-text borç kayıtları için admin tarafında bir migration utility yapıldı.
@@ -697,7 +747,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.5...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.6...HEAD
+[1.5.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.6
 [1.5.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.5
 [1.5.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.4
 [1.5.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.3
