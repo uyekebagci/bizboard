@@ -37,6 +37,15 @@ public class Business {
     @Column(nullable = false)
     private String name;
 
+    /**
+     * v1.5.7: serbest metin işletme tipi adı (yeni wizard autocomplete tarafı).
+     * BusinessType FK katı master data sağlar; {@code businessTypeName} kullanıcının
+     * yazdığı human-readable adı tutar — autocomplete listesinin kaynaklarından biri.
+     * Eski kayıtlarda null kalır; yeni wizard'da zorunlu girilir.
+     */
+    @Column(name = "business_type_name", length = 120)
+    private String businessTypeName;
+
     private String description;
 
     @Column(name = "logo_url")

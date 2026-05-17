@@ -34,6 +34,59 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.7] — 2026-05-17
+
+**v1.4 WP'sinin gerçek tasarımı — backend.** Dashboard'daki güncel TODO listesini okuyunca anlaşıldı: orijinal master-data yaklaşımı (v1.5.6'da yapılan) **CANCELLED** edilmiş; yeni tasarım wizard'da **manuel serbest liste** + **atomic create**. Bu sürüm yeni tasarımın backend tarafını shipler; frontend wizard rewrite v1.5.8'de.
+
+### Added
+
+#### Backend
+- **`Business.businessTypeName`** kolonu (`business_type_name` VARCHAR(120)). BusinessType FK'sine ek serbest metin alan — yeni wizard'da kullanıcının yazdığı tipi tutar (autocomplete kaynağı). Eski kayıtlarda null kalır.
+- **`FixedCostCategory` enum (12 sabit kategori):** `RENT`, `PERSONNEL`, `UTILITY`, `VEHICLE`, `SUPPLIES`, `MARKETING`, `INSURANCE`, `MAINTENANCE`, `SOFTWARE`, `LEGAL`, `TAX`, `OTHER`. İlk 11'i wizard'da zorunlu, `OTHER` serbest giriş. TR label'lar enum'da. `FixedCost.type` String alanı serbest kalmaya devam eder (geriye uyumluluk); yeni create akışı bu enum isimlerini kullanır.
+- **`CreateBusinessRequest`'e iki yeni liste:**
+  - `setup_costs: [{ name, amount }]` — wizard adım 1, kuruluş maliyetleri
+  - `monthly_fixed_costs: [{ category, name?, amount, applicable }]` — wizard adım 2, aylık sabit masraflar
+  - Plus `business_type_name` (serbest metin tipi)
+- **`BusinessService.createBusiness` atomic akış:**
+  - Tek `@Transactional` içinde business + tüm setup tx[] + tüm fixed_cost[] üretilir
+  - Biri patlarsa hepsi rollback olur — yarım kalmış business kaydı kalmaz
+  - Setup tx'ler `is_setup_cost=true` flag'ı ile (v1.5.6'da eklenen) işaretlenir
+  - Monthly fc'ler `frequency=MONTHLY`, `auto=false`
+  - Master-data path (v1.5.6'nın `includeSetupCosts`'u) hâlâ çalışır — iki yaklaşım yan yana açık
+- **`GET /business-types/names`** (authenticated) — autocomplete kaynağı: BusinessType.label master listesi + distinct `Business.businessTypeName` birleşik liste. Frontend tek istekle alıp lokalde filtreler.
+- **`GET /fixed-cost-categories`** (authenticated) — 12 kategori `[{ key, label, required }]` formatında, wizard adım 2 için.
+- **`BusinessRepository.findDistinctBusinessTypeNames()`** — autocomplete query'si.
+- **Audit log enrichment:** `BUSINESS_CREATE` metadata'sında `businessTypeName`, `wizardSetupTransactions`, `wizardMonthlyFixedCosts` sayımları (gerçek üretimde). Detail string'de de wizard sayımları görünür.
+
+### Changed
+
+#### Backend
+- `CreateBusinessRequest` 4 alan büyüdü; eski clients hâlâ çalışır (yeni alanlar opsiyonel).
+- `Business.builder()` artık `businessTypeName` set ediyor.
+
+### Notes
+
+- Bu sürümün **hiçbir frontend değişikliği yok** — wizard rewrite v1.5.8'e bırakıldı. Backend test/curl ile şu an üretim akışı:
+  ```json
+  POST /businesses
+  {
+    "name": "Yeni Şube",
+    "business_type_id": "...",
+    "business_type_name": "Kafe",
+    "setup_costs": [{"name": "Depozit", "amount": 50000}],
+    "monthly_fixed_costs": [
+      {"category": "RENT", "amount": 15000, "applicable": true},
+      {"category": "PERSONNEL", "amount": 30000, "applicable": true},
+      {"category": "VEHICLE", "applicable": false}
+    ]
+  }
+  ```
+- **Schema değişikliği:** Hibernate cold start'ta `businesses.business_type_name` kolonu ekler (nullable VARCHAR 120) — mevcut satırlar null alır, ALTER atomik. İlk request 1-2 saniye yavaş olabilir.
+- v1.5.6'nın master-data yaklaşımı dashboard'da CANCELLED; teknik borç olarak kalır ama backend kod yine kullanılabilir (admin endpoint'leri açık). Önümüzdeki bir patch'te silinmesi değerlendirilir.
+- v1.5.8 scope: NewBusinessWizard rewrite (multi-step manuel form), "Sabit Masraflar" düzenleme sekmesi, autocomplete UI.
+
+---
+
 ## [1.5.6] — 2026-05-17
 
 **v1.4 roadmap WP'sinin geri-doldurulması — "İşletme Tipleri & Kurulum Maliyetleri".** Daha önce v1.4 sürüm slot'u güvenlik patch serisinde kullanıldığı için bu WP atlanmıştı; v1.5.6 olarak shipleniyor. Yeni master data: her işletme tipi için kategorize kurulum + sabit gider şablonları, yeni işletme wizard'ında "Kurulum maliyetlerini ekle" checkbox'ı, kategorize listede her kalem ayrı transaction (raporlamada detaylı görünür).
@@ -747,7 +800,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.6...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.7...HEAD
+[1.5.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.7
 [1.5.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.6
 [1.5.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.5
 [1.5.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.4
