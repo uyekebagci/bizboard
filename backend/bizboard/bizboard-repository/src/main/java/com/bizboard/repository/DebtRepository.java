@@ -34,4 +34,9 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
 
     /** Bir counterpart'a bağlı borç sayısı — delete guard'ı için. */
     long countByCounterpartRefId(UUID counterpartId);
+
+    // ── v1.5.5: migration ───────────────────────────────────────
+
+    /** Counterpart_id'si null olan (free-text only) borçlar — migration kaynağı. */
+    List<Debt> findByCounterpartRefIsNull();
 }

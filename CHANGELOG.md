@@ -34,6 +34,37 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.5] — 2026-05-17
+
+**Firmalar WP dilim 3d — mobile 404'ler tamamen kapandı + debt migration utility.** Mobile bottom-nav'da kalan iki 404 sayfa (Raporlar, Profil) eklendi; eski free-text borç kayıtları için admin tarafında bir migration utility yapıldı.
+
+### Added
+
+#### Backend
+- **`DebtMigrationService` + `POST /admin/counterparts/migrate-debts`** — `counterpart_id IS NULL` olan tüm borçları toplar, counterparty string'ini case-insensitive olarak mevcut counterpart'larda arar.
+  - Bulunursa → bağlar
+  - Bulunamazsa ve `auto_create=true` ise yeni counterpart (role=OTHER) yaratır
+  - `dry_run=true` (default) sadece sayım döndürür, mutation yapmaz
+  - Etkilenen counterpart'lar için `CounterpartLedgerService.recomputeIfPresent` tetiklenir
+  - Idempotent — sonraki çalıştırmalarda orphan kalmazsa sıfır etki döner
+  - Gerçek run audit'e `DEBT_MIGRATION` aksiyonu ile düşer (counts metadata)
+- **`AuditAction.DEBT_MIGRATION`** sabiti
+- **`DebtRepository.findByCounterpartRefIsNull()`** — migration kaynak query'si
+
+#### Frontend
+- **`/dashboard/reports` sayfası** — mobile bottom-nav "Raporlar" linkinin 404'ünü kapatır. İki kart: Finans Özeti (mevcut `/dashboard/finance`'a yönlendirir) + Cari Hesap Ekstreleri (`/dashboard/counterparts`'a yönlendirir). Altta v1.7.0 rapor merkezi yol haritası notu.
+- **`/dashboard/profile` sayfası** — mobile bottom-nav "Profil" linkinin 404'ünü kapatır. Avatar (initials), kullanıcı bilgileri (e-posta, telefon, para birimi, dil), Parola Değiştir / Admin Paneli / İşletmelerim aksiyonları + Çıkış Yap. Admin için "Admin Paneli" satırı koşullu görünür.
+- **`/admin/debt-migration` admin sayfası** — DebtMigrationService UI'ı: dry-run + auto-create toggle + apply + sonuç paneli (orphan/matched/created/skipped/recomputed sayımları). Apply için onay modali. Admin paneli ana sayfasından "Borc Migration" linki ile erişilir.
+
+### Notes
+
+- **Mobile bottom-nav 404'leri tamamen kapandı:** Ana Sayfa ✓, İşletmeler ✓ (v1.5.2), Ekle ✓, Raporlar ✓ (bu sürüm), Profil ✓ (bu sürüm).
+- Migration utility'i çalıştırmadan önce **dry-run ile kontrol** önerilir — kaç orphan borç var, kaçı eşleşiyor, kaçı yeni firma gerektirir görülür. Apply geri alınmaz ama idempotent yapısı ile birden fazla deneme güvenli.
+- `auto_create` kapalıyken eşleşmeyen kayıtlar `skipped` olarak işaretlenir; sonra elle düzeltilip tekrar koşulabilir.
+- Backend schema değişikliği yok bu sürümde — cold start riski sıfır.
+
+---
+
 ## [1.5.4] — 2026-05-16
 
 **Firmalar WP dilim 3c — Borç akışına counterpart bağlama.** Yeni borç oluşturma formunda "Kimden Alınacak / Kime Verilecek" alanı artık karşı firma seçici (combobox). Mevcut firmadan seçilirse `counterpart_id` ile normalize edilir; tıklayınca yeni firma inline modal üzerinden anında oluşturulur ve seçilir. Free-text fallback hâlâ çalışır (eski client/UX akışları bozulmaz).
@@ -666,7 +697,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.4...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.5...HEAD
+[1.5.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.5
 [1.5.4]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.4
 [1.5.3]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.3
 [1.5.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.2
