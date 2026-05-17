@@ -34,6 +34,37 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.5.8] — 2026-05-17
+
+**v1.4 WP'sinin frontend tarafı tamamlandı — yeni 6-step wizard.** `/dashboard/add` wizard'ı manuel kuruluş maliyetleri + aylık sabit masraf adımlarıyla genişletildi. Eskiden 4 adım, şimdi 6: Tip + Temel + Modüller + Kuruluş + Aylık Gider + Önizleme. Backend (v1.5.7) atomic POST akışı buradan tetiklenir.
+
+### Added
+
+#### Frontend
+- **Yeni Step 4: "Kuruluş Maliyetleri"** — manuel serbest liste. "Yeni kalem" buton → name + tutar inline; X ile sil; toplam canlı hesaplanır. Boş bırakılabilir (opsiyonel adım). Backend tarafında her kalem ayrı bir `Transaction` (`is_setup_cost=true`, direction=EXPENSE) olur.
+- **Yeni Step 5: "Aylık Sabit Masraf"** — 12 standart kategori (RENT, PERSONNEL, UTILITY, VEHICLE, SUPPLIES, MARKETING, INSURANCE, MAINTENANCE, SOFTWARE, LEGAL, TAX, OTHER). Her kategori için tutar input + "Geçerli değil" toggle. Toggle açıkken kategori soluk gri, input devre dışı — submit'te `applicable=false` olarak işaretlenir, backend o kategoriyi atlar. OTHER için ek serbest isim input. Aylık toplam altta canlı hesaplanır.
+- **Step 1 (Tip Seçimi) — `business_type_name` autocomplete**: tip seçildiğinde label otomatik dolar, kullanıcı serbest düzenleyebilir. Suggestion listesi `GET /business-types/names` (master labels + distinct user-entered). Focus / typing'de dropdown açılır, 10'a kadar filtre sonucu.
+- **Step 6 (Önizleme) — yeni "Atomic Olusturulacak Kalemler" kartı**: setup tx'ler + aylık fc'ler ayrı bölümlerde, toplamlarla. "Bu kalemler atomic — biri patlarsa hiçbir kayıt olusturulmaz" notu.
+
+### Changed
+
+#### Frontend
+- `FormData` 4 yeni alan: `businessTypeName`, `setupCostItems[]`, `monthlyFixedCostItems[]` (12 kategori önceden init edilir), `setupCostItems` opsiyonel.
+- `canNext` validation 6 step için: Step 1 tip + name zorunlu, Step 5 applicable kalemlerde amount > 0 + OTHER için customName zorunlu.
+- `handleSubmit` payload artık `business_type_name`, `setup_costs[]`, `monthly_fixed_costs[]` gönderir (v1.5.7 backend bekleyen format). Eski `include_setup_costs` master-data path'i hâlâ destekli ama yeni manuel akış asıl yol.
+- Step indicator artık 6 bölüm.
+- Local lucide-react import'lara `Plus`, `X` eklendi.
+
+### Notes
+
+- **6 adım mobile-da sıkışık görünmesin diye**: step content scrollable; her adım odaklı (Step 4 sadece kuruluş, Step 5 sadece aylık). Step indicator üstte ince çubuk.
+- **Zaten girilen veriler korunur**: localStorage draft akışı yeni `FormData` shape'ine adapte; eski draft'lar yüklendiğinde yeni alanlar default değerleriyle init olur, kullanıcı kaldığı yerden devam edebilir.
+- **Backend uyumluluğu**: v1.5.7 endpoint'leri (`/business-types/names`, `/fixed-cost-categories`, atomic `POST /businesses`) prod'da olmalı. Wizard mount'ta bunları çeker.
+- "Sabit Masraflar düzenleme sekmesi" (sonradan editing) TODO'su bu sürüm kapsamında değil — `FixedCostsWidget.tsx` zaten business detayında mevcut, gerekirse v1.5.9'da ek sekme yapılır.
+- Schema değişikliği yok (frontend-only sürüm); cold start etkisi yok.
+
+---
+
 ## [1.5.7] — 2026-05-17
 
 **v1.4 WP'sinin gerçek tasarımı — backend.** Dashboard'daki güncel TODO listesini okuyunca anlaşıldı: orijinal master-data yaklaşımı (v1.5.6'da yapılan) **CANCELLED** edilmiş; yeni tasarım wizard'da **manuel serbest liste** + **atomic create**. Bu sürüm yeni tasarımın backend tarafını shipler; frontend wizard rewrite v1.5.8'de.
@@ -800,7 +831,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.7...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.8...HEAD
+[1.5.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.8
 [1.5.7]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.7
 [1.5.6]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.6
 [1.5.5]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.5
