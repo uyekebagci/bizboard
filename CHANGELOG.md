@@ -34,6 +34,68 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.2] — 2026-05-18
+
+**Breaking cleanup — `BusinessType` master tablosu tamamen kaldırıldı + admin "İşletme Sil" UI.** v1.5.6'da eklenen master-data yaklaşımı CANCELLED edilmişti; v1.6.1'de geçici find-or-create stub kullandık. Bu sürümde tamamen temizleniyor: 8 backend dosyası + ilgili tablolar/kolonlar drop ediliyor.
+
+### Removed
+
+#### Backend (8 dosya silindi)
+- `BusinessType` entity, `BusinessTypeRepository`
+- `BusinessTypeDefaultCost` entity, `BusinessTypeDefaultCostRepository`, `BusinessTypeDefaultCostService`
+- `BusinessTypeController`, `AdminBusinessTypeController`
+- `BusinessTypeDto`, `BusinessTypeDefaultCostDto`, `UpsertDefaultCostRequest` DTO'ları
+- `Business.businessType` FK alanı (entity'den)
+- `CreateBusinessRequest.businessTypeId`, `includeSetupCosts`, `setupCosts`/`monthlyFixedCosts` alanları korundu
+
+#### Backend (endpoint kaldırıldı)
+- `GET /business-types` (master listele)
+- `GET /business-types/{id}/default-costs`
+- `GET /business-types/names` (autocomplete — yerini sadece distinct user-entered listesi aldı, aşağıda)
+- `POST/PUT/DELETE /admin/business-types/...` (default cost CRUD)
+
+#### Frontend
+- `BusinessTypeDefaultCost` TS interface
+- `BusinessType` interface küçük stub'a indirgendi (eski kod uyumluluğu için minimum alanlar)
+- Wizard'da: master tip listesi fetch + `defaultCosts` state + `selectedType.default_categories` preview kartı + `includeSetupCosts` checkbox + `businessTypeId` form alanı tamamen silindi
+- `Business.business_type_id` ve `Business.business_type` (joined) tipte kaldırıldı; `Business.business_type_name` eklendi
+- `BusinessHeader`, `BusinessGrid`, `InventoryPage` artık `business.business_type_name` veya default ikon/renk kullanır
+
+### Added
+
+#### Backend
+- **`DELETE /businesses/{id}`** — admin-only. `BusinessService.deleteBusiness`: rol kontrolü + cascade silme + 409 Conflict (bağlı FK constraint reddi) + `BUSINESS_DELETE` audit log.
+- **`BusinessTypeTablesCleanup` ApplicationRunner** — startup'ta idempotent SQL:
+  ```sql
+  ALTER TABLE businesses DROP COLUMN IF EXISTS business_type_id CASCADE;
+  DROP TABLE IF EXISTS business_type_default_costs CASCADE;
+  DROP TABLE IF EXISTS business_types CASCADE;
+  ```
+  v2.0 Flyway baseline'da silinecek (artık gerek kalmayacak).
+- **`BusinessRepository.findDistinctBusinessTypeNames`** zaten v1.5.7'de eklenmişti — autocomplete kaynağı olarak korunur. `BusinessService.getBusinessTypeNameSuggestions` artık yalnız bunu döner (master tip labellar gitti).
+
+#### Frontend
+- **Business detayında admin için "Sil" butonu** (üst sağ, Trash2 ikon) → confirm modal + 409 hata mesajı (bağlı kayıtlar varsa). Silme başarılı olunca dashboard'a redirect + `triggerRefresh()`.
+
+### Changed
+
+#### Backend
+- **`BusinessService.createBusiness`** sadeleşti:
+  - `business_type_name` zorunlu (404 yerine 400)
+  - Default modules/categories master tip'ten gelmiyor — kullanıcı wizard'da seçer; fallback `["finance"]`
+  - `resolveOrCreateBusinessType` helper kaldırıldı
+- **`BusinessDto`** sadeleşti — `businessTypeId`, `businessType` kaldırıldı; `businessTypeName` eklendi.
+- **`DtoMapper.toBusinessDto`** + `toBusinessTypeDto` (silindi).
+- **`CreateBusinessRequest`** sadeleşti — `business_type_id` + `include_setup_costs` kaldırıldı; `business_type_name` `@NotBlank` oldu.
+
+### Notes
+
+- **Cold start davranışı:** Hibernate `ddl-auto=update` artık `business_types` tablosunu yönetmiyor. `BusinessTypeTablesCleanup` ApplicationRunner Spring boot tamamlandıktan sonra çalışır ve tabloları/kolonu drop eder. Loglarda `[business-type-cleanup] master tablolar ve business_type_id kolonu temizlendi` görünmeli. Bu işlem **idempotent** — sonraki deploy'larda etki yok.
+- **Mevcut işletmeler korunur:** silme sadece kolonu/tabloyu hedefler. `businesses.business_type_id` kolonu CASCADE ile düşer, FK constraint kalkar. Her Business kaydında `business_type_name` zaten doluydu (v1.5.7'den beri), boşsa null kalır.
+- v1.6.0 hotfix'i (localStorage draft merge) + v1.6.1 (find-or-create stub) artık geçmiş — temizlik tamamlandı.
+
+---
+
 ## [1.6.1] — 2026-05-18
 
 **Gerçek root cause hotfix — wizard Step 1 tip kartları kaldırıldı.** v1.6.0 hotfix bir semptomu (`undefined.trim()` crash) düzeltti ama esas problem farklıydı: master-data tip seçim akışı tamamen kaldırılmıştı ama wizard'da kartlar hâlâ rendering ediliyordu. Prod DB'de `business_types` boş veya yeterince doluyken bile kullanıcı kartlardan birini seçmek zorunda kalıyordu (yoksa `business_type_id` eksik → backend 400). Bu sürüm hem frontend tip kartlarını siler hem backend `business_type_id`'yi opsiyonel yapar.
@@ -959,7 +1021,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.1...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.2...HEAD
+[1.6.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.2
 [1.6.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.1
 [1.6.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.0
 [1.5.10]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.10

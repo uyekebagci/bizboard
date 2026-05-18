@@ -36,7 +36,7 @@ import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
-import type { BusinessType, BusinessTypeDefaultCost, ModuleType } from "@/types";
+import type { BusinessType, ModuleType } from "@/types";
 
 // ===== ICON MAPS =====
 const categoryIconMap: Record<string, LucideIcon> = {
@@ -85,8 +85,7 @@ const colorPalette = [
 interface FormData {
   name: string;
   description: string;
-  businessTypeId: string;
-  /** v1.5.7+ serbest metin tipi adı (autocomplete'lik) */
+  /** v1.6.2: serbest metin tipi adı (eski businessTypeId + includeSetupCosts kaldırıldı) */
   businessTypeName: string;
   color: string;
   currency: string;
@@ -97,8 +96,6 @@ interface FormData {
   mockupEstimatedExpense: number;
   mockupInitialInvestment: number;
   mockupNotes: string;
-  /** v1.5.6: kurulum maliyetlerini ekle checkbox'ı */
-  includeSetupCosts: boolean;
   /** v1.5.8: yeni wizard akışı — manuel kuruluş kalemleri */
   setupCostItems: SetupCostItem[];
   /** v1.5.8: yeni wizard akışı — aylık sabit masraflar (12 kategori) */
@@ -163,7 +160,6 @@ function mergeDraft(defaults: FormData, parsed: Record<string, unknown>): FormDa
   if (typeof out.mockupNotes !== "string") out.mockupNotes = "";
   // Boolean
   if (typeof out.isMockup !== "boolean") out.isMockup = false;
-  if (typeof out.includeSetupCosts !== "boolean") out.includeSetupCosts = false;
   // Numerikler
   for (const k of [
     "mockupEstimatedRevenue",
@@ -179,15 +175,14 @@ function mergeDraft(defaults: FormData, parsed: Record<string, unknown>): FormDa
 export default function AddBusinessPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // v1.6.2: business types master listesi kaldırıldı.
+  const [isLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState<FormData>({
     name: "",
     description: "",
-    businessTypeId: "",
     businessTypeName: "",
     color: "",
     currency: "TRY",
@@ -197,32 +192,15 @@ export default function AddBusinessPage() {
     mockupEstimatedExpense: 0,
     mockupInitialInvestment: 0,
     mockupNotes: "",
-    includeSetupCosts: false,
     setupCostItems: [],
     monthlyFixedCostItems: [],
   });
 
   // v1.5.8: autocomplete + 12 kategori master data
   const [typeNameSuggestions, setTypeNameSuggestions] = useState<string[]>([]);
-  const [fixedCostCategories, setFixedCostCategories] = useState<FixedCostCategoryMeta[]>([]);
-
-  /** v1.5.6: seçili tipin varsayılan kurulum/sabit gider şablonları */
-  const [defaultCosts, setDefaultCosts] = useState<BusinessTypeDefaultCost[]>([]);
-  const [defaultCostsLoading, setDefaultCostsLoading] = useState(false);
-
-  // Load business types
-  useEffect(() => {
-    api
-      .get<BusinessType[]>("/business-types")
-      .then((data) => {
-        setBusinessTypes(data);
-        setIsLoading(false);
-      })
-      .catch(() => {
-        setError("Isletme tipleri yuklenemedi");
-        setIsLoading(false);
-      });
-  }, []);
+  // v1.6.2: fixedCostCategories'i kullanan başka yer kalmadı (state ileride sadece set ediliyor),
+  // ama yine de fetch'i yapıyoruz çünkü monthlyFixedCostItems init'i kategorilerden geliyor.
+  const [, setFixedCostCategories] = useState<FixedCostCategoryMeta[]>([]);
 
   // Auto-save draft to localStorage.
   // v1.6.0: eski wizard surumlerinden (v1.5.8 oncesi) kalan draft'larda yeni
@@ -245,26 +223,12 @@ export default function AddBusinessPage() {
   }, []);
 
   useEffect(() => {
-    if (form.name || form.businessTypeId) {
+    if (form.name || form.businessTypeName) {
       localStorage.setItem("bizboard_draft_business", JSON.stringify(form));
     }
   }, [form]);
 
-  // v1.5.6: tip seçildiğinde default cost şablonlarını çek.
-  useEffect(() => {
-    if (!form.businessTypeId) {
-      setDefaultCosts([]);
-      return;
-    }
-    let cancelled = false;
-    setDefaultCostsLoading(true);
-    api
-      .get<BusinessTypeDefaultCost[]>(`/business-types/${form.businessTypeId}/default-costs`)
-      .then((data) => { if (!cancelled) setDefaultCosts(data || []); })
-      .catch(() => { if (!cancelled) setDefaultCosts([]); })
-      .finally(() => { if (!cancelled) setDefaultCostsLoading(false); });
-    return () => { cancelled = true; };
-  }, [form.businessTypeId]);
+  // v1.6.2: master tip default cost şablonu fetch'i kaldırıldı — manuel akış.
 
   // v1.5.8: autocomplete listesi + 12 kategori (mount'ta tek seferlik)
   useEffect(() => {
@@ -297,29 +261,9 @@ export default function AddBusinessPage() {
 
   // v1.5.8: tip seçilince businessTypeName'i otomatik doldur (kullanıcı override edebilir)
   // v1.6.0: defansif — form.businessTypeName undefined ise empty say.
-  useEffect(() => {
-    if (!form.businessTypeId) return;
-    const t = businessTypes.find((b) => b.id === form.businessTypeId);
-    if (t && !(form.businessTypeName ?? "").trim()) {
-      setForm((prev) => ({ ...prev, businessTypeName: t.label }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.businessTypeId, businessTypes]);
-
-  const selectedType = businessTypes.find(
-    (t) => t.id === form.businessTypeId
-  );
-
-  function selectType(typeId: string) {
-    const type = businessTypes.find((t) => t.id === typeId);
-    if (!type) return;
-    setForm((prev) => ({
-      ...prev,
-      businessTypeId: typeId,
-      color: prev.color || type.color,
-      modules: type.default_modules || [],
-    }));
-  }
+  // v1.6.2: businessTypeId, selectType, selectedType, businessTypes kaldırıldı —
+  // master tablo silindi, kullanıcı serbest metin girer.
+  const selectedType: undefined = undefined;
 
   function toggleModule(mod: string) {
     setForm((prev) => ({
@@ -403,16 +347,13 @@ export default function AddBusinessPage() {
       await api.post("/businesses", {
         name: form.name,
         description: form.description || null,
-        // v1.6.1: tip seçimi kaldırıldı; backend business_type_name'den
-        // find-or-create yapar. Boş string yerine null gönder (UUID parse hatası önler).
-        business_type_id: form.businessTypeId || null,
-        business_type_name: (form.businessTypeName ?? "").trim() || null,
+        // v1.6.2: business_type_id ve include_setup_costs kaldırıldı (master tablo silindi).
+        business_type_name: (form.businessTypeName ?? "").trim(),
         color: form.color,
         currency: form.currency,
         modules: form.modules,
         is_mockup: form.isMockup,
         metadata,
-        include_setup_costs: form.includeSetupCosts,
         setup_costs: setupCostsPayload,
         monthly_fixed_costs: monthlyFixedCostsPayload,
       });
@@ -592,15 +533,7 @@ export default function AddBusinessPage() {
         />
       )}
       {step === 6 && (
-        <StepPreview
-          form={form}
-          selectedType={selectedType}
-          defaultCosts={defaultCosts}
-          defaultCostsLoading={defaultCostsLoading}
-          onToggleSetupCosts={(checked) =>
-            setForm((prev) => ({ ...prev, includeSetupCosts: checked }))
-          }
-        />
+        <StepPreview form={form} selectedType={selectedType} />
       )}
 
       {/* Navigation */}
@@ -891,7 +824,9 @@ function StepModules({
     "crm",
   ];
 
-  const defaults = selectedType?.default_modules || [];
+  // v1.6.2: selectedType.default_modules kaldırıldı — wizard'ın "varsayılan" rozet
+  // göstergesi de boş kalsın; kullanıcı her modülü manuel seçer.
+  const defaults: string[] = [];
 
   return (
     <div className="space-y-3">
@@ -958,25 +893,13 @@ function StepModules({
 function StepPreview({
   form,
   selectedType,
-  defaultCosts,
-  defaultCostsLoading,
-  onToggleSetupCosts,
 }: {
   form: FormData;
   selectedType?: BusinessType;
-  defaultCosts: BusinessTypeDefaultCost[];
-  defaultCostsLoading: boolean;
-  onToggleSetupCosts: (checked: boolean) => void;
 }) {
-  // v1.5.6: setup ve recurring kalemlerin toplam tutarları
-  const setupItems = defaultCosts.filter((c) => c.is_setup);
-  const recurringItems = defaultCosts.filter((c) => !c.is_setup);
-  const setupTotal = setupItems.reduce((s, c) => s + (c.amount || 0), 0);
-  const recurringTotal = recurringItems.reduce((s, c) => s + (c.amount || 0), 0);
-  const Icon = selectedType
-    ? categoryIconMap[selectedType.icon] || LayoutGrid
-    : LayoutGrid;
-  const color = form.color || selectedType?.color || "#4c6ef5";
+  // v1.6.2: master tip + defaultCosts kaldırıldı; default ikon/renk.
+  const Icon = LayoutGrid;
+  const color = form.color || "#4c6ef5";
 
   const estimatedProfit =
     form.mockupEstimatedRevenue - form.mockupEstimatedExpense;
@@ -1040,38 +963,7 @@ function StepPreview({
         </div>
       </div>
 
-      {/* Default Categories Preview */}
-      {selectedType?.default_categories &&
-        selectedType.default_categories.length > 0 && (
-          <div className="card p-4">
-            <p className="text-xs text-surface-400 font-medium uppercase tracking-wide mb-3">
-              Varsayilan Kategoriler
-            </p>
-            <div className="space-y-2">
-              {selectedType.default_categories.map((cat, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <span
-                    className={cn(
-                      "w-2 h-2 rounded-full",
-                      (cat.direction || cat.type) === "income"
-                        ? "bg-green-500"
-                        : "bg-red-500"
-                    )}
-                  />
-                  <span className="text-surface-200">{cat.name}</span>
-                  <span className="text-xs text-surface-400">
-                    {(cat.direction || cat.type) === "income"
-                      ? "Gelir"
-                      : "Gider"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* v1.6.2: master tip kaldırıldı — default_categories preview yok. */}
 
       {/* v1.5.8: Wizard adim 4-5 ozet */}
       {(form.setupCostItems.length > 0 || form.monthlyFixedCostItems.some((it) => it.applicable && parseMoneyInput(it.amount) > 0)) && (
@@ -1157,114 +1049,7 @@ function StepPreview({
         </div>
       )}
 
-      {/* v1.5.6: Kurulum Maliyetleri */}
-      {(defaultCostsLoading || defaultCosts.length > 0) && (
-        <div className="card p-4">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.includeSetupCosts}
-              onChange={(e) => onToggleSetupCosts(e.target.checked)}
-              className="mt-0.5 w-4 h-4 rounded accent-brand-600"
-            />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">
-                Kurulum maliyetlerini ekle
-              </p>
-              <p className="text-xs text-surface-400 mt-0.5">
-                Bu isletme tipi icin tanimli varsayilan giderler otomatik olusturulur:
-                tek seferlik kalemler {`->`}{" "}<strong>kurulum islemi (Transaction)</strong>;
-                aylik kalemler {`->`}{" "}<strong>sabit gider (FixedCost)</strong> olarak yazilir.
-              </p>
-            </div>
-          </label>
-
-          {defaultCostsLoading ? (
-            <p className="mt-3 text-xs text-surface-500">
-              Sablonlar yukleniyor...
-            </p>
-          ) : (
-            <>
-              {setupItems.length > 0 && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] uppercase tracking-wide text-surface-400">
-                      Tek seferlik (kurulum)
-                    </p>
-                    <p className="text-xs font-semibold text-red-400">
-                      {formatCurrency(setupTotal, form.currency)}
-                    </p>
-                  </div>
-                  <div className="space-y-1.5">
-                    {setupItems.map((c) => (
-                      <div
-                        key={c.id}
-                        className={cn(
-                          "flex items-center justify-between text-xs px-2 py-1.5 rounded",
-                          form.includeSetupCosts
-                            ? "bg-red-500/10"
-                            : "bg-surface-700/30 opacity-60"
-                        )}
-                      >
-                        <div>
-                          <span className="text-surface-200">{c.name}</span>
-                          <span className="text-[10px] text-surface-500 ml-2">
-                            {c.category}
-                          </span>
-                        </div>
-                        <span className="text-surface-300 font-medium">
-                          {formatCurrency(c.amount, c.currency || form.currency)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {recurringItems.length > 0 && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] uppercase tracking-wide text-surface-400">
-                      Aylik (sabit gider)
-                    </p>
-                    <p className="text-xs font-semibold text-amber-400">
-                      {formatCurrency(recurringTotal, form.currency)} / ay
-                    </p>
-                  </div>
-                  <div className="space-y-1.5">
-                    {recurringItems.map((c) => (
-                      <div
-                        key={c.id}
-                        className={cn(
-                          "flex items-center justify-between text-xs px-2 py-1.5 rounded",
-                          form.includeSetupCosts
-                            ? "bg-amber-500/10"
-                            : "bg-surface-700/30 opacity-60"
-                        )}
-                      >
-                        <div>
-                          <span className="text-surface-200">{c.name}</span>
-                          <span className="text-[10px] text-surface-500 ml-2">
-                            {c.category} · {c.frequency}
-                          </span>
-                        </div>
-                        <span className="text-surface-300 font-medium">
-                          {formatCurrency(c.amount, c.currency || form.currency)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {setupItems.length === 0 && recurringItems.length === 0 && (
-                <p className="mt-3 text-xs text-surface-500">
-                  Bu tip icin tanimli kurulum sablonu yok. Admin paneli uzerinden
-                  eklenebilir.
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      )}
+      {/* v1.6.2: master tip default cost şablonu önizleme kartı kaldırıldı. */}
 
       {/* Mockup Analysis Preview */}
       {form.isMockup && (

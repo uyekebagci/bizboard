@@ -30,18 +30,13 @@ public class Business {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "business_type_id", nullable = false)
-    private BusinessType businessType;
-
     @Column(nullable = false)
     private String name;
 
     /**
-     * v1.5.7: serbest metin işletme tipi adı (yeni wizard autocomplete tarafı).
-     * BusinessType FK katı master data sağlar; {@code businessTypeName} kullanıcının
-     * yazdığı human-readable adı tutar — autocomplete listesinin kaynaklarından biri.
-     * Eski kayıtlarda null kalır; yeni wizard'da zorunlu girilir.
+     * İşletme tipi adı (serbest metin). v1.6.2: master `BusinessType` tablosu
+     * tamamen kaldırıldı, kullanıcılar wizard'da tipi serbest yazıyor.
+     * Raporlamada/filtrelemede kullanılır.
      */
     @Column(name = "business_type_name", length = 120)
     private String businessTypeName;

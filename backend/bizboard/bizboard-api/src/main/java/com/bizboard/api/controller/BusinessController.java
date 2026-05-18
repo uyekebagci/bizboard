@@ -151,4 +151,20 @@ public class BusinessController {
         }
         return ResponseEntity.ok(businessService.removeModule(id, module, principal.getId()));
     }
+
+    /**
+     * v1.6.2: İşletme silme — yalnız admin. Cascade: bağlı transaction/fixed_cost/
+     * member/module kayıtları otomatik temizlenir; FK kalan başka kayıt varsa
+     * 409 Conflict döner.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBusiness(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        if (!principal.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        businessService.deleteBusiness(id, principal.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

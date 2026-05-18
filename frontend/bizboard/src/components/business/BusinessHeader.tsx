@@ -23,8 +23,9 @@ interface Props {
 }
 
 export function BusinessHeader({ business }: Props) {
-  const Icon = iconMap[business.business_type?.icon || "layout-grid"] || LayoutGrid;
-  const color = business.color || business.business_type?.color || "#4c6ef5";
+  // v1.6.2: BusinessType FK kaldırıldı, serbest metin tipi var; ikon default.
+  const Icon = LayoutGrid;
+  const color = business.color || "#4c6ef5";
 
   return (
     <div className="card p-5">
@@ -43,7 +44,7 @@ export function BusinessHeader({ business }: Props) {
             {business.name}
           </h1>
           <p className="text-sm text-surface-400 capitalize mt-0.5">
-            {business.business_type?.label || "Isletme"}
+            {business.business_type_name || "Isletme"}
           </p>
         </div>
       </div>

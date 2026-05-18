@@ -2,12 +2,10 @@ package com.bizboard.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 public class CreateBusinessRequest {
@@ -18,12 +16,12 @@ public class CreateBusinessRequest {
     private String description;
 
     /**
-     * v1.6.1: opsiyonel — manuel wizard akışı tip kartlarını kaldırdı.
-     * Eğer null gelirse {@code business_type_name} kullanılarak BusinessType
-     * find-or-create edilir.
+     * v1.6.2: serbest metin işletme tipi adı (master BusinessType tablosu kaldırıldı).
+     * Wizard'da zorunlu girilir; raporlama/filtrelemede kullanılır.
      */
-    @JsonProperty("business_type_id")
-    private UUID businessTypeId;
+    @NotBlank
+    @JsonProperty("business_type_name")
+    private String businessTypeName;
 
     private String color;
 
@@ -38,24 +36,6 @@ public class CreateBusinessRequest {
 
     @JsonProperty("is_mockup")
     private boolean mockup;
-
-    /**
-     * v1.5.6: işletme tipinin {@code business_type_default_costs} kayıtlarından
-     * otomatik kurulum + sabit gider üretmek istenirse {@code true}.
-     * - setup=true kalemler → tek seferlik Transaction (gider yönü, is_setup_cost=true)
-     * - setup=false kalemler → FixedCost (recurring)
-     * Default false (geriye uyumluluk).
-     */
-    @JsonProperty("include_setup_costs")
-    private boolean includeSetupCosts;
-
-    /**
-     * v1.5.7: yeni wizard'ın serbest metin işletme tipi adı (autocomplete'lik).
-     * BusinessType FK'sine ek; raporlamada ve sonraki autocomplete'lerde kullanılır.
-     * Yeni wizard akışı bunu zorunlu girer.
-     */
-    @JsonProperty("business_type_name")
-    private String businessTypeName;
 
     /**
      * v1.5.7: Wizard adım 1 — kuruluş maliyetleri (manuel serbest liste).

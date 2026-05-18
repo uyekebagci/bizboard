@@ -39,8 +39,9 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {businesses.map((biz) => {
-        const Icon = iconMap[biz.business_type?.icon || "layout-grid"] || LayoutGrid;
-        const color = biz.color || biz.business_type?.color || "#4c6ef5";
+        // v1.6.2: BusinessType FK kaldırıldı; default ikon + serbest tip adı.
+        const Icon = LayoutGrid;
+        const color = biz.color || "#4c6ef5";
         const data = bizDataMap[biz.id];
         const income = data?.income ?? 0;
         const expense = data?.expense ?? 0;
@@ -69,7 +70,7 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
                     {biz.name}
                   </h3>
                   <p className="text-[11px] text-surface-400 capitalize">
-                    {biz.business_type?.label || "Isletme"}
+                    {biz.business_type_name || "Isletme"}
                   </p>
                 </div>
               </div>

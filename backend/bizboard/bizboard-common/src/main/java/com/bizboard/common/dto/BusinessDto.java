@@ -18,8 +18,11 @@ public class BusinessDto {
     @JsonProperty("owner_id")
     private UUID ownerId;
 
-    @JsonProperty("business_type_id")
-    private UUID businessTypeId;
+    /**
+     * v1.6.2: serbest metin işletme tipi adı (eski BusinessType FK kaldırıldı).
+     */
+    @JsonProperty("business_type_name")
+    private String businessTypeName;
 
     private String name;
     private String description;
@@ -40,9 +43,6 @@ public class BusinessDto {
 
     @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
-
-    @JsonProperty("business_type")
-    private BusinessTypeDto businessType;
 
     private List<BusinessMemberDto> members;
     private List<BusinessModuleDto> modules;

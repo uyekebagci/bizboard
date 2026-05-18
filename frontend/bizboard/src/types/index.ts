@@ -68,28 +68,24 @@ export interface AdminUser {
   created_at: string;
 }
 
+/**
+ * v1.6.2: BusinessType master tablosu kaldırıldı. Type alanı sadece
+ * raporlama/filtreleme amaçlı serbest metin `business_type_name`. Eski
+ * `BusinessType` tipi bağımlı kod için minimal stub olarak korundu —
+ * yeni kodda kullanılmamalı.
+ */
 export interface BusinessType {
-  id: string;
-  category: BusinessCategory;
+  id?: string;
   label: string;
-  icon: string;
-  color: string;
-  default_modules: string[];
-  default_categories: {
-    name: string;
-    /** Backend bazi yerlerde "type", bazi yerlerde "direction" dondurebilir — ikisini de kabul et. */
-    type?: TransactionDirection;
-    direction?: TransactionDirection;
-    icon?: string;
-    color?: string;
-  }[];
-  created_at: string;
+  icon?: string;
+  color?: string;
 }
 
 export interface Business {
   id: string;
   owner_id: string;
-  business_type_id: string;
+  /** v1.6.2: serbest metin tip adı (eski FK kaldırıldı) */
+  business_type_name?: string | null;
   name: string;
   description: string | null;
   logo_url: string | null;
@@ -100,7 +96,6 @@ export interface Business {
   created_at: string;
   updated_at: string;
   // Joined fields
-  business_type?: BusinessType;
   members?: BusinessMember[];
   modules?: BusinessModule[];
 }
@@ -667,19 +662,5 @@ export interface CounterpartStatement {
   entries: CounterpartStatementEntry[];
 }
 
-// ---- v1.5.6: Business type default costs ----
-
-export interface BusinessTypeDefaultCost {
-  id: string;
-  business_type_id: string;
-  name: string;
-  category: string;
-  amount: number;
-  currency: string;
-  is_setup: boolean;
-  frequency: string;
-  sort_order: number;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+// v1.6.2: BusinessTypeDefaultCost interface'i kaldırıldı — backend master
+// tablosu silindiği için kullanım yok.
