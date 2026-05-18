@@ -34,6 +34,38 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.1] — 2026-05-18
+
+**Gerçek root cause hotfix — wizard Step 1 tip kartları kaldırıldı.** v1.6.0 hotfix bir semptomu (`undefined.trim()` crash) düzeltti ama esas problem farklıydı: master-data tip seçim akışı tamamen kaldırılmıştı ama wizard'da kartlar hâlâ rendering ediliyordu. Prod DB'de `business_types` boş veya yeterince doluyken bile kullanıcı kartlardan birini seçmek zorunda kalıyordu (yoksa `business_type_id` eksik → backend 400). Bu sürüm hem frontend tip kartlarını siler hem backend `business_type_id`'yi opsiyonel yapar.
+
+### Changed
+
+#### Frontend (`/dashboard/add` Step 1)
+- **Tip kartları grid'i tamamen kaldırıldı.** Master-data seçim akışı yoktu artık — kullanıcı doğrudan tip adını yazıyor (autocomplete'ten önceki adlar veya master labellar gelir).
+- `StepBusinessType` props'u sadeleşti: `types`, `selectedId`, `onSelect` kaldırıldı; yalnız `businessTypeName`, `onBusinessTypeNameChange`, `nameSuggestions`.
+- Input `autoFocus` aldı — sayfa açılınca cursor doğrudan tip adı alanında.
+- Label "Tip Adi *" — zorunlu olduğu net.
+- `canNext` step 1: artık sadece `businessTypeName.trim().length >= 2` kontrol eder. `businessTypeId` zorunluluğu kalktı.
+- `handleSubmit` payload: `business_type_id` boş string yerine `null` gönderir (UUID parse hatası önler).
+
+#### Backend
+- **`CreateBusinessRequest.businessTypeId` artık opsiyonel** (`@NotNull` kaldırıldı). Eski API client'lar `business_type_id` göndermeye devam edebilir; yeni client'lar `business_type_name` ile gelir.
+- **`BusinessService.resolveOrCreateBusinessType(request)`** yeni helper:
+  1. `business_type_id` verilmişse → o tipi getir (eski API uyumluluğu)
+  2. `business_type_name` verilmişse → case-insensitive label ile master tablodan bul (`BusinessTypeRepository.findFirstByLabelIgnoreCase`); örn. "Restoran" yazılırsa mevcut RESTAURANT category'sine bağlanır
+  3. Eşleşme yoksa → paylaşılan `OTHER` kategori tipini bul veya oluştur ("Diğer" label). Tüm serbest-metin tipleri tek OTHER FK'sine işaret eder; her `Business.businessTypeName` orijinal ismi korur.
+  4. Hiçbiri yoksa → `IllegalArgumentException("Isletme tip adi zorunlu")`
+- **`BusinessTypeRepository.findFirstByLabelIgnoreCase`** yeni method.
+
+### Notes
+
+- **Migrate edilen kullanıcılar için zarar yok:** mevcut Business kayıtlarının `businessType` FK'si aynı kalır. Yeni create'ler ya tam-eşleşme tipini ya da paylaşılan OTHER tipini kullanır.
+- `BusinessType.category` UNIQUE constraint korundu — bu sayede OTHER tipi en fazla 1 satır. Birden fazla "özel" tip için ileride şema migration gerekebilir (v2.0 Flyway baseline'ında); şimdilik tüm custom-name'ler tek OTHER FK + her Business kendi `businessTypeName`'iyle ayrıştırılır.
+- Frontend `selectedType` referansları (StepBasicInfo, StepModules, StepPreview) zaten `?.` ile defansifti — artık her zaman undefined olabilir, tüm kullanıcılar zarar görmez.
+- Sevalla deploy ~1-2 dakikada bitince yeniden dene → tip adı yaz → "Devam" tıkla → 6 adımı bitir.
+
+---
+
 ## [1.6.0] — 2026-05-18
 
 **HOTFIX (prod-blocker) — yeni işletme oluşturulamıyordu.** Yarın kullanıcıya açılacak prod'da `/dashboard/add` wizard'ında "İşletme tipi adını girdikten sonra Devam butonu disabled kalıyor" şikayeti. Root cause: v1.5.8'de FormData'ya eklenen yeni alanlar (`businessTypeName`, `setupCostItems`, `monthlyFixedCostItems`) eski tarayıcıdaki `localStorage` draft'ında yoktu; `setForm(parsed)` partial nesneyle state'i ezerek bu alanları `undefined` yapıyordu. `canNext` step 1'de `form.businessTypeName.trim()` sessiz TypeError atıp button'u disabled tutuyordu.
@@ -927,7 +959,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.1
 [1.6.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.0
 [1.5.10]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.10
 [1.5.9]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.9

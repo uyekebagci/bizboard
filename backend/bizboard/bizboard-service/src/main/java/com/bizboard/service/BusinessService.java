@@ -115,8 +115,13 @@ public class BusinessService {
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        BusinessType businessType = businessTypeRepository.findById(request.getBusinessTypeId())
-                .orElseThrow(() -> new IllegalArgumentException("Business type not found"));
+        // v1.6.1: manuel wizard — tip seçimi kartları kaldırıldı, kullanıcı
+        // serbest metin yazıyor. Üç olası yol:
+        // 1) Eski wizard / API client: business_type_id verir → onu kullan
+        // 2) Yeni wizard: business_type_id null, business_type_name dolu →
+        //    label ile mevcut tip bulunur veya yeni "Diğer" tipi oluşturulur
+        // 3) Hiçbiri yoksa hata
+        BusinessType businessType = resolveOrCreateBusinessType(request);
 
         // Build metadata
         Map<String, Object> metadata = new HashMap<>();
@@ -296,6 +301,51 @@ public class BusinessService {
                 auditMeta);
 
         return DtoMapper.toBusinessDto(business);
+    }
+
+    /**
+     * v1.6.1: yeni manuel wizard için tip find-or-create.
+     *
+     * <p>Çözüm sırası:
+     * <ol>
+     *   <li>{@code business_type_id} verilmişse → o tipi getir (eski API client'lar için)</li>
+     *   <li>{@code business_type_name} verilmişse → label case-insensitive ara, yoksa
+     *       OTHER kategorisinde yeni bir BusinessType oluştur</li>
+     *   <li>Hiçbiri yoksa → IllegalArgumentException</li>
+     * </ol>
+     */
+    private BusinessType resolveOrCreateBusinessType(CreateBusinessRequest request) {
+        if (request.getBusinessTypeId() != null) {
+            return businessTypeRepository.findById(request.getBusinessTypeId())
+                    .orElseThrow(() -> new IllegalArgumentException("Business type not found"));
+        }
+        String name = request.getBusinessTypeName();
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Isletme tip adi zorunlu");
+        }
+        String trimmed = name.trim();
+
+        // 1) Tam-eşleşme: kullanıcının yazdığı label master tablodaki bir tip ile
+        //    case-insensitive eşleşiyorsa onu kullan (örn. "Restoran" → mevcut
+        //    RESTAURANT category).
+        var byLabel = businessTypeRepository.findFirstByLabelIgnoreCase(trimmed);
+        if (byLabel.isPresent()) return byLabel.get();
+
+        // 2) Paylaşılan OTHER tipi (BusinessType.category UNIQUE → birden çok OTHER
+        //    yaratılamaz). Tüm serbest-metin tipleri tek bir OTHER FK'ye işaret eder;
+        //    her Business kaydında orijinal isim Business.businessTypeName'de tutulur.
+        return businessTypeRepository.findByCategory(com.bizboard.common.enums.BusinessCategory.OTHER)
+                .orElseGet(() -> {
+                    BusinessType t = BusinessType.builder()
+                            .category(com.bizboard.common.enums.BusinessCategory.OTHER)
+                            .label("Diğer")
+                            .icon("layout-grid")
+                            .color("#4c6ef5")
+                            .defaultModules(java.util.List.of("finance"))
+                            .defaultCategories(java.util.List.of())
+                            .build();
+                    return businessTypeRepository.save(t);
+                });
     }
 
     /**
