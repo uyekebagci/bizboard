@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   Plus, Receipt, Camera, FolderOpen, Package, BarChart3, Users,
+  CreditCard, Banknote,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
@@ -14,6 +15,20 @@ const actions = [
     color: "text-brand-600",
     bg: "bg-brand-50",
     href: "/dashboard/add-transaction",
+  },
+  {
+    label: "POS",
+    icon: CreditCard,
+    color: "text-indigo-300",
+    bg: "bg-indigo-500/15",
+    href: "/dashboard/pos-cihazlari",
+  },
+  {
+    label: "Nakit",
+    icon: Banknote,
+    color: "text-emerald-300",
+    bg: "bg-emerald-500/15",
+    href: "/dashboard/nakit",
   },
   {
     label: "Envanter",

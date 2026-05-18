@@ -4,28 +4,40 @@ import { useState, useEffect } from "react";
 import {
   ArrowDownLeft, ArrowUpRight, Trash2, X, Loader2,
   AlertTriangle, Calendar, Building2, Tag, FileText, Hash,
-  Pencil, Save, Paperclip,
+  Pencil, Save, Paperclip, CreditCard, Banknote,
 } from "lucide-react";
 import { formatCurrency, formatRelativeDate, cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
-import type { Transaction, Category, FileUploadInfo } from "@/types";
+import type { Transaction, Category, FileUploadInfo, PaymentMethod } from "@/types";
 
 interface Props {
   transactions: Transaction[];
   currency: string;
+  /** v1.6.3+: opsiyonel ödeme yöntemi filtresi. Bilinmiyorsa NAKIT varsayılır. */
+  paymentFilter?: "ALL" | PaymentMethod;
 }
 
-export function TransactionList({ transactions, currency }: Props) {
+export function TransactionList({ transactions, currency, paymentFilter = "ALL" }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
 
-  if (transactions.length === 0) {
+  const visible = paymentFilter === "ALL"
+    ? transactions
+    : transactions.filter((t) => (t.payment_method || "NAKIT") === paymentFilter);
+
+  if (visible.length === 0) {
     return (
       <div className="card p-8 text-center">
-        <p className="text-surface-400">Henuz islem yok</p>
+        <p className="text-surface-400">
+          {paymentFilter === "POS"
+            ? "POS ile odenmis islem yok"
+            : paymentFilter === "NAKIT"
+            ? "Nakit islem yok"
+            : "Henuz islem yok"}
+        </p>
         <p className="text-surface-400 text-sm mt-1">
           Ilk isleminizi kaydetmek icin &quot;Ekle&quot; butonuna basin
         </p>
@@ -36,8 +48,9 @@ export function TransactionList({ transactions, currency }: Props) {
   return (
     <>
       <div className="card divide-y divide-surface-700">
-        {transactions.map((tx) => {
+        {visible.map((tx) => {
           const isIncome = tx.direction === "income";
+          const isPos = (tx.payment_method || "NAKIT") === "POS";
           return (
             <div
               key={tx.id}
@@ -61,9 +74,23 @@ export function TransactionList({ transactions, currency }: Props) {
                 <p className="text-sm font-medium text-white truncate">
                   {tx.description || tx.category?.name || "Islem"}
                 </p>
-                <p className="text-xs text-surface-400 mt-0.5">
-                  {tx.category?.name || "Kategorisiz"} ·{" "}
-                  {formatRelativeDate(tx.date)}
+                <p className="text-xs text-surface-400 mt-0.5 flex items-center gap-1.5">
+                  <span>{tx.category?.name || "Kategorisiz"}</span>
+                  <span>·</span>
+                  <span>{formatRelativeDate(tx.date)}</span>
+                  <span
+                    className={cn(
+                      "ml-1 inline-flex items-center gap-1 px-1.5 py-[1px] rounded-full text-[10px] font-medium",
+                      isPos
+                        ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30"
+                        : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+                    )}
+                    title={isPos ? "POS odeme" : "Nakit odeme"}
+                  >
+                    {isPos ? <CreditCard size={10} /> : <Banknote size={10} />}
+                    {isPos ? "POS" : "Nakit"}
+                    {isPos && tx.pos_rate ? <span className="opacity-70">%{tx.pos_rate}</span> : null}
+                  </span>
                 </p>
               </div>
 
@@ -139,6 +166,12 @@ export function TransactionDetailModal({
   const [editDescription, setEditDescription] = useState(transaction.description || "");
   const [editDate, setEditDate] = useState(transaction.date);
   const [editTags, setEditTags] = useState((transaction.tags || []).join(", "));
+  const [editPaymentMethod, setEditPaymentMethod] = useState<PaymentMethod>(
+    (transaction.payment_method as PaymentMethod) || "NAKIT",
+  );
+  const [editPosRate, setEditPosRate] = useState(
+    transaction.pos_rate != null ? String(transaction.pos_rate) : "",
+  );
 
   // Categories
   const [categories, setCategories] = useState<Category[]>([]);
@@ -169,6 +202,11 @@ export function TransactionDetailModal({
         .map((t) => t.trim())
         .filter(Boolean);
 
+      const posRateValue =
+        editPaymentMethod === "POS" && editPosRate.trim() !== ""
+          ? Number(editPosRate.replace(",", "."))
+          : null;
+
       await api.put(`/businesses/${transaction.business_id}/transactions/${transaction.id}`, {
         direction: editDirection,
         amount: parseMoneyInput(editAmount),
@@ -176,6 +214,8 @@ export function TransactionDetailModal({
         date: editDate,
         category_id: editCategoryId || null,
         tags,
+        payment_method: editPaymentMethod,
+        pos_rate: posRateValue,
       });
 
       // Link newly uploaded files to transaction
@@ -244,6 +284,56 @@ export function TransactionDetailModal({
                     {dir === "income" ? "Gelir" : "Gider"}
                   </button>
                 ))}
+              </div>
+
+              {/* Payment Method (v1.6.3+) */}
+              <div>
+                <label className="block text-sm font-medium text-surface-200 mb-1">Odeme Yontemi</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setEditPaymentMethod("NAKIT"); setEditPosRate(""); }}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all border",
+                      editPaymentMethod === "NAKIT"
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                        : "bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-300",
+                    )}
+                  >
+                    <Banknote size={14} />
+                    Nakit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditPaymentMethod("POS")}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all border",
+                      editPaymentMethod === "POS"
+                        ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                        : "bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-300",
+                    )}
+                  >
+                    <CreditCard size={14} />
+                    POS
+                  </button>
+                </div>
+                {editPaymentMethod === "POS" && (
+                  <div className="mt-2">
+                    <label className="block text-xs font-medium text-surface-300 mb-1">
+                      POS Komisyon Orani (%)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={editPosRate}
+                      onChange={(e) => setEditPosRate(e.target.value.replace(/[^0-9.,]/g, ""))}
+                      placeholder="orn. 1.95"
+                      className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white
+                                 placeholder:text-surface-400 focus:outline-none focus:ring-2
+                                 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Amount */}
@@ -444,6 +534,38 @@ export function TransactionDetailModal({
                     </div>
                   </div>
                 )}
+
+                {/* v1.6.3+: Odeme yontemi */}
+                <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
+                  {(transaction.payment_method || "NAKIT") === "POS" ? (
+                    <CreditCard size={16} className="text-indigo-300 mt-0.5 shrink-0" />
+                  ) : (
+                    <Banknote size={16} className="text-emerald-300 mt-0.5 shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Odeme</p>
+                    <p className="text-sm text-white font-medium">
+                      {(transaction.payment_method || "NAKIT") === "POS" ? "POS" : "Nakit"}
+                      {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_rate != null && (
+                        <span className="ml-2 text-surface-300">%{transaction.pos_rate}</span>
+                      )}
+                    </p>
+                    {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_rate != null && (
+                      <p className="text-[11px] text-surface-400 mt-0.5">
+                        Komisyon: {formatCurrency(
+                          (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
+                          effectiveCurrency,
+                        )}
+                        {" · Net: "}
+                        {formatCurrency(
+                          Number(transaction.amount) -
+                            (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
+                          effectiveCurrency,
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 {transaction.tags && transaction.tags.length > 0 && (
                   <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">

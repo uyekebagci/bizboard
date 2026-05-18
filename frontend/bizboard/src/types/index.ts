@@ -135,6 +135,9 @@ export interface Category {
   created_at: string;
 }
 
+/** v1.6.3+: ödeme yöntemi — POS veya NAKIT (default NAKIT). */
+export type PaymentMethod = "POS" | "NAKIT";
+
 export interface Transaction {
   id: string;
   business_id: string;
@@ -147,6 +150,10 @@ export interface Transaction {
   receipt_url: string | null;
   /** v1.5.6+: kurulum maliyeti bayrağı */
   is_setup_cost?: boolean;
+  /** v1.6.3+: ödeme yöntemi (POS / NAKIT) — default NAKIT. */
+  payment_method?: PaymentMethod;
+  /** v1.6.3+: POS komisyon oranı (yüzde). Sadece payment_method=POS iken kullanılır. */
+  pos_rate?: number | null;
   tags: string[];
   metadata: Record<string, unknown>;
   created_by: string | null;
@@ -155,6 +162,40 @@ export interface Transaction {
   // Joined
   category?: Category;
   business_name?: string;
+}
+
+/** v1.6.3+: GET /api/pos/businesses cevabı — POS işlemi olan işletme özeti. */
+export interface PosBusinessSummary {
+  business_id: string;
+  business_name: string;
+  currency: string;
+  total_gross: number;
+  total_commission: number;
+  total_net: number;
+  weighted_avg_rate: number;
+  transaction_count: number;
+}
+
+/** v1.6.3+: GET /api/pos/transactions/daily — bir tek günlük POS işlemi satırı. */
+export interface PosTransactionRow {
+  transaction_id: string;
+  business_id: string;
+  business_name: string;
+  date: string;
+  amount: number;
+  pos_rate: number;
+  commission: number;
+  net: number;
+  currency: string;
+  description: string | null;
+}
+
+/** v1.6.3+: GET /api/cash/businesses — nakit bakiyesi olan işletme. */
+export interface CashBusinessBalance {
+  business_id: string;
+  business_name: string;
+  currency: string;
+  balance: number;
 }
 
 export interface Notification {

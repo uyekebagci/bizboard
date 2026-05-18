@@ -2,14 +2,14 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Calendar, Clock, Tag, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Calendar, Clock, Tag, FileText, Loader2, CreditCard, Banknote } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
-import type { Business, Category, FileUploadInfo } from "@/types";
+import type { Business, Category, FileUploadInfo, PaymentMethod } from "@/types";
 
 export default function AddTransactionPageWrapper() {
   return (
@@ -25,6 +25,10 @@ function AddTransactionPage() {
   const { triggerRefresh } = useAppStore();
   const preselectedType = searchParams.get("type") as "income" | "expense" | null;
   const preselectedBusinessId = searchParams.get("business") || "";
+  const preselectedPaymentMethod = (() => {
+    const raw = (searchParams.get("payment_method") || "").toUpperCase();
+    return raw === "POS" || raw === "NAKIT" ? (raw as PaymentMethod) : null;
+  })();
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,6 +51,10 @@ function AddTransactionPage() {
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    preselectedPaymentMethod || "NAKIT",
+  );
+  const [posRate, setPosRate] = useState("");
 
   // Fetch businesses
   useEffect(() => {
@@ -96,6 +104,11 @@ function AddTransactionPage() {
     setError(null);
 
     try {
+      const posRateValue =
+        paymentMethod === "POS" && posRate.trim() !== ""
+          ? Number(posRate.replace(",", "."))
+          : null;
+
       const tx = await api.post<{ id: string }>(`/businesses/${businessId}/transactions`, {
         direction,
         amount: parseMoneyInput(amount),
@@ -103,6 +116,8 @@ function AddTransactionPage() {
         date,
         category_id: categoryId || null,
         tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        payment_method: paymentMethod,
+        pos_rate: posRateValue,
       });
 
       // Yüklenen dosyaları bu transaction ile ilişkilendir
@@ -179,6 +194,70 @@ function AddTransactionPage() {
             <ArrowUpRight size={20} />
             Gider
           </button>
+        </div>
+
+        {/* Payment Method (v1.6.3+) */}
+        <div>
+          <label className="block text-sm font-medium text-surface-200 mb-1.5">
+            Odeme Yontemi *
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => { setPaymentMethod("NAKIT"); setPosRate(""); }}
+              className={cn(
+                "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+                paymentMethod === "NAKIT"
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                  : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+              )}
+            >
+              <Banknote size={18} />
+              Nakit
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("POS")}
+              className={cn(
+                "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+                paymentMethod === "POS"
+                  ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                  : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+              )}
+            >
+              <CreditCard size={18} />
+              POS
+            </button>
+          </div>
+          {paymentMethod === "POS" && (
+            <div className="mt-3">
+              <label className="block text-xs font-medium text-surface-300 mb-1.5">
+                POS Komisyon Orani (%)
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={posRate}
+                  onChange={(e) => {
+                    // sadece sayi + tek nokta/virgul
+                    const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
+                    setPosRate(cleaned);
+                  }}
+                  placeholder="orn. 1.95"
+                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
+                             placeholder:text-surface-400 focus:outline-none focus:ring-2
+                             focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 font-medium">
+                  %
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] text-surface-400">
+                Komisyon orani islem tutari uzerinden dusulur.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Amount */}

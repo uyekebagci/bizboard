@@ -2,7 +2,8 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Settings, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote } from "lucide-react";
+import type { PaymentMethod } from "@/types";
 import { BusinessHeader } from "@/components/business/BusinessHeader";
 import { FinanceSummary } from "@/components/business/FinanceSummary";
 import { TransactionList } from "@/components/business/TransactionList";
@@ -26,6 +27,9 @@ export default function BusinessDetailPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // v1.6.4: POS/NAKIT filter chips
+  const [paymentFilter, setPaymentFilter] = useState<"ALL" | PaymentMethod>("ALL");
 
   async function handleDelete() {
     setDeleting(true);
@@ -142,17 +146,68 @@ export default function BusinessDetailPage() {
           <h2 className="text-lg font-semibold text-white">
             Son Islemler
           </h2>
-          <Link
-            href={`/dashboard/add-transaction?business=${businessId}`}
-            className="flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700"
-          >
-            <Plus size={16} />
-            Ekle
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/dashboard/add-transaction?business=${businessId}&payment_method=POS`}
+              className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-indigo-300 hover:text-indigo-200"
+              title="POS islemi olustur"
+            >
+              <CreditCard size={14} />
+              POS Islem
+            </Link>
+            <Link
+              href={`/dashboard/add-transaction?business=${businessId}`}
+              className="flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700"
+            >
+              <Plus size={16} />
+              Ekle
+            </Link>
+          </div>
         </div>
+
+        {/* v1.6.4: POS / Nakit filter chips */}
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setPaymentFilter("ALL")}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              paymentFilter === "ALL"
+                ? "bg-surface-600 border-surface-500 text-white"
+                : "bg-surface-700 border-surface-600 text-surface-300"
+            }`}
+          >
+            Tumu
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentFilter("POS")}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors flex items-center gap-1 ${
+              paymentFilter === "POS"
+                ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
+                : "bg-surface-700 border-surface-600 text-surface-300"
+            }`}
+          >
+            <CreditCard size={11} />
+            POS
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentFilter("NAKIT")}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors flex items-center gap-1 ${
+              paymentFilter === "NAKIT"
+                ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
+                : "bg-surface-700 border-surface-600 text-surface-300"
+            }`}
+          >
+            <Banknote size={11} />
+            Nakit
+          </button>
+        </div>
+
         <TransactionList
           transactions={transactions}
           currency={business.currency}
+          paymentFilter={paymentFilter}
         />
       </section>
     </div>
