@@ -140,6 +140,41 @@ function makeId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+/**
+ * v1.6.0: localStorage draft'i mevcut FormData default'lariyla guvenli sekilde
+ * birlestir. Eski surumlerden kalan partial JSON'larda yeni alanlar yok;
+ * defaults korunarak ezilmemis halde devam eder. Array alanlari icin tip
+ * dogrulamasi: array degilse default array kullanilir (string olarak gelmis
+ * bozuk verilere karsi koruma).
+ */
+function mergeDraft(defaults: FormData, parsed: Record<string, unknown>): FormData {
+  const out: FormData = { ...defaults, ...parsed } as FormData;
+  // Array alanlarini guvenle dogrula
+  if (!Array.isArray(out.modules)) out.modules = defaults.modules;
+  if (!Array.isArray(out.setupCostItems)) out.setupCostItems = defaults.setupCostItems;
+  if (!Array.isArray(out.monthlyFixedCostItems))
+    out.monthlyFixedCostItems = defaults.monthlyFixedCostItems;
+  // String alanlari guvenle dogrula
+  if (typeof out.businessTypeName !== "string") out.businessTypeName = "";
+  if (typeof out.name !== "string") out.name = "";
+  if (typeof out.description !== "string") out.description = "";
+  if (typeof out.color !== "string") out.color = "";
+  if (typeof out.currency !== "string") out.currency = "TRY";
+  if (typeof out.mockupNotes !== "string") out.mockupNotes = "";
+  // Boolean
+  if (typeof out.isMockup !== "boolean") out.isMockup = false;
+  if (typeof out.includeSetupCosts !== "boolean") out.includeSetupCosts = false;
+  // Numerikler
+  for (const k of [
+    "mockupEstimatedRevenue",
+    "mockupEstimatedExpense",
+    "mockupInitialInvestment",
+  ] as const) {
+    if (typeof out[k] !== "number" || Number.isNaN(out[k])) out[k] = 0;
+  }
+  return out;
+}
+
 // ===== MAIN COMPONENT =====
 export default function AddBusinessPage() {
   const router = useRouter();
@@ -189,14 +224,23 @@ export default function AddBusinessPage() {
       });
   }, []);
 
-  // Auto-save draft to localStorage
+  // Auto-save draft to localStorage.
+  // v1.6.0: eski wizard surumlerinden (v1.5.8 oncesi) kalan draft'larda yeni
+  // alanlar yok — partial parsed objesi setForm ile state'i ezince
+  // businessTypeName/setupCostItems/monthlyFixedCostItems undefined kaliyordu.
+  // Bu durum canNext'te sessiz TypeError'a yol acip Devam butonunu disabled
+  // birakiyordu. Cozum: defaults ile shallow merge + array tip dogrulamasi.
   useEffect(() => {
     const draft = localStorage.getItem("bizboard_draft_business");
-    if (draft) {
-      try {
-        const parsed = JSON.parse(draft);
-        setForm(parsed);
-      } catch {}
+    if (!draft) return;
+    try {
+      const parsed: unknown = JSON.parse(draft);
+      if (parsed && typeof parsed === "object") {
+        setForm((prev) => mergeDraft(prev, parsed as Record<string, unknown>));
+      }
+    } catch {
+      // Bozuk draft — sessizce temizle.
+      localStorage.removeItem("bizboard_draft_business");
     }
   }, []);
 
@@ -231,8 +275,10 @@ export default function AddBusinessPage() {
       .then((cats) => {
         setFixedCostCategories(cats || []);
         // İlk yüklemede default monthly items'ı kategorilerle doldur (zaten boşsa).
+        // v1.6.0: defansif — prev.monthlyFixedCostItems undefined ise sıfır say.
         setForm((prev) => {
-          if (prev.monthlyFixedCostItems.length > 0) return prev;
+          const existing = prev.monthlyFixedCostItems ?? [];
+          if (existing.length > 0) return prev;
           return {
             ...prev,
             monthlyFixedCostItems: (cats || []).map((c) => ({
@@ -250,10 +296,11 @@ export default function AddBusinessPage() {
   }, []);
 
   // v1.5.8: tip seçilince businessTypeName'i otomatik doldur (kullanıcı override edebilir)
+  // v1.6.0: defansif — form.businessTypeName undefined ise empty say.
   useEffect(() => {
     if (!form.businessTypeId) return;
     const t = businessTypes.find((b) => b.id === form.businessTypeId);
-    if (t && !form.businessTypeName.trim()) {
+    if (t && !(form.businessTypeName ?? "").trim()) {
       setForm((prev) => ({ ...prev, businessTypeName: t.label }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -284,32 +331,37 @@ export default function AddBusinessPage() {
   }
 
   function canNext(): boolean {
+    // v1.6.0: defansif okumalar — eski draft'lardan / bozuk state'ten gelen
+    // undefined alanlar artik silently crash etmiyor.
     switch (step) {
-      case 1:
-        // Tip seçimi + serbest metin adı (autocomplete dolu olmalı)
-        return !!form.businessTypeId && form.businessTypeName.trim().length >= 2;
+      case 1: {
+        const typeName = (form.businessTypeName ?? "").trim();
+        return !!form.businessTypeId && typeName.length >= 2;
+      }
       case 2:
-        return form.name.trim().length >= 2;
+        return (form.name ?? "").trim().length >= 2;
       case 3:
-        return form.modules.length > 0;
-      case 4:
+        return (form.modules ?? []).length > 0;
+      case 4: {
         // Kuruluş maliyetleri opsiyonel — boş bırakılabilir; ama dolu olanlar valid olmalı
-        return form.setupCostItems.every(
-          (it) => !it.name.trim() || parseMoneyInput(it.amount) >= 0
+        const items = form.setupCostItems ?? [];
+        return items.every(
+          (it) => !(it.name ?? "").trim() || parseMoneyInput(it.amount ?? "") >= 0
         );
-      case 5:
+      }
+      case 5: {
         // Aylık sabit masraflar: applicable=true olan tüm zorunlu kategorilerde amount > 0
         // Geçerli değil olanlar atlanır
-        for (const it of form.monthlyFixedCostItems) {
+        const items = form.monthlyFixedCostItems ?? [];
+        for (const it of items) {
           if (!it.applicable) continue;
-          if (!it.required && parseMoneyInput(it.amount) <= 0) {
-            // OTHER + applicable + amount=0 → tamamen boş demek, skip ok
-            continue;
-          }
-          if (parseMoneyInput(it.amount) <= 0) return false;
-          if (it.category === "OTHER" && !it.customName?.trim()) return false;
+          const amt = parseMoneyInput(it.amount ?? "");
+          if (!it.required && amt <= 0) continue;
+          if (amt <= 0) return false;
+          if (it.category === "OTHER" && !(it.customName ?? "").trim()) return false;
         }
         return true;
+      }
       default:
         return true;
     }
@@ -330,15 +382,16 @@ export default function AddBusinessPage() {
       }
 
       // v1.5.8: wizard manuel akış — atomic payload
-      const setupCostsPayload = form.setupCostItems
-        .filter((it) => it.name.trim() && parseMoneyInput(it.amount) > 0)
+      // v1.6.0: defansif okumalar (eski draft → undefined arrays guard)
+      const setupCostsPayload = (form.setupCostItems ?? [])
+        .filter((it) => (it.name ?? "").trim() && parseMoneyInput(it.amount ?? "") > 0)
         .map((it) => ({
           name: it.name.trim(),
           amount: parseMoneyInput(it.amount),
         }));
 
-      const monthlyFixedCostsPayload = form.monthlyFixedCostItems
-        .filter((it) => it.applicable && parseMoneyInput(it.amount) > 0)
+      const monthlyFixedCostsPayload = (form.monthlyFixedCostItems ?? [])
+        .filter((it) => it.applicable && parseMoneyInput(it.amount ?? "") > 0)
         .map((it) => ({
           category: it.category,
           name: it.category === "OTHER" ? (it.customName?.trim() || null) : null,
@@ -350,7 +403,7 @@ export default function AddBusinessPage() {
         name: form.name,
         description: form.description || null,
         business_type_id: form.businessTypeId,
-        business_type_name: form.businessTypeName.trim() || null,
+        business_type_name: (form.businessTypeName ?? "").trim() || null,
         color: form.color,
         currency: form.currency,
         modules: form.modules,

@@ -34,6 +34,31 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.0] — 2026-05-18
+
+**HOTFIX (prod-blocker) — yeni işletme oluşturulamıyordu.** Yarın kullanıcıya açılacak prod'da `/dashboard/add` wizard'ında "İşletme tipi adını girdikten sonra Devam butonu disabled kalıyor" şikayeti. Root cause: v1.5.8'de FormData'ya eklenen yeni alanlar (`businessTypeName`, `setupCostItems`, `monthlyFixedCostItems`) eski tarayıcıdaki `localStorage` draft'ında yoktu; `setForm(parsed)` partial nesneyle state'i ezerek bu alanları `undefined` yapıyordu. `canNext` step 1'de `form.businessTypeName.trim()` sessiz TypeError atıp button'u disabled tutuyordu.
+
+v1.6.0 "ACİL PROD" iş paketinin **CRITICAL hotfix** TODO'su.
+
+### Fixed
+
+#### Frontend
+- **Draft load merge** (`/dashboard/add`): `setForm(parsed)` → `setForm((prev) => mergeDraft(prev, parsed))`. Yeni `mergeDraft` helper defaults'u korur, partial JSON üzerine bindirir. Array alanları (`modules`, `setupCostItems`, `monthlyFixedCostItems`) için tip doğrulaması: array değilse default array. String/boolean/number alanları için de aynı şekilde defensive normalization.
+- **canNext + handleSubmit + useEffect'ler defensive okur:** `(form.businessTypeName ?? "").trim()`, `(form.setupCostItems ?? []).every(...)`, `(prev.monthlyFixedCostItems ?? []).length`, vb. Eski / bozuk draft'tan gelen `undefined` alanlar artık crash etmez.
+- **Bozuk JSON kurtarması:** `JSON.parse` patlarsa draft localStorage'dan silinir (loop önler).
+
+### Documentation
+
+- `docs/test-plans/wizard-atomic.md` → "S8 — Eski draft regression" senaryosu eklendi. Manuel reprodüksiyon adımları, doğrulama checklist, bug analizi + fix açıklaması QA için.
+
+### Notes
+
+- **Mevcut kullanıcılar için etki yok:** browser'ında draft olmayan kullanıcı zaten etkilenmiyordu (yeni form default'ları temizdi). Etkilenen sadece v1.5.7 öncesinden draft taşıyan kullanıcılar.
+- Schema değişikliği yok, backend dokunulmadı. Frontend-only hotfix, cold start riski sıfır.
+- v1.6.0 "ACİL PROD" WP'sinin diğer 44 TODO'su (POS/Nakit/Alacaklar/Gruplama/Rebrand/Error Boundary/Monitoring) sırayla v1.6.x patch'lerinde ele alınacak.
+
+---
+
 ## [1.5.10] — 2026-05-17
 
 **v1.4 İşletme Tipleri WP'sinin son 3 PENDING'i kapandı.** Bu sürümle birlikte hem **v1.4 WP** (İşletme Tipleri & Kurulum Maliyetleri) hem **v1.5 WP** (Firmalar & Cari & Otomasyon) **tamamen DONE**. 1.5.x serisinde açık TODO kalmadı.
@@ -902,7 +927,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.5.10...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.0
 [1.5.10]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.10
 [1.5.9]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.9
 [1.5.8]: https://github.com/uyekebagci/bizboard/releases/tag/v1.5.8

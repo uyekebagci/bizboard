@@ -209,6 +209,34 @@ curl "$BIZBOARD/fixed-cost-categories" -H "Authorization: Bearer $TOKEN"
 
 ---
 
+## S8 — Eski draft regression (v1.6.0 hotfix)
+
+**Beklenti:** v1.5.7 öncesi `localStorage` draft'ı varsa wizard yine de açılır, "Devam" butonu çalışır.
+
+**Reprodüksiyon:**
+
+1. DevTools → Application → Local Storage
+2. `bizboard_draft_business` key'ine eski versiyon partial draft yapıştır:
+   ```json
+   { "name": "Eski Draft", "businessTypeId": "<bir-tip-uuid>", "color": "#4c6ef5" }
+   ```
+   _(Bu draft `businessTypeName`, `setupCostItems`, `monthlyFixedCostItems` içermez — v1.5.7 öncesi state shape'i)_
+3. `/dashboard/add` sayfasını aç (refresh).
+
+**Doğrulama:**
+
+- Step 1 açılır, tip otomatik seçili gelir (draft'tan)
+- "Tip Adı" alanı tip etiketiyle dolar (auto-fill useEffect)
+- "Devam" butonu **enabled** (bug öncesi disabled kalıyordu — TypeError silently)
+- 6 adımı sorunsuz tamamla → atomic create başarılı
+- Browser console → hiç `TypeError: Cannot read property 'trim' of undefined` görünmez
+
+**Bug analizi:** v1.5.8 ile FormData'ya yeni alanlar (`businessTypeName`, `setupCostItems`, `monthlyFixedCostItems`) eklendi ama draft load akışı `setForm(parsed)` ile state'i full ezdiği için bu alanlar undefined kalıyordu. `canNext` step 1'de `form.businessTypeName.trim()` sessiz crash → button disabled.
+
+**Fix:** `setForm((prev) => mergeDraft(prev, parsed))` — defaults korunarak partial parsed üzerine bindirilir. Array + string + boolean alanları için tip doğrulaması. Defensive read: `(form.businessTypeName ?? "").trim()` her yerde.
+
+---
+
 ## Notlar
 
 - **Test infrastructure:** Bu senaryolar manuel/QA. JUnit + Spring Boot Test entegrasyonu
