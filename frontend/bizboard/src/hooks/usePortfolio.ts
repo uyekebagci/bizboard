@@ -4,20 +4,28 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { getDefaultPeriod, type Period } from "@/lib/preferences";
 import type { PortfolioSummary } from "@/types";
 
-export function usePortfolio() {
+/**
+ * v1.6.7: portfolio hook artık `?period=` kullanıyor (eskiden ?year=&month=).
+ * `period` parametresi verilmezse kullanıcı tercihinden okur (default `daily`).
+ *
+ * Backend `?period=` veya `?year=&month=` ikisini de kabul eder; biz period
+ * yolundan ilerliyoruz çünkü periyot tercihi artık sistemde merkezi.
+ */
+export function usePortfolio(period?: Period) {
   const { portfolio, setPortfolio, refreshKey } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const effectivePeriod: Period = period || getDefaultPeriod();
 
   useEffect(() => {
     async function fetchPortfolio() {
       setIsLoading(true);
       try {
-        const now = new Date();
         const data = await api.get<PortfolioSummary>(
-          `/portfolio?year=${now.getFullYear()}&month=${now.getMonth() + 1}`
+          `/portfolio?period=${effectivePeriod}`,
         );
         setPortfolio(data);
       } catch (err: unknown) {
@@ -40,7 +48,7 @@ export function usePortfolio() {
     }
 
     fetchPortfolio();
-  }, [setPortfolio, refreshKey]);
+  }, [setPortfolio, refreshKey, effectivePeriod]);
 
-  return { portfolio, isLoading, error };
+  return { portfolio, isLoading, error, period: effectivePeriod };
 }

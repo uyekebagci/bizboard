@@ -56,8 +56,25 @@ export default function FinancePage() {
   const [data, setData] = useState<FinanceOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [months, setMonths] = useState(6);
+  // v1.6.7+: varsayılan en küçük periyot (1 Ay). Daha önce 6 idi.
+  // Kullanıcının seçimi localStorage'a yazılır, bir sonraki ziyarette aktif.
+  const [months, setMonths] = useState<number>(() => {
+    if (typeof window === "undefined") return 1;
+    try {
+      const raw = window.localStorage.getItem("bizboard.preferences.financeMonths");
+      const n = raw == null ? NaN : Number(raw);
+      if (Number.isFinite(n) && [0, 1, 3, 6, 12].includes(n)) return n;
+    } catch {}
+    return 1;
+  });
   const [activeTab, setActiveTab] = useState<"overview" | "cashflow" | "categories" | "businesses">("overview");
+
+  function persistMonths(next: number) {
+    setMonths(next);
+    try {
+      window.localStorage.setItem("bizboard.preferences.financeMonths", String(next));
+    } catch {}
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -110,7 +127,7 @@ export default function FinancePage() {
           ] as const).map(({ value, label }) => (
             <button
               key={value}
-              onClick={() => setMonths(value)}
+              onClick={() => persistMonths(value)}
               className={cn(
                 "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
                 months === value
