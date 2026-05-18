@@ -124,7 +124,7 @@ export default function ProfilePage() {
       </section>
 
       <p className="text-center text-[10px] text-surface-500">
-        BizBoard v{formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}
+        CATI v{formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}
       </p>
     </div>
   );

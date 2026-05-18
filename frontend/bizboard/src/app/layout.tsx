@@ -17,15 +17,16 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+// v1.6.8: marka adı ÇATI (eskiden BizBoard).
 export const metadata: Metadata = {
-  title: "BizBoard - Tum Isletmeleriniz, Tek Ekran",
+  title: "CATI - Tum Isletmeleriniz, Tek Ekran",
   description:
     "Birden fazla isletmenizi tek bir panelden yonetin. Finanslari takip edin, performansi izleyin, kontrolu elinizde tutun.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BizBoard",
+    title: "CATI",
   },
 };
 
