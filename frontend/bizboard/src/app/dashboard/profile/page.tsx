@@ -9,6 +9,7 @@ import { useAppStore } from "@/lib/store";
 import { logout } from "@/lib/api/client";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
+import { formatVersion } from "@/lib/version";
 
 /**
  * Mobile bottom-nav "Profil" sayfasi — kullanici bilgileri + parola degisikligi
@@ -123,7 +124,7 @@ export default function ProfilePage() {
       </section>
 
       <p className="text-center text-[10px] text-surface-500">
-        BizBoard v{process.env.NEXT_PUBLIC_APP_VERSION ?? "?"}
+        BizBoard v{formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}
       </p>
     </div>
   );

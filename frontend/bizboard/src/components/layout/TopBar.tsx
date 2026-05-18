@@ -8,6 +8,7 @@ import { logout } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+import { formatVersion } from "@/lib/version";
 
 export function TopBar() {
   const profile = useAppStore((s) => s.profile);
@@ -55,7 +56,7 @@ export function TopBar() {
                 className="mt-0.5 text-[10px] text-surface-400 font-mono leading-none tracking-tight"
                 title="Frontend sürümü"
               >
-                v{process.env.NEXT_PUBLIC_APP_VERSION}
+                v{formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}
               </span>
             )}
           </div>
