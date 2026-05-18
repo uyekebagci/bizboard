@@ -34,6 +34,37 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.4] — 2026-05-18
+
+**v1.6 ACİL PROD WP — POS/NAKIT frontend (v1.6.3 backend üstüne).** İşlem formu artık ödeme yöntemini soruyor, dashboard'a `/pos-cihazlari` ve `/nakit` aggregate sayfaları geldi. Mevcut işlemler default NAKIT olarak işaretli (`payment_method` kolonu `@ColumnDefault "'NAKIT'"`).
+
+### Added
+
+#### Frontend
+- **Transaction tipi** — `payment_method?: "POS" | "NAKIT"` ve `pos_rate?: number | null` opsiyonel alanları + `PaymentMethod` tipi (`types/index.ts`).
+- **Aggregate DTO tipleri** — `PosBusinessSummary`, `PosTransactionRow`, `CashBusinessBalance` (`types/index.ts`).
+- **`/dashboard/add-transaction` formu** — "Odeme Yontemi" 2'li toggle (Nakit / POS). POS seçilirse `pos_rate` (%) input açılır; gönderim sırasında `payment_method` + `pos_rate` POST body'sine eklenir. Query string'inde `?payment_method=POS|NAKIT` desteklenir (preselect).
+- **`TransactionList` satır rozeti** — her tx satırında küçük POS/Nakit rozeti (POS rozeti `pos_rate` da gösterir).
+- **`TransactionList` detay modalı** — view mode'da "Odeme" satırı (POS için komisyon + net hesabı görünür). Edit mode'da payment_method toggle + pos_rate input.
+- **`TransactionList.paymentFilter` prop** — `"ALL" | "POS" | "NAKIT"`; bilinmeyen tx'ler NAKIT varsayılır.
+- **`/dashboard/pos-cihazlari`** (yeni sayfa) — Toplam ciro / komisyon / net 3'lü kart, işletme filter chip'leri, işletme bazlı kart listesi (ortalama oran + tx sayısı), son 30 günün gün-gün POS işlem detayı (komisyon ve net dahil).
+- **`/dashboard/nakit`** (yeni sayfa) — Toplam nakit kartı + işletme bazlı bakiye listesi (yalnız bakiyesi > 0 olanlar).
+- **Dashboard `QuickActions`** — "POS" ve "Nakit" kısayolları (yeni sidebar gelene kadar buraya konuldu).
+- **`/business/[id]`** — "Son Islemler" başlığının yanına `POS Islem` shortcut (preset `payment_method=POS`), başlık altına `Tumu / POS / Nakit` filter chip'leri.
+
+### Changed
+
+#### Frontend
+- **`TransactionList`** `paymentFilter` prop ile filtrelenebilir; eksik `payment_method` → "NAKIT" varsayılır (geriye dönük uyumluluk: v1.6.3 öncesi tx'ler).
+
+### Notes
+
+- Backend tarafında değişiklik yok — v1.6.3'teki entity / endpoint / service'ler doğrudan kullanılıyor.
+- "Sidebar POS/Nakit kısayolu" TODO'su mevcut `QuickActions` widget'ına konularak tamamlandı; hamburger sidebar ayrı bir TODO chain'i (v1.6.x ilerisi).
+- TypeScript build (`next build`) temiz: type check ve linting geçiyor; static export sırasında `NEXT_PUBLIC_API_URL` prerender hatası verir — bu pre-existing, prod build'te env set'leniyor.
+
+---
+
 ## [1.6.3] — 2026-05-18
 
 **v1.6 ACİL PROD WP — POS/NAKIT backend foundation.** Tek CRITICAL TODO (`payment_method` enum migration) ve onun açtığı 5 HIGH bağımlılığı kapatıldı. Frontend (transaction form radio, /pos-cihazlari, /nakit sayfaları) v1.6.4'te.
