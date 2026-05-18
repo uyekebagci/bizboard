@@ -34,6 +34,17 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.10] — 2026-05-18
+
+**v1.6 ACİL PROD WP — `/counterparts` Geri dön butonu.** Küçük UX düzeltmesi.
+
+### Added
+
+#### Frontend
+- **`/dashboard/counterparts`** — başlığın yanına "Geri dön" ok butonu (uses `router.back()`). Mobile bottom-nav'dan veya doğrudan link ile gelinmiş kullanıcılar için.
+
+---
+
 ## [1.6.9] — 2026-05-18
 
 **v1.6 ACİL PROD WP — Error Boundary + Monitoring.** React class-based ErrorBoundary eklendi ve dashboard, admin, business detail route'larına wire edildi. Diğer monitoring TODOları zaten implementing edilmiş (audit sırasında ortaya çıktı) — bunlar da kapatılıyor.

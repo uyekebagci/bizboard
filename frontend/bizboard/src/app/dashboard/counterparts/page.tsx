@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users, Plus, Pencil, Trash2, X, Search, ArrowRight,
-  CircleUserRound, Package, RefreshCw,
+  CircleUserRound, Package, RefreshCw, ArrowLeft,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -123,11 +123,21 @@ export default function CounterpartsPage() {
     <div className="space-y-5">
       <section>
         <div className="flex items-center justify-between gap-3 mb-1">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Karsi Firmalar</h1>
-            <p className="text-surface-400 mt-1 text-sm">
-              Musteri, tedarikci ve diger dis paydaslarin cari hesabi
-            </p>
+          <div className="flex items-start gap-3">
+            {/* v1.6.10: Geri dön butonu */}
+            <button
+              onClick={() => router.back()}
+              className="p-2 -ml-2 mt-0.5 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+              aria-label="Geri don"
+            >
+              <ArrowLeft size={20} className="text-surface-300" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Karsi Firmalar</h1>
+              <p className="text-surface-400 mt-1 text-sm">
+                Musteri, tedarikci ve diger dis paydaslarin cari hesabi
+              </p>
+            </div>
           </div>
           <button
             onClick={() => setShowCreate(true)}
