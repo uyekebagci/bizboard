@@ -47,4 +47,19 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("businessIds") List<UUID> businessIds,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    // v1.6.3: POS işlemleri — payment_method filtreli
+    @Query("SELECT t FROM Transaction t WHERE t.business.id IN :businessIds " +
+            "AND t.paymentMethod = :paymentMethod ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findByBusinessIdInAndPaymentMethod(
+            @Param("businessIds") List<UUID> businessIds,
+            @Param("paymentMethod") String paymentMethod);
+
+    @Query("SELECT t FROM Transaction t WHERE t.business.id IN :businessIds " +
+            "AND t.paymentMethod = :paymentMethod AND t.date = :date " +
+            "ORDER BY t.createdAt DESC")
+    List<Transaction> findByBusinessIdInAndPaymentMethodAndDate(
+            @Param("businessIds") List<UUID> businessIds,
+            @Param("paymentMethod") String paymentMethod,
+            @Param("date") LocalDate date);
 }

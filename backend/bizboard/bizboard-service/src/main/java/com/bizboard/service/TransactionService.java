@@ -119,6 +119,10 @@ public class TransactionService {
             category = categoryRepository.findById(request.getCategoryId()).orElse(null);
         }
 
+        // v1.6.3: payment_method normalize (POS/NAKIT) + pos_rate
+        String pm = normalizePaymentMethod(request.getPaymentMethod());
+        java.math.BigDecimal posRate = "POS".equals(pm) ? request.getPosRate() : null;
+
         Transaction transaction = Transaction.builder()
                 .business(business)
                 .direction(TransactionDirection.valueOf(request.getDirection().toUpperCase(java.util.Locale.ENGLISH)))
@@ -127,6 +131,8 @@ public class TransactionService {
                 .description(request.getDescription())
                 .date(request.getDate())
                 .category(category)
+                .paymentMethod(pm)
+                .posRate(posRate)
                 .tags(request.getTags())
                 .metadata(request.getMetadata())
                 .createdBy(user)
@@ -219,6 +225,28 @@ public class TransactionService {
             // Metadata diff'i taşımıyoruz (JSONB serbest yapı); sadece güncellendi bayrağı.
             changes.put("metadataUpdated", true);
             transaction.setMetadata(request.getMetadata());
+        }
+        // v1.6.3: payment_method + pos_rate update
+        if (request.getPaymentMethod() != null) {
+            String newPm = normalizePaymentMethod(request.getPaymentMethod());
+            if (!newPm.equals(transaction.getPaymentMethod())) {
+                changes.put("paymentMethod", Map.of(
+                        "from", transaction.getPaymentMethod() != null ? transaction.getPaymentMethod() : "NAKIT",
+                        "to", newPm));
+                transaction.setPaymentMethod(newPm);
+                // NAKIT'e geçerse posRate temizle; POS'a geçerse aşağıda set olur
+                if ("NAKIT".equals(newPm)) {
+                    transaction.setPosRate(null);
+                }
+            }
+        }
+        if (request.getPosRate() != null && "POS".equals(transaction.getPaymentMethod())) {
+            if (!java.util.Objects.equals(transaction.getPosRate(), request.getPosRate())) {
+                changes.put("posRate", Map.of(
+                        "from", transaction.getPosRate() != null ? transaction.getPosRate() : 0,
+                        "to", request.getPosRate()));
+                transaction.setPosRate(request.getPosRate());
+            }
         }
 
         transaction = transactionRepository.save(transaction);
@@ -341,6 +369,16 @@ public class TransactionService {
         }
 
         return businessRepository.findAllAccessibleByUser(userId);
+    }
+
+    /**
+     * v1.6.3: payment_method normalize. Geçerli değerler: "POS", "NAKIT".
+     * Null/blank/diğer her şey "NAKIT" fallback'ine düşer.
+     */
+    private static String normalizePaymentMethod(String raw) {
+        if (raw == null || raw.isBlank()) return "NAKIT";
+        String upper = raw.trim().toUpperCase(java.util.Locale.ENGLISH);
+        return "POS".equals(upper) ? "POS" : "NAKIT";
     }
 
 }

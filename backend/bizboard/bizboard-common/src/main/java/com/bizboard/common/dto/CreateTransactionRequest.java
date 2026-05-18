@@ -35,4 +35,18 @@ public class CreateTransactionRequest {
     private List<String> tags;
 
     private Map<String, Object> metadata;
+
+    /**
+     * v1.6.3: ödeme yöntemi. Geçerli değerler: "POS" veya "NAKIT".
+     * Opsiyonel — gönderilmezse default "NAKIT" (backend tarafında normalize).
+     */
+    @JsonProperty("payment_method")
+    private String paymentMethod;
+
+    /**
+     * v1.6.3: POS işlemi için banka komisyon oranı (yüzde).
+     * paymentMethod=POS olduğunda anlamlı; NAKIT için yoksayılır.
+     */
+    @JsonProperty("pos_rate")
+    private BigDecimal posRate;
 }

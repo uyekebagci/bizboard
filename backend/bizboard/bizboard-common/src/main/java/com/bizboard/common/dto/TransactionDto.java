@@ -36,6 +36,14 @@ public class TransactionDto {
     @JsonProperty("is_setup_cost")
     private boolean setupCost;
 
+    /** v1.6.3: ödeme yöntemi "POS" veya "NAKIT" (default NAKIT). */
+    @JsonProperty("payment_method")
+    private String paymentMethod;
+
+    /** v1.6.3: POS komisyon oranı (yüzde); NAKIT'te null. */
+    @JsonProperty("pos_rate")
+    private BigDecimal posRate;
+
     private List<String> tags;
     private Map<String, Object> metadata;
 
