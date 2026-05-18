@@ -195,12 +195,12 @@ function InventoryPage() {
   const selectedBiz = businesses.find((b) => b.id === filterBusiness);
   const availableCategories = useMemo(() => {
     if (selectedBiz) {
-      return [ALL_TAB, ...getCategoriesForBusinessType(selectedBiz.business_type?.category)];
+      return [ALL_TAB, ...getCategoriesForBusinessType(undefined /* v1.6.2: BusinessType.category kaldırıldı */)];
     }
     const seen = new Set<string>();
     const merged: CategoryDef[] = [ALL_TAB];
     for (const biz of businesses) {
-      for (const cat of getCategoriesForBusinessType(biz.business_type?.category)) {
+      for (const cat of getCategoriesForBusinessType(undefined /* v1.6.2: BusinessType.category kaldırıldı */)) {
         if (!seen.has(cat.key)) { seen.add(cat.key); merged.push(cat); }
       }
     }
@@ -1205,7 +1205,7 @@ function CreateInventoryModal({ businesses, presetBusinessId, onClose, onCreated
   const [employees, setEmployees] = useState<Employee[]>([]);
 
   const selectedBiz = businesses.find((b) => b.id === businessId);
-  const bizCategories = getCategoriesForBusinessType(selectedBiz?.business_type?.category);
+  const bizCategories = getCategoriesForBusinessType(undefined /* v1.6.2 */);
 
   useEffect(() => {
     if (bizCategories.length > 0 && !bizCategories.find((c) => c.key === category)) {

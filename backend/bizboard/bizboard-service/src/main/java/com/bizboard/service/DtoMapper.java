@@ -14,7 +14,7 @@ public final class DtoMapper {
         return BusinessDto.builder()
                 .id(b.getId())
                 .ownerId(b.getOwner().getId())
-                .businessTypeId(b.getBusinessType().getId())
+                .businessTypeName(b.getBusinessTypeName())
                 .name(b.getName())
                 .description(b.getDescription())
                 .logoUrl(b.getLogoUrl())
@@ -24,26 +24,12 @@ public final class DtoMapper {
                 .metadata(b.getMetadata())
                 .createdAt(b.getCreatedAt())
                 .updatedAt(b.getUpdatedAt())
-                .businessType(toBusinessTypeDto(b.getBusinessType()))
                 .members(b.getMembers() != null
                         ? b.getMembers().stream().map(DtoMapper::toBusinessMemberDto).toList()
                         : List.of())
                 .modules(b.getModules() != null
                         ? b.getModules().stream().map(DtoMapper::toBusinessModuleDto).toList()
                         : List.of())
-                .build();
-    }
-
-    public static BusinessTypeDto toBusinessTypeDto(BusinessType bt) {
-        return BusinessTypeDto.builder()
-                .id(bt.getId())
-                .category(bt.getCategory().name().toLowerCase(java.util.Locale.ENGLISH))
-                .label(bt.getLabel())
-                .icon(bt.getIcon())
-                .color(bt.getColor())
-                .defaultModules(bt.getDefaultModules())
-                .defaultCategories(bt.getDefaultCategories())
-                .createdAt(bt.getCreatedAt())
                 .build();
     }
 
