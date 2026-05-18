@@ -34,6 +34,32 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.2.2] — 2026-05-18
+
+**Hotfix on v1.6.2 — versiyon UI display formatlayıcı.** v1.6.2.1'i yayınladığımda TopBar admin'lere `v1.6.2-1` (npm pre-release formatı) gösteriyordu. Kullanıcı talep etti: hotfix yoksa 3-component, varsa 4-component görünmeli — `1.6.2.1` formatı.
+
+### Added
+
+#### Frontend
+- **`lib/version.ts` → `formatVersion(raw)` helper.** Display normalize eder:
+  - `"1.6.3"` → `"1.6.3"` (hotfix yok, 3-component)
+  - `"1.6.3-1"` (npm SemVer pre-release) → `"1.6.3.1"` (4-component display)
+  - `"1.6.3-0"` defansif edge-case → `"1.6.3"` (hotfix=0 = baseline)
+  - Bilinmeyen format → olduğu gibi (örn. `"1.7.0-rc.1"` korunur)
+- TopBar admin sürüm rozeti ve `/dashboard/profile` footer'ı artık `formatVersion()` üzerinden okuyor.
+- Logger (`lib/logger.ts`) raw `NEXT_PUBLIC_APP_VERSION` kullanmaya devam ediyor — server'a / audit'e giden log entry'lerinde npm SemVer formatı doğru (sort + cross-tool ayrıştırma).
+
+### Notes
+
+- Versiyon iki yerden okunur:
+  - `package.json.version` (npm) — npm SemVer strict: `1.6.2-2` formatı
+  - `pom.xml` (Maven) — 4-component native: `1.6.2.2`
+  - Git tag: `v1.6.2.2` (string-based, tutarlı)
+- `next.config.js` `package.json.version`'u `NEXT_PUBLIC_APP_VERSION` env'ine inject ediyor (v1.0.2 mekaniği). UI'da `formatVersion()` ile gösteriyoruz.
+- Memory note güncellendi: hotfix versiyonlama + UI display kuralları tek dosyada.
+
+---
+
 ## [1.6.2.1] — 2026-05-18
 
 **Hotfix on v1.6.2 — wizard'da "Tip Seçimi" adımı (Step 1) tamamen kaldırıldı.** v1.6.2'de master `BusinessType` tablosunu sildim ama wizard'da Step 1 olarak Tip Adı zorunlu giriş alanı kaldı. Kullanıcı haklı olarak: "tip seçimi yoksa adım da olmasın" dedi.
@@ -1045,7 +1071,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.2.1...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.2.2...HEAD
+[1.6.2.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.2.2
 [1.6.2.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.2.1
 [1.6.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.2
 [1.6.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.1
