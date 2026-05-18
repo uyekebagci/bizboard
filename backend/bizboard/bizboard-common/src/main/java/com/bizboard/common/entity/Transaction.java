@@ -65,6 +65,24 @@ public class Transaction {
     @Builder.Default
     private boolean setupCost = false;
 
+    /**
+     * v1.6.3: ödeme yöntemi. Yalnız iki değer: {@code POS} veya {@code NAKIT}.
+     * Geriye uyumluluk: mevcut tüm tx'ler {@code NAKIT} default'una düşer
+     * (Hibernate ddl-auto=update + columnDefinition default).
+     */
+    @Column(name = "payment_method", nullable = false, length = 16)
+    @org.hibernate.annotations.ColumnDefault("'NAKIT'")
+    @Builder.Default
+    private String paymentMethod = "NAKIT";
+
+    /**
+     * v1.6.3: POS işlemi için banka komisyon oranı (yüzde). Yalnız
+     * {@code paymentMethod=POS} olduğunda anlamlı. NAKIT için null/0.
+     * 5,2 precision: 0.00 — 999.99 (gerçekte 0-100 arası ama check yok).
+     */
+    @Column(name = "pos_rate", precision = 5, scale = 2)
+    private java.math.BigDecimal posRate;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     @Builder.Default

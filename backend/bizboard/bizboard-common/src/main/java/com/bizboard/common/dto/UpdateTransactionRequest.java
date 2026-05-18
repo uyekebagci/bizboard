@@ -28,4 +28,12 @@ public class UpdateTransactionRequest {
     private List<String> tags;
 
     private Map<String, Object> metadata;
+
+    /** v1.6.3: ödeme yöntemi — "POS" veya "NAKIT" (opsiyonel update). */
+    @JsonProperty("payment_method")
+    private String paymentMethod;
+
+    /** v1.6.3: POS komisyon oranı (opsiyonel update). */
+    @JsonProperty("pos_rate")
+    private BigDecimal posRate;
 }

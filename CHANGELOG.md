@@ -34,6 +34,40 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.3] — 2026-05-18
+
+**v1.6 ACİL PROD WP — POS/NAKIT backend foundation.** Tek CRITICAL TODO (`payment_method` enum migration) ve onun açtığı 5 HIGH bağımlılığı kapatıldı. Frontend (transaction form radio, /pos-cihazlari, /nakit sayfaları) v1.6.4'te.
+
+### Added
+
+#### Backend
+- **`Transaction.paymentMethod`** (VARCHAR(16), `@ColumnDefault "'NAKIT'"`) — yalnız "POS" veya "NAKIT". Hibernate `ddl-auto=update` mevcut tabloya `payment_method` kolonunu default `'NAKIT'` ile ekler; eski tx'ler otomatik NAKIT olarak işaretlenir.
+- **`Transaction.posRate`** (`NUMERIC(5,2)` nullable) — POS işlemleri için banka komisyon oranı. NAKIT için null.
+- **`CreateTransactionRequest.payment_method` + `pos_rate`** alanları (opsiyonel).
+- **`UpdateTransactionRequest.payment_method` + `pos_rate`** alanları — update akışında değişim diff'ine girer, audit metadata'da görünür.
+- **`TransactionDto.payment_method` + `pos_rate`** — read API'larda görünür.
+- **`PosService` + `PosController`:**
+  - `GET /api/pos/businesses` — `accessible_businesses` filtreli işletme bazında POS özet: `total_pos_count`, `total_pos_amount`, ağırlıklı ortalama `avg_pos_rate` (SUM(amount × rate) / SUM(amount)), `last_tx_at`. Bakiye DESC sıralı.
+  - `GET /api/pos/transactions/daily?date=YYYY-MM-DD&businessId=opsiyonel` — günlük POS işlem tablosu: tx_id, business, amount, pos_rate, **pos_commission** (amount × rate / 100), **net_amount** (amount − commission), description, time.
+- **`CashService` + `CashController`:**
+  - `GET /api/cash/businesses` — payment_method=NAKIT olan işlemlerden işletme bazlı net bakiye (INCOME − EXPENSE). Yalnız > 0 olanlar dönülür, bakiye DESC.
+- **`TransactionRepository`** iki yeni query: `findByBusinessIdInAndPaymentMethod` + `findByBusinessIdInAndPaymentMethodAndDate`.
+
+### Changed
+
+#### Backend
+- **`TransactionService.createTransaction`** — payment_method normalize (POS/NAKIT, diğer → fallback NAKIT) + posRate kaydedilir (yalnız POS için).
+- **`TransactionService.updateTransaction`** — payment_method + pos_rate update + audit diff. NAKIT'e çevirilirse posRate otomatik null. POS'a çevirilirse caller'in posRate vermesi beklenir.
+- **`DtoMapper.toTransactionDto`** — yeni alanları taşır.
+
+### Notes
+
+- **Schema değişikliği:** Hibernate cold start'ta `ALTER TABLE transactions ADD COLUMN payment_method VARCHAR(16) NOT NULL DEFAULT 'NAKIT'` ve `ADD COLUMN pos_rate NUMERIC(5,2)`. Mevcut tüm tx'ler NAKIT olarak işaretlenir, etki yok.
+- **WP TODO durumu** (6 PENDING → COMPLETED'a çekilecek dashboard sync ile): payment_method migration, pos_rate migration, transaction DTO + validation, POS businesses endpoint, POS daily endpoint, Cash businesses endpoint.
+- **v1.6.4 planı:** frontend transaction form (Ödeme yöntemi radio), `/pos-cihazlari` sayfası (kart + günlük tablo), `/nakit` sayfası (tablo), 3 yeni kısayol, işletme detayında POS/Nakit filter chip'leri.
+
+---
+
 ## [1.6.2.2] — 2026-05-18
 
 **Hotfix on v1.6.2 — versiyon UI display formatlayıcı.** v1.6.2.1'i yayınladığımda TopBar admin'lere `v1.6.2-1` (npm pre-release formatı) gösteriyordu. Kullanıcı talep etti: hotfix yoksa 3-component, varsa 4-component görünmeli — `1.6.2.1` formatı.
