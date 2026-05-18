@@ -335,8 +335,9 @@ export default function AddBusinessPage() {
     // undefined alanlar artik silently crash etmiyor.
     switch (step) {
       case 1: {
+        // v1.6.1: master tip seçimi kaldırıldı — sadece ad zorunlu.
         const typeName = (form.businessTypeName ?? "").trim();
-        return !!form.businessTypeId && typeName.length >= 2;
+        return typeName.length >= 2;
       }
       case 2:
         return (form.name ?? "").trim().length >= 2;
@@ -402,7 +403,9 @@ export default function AddBusinessPage() {
       await api.post("/businesses", {
         name: form.name,
         description: form.description || null,
-        business_type_id: form.businessTypeId,
+        // v1.6.1: tip seçimi kaldırıldı; backend business_type_name'den
+        // find-or-create yapar. Boş string yerine null gönder (UUID parse hatası önler).
+        business_type_id: form.businessTypeId || null,
         business_type_name: (form.businessTypeName ?? "").trim() || null,
         color: form.color,
         currency: form.currency,
@@ -524,9 +527,6 @@ export default function AddBusinessPage() {
       {/* Step Content */}
       {step === 1 && (
         <StepBusinessType
-          types={businessTypes}
-          selectedId={form.businessTypeId}
-          onSelect={selectType}
           businessTypeName={form.businessTypeName}
           onBusinessTypeNameChange={(v) =>
             setForm((prev) => ({ ...prev, businessTypeName: v }))
@@ -643,18 +643,16 @@ export default function AddBusinessPage() {
   );
 }
 
-// ===== STEP 1: Business Type Selection =====
+// ===== STEP 1: Business Type Name (manuel + autocomplete) =====
+// v1.6.1: Master tip kartlari kaldirildi — kullanici dogrudan ad yazar.
+// Backend (BusinessService.resolveOrCreateBusinessType) bu adi alir,
+// mevcut tip ile case-insensitive eslesirse onu kullanir, yoksa paylasilan
+// "Diger" tipine baglar. Business.businessTypeName ile orijinal isim korunur.
 function StepBusinessType({
-  types,
-  selectedId,
-  onSelect,
   businessTypeName,
   onBusinessTypeNameChange,
   nameSuggestions,
 }: {
-  types: BusinessType[];
-  selectedId: string;
-  onSelect: (id: string) => void;
   businessTypeName: string;
   onBusinessTypeNameChange: (v: string) => void;
   nameSuggestions: string[];
@@ -665,50 +663,10 @@ function StepBusinessType({
   return (
     <div className="space-y-4">
       <p className="text-sm text-surface-300 font-medium">
-        Isletme tipini secin
+        Isletme tipini gir
       </p>
-      <div className="grid grid-cols-2 gap-3">
-        {types.map((type) => {
-          const Icon =
-            categoryIconMap[type.icon] || LayoutGrid;
-          const isSelected = selectedId === type.id;
-
-          return (
-            <button
-              key={type.id}
-              onClick={() => onSelect(type.id)}
-              className={cn(
-                "card p-4 text-left transition-all active:scale-[0.98] relative",
-                isSelected
-                  ? "ring-2 ring-brand-600 shadow-card-hover"
-                  : "hover:shadow-card-hover"
-              )}
-            >
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
-                style={{ backgroundColor: `${type.color}15` }}
-              >
-                <Icon size={22} style={{ color: type.color }} />
-              </div>
-              <p className="font-semibold text-sm text-white">
-                {type.label}
-              </p>
-              <p className="text-xs text-surface-400 mt-0.5">
-                {type.default_modules?.length || 0} modul
-              </p>
-              {isSelected && (
-                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-brand-600 flex items-center justify-center">
-                  <Check size={12} className="text-white" />
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* v1.5.8: business_type_name autocomplete */}
       <div className="card p-4 space-y-2 relative">
-        <label className="label">Tip Adi (gosterim)</label>
+        <label className="label">Tip Adi *</label>
         <input
           type="text"
           value={businessTypeName}
@@ -720,10 +678,11 @@ function StepBusinessType({
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder="orn. Kafe, Insaat Sirketi, Servis Atolyesi"
           className="input"
+          autoFocus
         />
         <p className="text-[10px] text-surface-400">
-          Raporlamada ve autocomplete'te kullanilir. Tip secimi otomatik dolurur,
-          istersen ozellestir.
+          Bu ad raporlama ve filtrelemede kullanilir. Daha once yazilan tipler
+          autocomplete olarak gosterilir.
         </p>
         {open && filtered.length > 0 && (
           <div className="absolute z-20 left-4 right-4 top-[100%] mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface-800 border border-surface-600 shadow-card-hover">

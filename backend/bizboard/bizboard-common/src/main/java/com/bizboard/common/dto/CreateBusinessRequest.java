@@ -17,7 +17,11 @@ public class CreateBusinessRequest {
 
     private String description;
 
-    @NotNull
+    /**
+     * v1.6.1: opsiyonel — manuel wizard akışı tip kartlarını kaldırdı.
+     * Eğer null gelirse {@code business_type_name} kullanılarak BusinessType
+     * find-or-create edilir.
+     */
     @JsonProperty("business_type_id")
     private UUID businessTypeId;
 

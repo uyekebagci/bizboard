@@ -10,4 +10,10 @@ import java.util.UUID;
 public interface BusinessTypeRepository extends JpaRepository<BusinessType, UUID> {
 
     Optional<BusinessType> findByCategory(BusinessCategory category);
+
+    /**
+     * v1.6.1: yeni manuel wizard akışı için case-insensitive label arama.
+     * Kullanıcı "Kafe" yazdıysa daha önce oluşturulan "Kafe" tipini bul.
+     */
+    Optional<BusinessType> findFirstByLabelIgnoreCase(String label);
 }
