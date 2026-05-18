@@ -16,10 +16,9 @@ public class CreateBusinessRequest {
     private String description;
 
     /**
-     * v1.6.2: serbest metin işletme tipi adı (master BusinessType tablosu kaldırıldı).
-     * Wizard'da zorunlu girilir; raporlama/filtrelemede kullanılır.
+     * v1.6.2.1: işletme tipi adı opsiyonel — wizard'dan Tip Seçimi adımı
+     * tamamen kaldırıldı. Verilirse raporlama/filtrelemede kullanılır.
      */
-    @NotBlank
     @JsonProperty("business_type_name")
     private String businessTypeName;
 

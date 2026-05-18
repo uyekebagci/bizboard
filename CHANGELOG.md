@@ -34,6 +34,30 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.2.1] — 2026-05-18
+
+**Hotfix on v1.6.2 — wizard'da "Tip Seçimi" adımı (Step 1) tamamen kaldırıldı.** v1.6.2'de master `BusinessType` tablosunu sildim ama wizard'da Step 1 olarak Tip Adı zorunlu giriş alanı kaldı. Kullanıcı haklı olarak: "tip seçimi yoksa adım da olmasın" dedi.
+
+Bu sürüm BizBoard'da **ilk 4-component versiyonlu hotfix** — yeni kural: hotfix'ler `v1.X.Y.Z` (Maven), `v1.X.Y-Z` (npm SemVer pre-release).
+
+### Removed
+
+#### Frontend
+- **Wizard `StepBusinessType` adımı tamamen kaldırıldı.** `STEPS` artık 6 yerine 5 adım: Temel Bilgiler → Modüller → Kuruluş → Aylık Gider → Önizleme. Tüm step indeksleri 1 geriye kaydı (`canNext`, render, navigation).
+- `typeNameSuggestions` state + `/business-types/names` fetch (endpoint zaten v1.6.2'de silinmişti, frontend çağrısı 404 dönüyordu).
+
+#### Backend
+- **`CreateBusinessRequest.businessTypeName` `@NotBlank` kaldırıldı.** Alan opsiyonel — null/empty kabul edilir.
+- `BusinessService.createBusiness` artık tip adı boşsa hata atmıyor; sadece null olarak kaydeder.
+
+### Notes
+
+- **Yeni versiyonlama kuralı:** hotfix'ler ana sürüm hattını "kirletmeyecek" şekilde 4-component'le ifade edilir. Maven `1.6.2.1` native destekler; npm SemVer strict olduğu için `1.6.2-1` pre-release tag'i kullanılır (sort olarak `1.6.2`'den sonra gelir). Git tag `v1.6.2.1`. Bir sonraki planlı sürüm yine 3-component `v1.6.3` olarak gelecek; o sürüme hotfix gerekirse `v1.6.3.1` olur.
+- Mevcut işletmeler etkilenmez — `business_type_name` zaten nullable kolon, eski kayıtlarda null veya geçmiş değerler korunur.
+- Yeni wizard akışı: tip seçimi yok → kullanıcı doğrudan işletme adı + açıklama girer, modülleri seçer, kuruluş+aylık masrafları ekler, önizleme onaylar.
+
+---
+
 ## [1.6.2] — 2026-05-18
 
 **Breaking cleanup — `BusinessType` master tablosu tamamen kaldırıldı + admin "İşletme Sil" UI.** v1.5.6'da eklenen master-data yaklaşımı CANCELLED edilmişti; v1.6.1'de geçici find-or-create stub kullandık. Bu sürümde tamamen temizleniyor: 8 backend dosyası + ilgili tablolar/kolonlar drop ediliyor.
@@ -1021,7 +1045,8 @@ audit log ile birlikte.
 
 ---
 
-[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.2...HEAD
+[Unreleased]: https://github.com/uyekebagci/bizboard/compare/v1.6.2.1...HEAD
+[1.6.2.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.2.1
 [1.6.2]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.2
 [1.6.1]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.1
 [1.6.0]: https://github.com/uyekebagci/bizboard/releases/tag/v1.6.0

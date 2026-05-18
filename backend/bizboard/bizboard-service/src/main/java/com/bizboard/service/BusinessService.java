@@ -112,15 +112,12 @@ public class BusinessService {
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // v1.6.2: BusinessType master tablosu kaldırıldı. Kullanıcı sadece
-        // business_type_name (serbest metin) gönderir; raporlama için kullanılır.
-        // Default modules/categories artık tip'ten gelmez — kullanıcı wizard'da
-        // kendi modüllerini seçer; kategoriler boş başlar, finans modülünden ekler.
+        // v1.6.2.1: BusinessType master tablosu + wizard Tip Seçimi adımı kaldırıldı.
+        // business_type_name opsiyonel; verilirse raporlamada kullanılır, yoksa null.
         String typeName = request.getBusinessTypeName() != null
-                ? request.getBusinessTypeName().trim() : null;
-        if (typeName == null || typeName.isBlank()) {
-            throw new IllegalArgumentException("Isletme tip adi zorunlu");
-        }
+                && !request.getBusinessTypeName().isBlank()
+                ? request.getBusinessTypeName().trim()
+                : null;
 
         // Build metadata
         Map<String, Object> metadata = new HashMap<>();
