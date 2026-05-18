@@ -102,13 +102,13 @@ interface FormData {
   monthlyFixedCostItems: MonthlyFixedCostItem[];
 }
 
+// v1.6.2.1: Tip Secimi adımı kaldırıldı (master BusinessType tablosu yok artık).
 const STEPS = [
-  { id: 1, label: "Tip Secimi" },
-  { id: 2, label: "Temel Bilgiler" },
-  { id: 3, label: "Moduller" },
-  { id: 4, label: "Kurulus" },
-  { id: 5, label: "Aylik Gider" },
-  { id: 6, label: "Onizleme" },
+  { id: 1, label: "Temel Bilgiler" },
+  { id: 2, label: "Moduller" },
+  { id: 3, label: "Kurulus" },
+  { id: 4, label: "Aylik Gider" },
+  { id: 5, label: "Onizleme" },
 ];
 
 // v1.5.8: yeni wizard akışı için tipler
@@ -196,10 +196,8 @@ export default function AddBusinessPage() {
     monthlyFixedCostItems: [],
   });
 
-  // v1.5.8: autocomplete + 12 kategori master data
-  const [typeNameSuggestions, setTypeNameSuggestions] = useState<string[]>([]);
-  // v1.6.2: fixedCostCategories'i kullanan başka yer kalmadı (state ileride sadece set ediliyor),
-  // ama yine de fetch'i yapıyoruz çünkü monthlyFixedCostItems init'i kategorilerden geliyor.
+  // v1.6.2.1: autocomplete (typeNameSuggestions) kaldırıldı — Tip Secimi adımı yok.
+  // monthlyFixedCostItems init'i için kategori fetch'i hala gerekli.
   const [, setFixedCostCategories] = useState<FixedCostCategoryMeta[]>([]);
 
   // Auto-save draft to localStorage.
@@ -230,11 +228,9 @@ export default function AddBusinessPage() {
 
   // v1.6.2: master tip default cost şablonu fetch'i kaldırıldı — manuel akış.
 
-  // v1.5.8: autocomplete listesi + 12 kategori (mount'ta tek seferlik)
+  // v1.6.2.1: business-types/names fetch'i kaldırıldı (endpoint silindi).
+  // 12 kategori mount'ta tek seferlik fetch.
   useEffect(() => {
-    api.get<string[]>("/business-types/names")
-      .then((d) => setTypeNameSuggestions(d || []))
-      .catch(() => setTypeNameSuggestions([]));
     api.get<FixedCostCategoryMeta[]>("/fixed-cost-categories")
       .then((cats) => {
         setFixedCostCategories(cats || []);
@@ -277,24 +273,20 @@ export default function AddBusinessPage() {
   function canNext(): boolean {
     // v1.6.0: defansif okumalar — eski draft'lardan / bozuk state'ten gelen
     // undefined alanlar artik silently crash etmiyor.
+    // v1.6.2.1: Tip Secimi adımı kaldırıldı. Adımlar 1 indeks geriye kaydı.
     switch (step) {
-      case 1: {
-        // v1.6.1: master tip seçimi kaldırıldı — sadece ad zorunlu.
-        const typeName = (form.businessTypeName ?? "").trim();
-        return typeName.length >= 2;
-      }
-      case 2:
+      case 1:
         return (form.name ?? "").trim().length >= 2;
-      case 3:
+      case 2:
         return (form.modules ?? []).length > 0;
-      case 4: {
+      case 3: {
         // Kuruluş maliyetleri opsiyonel — boş bırakılabilir; ama dolu olanlar valid olmalı
         const items = form.setupCostItems ?? [];
         return items.every(
           (it) => !(it.name ?? "").trim() || parseMoneyInput(it.amount ?? "") >= 0
         );
       }
-      case 5: {
+      case 4: {
         // Aylık sabit masraflar: applicable=true olan tüm zorunlu kategorilerde amount > 0
         // Geçerli değil olanlar atlanır
         const items = form.monthlyFixedCostItems ?? [];
@@ -413,7 +405,7 @@ export default function AddBusinessPage() {
         ))}
       </div>
 
-      {/* Mockup Toggle */}
+      {/* Mockup Toggle — v1.6.2.1: yeni Step 1 (Temel Bilgiler) ile birlikte. */}
       {step === 1 && (
         <button
           onClick={() =>
@@ -465,31 +457,22 @@ export default function AddBusinessPage() {
         </div>
       )}
 
-      {/* Step Content */}
+      {/* Step Content — v1.6.2.1: Tip Secimi adımı kaldırıldı, indeksler 1 geriye. */}
       {step === 1 && (
-        <StepBusinessType
-          businessTypeName={form.businessTypeName}
-          onBusinessTypeNameChange={(v) =>
-            setForm((prev) => ({ ...prev, businessTypeName: v }))
-          }
-          nameSuggestions={typeNameSuggestions}
-        />
-      )}
-      {step === 2 && (
         <StepBasicInfo
           form={form}
           setForm={setForm}
           selectedType={selectedType}
         />
       )}
-      {step === 3 && (
+      {step === 2 && (
         <StepModules
           form={form}
           toggleModule={toggleModule}
           selectedType={selectedType}
         />
       )}
-      {step === 4 && (
+      {step === 3 && (
         <StepSetupCosts
           items={form.setupCostItems}
           currency={form.currency}
@@ -518,7 +501,7 @@ export default function AddBusinessPage() {
           }
         />
       )}
-      {step === 5 && (
+      {step === 4 && (
         <StepMonthlyFixedCosts
           items={form.monthlyFixedCostItems}
           currency={form.currency}
@@ -532,7 +515,7 @@ export default function AddBusinessPage() {
           }
         />
       )}
-      {step === 6 && (
+      {step === 5 && (
         <StepPreview form={form} selectedType={selectedType} />
       )}
 
