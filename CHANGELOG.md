@@ -34,6 +34,47 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.9] — 2026-05-18
+
+**v1.6 ACİL PROD WP — Error Boundary + Monitoring.** React class-based ErrorBoundary eklendi ve dashboard, admin, business detail route'larına wire edildi. Diğer monitoring TODOları zaten implementing edilmiş (audit sırasında ortaya çıktı) — bunlar da kapatılıyor.
+
+### Added
+
+#### Frontend
+- **`src/components/layout/ErrorBoundary.tsx`** — class component:
+  - `getDerivedStateFromError` ile render-time exception'ları yakalar
+  - `componentDidCatch` → `logger.error("boundary", ..., { component_stack, level })`
+  - Default fallback UI: kırmızı uyarı ikonu + başlık + Türkçe mesaj + "Tekrar dene" / "Ana sayfa" butonları
+  - Dev mode'da `<details>` içinde error.name + message + stack (ilk 2 KB)
+  - `level` prop'u telemetri için (route / route-admin / route-business / global / vs.)
+  - Custom `fallback(error, retry)` prop'u opsiyonel — özel ekranlar için
+- **Wiring:**
+  - `src/app/dashboard/layout.tsx` — `<ErrorBoundary level="route">` `<main>`'i sarar
+  - `src/app/admin/layout.tsx` — `<ErrorBoundary level="route-admin">` admin gövdeyi sarar
+  - `src/app/business/[id]/layout.tsx` — `<ErrorBoundary level="route-business">` business `<main>`'i sarar
+
+### Notes — Audit'te keşfedilenler (zaten implementing edilmiş ama TODO'da açık)
+
+Bu sürümde yeni eklediğim ErrorBoundary dışında, monitoring chain'inin diğer parçaları zaten önceki versiyonlarda implement edilmişti:
+
+- **`a535d85a` (/api/logs endpoint)** — `src/app/api/logs/route.ts` zaten var (Next.js → backend `/internal/logs` proxy, keepalive batch ingestion).
+- **`a0d236d9` (Global error capture wiring)** — `src/components/layout/ClientProviders.tsx` zaten `window.addEventListener("error")` ve `window.addEventListener("unhandledrejection")` → `logger.error("boundary", ...)` yapıyor.
+- **`src/app/global-error.tsx`** — Next.js App Router root-segment crash fallback'i de zaten var (digest + logger.error + Türkçe friendly UI).
+- **`src/lib/logger.ts`** — production batch buffer (25 record / 5s), keepalive, visibilitychange + beforeunload flush, dev console formatter ile kurulu.
+
+### Deferred (PENDING TODO'lar)
+
+- **`9a951a00` Sentry frontend SDK** — kurulumu DSN ve Sentry hesabı gerektirir; kullanıcının sentry.io kontrol panelinde proje oluşturması gerek. Mevcut `logger.ts` + `/api/logs` + ErrorBoundary kombo'su Sentry'ye benzer akış sağlıyor (errors backend'a düşüyor). Sentry eklenmesi opsiyonel UX upgrade — v1.7+ için.
+- **`698e6d9e` Sentry backend SDK** — aynı şekilde DSN gerekli, opsiyonel.
+- **`62b3f0a2` Documentation** — ayrı bir dokümantasyon TODO'su; içerik buraya CHANGELOG'a girdi, ayrıca docs/ dizini eklemek bu sürümün scope'u değil.
+
+### Notes
+
+- Frontend `next build` TypeScript compile + lint temiz.
+- Backend değişiklik yok.
+
+---
+
 ## [1.6.8] — 2026-05-18
 
 **v1.6 ACİL PROD WP — Rebrand: BizBoard → ÇATI (user-facing strings).** Kullanıcının gördüğü her şey artık ÇATI markası taşıyor: tab title, manifest, top bar logo + wordmark, login ekranı, profil footer, ilk-giriş hoşgeldin bildirimi. İç (paket adı, application class, log SVC_NAME, localStorage key prefix'leri) eski kalır — onlar `e83947e1` TODO'sunun kapsamı (ayrı, büyük mekanik geçiş, v1.7+).
