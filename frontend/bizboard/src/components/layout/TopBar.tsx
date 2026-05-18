@@ -43,13 +43,13 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-40 bg-surface-800/95 backdrop-blur-lg border-b border-surface-700">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
+        <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="CATI ana sayfa">
           <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">BB</span>
+            <span className="text-white font-bold text-sm">C</span>
           </div>
           <div className="hidden sm:flex flex-col leading-tight">
             <span className="font-bold text-lg text-white leading-none">
-              BizBoard
+              CATI
             </span>
             {profile?.role === "admin" && process.env.NEXT_PUBLIC_APP_VERSION && (
               <span

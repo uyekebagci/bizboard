@@ -116,10 +116,11 @@ public class AuthService {
             long unread = notificationRepository.countByUserIdAndReadFalse(user.getId());
             long total = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).size();
             if (total == 0 && unread == 0) {
+                // v1.6.8: marka adı ÇATI.
                 notificationService.create(
                         user.getId(),
                         NotificationType.INFO,
-                        "BizBoard'a hos geldin!",
+                        "CATI'ya hos geldin!",
                         "Hesabin hazir. Sol panelden yeni isletme ekleyerek baslayabilirsin.",
                         "/dashboard",
                         null,

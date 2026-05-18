@@ -34,6 +34,34 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.8] — 2026-05-18
+
+**v1.6 ACİL PROD WP — Rebrand: BizBoard → ÇATI (user-facing strings).** Kullanıcının gördüğü her şey artık ÇATI markası taşıyor: tab title, manifest, top bar logo + wordmark, login ekranı, profil footer, ilk-giriş hoşgeldin bildirimi. İç (paket adı, application class, log SVC_NAME, localStorage key prefix'leri) eski kalır — onlar `e83947e1` TODO'sunun kapsamı (ayrı, büyük mekanik geçiş, v1.7+).
+
+### Changed
+
+#### Frontend
+- **`src/app/layout.tsx`** — `metadata.title` → `"CATI - Tum Isletmeleriniz, Tek Ekran"`, `appleWebApp.title` → `"CATI"`.
+- **`public/manifest.json`** — `name` → `"ÇATI - Çoklu İşletme Yönetim Paneli"`, `short_name` → `"ÇATI"`, `description` Türkçe + ÇATI marka, `background_color` `#f8f9fa` → `#212529` (gerçek koyu temayla uyumlu).
+- **`src/components/layout/TopBar.tsx`** — logo rozeti `"BB"` → `"C"`, wordmark `"BizBoard"` → `"CATI"`, link'e `aria-label="CATI ana sayfa"`.
+- **`src/app/auth/login/page.tsx`** — büyük logo `"BB"` → `"C"`, alt yazı `"BizBoard hesabiniza giris yapin"` → `"CATI hesabiniza giris yapin"`.
+- **`src/app/dashboard/profile/page.tsx`** — footer `"BizBoard v..."` → `"CATI v..."`.
+
+#### Backend
+- **`AuthService.tryCreateFirstLoginNotification`** — başlık `"BizBoard'a hos geldin!"` → `"CATI'ya hos geldin!"`. Body değişmedi.
+
+### Notes
+
+- Backend compile + frontend `next build` TypeScript pass temiz.
+- **OpenAPI / Swagger rebrand (`1762ea93`)** — proje şu an springdoc/swagger dependency içermiyor (ne `pom.xml`'de ne resources'da OpenAPI config var). Rebrand edilecek yüzey yok; TODO closed olarak işaretlenir, yeni OpenAPI/Swagger eklendiğinde marka adı ÇATI olmalı.
+- **Email/bildirim template rebrand (`b79e2136`)** — sistemde harici email template yok (HTML, FreeMarker, Thymeleaf hiçbiri yok). Yalnız `Notification` entity'sinden gelen mesajlar var; bunlar `NotificationService.create(title, body, ...)` çağrılarında inline. Tek user-facing brand string'i (welcome notification) bu sürümde güncellendi.
+- **Code/comment cleanup (`e83947e1`)** — `com.bizboard.*` Java package path'i, `BizBoardApplication` class adı, `bizboard-web` logger SVC name, `bizboard_draft_business` / `bizboard.preferences.*` localStorage anahtarları **değişmedi**. Bunların değişmesi:
+  - Java refactor (package rename) — derin bir yapı değişikliği, tüm import path'leri etkiler.
+  - localStorage key migration — kullanıcı state'i kaybolur veya migration kodu eklenmesi gerekir.
+  - Bu kapsam v1.7.x+'a (rebrand cleanup release) ertelenir; mevcut TODO açık bırakılır.
+
+---
+
 ## [1.6.7] — 2026-05-18
 
 **v1.6 ACİL PROD WP — Periyot Aylık → Günlük (default switch).** Sistem geneli varsayılan periyot artık `daily` ("Bugün"). Backend `?period=` query param backwards-compatible kalıyor; kullanıcı dashboard'dan periyot seçince localStorage'a yazılıp tüm ziyaretlerde aktif oluyor.

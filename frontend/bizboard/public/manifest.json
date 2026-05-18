@@ -1,10 +1,10 @@
 {
-  "name": "BizBoard - Multi-Business Dashboard",
-  "short_name": "BizBoard",
-  "description": "Manage all your businesses from one place",
+  "name": "ÇATI - Çoklu İşletme Yönetim Paneli",
+  "short_name": "ÇATI",
+  "description": "İşletmelerinizi tek bir ekrandan yönetin.",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#f8f9fa",
+  "background_color": "#212529",
   "theme_color": "#4c6ef5",
   "orientation": "portrait-primary",
   "icons": [
