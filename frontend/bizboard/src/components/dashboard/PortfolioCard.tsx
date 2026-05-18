@@ -2,13 +2,16 @@
 
 import { TrendingUp, TrendingDown, Pin } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { periodLabel, SYSTEM_DEFAULT_PERIOD, type Period } from "@/lib/preferences";
 import type { PortfolioSummary } from "@/types";
 
 interface Props {
   portfolio: PortfolioSummary | null;
+  /** v1.6.7+: aktif periyot — etiketler bunla dinamik. */
+  period?: Period;
 }
 
-export function PortfolioCard({ portfolio }: Props) {
+export function PortfolioCard({ portfolio, period }: Props) {
   if (!portfolio) {
     return (
       <div className="card p-6 text-center text-surface-400">
@@ -29,6 +32,7 @@ export function PortfolioCard({ portfolio }: Props) {
   const totalExpense = total_expense_with_fixed ?? total_expense;
   const fixedCost = fixed_cost_total ?? 0;
   const isPositive = netProfit >= 0;
+  const activePeriod = period || SYSTEM_DEFAULT_PERIOD;
 
   return (
     <div className="card p-5 bg-gradient-to-br from-brand-600 to-brand-800 text-white h-full flex flex-col justify-between">
@@ -47,7 +51,7 @@ export function PortfolioCard({ portfolio }: Props) {
             }`}
           >
             {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            Bu ay
+            {periodLabel(activePeriod)}
           </span>
         </div>
       </div>

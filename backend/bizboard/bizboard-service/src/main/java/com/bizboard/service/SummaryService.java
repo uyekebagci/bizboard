@@ -341,6 +341,14 @@ public class SummaryService {
     }
 
     /**
+     * v1.6.7+: Sistem geneli varsayılan periyot. Daha önce "monthly" idi; günlük
+     * bakış kullanıcı için daha aktüel ve POS/NAKIT akışları günlük net cüzdan
+     * görünümü ister. İstemci açıkça {@code ?period=monthly|weekly|...} geçerse
+     * ona göre hesaplama yapılır — sadece DEFAULT değişti, geriye uyumluluk korunur.
+     */
+    private static final String DEFAULT_PERIOD = "daily";
+
+    /**
      * period parametresine göre tarih aralığını çözer.
      * Eğer from/to verilmişse onları kullanır (custom).
      * Yoksa period'a göre hesaplar.
@@ -352,8 +360,8 @@ public class SummaryService {
 
         LocalDate today = LocalDate.now();
 
-        if (period == null) {
-            period = "monthly";
+        if (period == null || period.isBlank()) {
+            period = DEFAULT_PERIOD;
         }
 
         return switch (period.toLowerCase(java.util.Locale.ENGLISH)) {
@@ -377,7 +385,8 @@ public class SummaryService {
                     LocalDate.of(today.getYear(), 1, 1),
                     today
             );
-            default -> new DateRange(today.withDayOfMonth(1), today);
+            // v1.6.7+: bilinmeyen periyot → yeni default (daily).
+            default -> new DateRange(today, today);
         };
     }
 

@@ -34,6 +34,39 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.7] — 2026-05-18
+
+**v1.6 ACİL PROD WP — Periyot Aylık → Günlük (default switch).** Sistem geneli varsayılan periyot artık `daily` ("Bugün"). Backend `?period=` query param backwards-compatible kalıyor; kullanıcı dashboard'dan periyot seçince localStorage'a yazılıp tüm ziyaretlerde aktif oluyor.
+
+### Added
+
+#### Frontend
+- **`lib/preferences.ts`** — yeni utility:
+  - `Period = "daily" | "weekly" | "monthly" | "quarterly" | "yearly"` + `PERIODS` listesi
+  - `SYSTEM_DEFAULT_PERIOD = "daily"` (sabit, backend ile uyumlu)
+  - `getDefaultPeriod()` / `setDefaultPeriod()` — localStorage key `bizboard.preferences.defaultPeriod`; SSR-safe (window kontrolü)
+  - `periodLabel(p)` / `periodShortLabel(p)` — Türkçe etiketleyici (Bugun / Bu hafta / Bu ay / ...)
+- **Dashboard period selector** (`/dashboard`) — sağ üstte 5'li chip grubu (Bugun / Bu hafta / Bu ay / Bu ceyrek / Bu yil). Seçim anında `usePortfolio` yeniden fetch eder + localStorage'a yazılır.
+- **`PortfolioCard.period` prop** — TrendingUp rozeti yanındaki etiket dinamik (`periodLabel(period)`).
+
+### Changed
+
+#### Backend
+- **`SummaryService.resolveDateRange`** — `DEFAULT_PERIOD` sabiti `"monthly"` → `"daily"`. `period` null/blank gelirse bugünün date range'i (today, today) dönülür. Bilinmeyen periyot (typo) için fallback da artık daily. Açık `?period=monthly|weekly|...` kullanan istemciler etkilenmez (backward compatible).
+
+#### Frontend
+- **`usePortfolio(period?)`** — artık `?period=` kullanıyor (eskiden `?year=&month=`). Argüman verilmezse `getDefaultPeriod()` üzerinden okuyor. Tek return shape: `{portfolio, isLoading, error, period}`.
+- **`/dashboard/finance` default `months`** — 6 → 1 (en kısa periyot). Kullanıcı seçimi `bizboard.preferences.financeMonths` key'i altında ayrıca persist edilir.
+
+### Notes
+
+- Backend compile: `mvn -DskipTests compile` → BUILD SUCCESS.
+- Frontend `next build`: TypeScript compile + lint temiz.
+- TODO `c7437327` (finance center daily bar chart, 30 günlük günlük bucket) **partial** — default period değişti ama trend grafiği için backend `/finance/overview?period=daily` desteği henüz yok; günlük bucket aggregation v1.7+ için açık. Mevcut "1 Ay" hala aylık tek bar gösteriyor.
+- TODO `b262ef8a` (localStorage persistence) — hem dashboard period (`bizboard.preferences.defaultPeriod`) hem finance months (`bizboard.preferences.financeMonths`) için ayrı ayrı persist.
+
+---
+
 ## [1.6.6] — 2026-05-18
 
 **v1.6 ACİL PROD WP — Alacaklar frontend (v1.6.5 backend üstüne).** Borç formu artık RECEIVABLE seçilince "Alacak Tipi" select gösteriyor (SENET / Cek / Altin / Nakit / Diger). Dashboard'a `/alacaklar` aggregate sayfası ve kısayolu geldi.

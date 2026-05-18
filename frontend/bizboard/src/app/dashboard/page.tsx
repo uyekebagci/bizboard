@@ -12,6 +12,13 @@ import { ExpenseChart } from "@/components/dashboard/ExpenseChart";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { api } from "@/lib/api/client";
+import {
+  getDefaultPeriod,
+  setDefaultPeriod,
+  PERIODS,
+  periodLabel,
+  type Period,
+} from "@/lib/preferences";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -23,7 +30,15 @@ function getGreeting(): string {
 
 export default function DashboardPage() {
   const { businesses, isLoading: bizLoading } = useBusinesses();
-  const { portfolio, isLoading: portLoading } = usePortfolio();
+
+  // v1.6.7: kullanıcının seçtiği periyot — localStorage'a yazılıp tüm tab/visit'lerde aktif.
+  const [period, setPeriod] = useState<Period>(() => getDefaultPeriod());
+  const { portfolio, isLoading: portLoading } = usePortfolio(period);
+
+  function handlePeriodChange(next: Period) {
+    setPeriod(next);
+    setDefaultPeriod(next);
+  }
 
   // Aggregated employee data
   const [employeeData, setEmployeeData] = useState<{ count: number; cost: number } | null>(null);
@@ -56,17 +71,35 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      {/* Greeting */}
-      <section>
-        <h1 className="text-2xl font-bold text-white">{getGreeting()} 👋</h1>
-        <p className="text-surface-400 mt-1">
-          Isletmelerinizin durumu
-        </p>
+      {/* Greeting + period selector (v1.6.7+) */}
+      <section className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">{getGreeting()} 👋</h1>
+          <p className="text-surface-400 mt-1">
+            Isletmelerinizin durumu — {periodLabel(period).toLowerCase()}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 bg-surface-800 rounded-xl p-1 border border-surface-700">
+          {PERIODS.map((p) => (
+            <button
+              key={p}
+              onClick={() => handlePeriodChange(p)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                period === p
+                  ? "bg-brand-600 text-white"
+                  : "text-surface-300 hover:text-white"
+              }`}
+              aria-pressed={period === p}
+            >
+              {periodLabel(p)}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Portfolio (50%) + Stats 2x2 (50%) */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <PortfolioCard portfolio={portfolio} />
+        <PortfolioCard portfolio={portfolio} period={period} />
         <StatsRow portfolio={portfolio} debtData={debtData} employeeData={employeeData} />
       </section>
 
