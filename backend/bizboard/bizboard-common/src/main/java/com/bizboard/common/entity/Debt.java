@@ -67,6 +67,19 @@ public class Debt {
     @Column(name = "instrument_type", nullable = false)
     private String instrumentType;
 
+    /**
+     * v1.6.5: alacak (RECEIVABLE) tipinde borçlar için tip seçimi.
+     * İzin verilen değerler (uygulama enum'u): SENET, CEK, ALTIN, NAKIT, DIGER.
+     * PAYABLE borçlar için null kalır. RECEIVABLE için önerilen, ama zorunlu değil.
+     * "DIGER" seçilirse {@link #receivableTypeOther} doldurulmalı.
+     */
+    @Column(name = "receivable_type", length = 32)
+    private String receivableType;
+
+    /** v1.6.5: receivable_type = DIGER iken serbest metin tip adı (max 120). */
+    @Column(name = "receivable_type_other", length = 120)
+    private String receivableTypeOther;
+
     /** Vade tarihi */
     @Column(name = "due_date")
     private LocalDate dueDate;

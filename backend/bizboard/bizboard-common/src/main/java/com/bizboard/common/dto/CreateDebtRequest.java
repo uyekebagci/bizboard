@@ -39,6 +39,17 @@ public class CreateDebtRequest {
     @JsonProperty("instrument_type")
     private String instrumentType; // CEK, SENET, NAKIT veya özel
 
+    /**
+     * v1.6.5: alacak (RECEIVABLE) için tip seçimi. İzin verilen değerler:
+     * SENET, CEK, ALTIN, NAKIT, DIGER. PAYABLE için null.
+     */
+    @JsonProperty("receivable_type")
+    private String receivableType;
+
+    /** v1.6.5: receivable_type = DIGER iken serbest metin tip adı. */
+    @JsonProperty("receivable_type_other")
+    private String receivableTypeOther;
+
     @JsonProperty("due_date")
     private LocalDate dueDate;
 
