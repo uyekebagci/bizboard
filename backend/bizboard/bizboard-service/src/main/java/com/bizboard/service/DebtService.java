@@ -128,6 +128,24 @@ public class DebtService {
             }
         }
 
+        // v1.6.5: receivable_type validation + normalize (yalnız RECEIVABLE için).
+        String receivableType = null;
+        String receivableTypeOther = null;
+        if (direction == DebtDirection.RECEIVABLE && request.getReceivableType() != null
+                && !request.getReceivableType().isBlank()) {
+            receivableType = normalizeReceivableType(request.getReceivableType());
+            if ("DIGER".equals(receivableType)) {
+                if (request.getReceivableTypeOther() == null || request.getReceivableTypeOther().isBlank()) {
+                    throw new IllegalArgumentException(
+                            "receivable_type=DIGER icin receivable_type_other zorunludur");
+                }
+                receivableTypeOther = request.getReceivableTypeOther().trim();
+                if (receivableTypeOther.length() > 120) {
+                    receivableTypeOther = receivableTypeOther.substring(0, 120);
+                }
+            }
+        }
+
         Debt debt = Debt.builder()
                 .business(business)
                 .direction(direction)
@@ -136,6 +154,8 @@ public class DebtService {
                 .amount(request.getAmount())
                 .currency(request.getCurrency() != null ? request.getCurrency() : business.getCurrency())
                 .instrumentType(request.getInstrumentType())
+                .receivableType(receivableType)
+                .receivableTypeOther(receivableTypeOther)
                 .dueDate(request.getDueDate())
                 .description(request.getDescription())
                 .documentUrl(request.getDocumentUrl())
@@ -370,6 +390,8 @@ public class DebtService {
                 .amount(d.getAmount())
                 .currency(d.getCurrency())
                 .instrumentType(d.getInstrumentType())
+                .receivableType(d.getReceivableType())
+                .receivableTypeOther(d.getReceivableTypeOther())
                 .dueDate(d.getDueDate())
                 .settled(d.isSettled())
                 .settledAt(d.getSettledAt())
@@ -379,5 +401,25 @@ public class DebtService {
                 .createdByName(d.getCreatedBy() != null ? d.getCreatedBy().getFullName() : null)
                 .createdAt(d.getCreatedAt())
                 .build();
+    }
+
+    // v1.6.5: izin verilen alacak tipleri.
+    private static final java.util.Set<String> ALLOWED_RECEIVABLE_TYPES =
+            java.util.Set.of("SENET", "CEK", "ALTIN", "NAKIT", "DIGER");
+
+    /**
+     * v1.6.5: serbest metin → kanonik tip. Kabul edilmeyen değer
+     * IllegalArgumentException atar. Boş/null caller tarafında zaten elimine.
+     */
+    private static String normalizeReceivableType(String raw) {
+        String upper = raw.trim().toUpperCase(java.util.Locale.ENGLISH);
+        // Çekirdek değer haritalama: Türkçe karakter normalize.
+        upper = upper.replace("Ç", "C").replace("Ğ", "G").replace("İ", "I")
+                     .replace("Ö", "O").replace("Ş", "S").replace("Ü", "U");
+        if (!ALLOWED_RECEIVABLE_TYPES.contains(upper)) {
+            throw new IllegalArgumentException(
+                    "Gecersiz receivable_type. Izin verilen: SENET, CEK, ALTIN, NAKIT, DIGER");
+        }
+        return upper;
     }
 }

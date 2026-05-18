@@ -41,6 +41,14 @@ public class DebtDto {
     @JsonProperty("instrument_type")
     private String instrumentType;
 
+    /** v1.6.5: alacak (RECEIVABLE) tipi — SENET / CEK / ALTIN / NAKIT / DIGER. */
+    @JsonProperty("receivable_type")
+    private String receivableType;
+
+    /** v1.6.5: receivable_type = DIGER iken serbest metin tip adı. */
+    @JsonProperty("receivable_type_other")
+    private String receivableTypeOther;
+
     @JsonProperty("due_date")
     private LocalDate dueDate;
 

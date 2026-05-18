@@ -34,6 +34,41 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.5] — 2026-05-18
+
+**v1.6 ACİL PROD WP — Alacaklar backend.** Debt entity artık `receivable_type` + `receivable_type_other` taşıyor, yeni `GET /api/receivables` aggregate endpoint'i counterpart bazlı alacak özetini dönüyor. Frontend (debt form tip select, `/alacaklar` sayfası) v1.6.6'da.
+
+### Added
+
+#### Backend
+- **`Debt.receivableType`** (VARCHAR(32) nullable) — RECEIVABLE direction'lı debt'ler için tip seçimi. İzin verilen değerler (uygulama-level enum): `SENET`, `CEK`, `ALTIN`, `NAKIT`, `DIGER`. PAYABLE debt'ler için null kalır. Hibernate `ddl-auto=update` mevcut tabloya kolonu nullable ekler — eski kayıtlar otomatik null (UNSPECIFIED) olur.
+- **`Debt.receivableTypeOther`** (VARCHAR(120) nullable) — `receivable_type = DIGER` iken serbest metin tip adı.
+- **`CreateDebtRequest.receivable_type` + `receivable_type_other`** alanları (opsiyonel, JsonProperty snake_case).
+- **`DebtDto.receivable_type` + `receivable_type_other`** — read API'larda görünür.
+- **`ReceivableTypeBreakdownDto`** — counterpart altındaki tek bir tip için `{type, label, amount, count}`. `type=DIGER` ise `label` = `receivable_type_other`.
+- **`ReceivableAggregateDto`** — counterpart bazlı özet: `{counterpart_id?, counterpart_name, total_amount, currency, receivable_types[], last_due_date?, count}`.
+- **`ReceivableService.getReceivables(userId)`:**
+  - Admin → tüm RECEIVABLE+settled=false debt'ler.
+  - Viewer → `accessibleBusinesses` üzerinden filtrelenmiş + admin_only=false.
+  - Group by counterpart_id (varsa) yoksa lowercased `counterparty` string.
+  - Tip kırılımı: SENET / CEK / ALTIN / NAKIT / DIGER (label ile birleştirilir) / UNSPECIFIED (null tipler).
+  - `lastDueDate` = grup içindeki `due_date`'lerin max'i (null-safe).
+  - Sonuç `total_amount DESC` sıralı döner.
+- **`GET /api/receivables`** — yeni controller. `@AuthenticationPrincipal` ile user-scope.
+
+### Changed
+
+#### Backend
+- **`DebtService.createDebt`** — yalnız direction=RECEIVABLE ve receivable_type non-blank ise normalize edilir. Türkçe karakter normalize (`Ç→C`, `Ğ→G`, `İ→I`, `Ö→O`, `Ş→S`, `Ü→U`) sonrası izin verilen 5 değerden biri değilse `IllegalArgumentException`. `DIGER` ise `receivable_type_other` zorunlu (boş → `IllegalArgumentException`); 120 karaktere truncate edilir.
+- **`DebtService.toDto`** — `receivable_type` + `receivable_type_other` exposed.
+
+### Notes
+
+- Backend compile temiz: `mvn -DskipTests compile` → BUILD SUCCESS.
+- v1.6.6'da frontend gelene kadar `instrument_type` (legacy alan) ile `receivable_type` (yeni alan) bir arada yaşar. Frontend RECEIVABLE oluştururken her ikisini de gönderebilir; backend instrumentType'ı zorunlu tutmaya devam eder (legacy contract).
+
+---
+
 ## [1.6.4] — 2026-05-18
 
 **v1.6 ACİL PROD WP — POS/NAKIT frontend (v1.6.3 backend üstüne).** İşlem formu artık ödeme yöntemini soruyor, dashboard'a `/pos-cihazlari` ve `/nakit` aggregate sayfaları geldi. Mevcut işlemler default NAKIT olarak işaretli (`payment_method` kolonu `@ColumnDefault "'NAKIT'"`).
