@@ -1,0 +1,229 @@
+"use client";
+
+/**
+ * v1.6.6: Alacaklar sayfası — counterpart bazlı açık (settled=false) RECEIVABLE özeti.
+ *
+ * Veri: GET /api/receivables (v1.6.5)
+ *
+ * Sütunlar: Kişi/Firma, Tutar (₺), Tip(ler), Vade.
+ * Default sıralama: tutar DESC (backend zaten DESC döner; client ayrıca sort opsiyonu sağlar).
+ */
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft, Loader2, HandCoins, Plus, CalendarClock,
+} from "lucide-react";
+import { api } from "@/lib/api/client";
+import { formatCurrency } from "@/lib/utils";
+import { logger } from "@/lib/logger";
+import type { ReceivableAggregate, ReceivableTypeBreakdown } from "@/types";
+
+type SortMode = "amount_desc" | "due_asc" | "name_asc";
+
+export default function AlacaklarPage() {
+  const router = useRouter();
+  const [rows, setRows] = useState<ReceivableAggregate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await api.get<ReceivableAggregate[]>("/receivables").catch(() => []);
+        setRows(data || []);
+      } catch (err) {
+        logger.error("api", "Receivables fetch failed", undefined, err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const total = rows.reduce((a, r) => a + (r.total_amount || 0), 0);
+  const totalCount = rows.reduce((a, r) => a + (r.count || 0), 0);
+
+  const sorted = useMemo(() => {
+    const out = [...rows];
+    if (sortMode === "amount_desc") {
+      out.sort((a, b) => b.total_amount - a.total_amount);
+    } else if (sortMode === "due_asc") {
+      out.sort((a, b) => {
+        const ax = a.last_due_date ? new Date(a.last_due_date).getTime() : Number.POSITIVE_INFINITY;
+        const bx = b.last_due_date ? new Date(b.last_due_date).getTime() : Number.POSITIVE_INFINITY;
+        return ax - bx;
+      });
+    } else {
+      out.sort((a, b) => a.counterpart_name.localeCompare(b.counterpart_name, "tr"));
+    }
+    return out;
+  }, [rows, sortMode]);
+
+  return (
+    <div className="space-y-5 pb-24">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => router.back()}
+          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+        >
+          <ArrowLeft size={20} className="text-surface-300" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+            <HandCoins size={20} className="text-amber-300" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">Alacaklar</h1>
+            <p className="text-xs text-surface-400">
+              Acik (tahsil edilmemis) alacaklarin kisi bazli ozeti
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={28} className="animate-spin text-amber-400" />
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="card p-8 text-center">
+          <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
+          <p className="text-surface-300 font-medium">Acik alacaginiz yok</p>
+          <p className="text-surface-400 text-sm mt-1">
+            Bir isletme detay sayfasindan &quot;Yeni Borc / Alacak&quot; ile alacak kaydi olusturabilirsiniz.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Totals */}
+          <section className="grid grid-cols-2 gap-3">
+            <div className="card p-4">
+              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
+              <p className="mt-1 text-2xl font-bold text-amber-300">
+                {formatCurrency(total, "TRY")}
+              </p>
+            </div>
+            <div className="card p-4">
+              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>
+              <p className="mt-1 text-2xl font-bold text-white">
+                {totalCount}
+              </p>
+              <p className="text-[11px] text-surface-400 mt-0.5">
+                {rows.length} farkli kisi/firma
+              </p>
+            </div>
+          </section>
+
+          {/* Sort chips */}
+          <section className="flex items-center justify-between gap-2">
+            <span className="text-xs text-surface-400">Sirala:</span>
+            <div className="flex gap-2">
+              {([
+                { v: "amount_desc", label: "Tutar (cok→az)" },
+                { v: "due_asc", label: "Vade (yakin→uzak)" },
+                { v: "name_asc", label: "Isim (A-Z)" },
+              ] as { v: SortMode; label: string }[]).map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setSortMode(opt.v)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    sortMode === opt.v
+                      ? "bg-amber-500/20 border-amber-400 text-amber-200"
+                      : "bg-surface-700 border-surface-600 text-surface-300"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* List */}
+          <section className="card divide-y divide-surface-700">
+            {sorted.map((r) => {
+              const key = r.counterpart_id || `name:${r.counterpart_name}`;
+              const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
+              const Inner = (
+                <div className="p-4 flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white truncate">
+                      {r.counterpart_name || "Bilinmiyor"}
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {r.receivable_types.map((b, i) => (
+                        <TypeBadge key={`${b.type}-${i}`} breakdown={b} currency={r.currency} />
+                      ))}
+                    </div>
+                    {r.last_due_date && (
+                      <p className="mt-1.5 text-[11px] text-surface-400 flex items-center gap-1">
+                        <CalendarClock size={11} />
+                        Son vade: {new Date(r.last_due_date).toLocaleDateString("tr-TR", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-base font-semibold text-amber-300">
+                      {formatCurrency(r.total_amount, r.currency)}
+                    </p>
+                    <p className="text-[11px] text-surface-400">
+                      {r.count} kayit
+                    </p>
+                  </div>
+                </div>
+              );
+              return href ? (
+                <Link key={key} href={href} className="block hover:bg-surface-700 transition-colors">
+                  {Inner}
+                </Link>
+              ) : (
+                <div key={key}>{Inner}</div>
+              );
+            })}
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TypeBadge({
+  breakdown,
+  currency,
+}: {
+  breakdown: ReceivableTypeBreakdown;
+  currency: string;
+}) {
+  const labelMap: Record<string, string> = {
+    SENET: "Senet",
+    CEK: "Cek",
+    ALTIN: "Altin",
+    NAKIT: "Nakit",
+    DIGER: breakdown.label || "Diger",
+    UNSPECIFIED: "Belirtilmemis",
+  };
+  const colorMap: Record<string, string> = {
+    SENET: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+    CEK: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+    ALTIN: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
+    NAKIT: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+    DIGER: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+    UNSPECIFIED: "bg-surface-600 text-surface-300 border-surface-500",
+  };
+  const cls = colorMap[breakdown.type] || colorMap.UNSPECIFIED;
+  const label = labelMap[breakdown.type] || breakdown.type;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${cls}`}
+      title={`${label}: ${formatCurrency(breakdown.amount, currency)} (${breakdown.count} kayit)`}
+    >
+      <span>{label}</span>
+      <span className="opacity-70">·</span>
+      <span>{formatCurrency(breakdown.amount, currency)}</span>
+    </span>
+  );
+}

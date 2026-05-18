@@ -22,9 +22,26 @@ import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import { CounterpartCombobox } from "@/components/shared/CounterpartCombobox";
-import type { Debt, DebtSummary, FileUploadInfo } from "@/types";
+import type { Debt, DebtSummary, FileUploadInfo, ReceivableType } from "@/types";
 
 const INSTRUMENT_OPTIONS = ["CEK", "SENET", "NAKIT"];
+
+/**
+ * v1.6.5+: RECEIVABLE direction'lı debt'ler için ek tipler.
+ * Backend `receivable_type` enum'u SENET / CEK / ALTIN / NAKIT / DIGER.
+ * ALTIN bu listede instrument_type'da yok — yalnız alacak tarafında anlamlı.
+ */
+const RECEIVABLE_TYPE_OPTIONS: ReceivableType[] = ["SENET", "CEK", "ALTIN", "NAKIT", "DIGER"];
+
+function receivableTypeLabel(t: ReceivableType): string {
+  switch (t) {
+    case "SENET": return "Senet";
+    case "CEK": return "Cek";
+    case "ALTIN": return "Altin";
+    case "NAKIT": return "Nakit";
+    case "DIGER": return "Diger";
+  }
+}
 
 function formatMoney(n: number) {
   return new Intl.NumberFormat("tr-TR", {
@@ -430,6 +447,9 @@ function CreateDebtModal({
   const [amount, setAmount] = useState("");
   const [instrumentType, setInstrumentType] = useState("NAKIT");
   const [customInstrument, setCustomInstrument] = useState("");
+  /** v1.6.5+: RECEIVABLE için ayrı tip seçimi (instrument_type'tan bağımsız). */
+  const [receivableType, setReceivableType] = useState<ReceivableType>("NAKIT");
+  const [receivableTypeOther, setReceivableTypeOther] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [description, setDescription] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
@@ -457,15 +477,33 @@ function CreateDebtModal({
       return;
     }
 
+    // v1.6.5+: RECEIVABLE için receivable_type + DIGER zorunlu metin kontrolü.
+    if (direction === "RECEIVABLE" && receivableType === "DIGER" && !receivableTypeOther.trim()) {
+      setError("'Diger' seciliyse alacak tipini belirtin");
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // v1.6.5+: RECEIVABLE iken receivable_type + receivable_type_other gönder;
+      // instrument_type backend'de hala @NotBlank — aynı değeri eşle (DIGER ise
+      // customInstrument metnini kullan; receivableType ALTIN ise "ALTIN" literal'i).
+      const isReceivable = direction === "RECEIVABLE";
       const debt = await api.post<{ id: string }>(`/businesses/${businessId}/debts`, {
         direction,
         counterparty: counterparty.trim(),
         counterpart_id: counterpartId,
         amount: parseMoneyInput(amount),
         currency,
-        instrument_type: effectiveInstrument.trim(),
+        instrument_type: isReceivable
+          ? (receivableType === "DIGER"
+              ? (receivableTypeOther.trim() || "DIGER")
+              : receivableType)
+          : effectiveInstrument.trim(),
+        receivable_type: isReceivable ? receivableType : null,
+        receivable_type_other: isReceivable && receivableType === "DIGER"
+          ? receivableTypeOther.trim()
+          : null,
         due_date: dueDate || null,
         description: description.trim() || null,
         document_url: uploadedFiles.length > 0 ? `/files/${uploadedFiles[0].id}` : null,
@@ -575,41 +613,73 @@ function CreateDebtModal({
             />
           </div>
 
-          {/* Instrument Type */}
-          <div>
-            <label className="label">Borc Tipi</label>
-            <div className="flex flex-wrap gap-2">
-              {[...INSTRUMENT_OPTIONS, "DIGER"].map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setInstrumentType(opt)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                    instrumentType === opt
-                      ? "bg-brand-50 border-brand-300 text-brand-700"
-                      : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300"
-                  }`}
-                >
-                  {opt === "CEK"
-                    ? "Cek"
-                    : opt === "SENET"
-                    ? "Senet"
-                    : opt === "NAKIT"
-                    ? "Nakit"
-                    : "Diger"}
-                </button>
-              ))}
+          {/* v1.6.5+: Alacak Tipi — sadece RECEIVABLE direction'da. */}
+          {direction === "RECEIVABLE" ? (
+            <div>
+              <label className="label">Alacak Tipi</label>
+              <div className="flex flex-wrap gap-2">
+                {RECEIVABLE_TYPE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setReceivableType(opt)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                      receivableType === opt
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                        : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300"
+                    }`}
+                  >
+                    {receivableTypeLabel(opt)}
+                  </button>
+                ))}
+              </div>
+              {receivableType === "DIGER" && (
+                <input
+                  type="text"
+                  value={receivableTypeOther}
+                  onChange={(e) => setReceivableTypeOther(e.target.value)}
+                  maxLength={120}
+                  className="input mt-2"
+                  placeholder="Alacak tipini girin (orn. doviz, hisse, vs.)"
+                />
+              )}
             </div>
-            {instrumentType === "DIGER" && (
-              <input
-                type="text"
-                value={customInstrument}
-                onChange={(e) => setCustomInstrument(e.target.value)}
-                className="input mt-2"
-                placeholder="Borc tipini girin"
-              />
-            )}
-          </div>
+          ) : (
+            <div>
+              <label className="label">Borc Tipi</label>
+              <div className="flex flex-wrap gap-2">
+                {[...INSTRUMENT_OPTIONS, "DIGER"].map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setInstrumentType(opt)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                      instrumentType === opt
+                        ? "bg-brand-50 border-brand-300 text-brand-700"
+                        : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300"
+                    }`}
+                  >
+                    {opt === "CEK"
+                      ? "Cek"
+                      : opt === "SENET"
+                      ? "Senet"
+                      : opt === "NAKIT"
+                      ? "Nakit"
+                      : "Diger"}
+                  </button>
+                ))}
+              </div>
+              {instrumentType === "DIGER" && (
+                <input
+                  type="text"
+                  value={customInstrument}
+                  onChange={(e) => setCustomInstrument(e.target.value)}
+                  className="input mt-2"
+                  placeholder="Borc tipini girin"
+                />
+              )}
+            </div>
+          )}
 
           {/* Due Date */}
           <div>
