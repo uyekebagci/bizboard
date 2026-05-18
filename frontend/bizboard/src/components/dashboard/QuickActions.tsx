@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Plus, Receipt, Camera, FolderOpen, Package, BarChart3, Users,
-  CreditCard, Banknote,
+  CreditCard, Banknote, HandCoins,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
@@ -29,6 +29,13 @@ const actions = [
     color: "text-emerald-300",
     bg: "bg-emerald-500/15",
     href: "/dashboard/nakit",
+  },
+  {
+    label: "Alacaklar",
+    icon: HandCoins,
+    color: "text-amber-300",
+    bg: "bg-amber-500/15",
+    href: "/dashboard/alacaklar",
   },
   {
     label: "Envanter",

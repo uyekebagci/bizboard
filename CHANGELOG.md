@@ -34,6 +34,40 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.6] — 2026-05-18
+
+**v1.6 ACİL PROD WP — Alacaklar frontend (v1.6.5 backend üstüne).** Borç formu artık RECEIVABLE seçilince "Alacak Tipi" select gösteriyor (SENET / Cek / Altin / Nakit / Diger). Dashboard'a `/alacaklar` aggregate sayfası ve kısayolu geldi.
+
+### Added
+
+#### Frontend
+- **`ReceivableType`** tipi (`types/index.ts`) — `"SENET" | "CEK" | "ALTIN" | "NAKIT" | "DIGER"`.
+- **`Debt.receivable_type` + `receivable_type_other`** alanları (opsiyonel) Debt arayüzünde.
+- **`ReceivableTypeBreakdown` + `ReceivableAggregate`** tipleri — GET /api/receivables cevabı için.
+- **`DebtModule.CreateDebtModal`** — `direction === "RECEIVABLE"` iken yeni "Alacak Tipi" buton grubu (5 seçenek + `DIGER` → 120 karakter sınırlı text input). Submit anında:
+  - `receivable_type` (kanonik enum)
+  - `receivable_type_other` (yalnız `DIGER` için)
+  - `instrument_type` (legacy contract için seçilen değer / `DIGER` ise serbest metin) ile birlikte gönderilir.
+- **`/dashboard/alacaklar`** (yeni sayfa):
+  - Toplam alacak + açık kayıt sayısı kartları
+  - Sıralama chip'leri: Tutar (cok→az) / Vade (yakin→uzak) / İsim (A-Z TR locale)
+  - Karşı taraf bazlı kart listesi; her satırda tip rozetleri (SENET / Cek / Altin / Nakit / Diger label / Belirtilmemis) + son vade tarihi
+  - `counterpart_id` varsa karşı taraf detay sayfasına link.
+- **`QuickActions`** — "Alacaklar" kısayolu (amber `HandCoins`).
+
+### Changed
+
+#### Frontend
+- **`DebtModule.handleSubmit`** — `DIGER` seçili ama `receivable_type_other` boşsa client-side `setError` ile uyarı (backend'den geri dönmek yerine erken kontrol).
+
+### Notes
+
+- Build (`next build`): TypeScript compile ve type-check temiz; static export sırasında `NEXT_PUBLIC_API_URL` prerender hatası (pre-existing) sürüyor — prod build'te env set'leniyor.
+- Backend tarafında değişiklik yok — v1.6.5 endpoint'leri doğrudan kullanılıyor.
+- "Sidebar Alacaklar kısayolu" TODO'su mevcut `QuickActions` widget'ına yerleştirildi (hamburger sidebar ayrı bir TODO chain'i).
+
+---
+
 ## [1.6.5] — 2026-05-18
 
 **v1.6 ACİL PROD WP — Alacaklar backend.** Debt entity artık `receivable_type` + `receivable_type_other` taşıyor, yeni `GET /api/receivables` aggregate endpoint'i counterpart bazlı alacak özetini dönüyor. Frontend (debt form tip select, `/alacaklar` sayfası) v1.6.6'da.

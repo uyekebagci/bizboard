@@ -276,6 +276,9 @@ export interface PeriodSummary {
 // ---- Debt Models ----
 export type DebtDirection = "RECEIVABLE" | "PAYABLE";
 
+/** v1.6.5+: receivable_type kanonik değerler. */
+export type ReceivableType = "SENET" | "CEK" | "ALTIN" | "NAKIT" | "DIGER";
+
 export interface Debt {
   id: string;
   business_id: string;
@@ -285,6 +288,10 @@ export interface Debt {
   amount: number;
   currency: string;
   instrument_type: string;
+  /** v1.6.5+: yalnız RECEIVABLE için doldurulur. */
+  receivable_type?: ReceivableType | null;
+  /** v1.6.5+: receivable_type=DIGER iken serbest metin tip adı. */
+  receivable_type_other?: string | null;
   due_date: string | null;
   is_settled: boolean;
   settled_at: string | null;
@@ -293,6 +300,27 @@ export interface Debt {
   admin_only: boolean;
   created_by_name: string | null;
   created_at: string;
+}
+
+/** v1.6.5+: GET /api/receivables — bir karşı taraf için bir tip kırılımı. */
+export interface ReceivableTypeBreakdown {
+  /** SENET / CEK / ALTIN / NAKIT / DIGER / UNSPECIFIED */
+  type: ReceivableType | "UNSPECIFIED";
+  /** type=DIGER iken serbest metin etiketi, aksi takdirde null. */
+  label?: string | null;
+  amount: number;
+  count: number;
+}
+
+/** v1.6.5+: GET /api/receivables — counterpart bazlı alacak özeti. */
+export interface ReceivableAggregate {
+  counterpart_id?: string | null;
+  counterpart_name: string;
+  total_amount: number;
+  currency: string;
+  receivable_types: ReceivableTypeBreakdown[];
+  last_due_date?: string | null;
+  count: number;
 }
 
 export interface DebtSummary {
