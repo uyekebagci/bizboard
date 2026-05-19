@@ -34,6 +34,65 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.22] — 2026-05-20
+
+**v1.6 acil prod devam · WP-5 — Çek + Hatırlatma + Master Havuz (final WP).** Çek özel alanları (vade/banka/no), hatırlatma alanları (her debt için), `/cekler` ve `/hesaplar/havuz` sayfaları, çek vade reminder cron, bank account aktif/pasif toggle. v1.6 acil prod devam serisinin 5/5 WP'si bu sürümle tamamlandı.
+
+### Added
+
+#### Backend
+- **`PATCH /bank-accounts/{id}/active`** — aktif/pasif toggle endpoint'i:
+  - Body: `{is_active: bool, force?: bool}`
+  - Pasif yaparken bakiye 0 değilse 409 (`force=true` ile zorla geçilir)
+  - Audit: BANK_ACCOUNT_ACTIVATED / DEACTIVATED
+- **`BankAccountService`** — toggle servisi + IllegalStateException → 409 mapping
+- **`BankAccountToggleRequest` DTO** — snake_case JsonProperty
+- **`ChequeReminderScheduler`** — `@Scheduled(cron = "0 0 9 * * *", zone = "Europe/Istanbul")`. Her sabah 09:00 `cheque_due_date - today IN (0, 1, 3)` olan açık çekler için tüm admin'lere NotificationType.WARNING (3/1 gün) veya ALERT (bugün) push. Trigger key: `cheque-reminder-{days}`.
+- **`GET /cheques?from=&to=`** — `ChequeController`. Default range: bugün → bugün+30. `DebtRepository.findUpcomingCheques` üzerinden açık çekleri döner.
+- **`CreateDebtRequest`** yeni alanlar: `cheque_due_date`, `cheque_collector_bank`, `cheque_no`, `reminder_date`, `reminder_note`.
+- **`DebtDto`** aynı 5 alanı expose eder.
+- **`DebtService.createDebt`** — yeni alanları entity'ye wire eder + `toDto`'ya yansıtır.
+
+#### Frontend
+- **Types:** `Debt.cheque_due_date`, `cheque_collector_bank`, `cheque_no`, `reminder_date`, `reminder_note` eklendi.
+- **`DebtModule.CreateDebtModal`:**
+  - `direction=RECEIVABLE` + `receivable_type=CEK` iken **"Çek Bilgileri" mavi kart** — vade tarihi, tahsil bankası (max 120), çek no (max 64).
+  - Her debt için **"🔔 Hatırlatma (Opsiyonel)" amber kart** — reminder_date + reminder_note (cron her sabah 09:00 kontrol ediyor info).
+  - Submit body conditional: çek alanları yalnız RECEIVABLE+CEK iken gönderilir; reminder her zaman opsiyonel.
+- **`/dashboard/cekler`** (yeni sayfa):
+  - Header + 3 istatistik kartı (Toplam / Kayıt / Vadesi Geçen).
+  - 7/15/30/60 gün filter chip'leri.
+  - Liste: vade, tutar, kim'den/kim'e, tahsil bankası, çek no, vadesi geçenler kırmızı arka plan + "Geçti" rozeti.
+  - Her satırda "Tahsil edildi" butonu — `PATCH /debts/{id}/settle`.
+- **`/dashboard/hesaplar/havuz`** (yeni sayfa, admin-only):
+  - Header + 3 istatistik kartı (Aktif / Pasif / Toplam Bakiye).
+  - "Pasif hesapları göster" toggle.
+  - Liste: tip rozeti (Banka/Vadeli/Kasa/Kişide), bank/holder/iban, bakiye, **ToggleRight/Left** açma-kapama butonu.
+  - 409 (bakiye≠0) durumunda `ConfirmToggleModal` `force=true` ile yeniden gönderir.
+- **Sidebar** — yeni linkler: "Cekler" (`FileText` icon), admin'e "Admin: Hesap Havuzu" (`Wallet`).
+
+### Notes
+
+- Çekler için kullanılan endpoint Spring Page<T> yerine basit List döner — sayfalanması gereken bir liste değil, "yaklaşan 30 gün" ufak bir set.
+- ChequeReminderScheduler bağımsız bir component (CashClosingScheduler ile çakışmıyor; her birinin kendi cron expression'ı).
+- Pasif hesapların **gizlenmesi** zaten WP-3'te yapıldı (default `findByActiveTrueOrderByNameAsc`); WP-5 ile **kullanıcı toggle ile yönetebilir** hale geldi.
+- Backend `mvn compile` BUILD SUCCESS, frontend `next build` TS pass temiz.
+- 8 WP-5 TODO tamamlandı.
+
+### v1.6 acil prod devam · final özet
+
+5/5 WP shipped, 60 TODO COMPLETED:
+
+| Sürüm | WP | Scope | TODO |
+|---|---|---|---|
+| v1.6.18 | WP-1 | DGR Veri Modeli & Migration | 15/15 ✅ |
+| v1.6.19 | WP-2 | Close-of-Day Workflow | 12/12 ✅ |
+| v1.6.20 | WP-3 | İşletme Detay Sayfa Revize + 10 Widget | 15/15 ✅ |
+| v1.6.21 | WP-4 | POS Cihazı Yönetimi v2 | 10/10 ✅ |
+| **v1.6.22** | **WP-5** | **Çek + Hatırlatma + Master Havuz** | **8/8 ✅** |
+
+---
+
 ## [1.6.21] — 2026-05-20
 
 **v1.6 acil prod devam · WP-4 — POS Cihazı Yönetimi v2.** POS cihazı first-class entity'ye yükseldi: full CRUD + per-device last_used_rate cache + tx form auto-fill + POS Kar hesaplama + settled toggle + analytics endpoint + trend chart.

@@ -450,6 +450,13 @@ function CreateDebtModal({
   /** v1.6.5+: RECEIVABLE için ayrı tip seçimi (instrument_type'tan bağımsız). */
   const [receivableType, setReceivableType] = useState<ReceivableType>("NAKIT");
   const [receivableTypeOther, setReceivableTypeOther] = useState("");
+  // v1.6.22 (WP-5): çek özel alanlar (yalnız receivable_type=CEK iken anlamlı)
+  const [chequeDueDate, setChequeDueDate] = useState("");
+  const [chequeCollectorBank, setChequeCollectorBank] = useState("");
+  const [chequeNo, setChequeNo] = useState("");
+  // v1.6.22 (WP-5): hatırlatma alanları (her debt için opsiyonel)
+  const [reminderDate, setReminderDate] = useState("");
+  const [reminderNote, setReminderNote] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [description, setDescription] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
@@ -505,6 +512,15 @@ function CreateDebtModal({
           ? receivableTypeOther.trim()
           : null,
         due_date: dueDate || null,
+        // v1.6.22 (WP-5): çek alanları (yalnız RECEIVABLE+CEK iken gönder)
+        cheque_due_date: isReceivable && receivableType === "CEK" ? (chequeDueDate || null) : null,
+        cheque_collector_bank: isReceivable && receivableType === "CEK"
+          ? (chequeCollectorBank.trim() || null) : null,
+        cheque_no: isReceivable && receivableType === "CEK"
+          ? (chequeNo.trim() || null) : null,
+        // v1.6.22 (WP-5): hatırlatma alanları (her debt için)
+        reminder_date: reminderDate || null,
+        reminder_note: reminderNote.trim() || null,
         description: description.trim() || null,
         document_url: uploadedFiles.length > 0 ? `/files/${uploadedFiles[0].id}` : null,
         admin_only: adminOnly,
@@ -690,6 +706,71 @@ function CreateDebtModal({
               onChange={(e) => setDueDate(e.target.value)}
               className="input"
             />
+          </div>
+
+          {/* v1.6.22 (WP-5): Çek özel alanları — yalnız RECEIVABLE + CEK iken */}
+          {direction === "RECEIVABLE" && receivableType === "CEK" && (
+            <div className="space-y-2 p-3 rounded-xl border border-blue-500/30 bg-blue-500/5">
+              <p className="text-xs font-medium text-blue-300">Çek Bilgileri</p>
+              <div>
+                <label className="label text-xs">Çek Vadesi</label>
+                <input
+                  type="date"
+                  value={chequeDueDate}
+                  onChange={(e) => setChequeDueDate(e.target.value)}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="label text-xs">Tahsil Bankası</label>
+                <input
+                  type="text"
+                  value={chequeCollectorBank}
+                  onChange={(e) => setChequeCollectorBank(e.target.value)}
+                  className="input"
+                  maxLength={120}
+                  placeholder="orn. Akbank Kadıköy"
+                />
+              </div>
+              <div>
+                <label className="label text-xs">Çek No</label>
+                <input
+                  type="text"
+                  value={chequeNo}
+                  onChange={(e) => setChequeNo(e.target.value)}
+                  className="input"
+                  maxLength={64}
+                  placeholder="seri no"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* v1.6.22 (WP-5): Hatırlatma alanları (her debt için opsiyonel) */}
+          <div className="space-y-2 p-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
+            <p className="text-xs font-medium text-amber-300">🔔 Hatırlatma (Opsiyonel)</p>
+            <div>
+              <label className="label text-xs">Hatırlatma Tarihi</label>
+              <input
+                type="date"
+                value={reminderDate}
+                onChange={(e) => setReminderDate(e.target.value)}
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="label text-xs">Hatırlatma Notu</label>
+              <input
+                type="text"
+                value={reminderNote}
+                onChange={(e) => setReminderNote(e.target.value)}
+                className="input"
+                placeholder="orn. Vadeden 3 gun once tahsile ver"
+              />
+            </div>
+            <p className="text-[10px] text-amber-300/70">
+              Cron her sabah 09:00'da bu tarihe gelen hatırlatmaları bildirim olarak yollar.
+            </p>
           </div>
 
           {/* Description */}

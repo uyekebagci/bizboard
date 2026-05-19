@@ -22,7 +22,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Building2, Plus, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
-  ShieldCheck, FileSearch, History, Repeat, CalendarCheck,
+  ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
   Search, X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -45,6 +45,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins },
   { href: "/dashboard/documents",        label: "Belgeler",      icon: FolderOpen },
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users },
+  { href: "/dashboard/cekler",           label: "Cekler",        icon: FileText },
   { href: "/dashboard/inventory",        label: "Envanter",      icon: Package },
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3 },
   { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck },
@@ -65,6 +66,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/admin/my-companies",         label: "Admin: Sirketlerim", icon: Building2,  adminOnly: true },
   { href: "/admin/recurring",            label: "Admin: Recurring",   icon: Repeat,     adminOnly: true },
   { href: "/dashboard/pos-cihazlari/yonetim", label: "Admin: POS Yonetim", icon: CreditCard, adminOnly: true },
+  { href: "/dashboard/hesaplar/havuz",   label: "Admin: Hesap Havuzu", icon: Wallet,    adminOnly: true },
 ];
 
 const SEARCH_THRESHOLD = 10;
