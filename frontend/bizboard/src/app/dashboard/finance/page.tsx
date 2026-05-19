@@ -56,24 +56,52 @@ export default function FinancePage() {
   const [data, setData] = useState<FinanceOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // v1.6.7+: varsayılan en küçük periyot (1 Ay). Daha önce 6 idi.
-  // Kullanıcının seçimi localStorage'a yazılır, bir sonraki ziyarette aktif.
-  const [months, setMonths] = useState<number>(() => {
-    if (typeof window === "undefined") return 1;
+  /**
+   * v1.6.15+: dönem modu — "daily" yeni default (Bugün). "1 Ay" / "3 Ay" / ... eski
+   * monthly mod. localStorage: bizboard.preferences.financePeriod
+   *  - "daily"  → ?days=1 (current_period = bugün)
+   *  - "1m"     → ?months=1
+   *  - "3m"     → ?months=3
+   *  - "6m"     → ?months=6
+   *  - "1y"     → ?months=12
+   *  - "all"    → ?months=0
+   */
+  type PeriodChoice = "daily" | "1m" | "3m" | "6m" | "1y" | "all";
+  const [period, setPeriod] = useState<PeriodChoice>(() => {
+    if (typeof window === "undefined") return "daily";
     try {
-      const raw = window.localStorage.getItem("bizboard.preferences.financeMonths");
-      const n = raw == null ? NaN : Number(raw);
-      if (Number.isFinite(n) && [0, 1, 3, 6, 12].includes(n)) return n;
+      const raw = window.localStorage.getItem("bizboard.preferences.financePeriod");
+      if (raw && ["daily", "1m", "3m", "6m", "1y", "all"].includes(raw)) {
+        return raw as PeriodChoice;
+      }
+      // v1.6.7 geri uyum: eski financeMonths anahtarı varsa migrate et.
+      const oldMonths = window.localStorage.getItem("bizboard.preferences.financeMonths");
+      if (oldMonths === "1") return "1m";
+      if (oldMonths === "3") return "3m";
+      if (oldMonths === "6") return "6m";
+      if (oldMonths === "12") return "1y";
+      if (oldMonths === "0") return "all";
     } catch {}
-    return 1;
+    return "daily";
   });
   const [activeTab, setActiveTab] = useState<"overview" | "cashflow" | "categories" | "businesses">("overview");
 
-  function persistMonths(next: number) {
-    setMonths(next);
+  function persistPeriod(next: PeriodChoice) {
+    setPeriod(next);
     try {
-      window.localStorage.setItem("bizboard.preferences.financeMonths", String(next));
+      window.localStorage.setItem("bizboard.preferences.financePeriod", next);
     } catch {}
+  }
+
+  function periodQueryString(p: PeriodChoice): string {
+    switch (p) {
+      case "daily": return "days=1";
+      case "1m":   return "months=1";
+      case "3m":   return "months=3";
+      case "6m":   return "months=6";
+      case "1y":   return "months=12";
+      case "all":  return "months=0";
+    }
   }
 
   useEffect(() => {
@@ -82,7 +110,9 @@ export default function FinancePage() {
       if (data) setRefreshing(true);
       else setLoading(true);
       try {
-        const result = await api.get<FinanceOverview>(`/finance/overview?months=${months}`);
+        const result = await api.get<FinanceOverview>(
+          `/finance/overview?${periodQueryString(period)}`,
+        );
         setData(result);
       } catch (err) {
         logger.error("api", "Finance overview fetch failed", undefined, err);
@@ -92,7 +122,7 @@ export default function FinancePage() {
       }
     }
     fetchData();
-  }, [months]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [period]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading && !data) return <FinanceSkeleton />;
   if (!data) return <EmptyState />;
@@ -116,21 +146,22 @@ export default function FinancePage() {
             <p className="text-surface-400 text-sm mt-0.5">Detayli finansal analiz ve raporlar</p>
           </div>
         </div>
-        {/* Dönem Seçici */}
+        {/* Dönem Seçici (v1.6.15+: 'Bugun' default) */}
         <div className="flex bg-surface-800 rounded-xl p-1 gap-0.5">
           {([
-            { value: 1, label: "1 Ay" },
-            { value: 3, label: "3 Ay" },
-            { value: 6, label: "6 Ay" },
-            { value: 12, label: "1 Yil" },
-            { value: 0, label: "Tumu" },
+            { value: "daily", label: "Bugun" },
+            { value: "1m",    label: "1 Ay" },
+            { value: "3m",    label: "3 Ay" },
+            { value: "6m",    label: "6 Ay" },
+            { value: "1y",    label: "1 Yil" },
+            { value: "all",   label: "Tumu" },
           ] as const).map(({ value, label }) => (
             <button
               key={value}
-              onClick={() => persistMonths(value)}
+              onClick={() => persistPeriod(value)}
               className={cn(
                 "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-                months === value
+                period === value
                   ? "bg-brand-600 text-white"
                   : "text-surface-400 hover:text-white"
               )}
@@ -220,7 +251,7 @@ export default function FinancePage() {
 
       {/* Tab İçerikleri */}
       <div className={cn("transition-opacity duration-200", refreshing ? "opacity-40 pointer-events-none" : "opacity-100")}>
-        {activeTab === "overview" && <OverviewTab data={data} />}
+        {activeTab === "overview" && <OverviewTab data={data} dailyMode={period === "daily"} />}
         {activeTab === "cashflow" && <CashFlowTab data={data} />}
         {activeTab === "categories" && <CategoriesTab data={data} />}
         {activeTab === "businesses" && <BusinessesTab data={data} />}
@@ -280,11 +311,15 @@ function SummaryCard({
 // ═══════════════════════════════════════════════════════════════════════
 // TAB: Genel Bakış
 // ═══════════════════════════════════════════════════════════════════════
-function OverviewTab({ data }: { data: FinanceOverview }) {
+function OverviewTab({ data, dailyMode }: { data: FinanceOverview; dailyMode: boolean }) {
   return (
     <div className="space-y-4">
-      {/* Aylık Trend Chart */}
-      <MonthlyTrendChart trend={data.monthly_trend} />
+      {/* v1.6.15+: daily mod'da günlük bar chart (son 30 gün), monthly mod'da aylık trend */}
+      {dailyMode ? (
+        <DailyTrendChart cashFlow={data.daily_cash_flow ?? []} />
+      ) : (
+        <MonthlyTrendChart trend={data.monthly_trend} />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* En Yüksek Giderler */}
@@ -387,6 +422,79 @@ function MonthlyTrendChart({ trend }: { trend: FinanceMonthData[] }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Günlük Trend Chart (v1.6.15+) ──────────────────────────────────────
+function DailyTrendChart({ cashFlow }: { cashFlow: DailyCashFlowData[] }) {
+  if (cashFlow.length === 0) {
+    return (
+      <div className="card p-5 text-center text-sm text-surface-400">
+        Henuz gunluk veri yok.
+      </div>
+    );
+  }
+
+  // Son 30 günü göster (data zaten 30+ gün, ama tutmak gerekirse slice).
+  const days = cashFlow.slice(-30);
+  const maxVal = Math.max(
+    ...days.map((d) => Math.max(d.income, d.expense)),
+    1,
+  );
+
+  return (
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-bold text-white">Gunluk Gelir / Gider (son 30 gun)</h3>
+        <div className="flex items-center gap-4 text-[10px] font-medium">
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm bg-green-500" /> Gelir
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm bg-red-400" /> Gider
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-end gap-0.5 h-40">
+        {days.map((d, idx) => {
+          const incomeH = (d.income / maxVal) * 100;
+          const expenseH = (d.expense / maxVal) * 100;
+          const isProfit = d.net >= 0;
+          return (
+            <div key={idx} className="flex-1 flex flex-col items-center group relative min-w-0">
+              {/* Tooltip */}
+              <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
+                <div className="bg-surface-800 text-white rounded-lg p-2.5 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
+                  <p className="font-bold mb-1">{formatDate(d.date)}</p>
+                  <p className="text-green-400">Gelir: {formatCurrency(d.income)}</p>
+                  <p className="text-red-400">Gider: {formatCurrency(d.expense)}</p>
+                  <p className={isProfit ? "text-green-400" : "text-red-400"}>
+                    Net: {formatCurrency(d.net)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="w-full flex gap-px items-end h-36">
+                <div
+                  className="flex-1 bg-green-500 rounded-t-sm transition-all duration-500 min-h-[1px]"
+                  style={{ height: `${Math.max(incomeH, 1)}%` }}
+                />
+                <div
+                  className="flex-1 bg-red-400 rounded-t-sm transition-all duration-500 min-h-[1px]"
+                  style={{ height: `${Math.max(expenseH, 1)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 flex justify-between text-[10px] text-surface-400">
+        <span>{formatDate(days[0].date)}</span>
+        <span>{formatDate(days[days.length - 1].date)}</span>
       </div>
     </div>
   );

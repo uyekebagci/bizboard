@@ -34,6 +34,39 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.15] — 2026-05-20
+
+**v1.6 ACİL PROD WP — Finance Center daily bucket + 'Bugun' preset.** `/finance` artık varsayılan olarak günlük modda; trend grafiği son 30 günün gün-gün bar chart'i; periyot selector'a "Bugun" eklendi.
+
+> v1.6.14 numarası atlandı — QuickActions widget kaldırma TODO'su v1.6.13'e dahil edilmişti.
+
+### Added
+
+#### Backend
+- **`GET /finance/overview`** yeni opsiyonel `?days=N` query param:
+  - Set ise `current_period` = today-(N-1)..today; `previous_period` = aynı uzunlukta öncesi
+  - Set ise `monthly_trend` boş döner — frontend `daily_cash_flow` üzerinden günlük chart render eder
+  - Set ise `daily_cash_flow` window'u max(N, 30) güne genişler
+  - `?months=N` kullanan eski istemciler etkilenmez (backward compatible)
+
+#### Frontend
+- **`/dashboard/finance` period selector** — 6 buton: **Bugun** / 1 Ay / 3 Ay / 6 Ay / 1 Yil / Tumu. Default: "Bugun".
+- **`DailyTrendChart` (yeni)** — `data.daily_cash_flow`'dan son 30 günü gelir/gider bar chart olarak render eder; hover tooltip (tarih, gelir, gider, net); x-ekseni başlangıç+bitiş tarihleri.
+- **`OverviewTab.dailyMode` prop** — `dailyMode === true` ise `DailyTrendChart`, değilse mevcut `MonthlyTrendChart`.
+
+### Changed
+
+#### Frontend
+- **localStorage key migration**: eski `bizboard.preferences.financeMonths` ("1"/"3"/"6"/"12"/"0") → yeni `bizboard.preferences.financePeriod` ("daily"/"1m"/"3m"/"6m"/"1y"/"all"). İlk açılışta otomatik migrate edilir.
+
+### Notes
+
+- Backend + frontend build temiz.
+- TODO `c7437327` kapatıldı — finance center daily bucket + "Bugun" default.
+- Donut / category breakdown ve karşılaştırma tabloları `current_period`'a göre veri çekiyor; "Bugun" seçili iken bunlar zaten "bugünün kırılımı" haline gelir (backend periyot kontrolü ile).
+
+---
+
 ## [1.6.13] — 2026-05-20
 
 **v1.6 ACİL PROD WP — Hamburger Sidebar + QuickActions widget kaldırıldı.** Tüm kısayollar artık tek alfabetik (TR locale) panelde; Cmd/Ctrl+B aç/kapat; 10+ item olduğunda arama input'u aktif; desktop'ta persistent 240px, mobile + tablet'te off-canvas overlay.
