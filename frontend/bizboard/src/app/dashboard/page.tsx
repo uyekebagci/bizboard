@@ -5,6 +5,7 @@ import { PortfolioCard } from "@/components/dashboard/PortfolioCard";
 import { StatsRow } from "@/components/dashboard/StatsRow";
 import { GroupedBusinessGrid } from "@/components/dashboard/groups/GroupedBusinessGrid";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { CarryOverBanner } from "@/components/closing/CarryOverBanner";
 // v1.6.14: QuickActions kısayolları sidebar'a taşındı — widget kaldırıldı.
 import { DebtWidget } from "@/components/dashboard/DebtWidget";
 import { AlertsWidget } from "@/components/dashboard/AlertsWidget";
@@ -96,6 +97,9 @@ export default function DashboardPage() {
           ))}
         </div>
       </section>
+
+      {/* v1.6.19 (WP-2): 'Dünden Kalan Eksik' banner — yalnız önceki günde fark varsa */}
+      <CarryOverBanner />
 
       {/* Portfolio (50%) + Stats 2x2 (50%) */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">

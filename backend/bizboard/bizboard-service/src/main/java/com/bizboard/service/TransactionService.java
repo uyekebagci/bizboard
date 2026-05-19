@@ -123,6 +123,11 @@ public class TransactionService {
         String pm = normalizePaymentMethod(request.getPaymentMethod());
         java.math.BigDecimal posRate = "POS".equals(pm) ? request.getPosRate() : null;
 
+        // v1.6.19 (WP-2): backdated tespiti — tx tarihi bugünden önce ise işaretle.
+        // Audit log highlight=BACKDATED ile rapor edilir.
+        boolean backdated = request.getDate() != null
+                && request.getDate().isBefore(java.time.LocalDate.now());
+
         Transaction transaction = Transaction.builder()
                 .business(business)
                 .direction(TransactionDirection.valueOf(request.getDirection().toUpperCase(java.util.Locale.ENGLISH)))
@@ -133,6 +138,7 @@ public class TransactionService {
                 .category(category)
                 .paymentMethod(pm)
                 .posRate(posRate)
+                .backdated(backdated)
                 .tags(request.getTags())
                 .metadata(request.getMetadata())
                 .createdBy(user)
@@ -153,15 +159,19 @@ public class TransactionService {
                 AuditAction.TRANSACTION_CREATE,
                 user.getId(), user.getUsername(),
                 "TRANSACTION", transaction.getId(),
-                business.getName() + " — " + transaction.getDirection() + " " + transaction.getAmount() + " " + transaction.getCurrency(),
+                business.getName() + " — " + transaction.getDirection() + " " + transaction.getAmount() + " " + transaction.getCurrency()
+                        + (backdated ? " [BACKDATED " + request.getDate() + "]" : ""),
                 Map.of(
                         "businessId", businessId,
                         "amount", transaction.getAmount(),
                         "direction", transaction.getDirection().name(),
                         "currency", transaction.getCurrency(),
                         "date", transaction.getDate().toString(),
-                        "categoryId", transaction.getCategory() != null ? transaction.getCategory().getId() : "null"
-                ));
+                        "categoryId", transaction.getCategory() != null ? transaction.getCategory().getId() : "null",
+                        "backdated", backdated
+                ),
+                // v1.6.19 (WP-2): backdated tx için UI rozet/renk için highlight set.
+                backdated ? AuditAction.HIGHLIGHT_BACKDATED : null);
 
         return DtoMapper.toTransactionDto(transaction);
     }
@@ -249,6 +259,12 @@ public class TransactionService {
             }
         }
 
+        // v1.6.19 (WP-2): Tx PATCH olduğunda corrected=true + audit highlight=CORRECTION.
+        // Yalnız gerçekten değişen alan varsa işaretle (no-op update'lerde corrected aktif olmasın).
+        if (!changes.isEmpty()) {
+            transaction.setCorrected(true);
+        }
+
         transaction = transactionRepository.save(transaction);
 
         Map<String, Object> meta = new HashMap<>();
@@ -264,7 +280,9 @@ public class TransactionService {
                 "TRANSACTION", transaction.getId(),
                 transaction.getBusiness().getName() + " — islem guncellendi (" + changes.size() + " alan): "
                         + transaction.getAmount() + " " + transaction.getCurrency(),
-                meta);
+                meta,
+                // v1.6.19 (WP-2): değişiklik varsa CORRECTION highlight.
+                changes.isEmpty() ? null : AuditAction.HIGHLIGHT_CORRECTION);
 
         TransactionDto dto = DtoMapper.toTransactionDto(transaction);
         dto.setBusinessName(transaction.getBusiness().getName());

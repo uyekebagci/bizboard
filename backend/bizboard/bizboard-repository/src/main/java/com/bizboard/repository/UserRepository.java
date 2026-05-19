@@ -11,4 +11,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
 
     Optional<User> findByUsername(String username);
+
+    /** v1.6.19 (WP-2): Cron bildirim hedef seçimi (case-insensitive 'admin'). */
+    java.util.List<User> findByRoleIgnoreCase(String role);
 }

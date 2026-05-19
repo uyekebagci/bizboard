@@ -34,6 +34,57 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.19] — 2026-05-20
+
+**v1.6 acil prod devam · WP-2 — Close-of-Day Workflow.** Günlük kasa kapanışı: manuel kapama + cron 20:00 otomatik. Physical sayım, fark hesabı, reason kategori, açıklama. Önceki günün hesaplanan kapanışı bugünün açılışı (carry-over kuralı). Backdated tx + correction tx audit highlight'ları. WP-1 cash_closing migration üstüne inşa edildi.
+
+### Added
+
+#### Backend
+- **`ClosingCalculator` service** — `getOpeningBalance(date)` (önceki günün computed_closing'i veya 0), `sumCashFlowForDate(date)` (yalnız `paymentMethod=NAKIT` tx'ler), `computeClosing(date)`. Tek-kasa modeli — POS işlemleri cash_closing'i etkilemez.
+- **`CashClosingService`:**
+  - `closeToday(actualBalance, reasonCategory?, reasonNote?)` — manuel kapama; fark hesaplanır; idempotency (zaten CLOSED ise IllegalStateException → 409); reason `LOSS/MIS_ENTRY/ROUNDING/OTHER` normalize.
+  - `autoCloseToday()` — cron için; actualBalance=null, is_auto=true; bildirim ile birlikte tetiklenir.
+  - `reopen(closingId, reasonNote)` — admin-only; `SecurityException` aksi takdirde; reason_note ek olarak append; audit highlight=CLOSING_REOPEN.
+  - `getTodayPreview()` — real-time computed (kapatılmamışken UI için).
+  - `getYesterday()` — Dünden Kalan Eksik widget'ı için.
+- **`CashClosingController`** (`/closings`):
+  - `GET /` paginated (PagedResponseDto envelope).
+  - `GET /today`, `GET /yesterday`, `GET /preview`.
+  - `POST /today` (409 zaten kapalı ise).
+  - `POST /{closingId}/reopen` (admin).
+- **`CashClosingScheduler`** (`@EnableScheduling` zaten aktif):
+  - `0 30 19 * * *` Europe/Istanbul — 19:30 reminder: bugün CLOSED değilse tüm admin'lere `NotificationType.WARNING` push.
+  - `0 0 20 * * *` Europe/Istanbul — 20:00 auto-close + tüm admin'lere `NotificationType.INFO` push.
+- **`UserRepository.findByRoleIgnoreCase`** — admin bildirim hedefi seçimi için.
+- **`TransactionRepository.findByDate`** — ClosingCalculator için (tek-tenant, business filtresi yok).
+- **`AuditLogService.recordEntityAction` overload** — `highlightType` parametresi opsiyonel.
+- **`AuditAction` yeni sabitler:** `CASH_CLOSING_CLOSED`, `CASH_CLOSING_AUTO_CLOSED`, `CASH_CLOSING_REOPENED`, `HIGHLIGHT_BACKDATED`, `HIGHLIGHT_CORRECTION`, `HIGHLIGHT_CLOSING_REOPEN`, `HIGHLIGHT_POS_RATE_OVERRIDE`.
+- **DTOs:** `CashClosingDto`, `CloseTodayRequest`, `ReopenClosingRequest` (snake_case JsonProperty).
+
+#### Frontend
+- **`types/index.ts`** — `CashClosingStatus`, `CashClosingReason`, `CashClosing`, `CashClosingPreview` tipleri.
+- **`hooks/useCashClosing`** — preview + today/yesterday + paginated list + closeToday + reopen mutations.
+- **`components/closing/CloseTodayModal`** — hesaplanan readonly büyük yazı + physical sayım input + canlı fark (kırmızı/yeşil/nötr) + reason chip grid (fark != 0 ise zorunlu) + açıklama (fark varsa zorunlu) + 409 handling.
+- **`components/closing/CarryOverBanner`** — dünün farkı != 0 ise dashboard'da üstte gösterilir. Link `/dashboard/kapanislar`.
+- **`/dashboard/kapanislar`** sayfası — bugünün preview kartı (kapatılmamışsa "Günü Kapat" butonu) + paginated arşiv liste + status badge'leri (KAPALI/OTO KAPALI/YENİDEN AÇILDI) + difference rozeti + reason özetleri.
+- **Sidebar** — yeni link "Kapanislar" (`CalendarCheck` ikon).
+- **Dashboard ana sayfa** — `<CarryOverBanner />` `<PortfolioCard>` üstüne eklendi.
+
+### Changed
+
+#### Backend
+- **`TransactionService.createTransaction`** — `request.getDate() < LocalDate.now()` ise `Transaction.backdated=true` set + audit `highlight=BACKDATED`. Detail mesajına `[BACKDATED <date>]` eki.
+- **`TransactionService.updateTransaction`** — gerçek değişiklik varsa (`changes.size() > 0`) `Transaction.corrected=true` + audit `highlight=CORRECTION`.
+
+### Notes
+
+- Cron Europe/Istanbul timezone'unda; tek-instance varsayıldı. Multi-instance deploy için cron lock (ShedLock) ileride gerekir.
+- Backend compile: BUILD SUCCESS. Frontend `next build` TypeScript pass temiz.
+- WP-2 12 TODO tamamlandı.
+
+---
+
 ## [1.6.18] — 2026-05-20
 
 **v1.6 acil prod devam · WP-1 — DGR Veri Modeli & Migration.** DGR (tek-tenant + Excel→sistem geçişi) için tüm veri modeli foundation'ı. 15 migration; WP-2/3/4/5 buna bağımlı. Saf entity / enum / repository ekleme — service/controller değişikliği yok. Hibernate `ddl-auto=update` mevcut tablolara yeni kolon/yeni tablo ekler.

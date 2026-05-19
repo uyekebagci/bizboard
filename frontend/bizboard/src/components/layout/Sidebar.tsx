@@ -22,7 +22,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Building2, Plus, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
-  ShieldCheck, FileSearch, History, Repeat,
+  ShieldCheck, FileSearch, History, Repeat, CalendarCheck,
   Search, X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -47,6 +47,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users },
   { href: "/dashboard/inventory",        label: "Envanter",      icon: Package },
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3 },
+  { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck },
   { href: "/dashboard/businesses",       label: "Isletmeler",    icon: Building2 },
   { href: "/dashboard/add",              label: "Isletme Ekle",  icon: Plus },
   { href: "/dashboard/add-transaction",  label: "Islem Ekle",    icon: Receipt },
