@@ -80,6 +80,32 @@ public class Debt {
     @Column(name = "receivable_type_other", length = 120)
     private String receivableTypeOther;
 
+    /**
+     * v1.7.0 (WP-1): Çek vadesi (receivable_type=CEK için anlamlı).
+     * dueDate ile karıştırılmamalı — çek özelinde tahsil tarihidir.
+     */
+    @Column(name = "cheque_due_date")
+    private LocalDate chequeDueDate;
+
+    /** v1.7.0 (WP-1): Çeki tahsile veren banka adı. */
+    @Column(name = "cheque_collector_bank", length = 120)
+    private String chequeCollectorBank;
+
+    /** v1.7.0 (WP-1): Çek seri numarası. */
+    @Column(name = "cheque_no", length = 64)
+    private String chequeNo;
+
+    /**
+     * v1.7.0 (WP-1): Hatırlatma tarihi. Cron her sabah 09:00
+     * reminder_date == today olan borç kayıtları için bildirim gönderir.
+     */
+    @Column(name = "reminder_date")
+    private LocalDate reminderDate;
+
+    /** v1.7.0 (WP-1): Hatırlatma notu (kullanıcı serbest metni). */
+    @Column(name = "reminder_note", columnDefinition = "TEXT")
+    private String reminderNote;
+
     /** Vade tarihi */
     @Column(name = "due_date")
     private LocalDate dueDate;

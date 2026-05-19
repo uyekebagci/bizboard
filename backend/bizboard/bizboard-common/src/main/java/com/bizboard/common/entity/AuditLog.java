@@ -67,6 +67,13 @@ public class AuditLog {
     @Column(length = 1024)
     private String detail;
 
+    /**
+     * v1.7.0 (WP-1): Audit kaydının görsel vurgu tipi. UI rozet/renk için.
+     * Değerler: BACKDATED / CORRECTION / CLOSING_REOPEN / POS_RATE_OVERRIDE / null.
+     */
+    @Column(name = "highlight_type", length = 32)
+    private String highlightType;
+
     /** Schemaless extra metadata for future use without migrations. */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")

@@ -34,6 +34,65 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.7.0] — 2026-05-20
+
+**v1.6 acil prod devam · WP-1 — DGR Veri Modeli & Migration.** DGR (tek-tenant + Excel→sistem geçişi) için tüm veri modeli foundation'ı. 15 migration; WP-2/3/4/5 buna bağımlı. Saf entity / enum / repository ekleme — service/controller değişikliği yok. Hibernate `ddl-auto=update` mevcut tablolara yeni kolon/yeni tablo ekler.
+
+### Added — Yeni Entity'ler
+
+#### Backend
+- **`SystemSetting`** (`system_setting`) — anahtar-değer ayar tablosu. PK: `setting_key` (VARCHAR 128). Sabit `KEY_TENANT_BUSINESS_ID = "tenant.single_business_id"`. `SystemSettingBootGuard` ApplicationRunner boot'ta NULL/blank ise WARNING log.
+- **`BankAccount`** (`bank_accounts`) — banka hesabı / kasa. Alanlar: name, type (BankAccountType enum), bank_name, iban, currency (default TRY), holder_person FK (Counterpart, CASH_HOLDER tipi için), current_balance, is_active (default true), notes, created_at, updated_at.
+- **`PosDevice`** (`pos_devices`) — POS cihazı. Alanlar: name, owner_counterpart FK, bank_name, default_rate (NUMERIC 5,2), last_used_rate, is_active (default true), notes, created_at, updated_at.
+- **`CashClosing`** (`cash_closings`) — günlük kapanış. UNIQUE constraint closing_date'te. Alanlar: closing_date, opening_balance, computed_closing, actual_balance (PENDING'de null), difference, status (CashClosingStatus enum), is_auto, closed_at, closed_by, reason_category (LOSS/MIS_ENTRY/ROUNDING/OTHER sabitler), reason_note.
+
+### Added — Yeni Enum'lar
+
+- **`CounterpartKind`** — `PERSON` / `FIRM`. Varlık tipi (`CounterpartRole` ile karıştırılmamalı; role = iş ilişkisi).
+- **`BankAccountType`** — `CHECKING` / `SAVINGS` / `CASH` / `CASH_HOLDER`.
+- **`CashClosingStatus`** — `PENDING` / `CLOSED` / `REOPENED`.
+
+### Added — Yeni Repository'ler
+
+- **`SystemSettingRepository`**
+- **`BankAccountRepository`** — `findByActiveTrueOrderByNameAsc`, `findByActiveTrueAndTypeOrderByNameAsc`, `findAllByOrderByActiveDescNameAsc`, `countByHolderPersonId`.
+- **`PosDeviceRepository`** — `findByActiveTrueOrderByNameAsc`, `findAllByOrderByActiveDescNameAsc`, `countByOwnerCounterpartId`.
+- **`CashClosingRepository`** — `findByClosingDate` (UNIQUE lookup), `findByStatusOrderByClosingDateDesc`, `findByClosingDateBetweenOrderByClosingDateAsc`, `findFirstByOrderByClosingDateDesc`.
+
+### Changed — Mevcut Entity'lere Yeni Alanlar
+
+#### `Counterpart`
+- `kind` (CounterpartKind, NOT NULL, default FIRM) — mevcut kayıtlar otomatik FIRM olur.
+- `parent` (Counterpart self FK, nullable) — alt-firma hiyerarşisi. Tree depth maks 2; uygulama katmanı kuralı.
+
+#### `Transaction`
+- `targetCounterpart` (Counterpart FK, nullable) — işlemin karşı tarafı. Tek-tenant'ta business sabit, kullanıcı counterpart seçer.
+- `backdated` (boolean, default false) — geriye dönük girildi mi.
+- `corrected` (boolean, default false) — başka bir tx'in düzeltmesi sonucu oluştu mu.
+- `correctionOfTxId` (UUID, nullable) — düzeltilen orijinal tx id.
+- `appliedPosRate` (NUMERIC 5,2, nullable) — tx anındaki POS oranı snapshot. Cihazın oranı sonra değişse bile bu sabit kalır.
+- `posDevice` (PosDevice FK, nullable) — payment_method=POS olan tx'ler bu alanı doldurur.
+- `posSettled` (Boolean, nullable) — null=nakit/non-POS, false=henüz hesaba düşmedi, true=düştü. Excel'deki "POS ÇEKİM HESABA GELECEK OLAN" mantığı.
+
+#### `Debt`
+- `chequeDueDate` (LocalDate, nullable) — çek vadesi (`receivable_type=CEK` için).
+- `chequeCollectorBank` (VARCHAR 120, nullable) — çeki tahsile veren banka.
+- `chequeNo` (VARCHAR 64, nullable) — çek seri numarası.
+- `reminderDate` (LocalDate, nullable) — hatırlatma tarihi. Cron 09:00'da bu güne eşit olanlar için bildirim.
+- `reminderNote` (TEXT, nullable) — hatırlatma serbest metni.
+
+#### `AuditLog`
+- `highlightType` (VARCHAR 32, nullable) — UI rozet/renk vurgusu. Değerler: BACKDATED / CORRECTION / CLOSING_REOPEN / POS_RATE_OVERRIDE / null.
+
+### Notes
+
+- Hibernate `ddl-auto=update` mevcut tablolara yeni kolon ekler; yeni tablolar (`system_setting`, `bank_accounts`, `pos_devices`, `cash_closings`) otomatik oluşur. Production'da `ddl-auto=validate` ile ilerlenirse Flyway/manuel migration gerekir.
+- `@ColumnDefault` annotation'ları mevcut satırların NOT NULL bool alanlarda otomatik doğru default'a düşmesini sağlar (`Counterpart.kind='FIRM'`, `Transaction.backdated=false`, `BankAccount.active=true`, vs.).
+- WP-1 saf data model — service/controller değişikliği yok. WP-2 (Close-of-Day Workflow), WP-3 (İşletme Detay Revize), WP-4 (POS Cihazı Yönetimi v2), WP-5 (Çek + Hatırlatma + Master Havuz) bu foundation üstünde inşa edilir.
+- Backend `mvn -DskipTests compile` BUILD SUCCESS. Frontend etkilenmedi.
+
+---
+
 ## [1.6.17] — 2026-05-20
 
 **UI polish — sidebar sabit + tek logo + herkese version badge.**
