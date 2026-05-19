@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * v1.7.0 (WP-1): Günlük kasa kapanışı repository.
+ * v1.6.18 (WP-1): Günlük kasa kapanışı repository.
  */
 public interface CashClosingRepository extends JpaRepository<CashClosing, UUID> {
 

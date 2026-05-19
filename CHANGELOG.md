@@ -34,7 +34,7 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
-## [1.7.0] — 2026-05-20
+## [1.6.18] — 2026-05-20
 
 **v1.6 acil prod devam · WP-1 — DGR Veri Modeli & Migration.** DGR (tek-tenant + Excel→sistem geçişi) için tüm veri modeli foundation'ı. 15 migration; WP-2/3/4/5 buna bağımlı. Saf entity / enum / repository ekleme — service/controller değişikliği yok. Hibernate `ddl-auto=update` mevcut tablolara yeni kolon/yeni tablo ekler.
 

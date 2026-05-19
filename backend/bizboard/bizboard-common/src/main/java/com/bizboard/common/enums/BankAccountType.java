@@ -1,7 +1,7 @@
 package com.bizboard.common.enums;
 
 /**
- * v1.7.0 (WP-1): Banka hesap tipi.
+ * v1.6.18 (WP-1): Banka hesap tipi.
  *
  * <ul>
  *   <li>{@link #CHECKING} — Vadesiz hesap</li>

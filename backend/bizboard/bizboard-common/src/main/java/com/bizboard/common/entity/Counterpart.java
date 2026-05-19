@@ -52,7 +52,7 @@ public class Counterpart {
     private CounterpartRole role = CounterpartRole.OTHER;
 
     /**
-     * v1.7.0 (WP-1): Varlık tipi — PERSON (gerçek kişi) veya FIRM (tüzel kişi).
+     * v1.6.18 (WP-1): Varlık tipi — PERSON (gerçek kişi) veya FIRM (tüzel kişi).
      * `role` (CUSTOMER/SUPPLIER/BOTH/OTHER) iş ilişkisini; `kind` (PERSON/FIRM) varlık
      * tipini tanımlar. Mevcut kayıtlar default FIRM olur (DGR senaryosunda doğru).
      */
@@ -63,7 +63,7 @@ public class Counterpart {
     private CounterpartKind kind = CounterpartKind.FIRM;
 
     /**
-     * v1.7.0 (WP-1): Alt-firma hiyerarşisi. Bir firma başka bir firmanın altında
+     * v1.6.18 (WP-1): Alt-firma hiyerarşisi. Bir firma başka bir firmanın altında
      * olabilir (örn. holding → bağlı şirket). Tree depth maks 2 — uygulama
      * katmanında zorlanır.
      */

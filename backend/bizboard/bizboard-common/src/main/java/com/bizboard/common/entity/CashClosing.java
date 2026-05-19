@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * v1.7.0 (WP-1): Günlük kasa kapanışı.
+ * v1.6.18 (WP-1): Günlük kasa kapanışı.
  *
  * <p>Her takvim günü için bir kayıt (UNIQUE closing_date). Sistem cron ile gün
  * sonu otomatik kayıt açar (status=PENDING); kullanıcı physical sayım sonucu

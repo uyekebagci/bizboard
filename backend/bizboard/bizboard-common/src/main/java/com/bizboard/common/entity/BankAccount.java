@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * v1.7.0 (WP-1): Banka hesabı / kasa varlığı.
+ * v1.6.18 (WP-1): Banka hesabı / kasa varlığı.
  *
  * <p>Tek-tenant (DGR) modelinde işletmeye bağlı değil — sistem genelinde
  * tek bir liste. {@code type=CASH_HOLDER} ise {@code holderPerson} doldurulmalı
@@ -70,7 +70,7 @@ public class BankAccount {
     private BigDecimal currentBalance = BigDecimal.ZERO;
 
     /**
-     * v1.7.0 (WP-1): Master havuzu için aktiflik flag'i. Pasif hesaplar
+     * v1.6.18 (WP-1): Master havuzu için aktiflik flag'i. Pasif hesaplar
      * varsayılan listelerden gizlenir; "göster" toggle'ı ile görünür kalır.
      */
     @Column(name = "is_active", nullable = false)

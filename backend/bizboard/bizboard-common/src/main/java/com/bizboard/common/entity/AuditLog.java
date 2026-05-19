@@ -68,7 +68,7 @@ public class AuditLog {
     private String detail;
 
     /**
-     * v1.7.0 (WP-1): Audit kaydının görsel vurgu tipi. UI rozet/renk için.
+     * v1.6.18 (WP-1): Audit kaydının görsel vurgu tipi. UI rozet/renk için.
      * Değerler: BACKDATED / CORRECTION / CLOSING_REOPEN / POS_RATE_OVERRIDE / null.
      */
     @Column(name = "highlight_type", length = 32)

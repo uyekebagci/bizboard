@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * v1.7.0 (WP-1): POS device repository.
+ * v1.6.18 (WP-1): POS device repository.
  */
 public interface PosDeviceRepository extends JpaRepository<PosDevice, UUID> {
 
