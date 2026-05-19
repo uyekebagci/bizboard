@@ -1,18 +1,19 @@
 "use client";
 
 /**
- * v1.6.13: Hamburger sidebar — tüm kısayollar tek alfabetik liste.
+ * v1.6.13+: Hamburger sidebar — tüm kısayollar tek alfabetik liste.
+ * v1.6.17+: Desktop'ta her zaman **sabit** (collapse yok). TopBar'dan logo
+ * kaldırıldığı için marka adı + version yalnız burada görünür.
  *
  * Davranış:
- *  - Desktop (≥lg): persistent sol panel (240px); açık/kapalı kullanıcı tercihi
- *    `bizboard.preferences.sidebarOpen` localStorage'da
- *  - Mobile + tablet (<lg): off-canvas overlay; backdrop click veya item click ile kapanır
- *  - Klavye: Cmd/Ctrl+B aç/kapat
+ *  - Desktop (≥lg): persistent sol panel (240px), collapse yok
+ *  - Mobile + tablet (<lg): off-canvas overlay; backdrop click / item click ile kapanır
+ *  - Klavye: Cmd/Ctrl+B → mobile overlay aç/kapat (desktop'ta no-op)
  *  - 10+ item olduğunda arama input'u görünür (`Intl.Collator("tr")` ile filter)
  *  - SidebarItem: icon + label + active state + (opsiyonel) count badge
- *  - Sıralama: alfabetik (TR locale, "ç" "c"den sonra, "i" / "ı" doğru ayrım)
- *
- * Admin item'lar yalnız `profile?.role === "admin"` iken görünür.
+ *  - Sıralama: alfabetik (TR locale)
+ *  - Admin item'lar yalnız `profile?.role === "admin"` iken görünür
+ *  - Version etiketi (header altında) tüm kullanıcılarda görünür
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -21,14 +22,13 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Building2, Plus, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
-  ShieldCheck, FileSearch, History, Repeat, ChevronLeft, Menu,
+  ShieldCheck, FileSearch, History, Repeat,
   Search, X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-
-const STORAGE_KEY = "bizboard.preferences.sidebarOpen";
+import { formatVersion } from "@/lib/version";
 
 interface SidebarLink {
   href: string;
@@ -75,28 +75,15 @@ interface Props {
 export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
   const profile = useAppStore((s) => s.profile);
   const pathname = usePathname();
-  const [desktopOpen, setDesktopOpen] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw === "0") return false;
-      if (raw === "1") return true;
-    } catch {}
-    return true;
-  });
   const [query, setQuery] = useState("");
 
-  // Cmd/Ctrl+B toggle (desktop = desktopOpen; mobile = mobileOpen)
+  // Cmd/Ctrl+B → mobile overlay aç/kapat (desktop'ta sidebar zaten sabit, no-op).
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
-        e.preventDefault();
-        if (window.matchMedia("(min-width: 1024px)").matches) {
-          setDesktopOpen((v) => {
-            try { window.localStorage.setItem(STORAGE_KEY, v ? "0" : "1"); } catch {}
-            return !v;
-          });
-        } else {
+        // Yalnız <lg ekranda anlamlı.
+        if (!window.matchMedia("(min-width: 1024px)").matches) {
+          e.preventDefault();
           onMobileOpenChange(!mobileOpen);
         }
       }
@@ -104,13 +91,6 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileOpen, onMobileOpenChange]);
-
-  function toggleDesktop() {
-    setDesktopOpen((v) => {
-      try { window.localStorage.setItem(STORAGE_KEY, v ? "0" : "1"); } catch {}
-      return !v;
-    });
-  }
 
   const visible = useMemo(() => {
     const role = profile?.role;
@@ -126,6 +106,9 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
   }, [profile?.role, query]);
 
   const showSearch = visible.length >= SEARCH_THRESHOLD || query !== "";
+  const versionLabel = process.env.NEXT_PUBLIC_APP_VERSION
+    ? `v${formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}`
+    : null;
 
   return (
     <>
@@ -142,29 +125,39 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
       {/* Sidebar panel */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-[100dvh] bg-surface-900 border-r border-surface-700 transition-transform duration-200 ease-out",
-          "w-60",
-          // mobile/tablet (<lg) off-canvas
+          "fixed top-0 left-0 z-50 h-[100dvh] w-60 bg-surface-900 border-r border-surface-700 transition-transform duration-200 ease-out",
+          // mobile/tablet (<lg): hamburger ile aç-kapat
           mobileOpen ? "translate-x-0" : "-translate-x-full",
+          // desktop (≥lg): her zaman sabit
           "lg:translate-x-0",
-          // desktop persistent: collapse'da daralt
-          !desktopOpen && "lg:w-0 lg:border-r-0",
         )}
         aria-label="Yan menu"
       >
-        <div className={cn("flex flex-col h-full overflow-hidden", !desktopOpen && "lg:hidden")}>
-          {/* Header */}
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Header — logo + marka adı + version badge (herkes görür) */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-surface-700 shrink-0">
             <Link
               href="/dashboard"
               onClick={() => onMobileOpenChange(false)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2.5"
+              aria-label="CATI ana sayfa"
             >
-              <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">C</span>
               </div>
-              <span className="font-bold text-white">CATI</span>
+              <div className="flex flex-col leading-tight">
+                <span className="font-bold text-lg text-white leading-none">CATI</span>
+                {versionLabel && (
+                  <span
+                    className="mt-0.5 text-[10px] text-surface-400 font-mono leading-none tracking-tight"
+                    title="Sürüm"
+                  >
+                    {versionLabel}
+                  </span>
+                )}
+              </div>
             </Link>
+            {/* Mobile-only kapatma */}
             <button
               type="button"
               onClick={() => onMobileOpenChange(false)}
@@ -172,15 +165,6 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
               aria-label="Kapat"
             >
               <X size={16} className="text-surface-300" />
-            </button>
-            <button
-              type="button"
-              onClick={toggleDesktop}
-              className="hidden lg:flex p-1.5 rounded-lg hover:bg-surface-700 transition-colors"
-              aria-label="Sidebar'i daralt"
-              title="Daralt (Cmd/Ctrl+B)"
-            >
-              <ChevronLeft size={16} className="text-surface-300" />
             </button>
           </div>
 
@@ -220,31 +204,8 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
               </ul>
             )}
           </nav>
-
-          {/* Footer hint */}
-          <div className="hidden lg:block px-3 py-2 border-t border-surface-700 shrink-0">
-            <p className="text-[10px] text-surface-500">
-              <kbd className="px-1 py-0.5 rounded bg-surface-800 border border-surface-700 text-surface-400">⌘</kbd>
-              {" + "}
-              <kbd className="px-1 py-0.5 rounded bg-surface-800 border border-surface-700 text-surface-400">B</kbd>
-              {" "}ile ac/kapat
-            </p>
-          </div>
         </div>
       </aside>
-
-      {/* Desktop'ta sidebar kapalıyken küçük "aç" tuşu (kenar bandı) */}
-      {!desktopOpen && (
-        <button
-          type="button"
-          onClick={toggleDesktop}
-          className="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 p-1.5 bg-surface-800 border border-l-0 border-surface-700 rounded-r-md text-surface-300 hover:text-white hover:bg-surface-700"
-          aria-label="Sidebar'i ac"
-          title="Ac (Cmd/Ctrl+B)"
-        >
-          <Menu size={16} />
-        </button>
-      )}
     </>
   );
 }

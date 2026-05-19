@@ -34,6 +34,24 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.17] — 2026-05-20
+
+**UI polish — sidebar sabit + tek logo + herkese version badge.**
+
+### Changed
+
+#### Frontend
+- **`Sidebar`** — desktop'ta artık her zaman sabit (collapse butonu kaldırıldı). Önceki `desktopOpen` state + localStorage `bizboard.preferences.sidebarOpen` + `ChevronLeft`/`Menu` toggle butonları + footer Cmd/Ctrl+B hint'i tamamen kaldırıldı. Mobile/tablet'te hamburger overlay davranışı korunur.
+- **`Sidebar` header** — version badge eklendi (`v1.6.17` gibi). Önceden TopBar'da yalnız admin'e gösteriliyordu; artık **tüm kullanıcılar** sidebar'da görür.
+- **`TopBar`** — logo + marka adı + version satırı kaldırıldı (sidebar'da tek bir yerde tutulur). Yalnız mobile hamburger (≡) ile search/notif/profile menüsü kalır. Logosuz TopBar daha kompakt.
+- **`Sidebar` Cmd/Ctrl+B keyboard shortcut** — sadece `<lg` ekranlarda anlamlı (mobile overlay aç/kapat). Desktop'ta no-op (sidebar zaten sabit).
+
+### Removed
+
+- **`Sidebar` desktop toggle** (collapse + kenar bandı "aç" tab'ı + `bizboard.preferences.sidebarOpen` localStorage key'i).
+
+---
+
 ## [1.6.16.1] — 2026-05-20 (hotfix)
 
 **Hotfix — Audit Log paneli boş görünüyordu.** Kullanıcı admin olarak user/business CRUD yapsa bile audit log panelinde hiçbir kayıt görünmüyordu. Audit kayıtları DB'ye doğru yazılıyordu — sorun response envelope shape uyumsuzluğuydu.

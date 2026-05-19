@@ -8,13 +8,18 @@ import { logout } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
-import { formatVersion } from "@/lib/version";
 
 interface TopBarProps {
   /** v1.6.13: mobile/tablet hamburger handler — sidebar açar/kapatır. */
   onMenuClick?: () => void;
 }
 
+/**
+ * v1.6.17+: TopBar artık logo + marka adı taşımıyor — tek logo ve marka adı
+ * sidebar header'ında. Burada yalnız (mobile-only) hamburger, search, notif
+ * ve profile menüsü kalır. Version badge'i sidebar'a taşındı (admin-only filter
+ * de kaldırıldı; herkes görebilir).
+ */
 export function TopBar({ onMenuClick }: TopBarProps = {}) {
   const profile = useAppStore((s) => s.profile);
   const setProfile = useAppStore((s) => s.setProfile);
@@ -48,8 +53,8 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
   return (
     <header className="sticky top-0 z-40 bg-surface-800/95 backdrop-blur-lg border-b border-surface-700">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          {/* v1.6.13: hamburger — sadece <lg ekranlarda + handler verilmişse */}
+        {/* Sol: yalnız mobile hamburger; desktop'ta sidebar zaten sabit görünür. */}
+        <div className="flex items-center">
           {onMenuClick && (
             <button
               type="button"
@@ -60,24 +65,6 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
               <Menu size={20} className="text-surface-300" />
             </button>
           )}
-          <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="CATI ana sayfa">
-          <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">C</span>
-          </div>
-          <div className="hidden sm:flex flex-col leading-tight">
-            <span className="font-bold text-lg text-white leading-none">
-              CATI
-            </span>
-            {profile?.role === "admin" && process.env.NEXT_PUBLIC_APP_VERSION && (
-              <span
-                className="mt-0.5 text-[10px] text-surface-400 font-mono leading-none tracking-tight"
-                title="Frontend sürümü"
-              >
-                v{formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}
-              </span>
-            )}
-          </div>
-        </Link>
         </div>
 
         <div className="flex items-center gap-2">
