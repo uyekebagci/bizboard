@@ -9,7 +9,7 @@ import { useAppStore } from "@/lib/store";
 import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
-import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart } from "@/types";
+import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart, PosDeviceListItem } from "@/types";
 
 export default function AddTransactionPageWrapper() {
   return (
@@ -61,12 +61,36 @@ function AddTransactionPage() {
   const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
   const [targetCounterpartId, setTargetCounterpartId] = useState<string>("");
 
+  // v1.6.21 (WP-4): POS device select + auto-fill rate
+  const [posDevices, setPosDevices] = useState<PosDeviceListItem[]>([]);
+  const [posDeviceId, setPosDeviceId] = useState<string>("");
+
   // v1.6.20 (WP-3): counterpart listesi (PERSON + FIRM birlikte)
   useEffect(() => {
     api.get<Counterpart[]>("/counterparts")
       .then((r) => setCounterparts(r || []))
       .catch(() => { /* silent */ });
   }, []);
+
+  // v1.6.21 (WP-4): POS device listesi (aktif)
+  useEffect(() => {
+    api.get<PosDeviceListItem[]>("/pos-devices")
+      .then((r) => setPosDevices(r || []))
+      .catch(() => { /* silent */ });
+  }, []);
+
+  // v1.6.21 (WP-4): POS device seçilince last_used_rate ?? default_rate auto-fill
+  function handlePosDeviceChange(devId: string) {
+    setPosDeviceId(devId);
+    if (!devId) return;
+    const dev = posDevices.find((p) => p.id === devId);
+    if (!dev) return;
+    const rate = dev.last_used_rate ?? dev.default_rate;
+    if (rate != null) {
+      // posRate input zaten string — locale-friendly format için "." kullan.
+      setPosRate(String(rate));
+    }
+  }
 
   // Fetch businesses
   useEffect(() => {
@@ -132,6 +156,8 @@ function AddTransactionPage() {
         pos_rate: posRateValue,
         // v1.6.20 (WP-3): karşı taraf seçimi (opsiyonel)
         target_counterpart_id: targetCounterpartId || null,
+        // v1.6.21 (WP-4): POS cihaz seçimi (yalnız payment_method=POS iken anlamlı)
+        pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
       });
 
       // Yüklenen dosyaları bu transaction ile ilişkilendir
@@ -244,6 +270,30 @@ function AddTransactionPage() {
             </button>
           </div>
           {paymentMethod === "POS" && (
+            <>
+              {/* v1.6.21 (WP-4): POS cihaz dropdown — auto-fill rate */}
+              {posDevices.length > 0 && (
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-surface-300 mb-1.5">
+                    POS Cihazi
+                  </label>
+                  <select
+                    value={posDeviceId}
+                    onChange={(e) => handlePosDeviceChange(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value="">Cihaz secin (opsiyonel)</option>
+                    {posDevices.map((dev) => (
+                      <option key={dev.id} value={dev.id}>
+                        {dev.name}
+                        {dev.bank_name ? ` — ${dev.bank_name}` : ""}
+                        {dev.last_used_rate != null ? ` (%${dev.last_used_rate})` : dev.default_rate != null ? ` (%${dev.default_rate})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             <div className="mt-3">
               <label className="block text-xs font-medium text-surface-300 mb-1.5">
                 POS Komisyon Orani (%)
@@ -271,6 +321,7 @@ function AddTransactionPage() {
                 Komisyon orani islem tutari uzerinden dusulur.
               </p>
             </div>
+            </>
           )}
         </div>
 

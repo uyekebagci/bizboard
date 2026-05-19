@@ -72,6 +72,13 @@ public final class DtoMapper {
                 .setupCost(t.isSetupCost())
                 .paymentMethod(t.getPaymentMethod())
                 .posRate(t.getPosRate())
+                // v1.6.21 (WP-4) + v1.6.20 (WP-3) extras
+                .appliedPosRate(t.getAppliedPosRate())
+                .posDeviceId(t.getPosDevice() != null ? t.getPosDevice().getId() : null)
+                .posDeviceName(t.getPosDevice() != null ? t.getPosDevice().getName() : null)
+                .posSettled(t.getPosSettled())
+                .targetCounterpartId(t.getTargetCounterpart() != null ? t.getTargetCounterpart().getId() : null)
+                .targetCounterpartName(t.getTargetCounterpart() != null ? t.getTargetCounterpart().getName() : null)
                 .tags(t.getTags())
                 .metadata(t.getMetadata())
                 .createdBy(t.getCreatedBy() != null ? t.getCreatedBy().getId() : null)

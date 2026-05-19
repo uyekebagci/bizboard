@@ -36,4 +36,11 @@ public class UpdateTransactionRequest {
     /** v1.6.3: POS komisyon oranı (opsiyonel update). */
     @JsonProperty("pos_rate")
     private BigDecimal posRate;
+
+    /**
+     * v1.6.21 (WP-4): POS çekiminin banka hesabına düşüp düşmediği.
+     * null = anlamsız (nakit/non-POS), false = bekliyor, true = hesaba düştü.
+     */
+    @JsonProperty("pos_settled")
+    private Boolean posSettled;
 }
