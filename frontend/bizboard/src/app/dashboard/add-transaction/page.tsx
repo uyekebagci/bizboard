@@ -9,7 +9,7 @@ import { useAppStore } from "@/lib/store";
 import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
-import type { Business, Category, FileUploadInfo, PaymentMethod } from "@/types";
+import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart } from "@/types";
 
 export default function AddTransactionPageWrapper() {
   return (
@@ -55,6 +55,18 @@ function AddTransactionPage() {
     preselectedPaymentMethod || "NAKIT",
   );
   const [posRate, setPosRate] = useState("");
+
+  // v1.6.20 (WP-3): counterpart select (FIRM + PERSON grouped). Tek-tenant DGR
+  // modunda işletme zaten sabit; tx girilirken kullanıcı "karşı taraf" seçer.
+  const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
+  const [targetCounterpartId, setTargetCounterpartId] = useState<string>("");
+
+  // v1.6.20 (WP-3): counterpart listesi (PERSON + FIRM birlikte)
+  useEffect(() => {
+    api.get<Counterpart[]>("/counterparts")
+      .then((r) => setCounterparts(r || []))
+      .catch(() => { /* silent */ });
+  }, []);
 
   // Fetch businesses
   useEffect(() => {
@@ -118,6 +130,8 @@ function AddTransactionPage() {
         tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         payment_method: paymentMethod,
         pos_rate: posRateValue,
+        // v1.6.20 (WP-3): karşı taraf seçimi (opsiyonel)
+        target_counterpart_id: targetCounterpartId || null,
       });
 
       // Yüklenen dosyaları bu transaction ile ilişkilendir
@@ -306,6 +320,31 @@ function AddTransactionPage() {
               ))}
             </select>
           )}
+        </div>
+
+        {/* v1.6.20 (WP-3): Karşı Taraf Select — FIRM ve PERSON gruplu */}
+        <div>
+          <label className="block text-sm font-medium text-surface-200 mb-1.5">
+            Karsi Taraf <span className="text-surface-400 font-normal">(opsiyonel)</span>
+          </label>
+          <select
+            value={targetCounterpartId}
+            onChange={(e) => setTargetCounterpartId(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                       focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+          >
+            <option value="">Secim yapma</option>
+            <optgroup label="Firmalar">
+              {counterparts.filter((c) => (c.kind ?? "FIRM") === "FIRM").map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Kisiler">
+              {counterparts.filter((c) => c.kind === "PERSON").map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </optgroup>
+          </select>
         </div>
 
         {/* Category */}

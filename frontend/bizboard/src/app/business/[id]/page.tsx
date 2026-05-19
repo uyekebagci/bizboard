@@ -4,6 +4,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote } from "lucide-react";
 import type { PaymentMethod } from "@/types";
+import { ConsolidatedWidgets } from "@/components/business/dashboard/ConsolidatedWidgets";
+import { CarryOverBanner } from "@/components/closing/CarryOverBanner";
+import { CloseTodayModal } from "@/components/closing/CloseTodayModal";
+import { useConsolidatedDashboard } from "@/hooks/useConsolidatedDashboard";
+import { useCashClosing } from "@/hooks/useCashClosing";
 import { BusinessHeader } from "@/components/business/BusinessHeader";
 import { FinanceSummary } from "@/components/business/FinanceSummary";
 import { TransactionList } from "@/components/business/TransactionList";
@@ -30,6 +35,11 @@ export default function BusinessDetailPage() {
 
   // v1.6.4: POS/NAKIT filter chips
   const [paymentFilter, setPaymentFilter] = useState<"ALL" | PaymentMethod>("ALL");
+
+  // v1.6.20 (WP-3): consolidated dashboard verisi + Günü Kapat modal kontrolü
+  const { data: consolidated, refresh: refreshConsolidated } = useConsolidatedDashboard(businessId);
+  const { preview, refresh: refreshClosing } = useCashClosing();
+  const [showCloseModal, setShowCloseModal] = useState(false);
 
   async function handleDelete() {
     setDeleting(true);
@@ -130,6 +140,23 @@ export default function BusinessDetailPage() {
 
       {/* Business Header */}
       <BusinessHeader business={business} />
+
+      {/* v1.6.19 (WP-2): Dünden Kalan Eksik banner */}
+      <CarryOverBanner />
+
+      {/* v1.6.20 (WP-3): Consolidated dashboard widgets — DGR pano */}
+      {consolidated && (
+        <ConsolidatedWidgets data={consolidated} onCloseDay={() => setShowCloseModal(true)} />
+      )}
+
+      {/* Close Today Modal */}
+      {showCloseModal && preview && (
+        <CloseTodayModal
+          preview={preview}
+          onClose={() => setShowCloseModal(false)}
+          onClosed={() => { void refreshClosing(); void refreshConsolidated(); }}
+        />
+      )}
 
       {/* Finance Summary Cards */}
       <FinanceSummary summary={summary} currency={business.currency} />

@@ -61,6 +61,8 @@ export default function CounterpartDetailPage() {
 
   const [cp, setCp] = useState<Counterpart | null>(null);
   const [statement, setStatement] = useState<CounterpartStatement | null>(null);
+  // v1.6.20 (WP-3): alt-firmalar (children) drill-down
+  const [children, setChildren] = useState<Counterpart[]>([]);
   const [from, setFrom] = useState<string>(monthAgoISO());
   const [to, setTo] = useState<string>(todayISO());
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export default function CounterpartDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [recomputing, setRecomputing] = useState(false);
 
-  // İlk yükleme — counterpart kendisi + ilk ekstre çağrısı
+  // İlk yükleme — counterpart kendisi + ilk ekstre çağrısı + alt firmalar
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -77,6 +79,10 @@ export default function CounterpartDetailPage() {
         const c = await api.get<Counterpart>(`/counterparts/${id}`);
         setCp(c);
         setError(null);
+        // v1.6.20 (WP-3): alt firmaları getir (boş gelirse sorun değil)
+        api.get<Counterpart[]>(`/counterparts/${id}/children`)
+          .then((r) => setChildren(r || []))
+          .catch(() => setChildren([]));
       } catch (e) {
         setError(getErrorMessage(e));
       } finally {
@@ -241,6 +247,42 @@ export default function CounterpartDetailPage() {
           )}
         </div>
       </section>
+
+      {/* v1.6.20 (WP-3): Alt firmalar (children) drill-down */}
+      {children.length > 0 && (
+        <section className="card overflow-hidden">
+          <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white">Alt Firmalar</h2>
+            <span className="text-[11px] text-surface-400">{children.length} firma</span>
+          </div>
+          <div className="divide-y divide-surface-700">
+            {children.map((ch) => (
+              <a
+                key={ch.id}
+                href={`/dashboard/counterparts/${ch.id}`}
+                className="block p-3 hover:bg-surface-700 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{ch.name}</p>
+                    <p className="text-[11px] text-surface-400 truncate">
+                      {ch.role} · {ch.tax_id || "VKN yok"}
+                    </p>
+                  </div>
+                  <p className={`text-sm font-semibold shrink-0 ${
+                    (ch.current_balance ?? 0) > 0 ? "text-emerald-300" :
+                    (ch.current_balance ?? 0) < 0 ? "text-red-300" : "text-surface-400"
+                  }`}>
+                    {(ch.current_balance ?? 0).toLocaleString("tr-TR", {
+                      style: "currency", currency: "TRY", maximumFractionDigits: 0,
+                    })}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Statement */}
       <section className="card overflow-hidden">

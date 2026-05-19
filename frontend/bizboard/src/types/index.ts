@@ -298,6 +298,120 @@ export interface BusinessGroup {
   updated_at: string;
 }
 
+// ---- v1.6.20+ (WP-3): Consolidated Dashboard Models ----
+export interface ConsolidatedDashboard {
+  business_id: string;
+  consolidated: {
+    total_cash: number;
+    credit_card_debt: number;
+    loan_principal: number;
+    receivables: number;
+    payables: number;
+    net: number;
+  };
+  today_closing: {
+    opening_balance: number;
+    incoming: number;
+    outgoing: number;
+    computed_closing: number;
+    actual_balance: number | null;
+    difference: number | null;
+    closed: boolean;
+    is_auto: boolean;
+    closing_id: string | null;
+  };
+  pos_devices: Array<{
+    device_id: string;
+    device_name: string;
+    today_gross: number;
+    today_commission: number;
+    today_net: number;
+    unsettled_count: number;
+    tx_count: number;
+  }>;
+  bank_accounts: Array<{
+    id: string;
+    name: string;
+    type: "CHECKING" | "SAVINGS" | "CASH" | "CASH_HOLDER";
+    bank_name: string | null;
+    holder_name: string | null;
+    balance: number;
+    currency: string;
+  }>;
+  payables: Array<{
+    debt_id: string;
+    counterpart_name: string;
+    amount: number;
+    currency: string;
+    due_date: string | null;
+    days_to_due: number | null;
+    instrument_type: string | null;
+  }>;
+  receivables: {
+    total: number;
+    type_breakdown: Array<{ type: string; amount: number; count: number }>;
+    overdue_count: number;
+    total_count: number;
+  };
+  cash_outflows_today: Array<{
+    tx_id: string;
+    description: string | null;
+    category_name: string | null;
+    amount: number;
+    counterpart_name: string | null;
+    date: string;
+  }>;
+  upcoming_cheques: Array<{
+    debt_id: string;
+    counterpart_name: string;
+    amount: number;
+    cheque_due_date: string;
+    cheque_no: string | null;
+    collector_bank: string | null;
+    days_to_due: number;
+  }>;
+  upcoming_reminders: Array<{
+    debt_id: string;
+    counterpart_name: string;
+    amount: number;
+    reminder_date: string;
+    reminder_note: string | null;
+    days_to_remind: number;
+  }>;
+  net_position: {
+    receivables: number;
+    payables: number;
+    net: number;
+    net_positive: boolean;
+  };
+}
+
+export interface BankAccountListItem {
+  id: string;
+  name: string;
+  type: "CHECKING" | "SAVINGS" | "CASH" | "CASH_HOLDER";
+  bank_name: string | null;
+  iban: string | null;
+  currency: string;
+  holder_person_id: string | null;
+  holder_person_name: string | null;
+  current_balance: number;
+  is_active: boolean;
+  notes: string | null;
+}
+
+export interface PosDeviceListItem {
+  id: string;
+  name: string;
+  owner_counterpart_id: string | null;
+  owner_counterpart_name: string | null;
+  bank_name: string | null;
+  default_rate: number | null;
+  last_used_rate: number | null;
+  is_active: boolean;
+  notes: string | null;
+}
+
 // ---- v1.6.19+ (WP-2): Cash Closing Models ----
 export type CashClosingStatus = "PENDING" | "CLOSED" | "REOPENED";
 export type CashClosingReason = "LOSS" | "MIS_ENTRY" | "ROUNDING" | "OTHER";
@@ -738,12 +852,19 @@ export interface MyCompany {
 
 export type CounterpartRole = "CUSTOMER" | "SUPPLIER" | "BOTH" | "OTHER";
 
+/** v1.6.18+ (WP-1): varlık tipi — PERSON / FIRM. */
+export type CounterpartKind = "PERSON" | "FIRM";
+
 export interface Counterpart {
   id: string;
   name: string;
   tax_id: string | null;
   tax_office: string | null;
   role: CounterpartRole;
+  /** v1.6.18+ */
+  kind?: CounterpartKind;
+  /** v1.6.18+: alt-firma hiyerarşisi parent FK. */
+  parent_id?: string | null;
   contact_name: string | null;
   contact_phone: string | null;
   contact_email: string | null;

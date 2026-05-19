@@ -48,6 +48,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/inventory",        label: "Envanter",      icon: Package },
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3 },
   { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck },
+  { href: "/dashboard/kisiler",          label: "Kisiler",       icon: User },
   { href: "/dashboard/businesses",       label: "Isletmeler",    icon: Building2 },
   { href: "/dashboard/add",              label: "Isletme Ekle",  icon: Plus },
   { href: "/dashboard/add-transaction",  label: "Islem Ekle",    icon: Receipt },

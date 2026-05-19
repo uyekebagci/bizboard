@@ -49,4 +49,19 @@ public class CreateTransactionRequest {
      */
     @JsonProperty("pos_rate")
     private BigDecimal posRate;
+
+    /**
+     * v1.6.20 (WP-3): Karşı taraf id (counterpart). Tek-tenant DGR modunda
+     * işletme zaten sabit; kullanıcı tx girerken kimden/kime'yi seçer.
+     * Opsiyonel — geriye uyumluluk için.
+     */
+    @JsonProperty("target_counterpart_id")
+    private java.util.UUID targetCounterpartId;
+
+    /**
+     * v1.6.20 (WP-3): POS cihazı id. paymentMethod=POS iken seçilebilir.
+     * Service tx'in appliedPosRate'ini cihazın o anki rate'inden snapshot eder.
+     */
+    @JsonProperty("pos_device_id")
+    private java.util.UUID posDeviceId;
 }

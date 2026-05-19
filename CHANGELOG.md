@@ -34,6 +34,62 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.20] — 2026-05-20
+
+**v1.6 acil prod devam · WP-3 — İşletme Detay Sayfa Revize + Widget'lar.** DGR işletme detay sayfası tüm operasyonun kalbi: tek-shot consolidated endpoint + 10 widget + kişi yönetim mini-sayfası + tx form'da counterpart entegrasyonu + sub-firma drill-down.
+
+### Added
+
+#### Backend
+- **`GET /businesses/{id}/consolidated`** — tek-shot endpoint, tüm widget verisi tek round-trip'te. Bölümler: `consolidated`, `today_closing`, `pos_devices` (bugün), `bank_accounts`, `payables`, `receivables` (özet), `cash_outflows_today`, `upcoming_cheques` (30 gün), `upcoming_reminders` (7 gün), `net_position`.
+- **`ConsolidatedDashboardService`** — agregator + IDOR access guard. Tek-tenant model: bank/POS/debt verileri system-wide.
+- **`ConsolidatedDashboardDto`** (nested DTO'lar) — snake_case JsonProperty.
+- **`GET /bank-accounts`** + `?include_inactive=true` — banka/kasa listesi (`BankAccountController`).
+- **`GET /pos-devices`** + `?include_inactive` — POS cihazı listesi (`PosDeviceController`).
+- **`GET /counterparts/{id}/children`** — alt firmalar (parent_id == id).
+- **`GET /counterparts?role=&kind=`** — role + kind kombinasyon filtresi.
+- **Repository extensions:**
+  - `CounterpartRepository.findByParentIdOrderByNameAsc`, `findByKindOrderByNameAsc`, `countByParentId`.
+  - `DebtRepository.findByDirectionAndSettledFalseOrderByDueDateAsc`, `findUpcomingCheques(from, to)`, `findUpcomingReminders(from, to)`.
+  - `TransactionRepository.findByDateAndPaymentMethodAndDirection`, `findByPosDeviceIdAndDate`.
+- **`CreateTransactionRequest`** yeni alanlar: `target_counterpart_id`, `pos_device_id`.
+- **`TransactionService.createTransaction`** karşı taraf + POS cihazı wire'lama:
+  - `targetCounterpart` set edilir (varsa).
+  - POS modunda `appliedPosRate` = request.posRate ?? device.defaultRate ?? device.lastUsedRate snapshot edilir (cihaz oranı sonra değişse bile tx sabit kalır).
+  - Cihazın `lastUsedRate` field'ı güncellenir.
+
+#### Frontend
+- **Types:** `ConsolidatedDashboard`, `BankAccountListItem`, `PosDeviceListItem`, `CounterpartKind`, `Counterpart.kind` + `parent_id`.
+- **`useConsolidatedDashboard(businessId)`** hook — tek-shot fetch + refresh.
+- **`components/business/dashboard/ConsolidatedWidgets.tsx`** — 10 widget tek dosyada:
+  1. Konsolide Pozisyon (gradient kart) — total_cash − cc − loan + receivables − payables.
+  2. Bugünün Kasa Durumu — Açılış/Gelen/Giden/Hesaplanan/Sayım/Fark + "Günü Kapat".
+  3. POS Cihazları (Bugün) — per device gross/komisyon/net + unsettled rozet.
+  4. Para Bulunan Hesaplar — type badge + bakiye + grand total.
+  5. Verecekler — 7-gün-yaklaşan sarı vurgu.
+  6. Alacaklar özeti — type breakdown chip'leri + overdue count; tıklayınca /alacaklar.
+  7. Net Pozisyon — pozitif yeşil / negatif kırmızı.
+  8. Hesaptan Harcama (bugün NAKIT EXPENSE).
+  9. Yaklaşan Çekler (30 gün) — vade + tahsil bankası.
+  10. Yaklaşan Hatırlatmalar (7 gün).
+  Footer pattern her widget'ta: "Toplam: X kalem | Y TL".
+- **`/business/[id]/page.tsx`** revize — `<CarryOverBanner />` + `<ConsolidatedWidgets />` üstte; mevcut FinanceSummary/FixedCosts/ModuleTabs/TransactionList altta korunur.
+- **`/dashboard/kisiler`** mini-sayfa — counterparts (kind=PERSON) listesi.
+- **Sidebar** — yeni link "Kisiler".
+- **`/dashboard/counterparts/[id]`** — `Alt Firmalar` widget'ı (children > 0 ise) statement öncesi.
+- **`/dashboard/add-transaction`** — "Karsi Taraf" FIRM/PERSON gruplu optgroup; tx body'sine `target_counterpart_id` eklenir.
+
+### Notes
+
+- ConsolidatedDashboardService tek tek küçük query'lerden oluşur — DGR ölçeğinde N+1 sorun değil.
+- Sub-firma drill-down counterpart detay sayfasında listelenir; daha derin tree (depth ≥ 3) UI'da gösterilmez (uygulama kuralı max 2).
+- Tx form'da `pos_device_id` alanı backend'de kabul ediliyor ama frontend dropdown'u WP-4'te gelecek.
+- Tüm widget'lar TRY formatlı; çoklu currency v1.7+'a.
+- Backend `mvn compile` BUILD SUCCESS, frontend `next build` TS pass temiz.
+- 15 WP-3 TODO tamamlandı.
+
+---
+
 ## [1.6.19] — 2026-05-20
 
 **v1.6 acil prod devam · WP-2 — Close-of-Day Workflow.** Günlük kasa kapanışı: manuel kapama + cron 20:00 otomatik. Physical sayım, fark hesabı, reason kategori, açıklama. Önceki günün hesaplanan kapanışı bugünün açılışı (carry-over kuralı). Backdated tx + correction tx audit highlight'ları. WP-1 cash_closing migration üstüne inşa edildi.
