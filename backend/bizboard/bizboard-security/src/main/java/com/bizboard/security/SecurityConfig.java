@@ -54,6 +54,39 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
+                // v1.6.23.1: anonymous → 401 (frontend silent refresh tetiklensin),
+                // authenticated but missing role → 403. Spring Security 6 default'u
+                // her ikisinde de 403 dönüyor (AnonymousAuthenticationFilter
+                // "anonymousUser" set ettiği için AuthorizationFilter
+                // AccessDeniedException atıyor). Burada principal'ı kontrol
+                // ederek anonymous case'i 401'e map'liyoruz — frontend client
+                // 401'de silent refresh'i tetikler.
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> {
+                            res.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write(
+                                    "{\"status\":401,\"code\":\"AUTH-401\",\"message\":\"Kimlik dogrulamasi gerekli\"}");
+                        })
+                        .accessDeniedHandler((req, res, e) -> {
+                            var auth = org.springframework.security.core.context.SecurityContextHolder
+                                    .getContext().getAuthentication();
+                            boolean anonymous = auth == null
+                                    || auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken
+                                    || !auth.isAuthenticated();
+                            if (anonymous) {
+                                res.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                                res.setContentType("application/json;charset=UTF-8");
+                                res.getWriter().write(
+                                        "{\"status\":401,\"code\":\"AUTH-401\",\"message\":\"Kimlik dogrulamasi gerekli\"}");
+                            } else {
+                                res.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                                res.setContentType("application/json;charset=UTF-8");
+                                res.getWriter().write(
+                                        "{\"status\":403,\"code\":\"AUTH-403\",\"message\":\"Bu islem icin yetkin yok\"}");
+                            }
+                        })
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
