@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * v1.6.3: nakit bakiyesi olan işletmeler (/api/cash/businesses).
+ * v1.6.3: nakit bakiyesi olan işletmeler.
+ *
+ * v1.6.11.1: `/api/cash` → `/cash` (projedeki diğer controller'larla uyumlu).
  */
 @RestController
-@RequestMapping("/api/cash")
+@RequestMapping("/cash")
 @RequiredArgsConstructor
 public class CashController {
 

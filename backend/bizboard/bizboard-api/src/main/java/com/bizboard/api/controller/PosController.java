@@ -15,10 +15,13 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * v1.6.3: POS işlemleri sorgu endpoint'leri (/api/pos/...).
+ * v1.6.3: POS işlemleri sorgu endpoint'leri.
+ *
+ * v1.6.11.1: `/api/pos` → `/pos` (projedeki diğer controller'larla uyumlu;
+ * Spring context-path yok, frontend `/pos/...` çağırıyor).
  */
 @RestController
-@RequestMapping("/api/pos")
+@RequestMapping("/pos")
 @RequiredArgsConstructor
 public class PosController {
 

@@ -34,6 +34,29 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.11.1] — 2026-05-19 (hotfix)
+
+**Hotfix — controller path mismatch.** PosController, CashController, ReceivableController ve yeni BusinessGroupController `/api/...` prefix'i ile mapped'iyken projedeki diğer tüm controller'lar (BusinessController `/businesses`, PortfolioController `/portfolio`, UserController `/me`, vs.) prefix'siz. Frontend pattern'i de prefix'siz (`/pos/businesses`, `/cash/businesses`, `/receivables`). Bu nedenle POS/Nakit/Alacaklar sayfaları sessizce 404'lüyor ve `.catch(() => [])` ile boş state gösteriyordu — kullanıcı bu yüzden bu özellikleri henüz test edememişti.
+
+### Fixed
+
+#### Backend
+- **`PosController`** — `@RequestMapping("/api/pos")` → `/pos`
+- **`CashController`** — `@RequestMapping("/api/cash")` → `/cash`
+- **`ReceivableController`** — `@RequestMapping("/api/receivables")` → `/receivables`
+- **`BusinessGroupController`** — `@RequestMapping("/api/me/business-groups")` → `/me/business-groups`
+
+#### Frontend
+- **`useBusinessGroups` hook** — tüm `/api/me/business-groups...` çağrıları `/me/business-groups...` olarak güncellendi.
+
+### Notes
+
+- Etki: v1.6.3'ten beri (POS), v1.6.5'ten beri (Alacaklar) ve v1.6.11'den beri (Gruplama — UI henüz yok) sessizce 404'lüyordu.
+- Diğer controller'lar ile uyumlu pattern: Spring `server.servlet.context-path` set değil, controller'lar root path'ten mount ediliyor.
+- Versiyon: 4-component hotfix (Maven `1.6.11.1`, npm `1.6.11-1`).
+
+---
+
 ## [1.6.11] — 2026-05-19
 
 **v1.6 ACİL PROD WP — Gruplama backend.** Kullanıcının dashboard'undaki işletmeleri öncelik seviyeli gruplara ayırma. `business_groups` + `business_group_members` tabloları + CRUD + reorder + üye yönetimi + sıkı user-isolation.

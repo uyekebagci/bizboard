@@ -20,7 +20,7 @@ import java.util.UUID;
  * 404/403 döner ({@link BusinessGroupService} `mustOwn` üzerinden).
  */
 @RestController
-@RequestMapping("/api/me/business-groups")
+@RequestMapping("/me/business-groups")
 @RequiredArgsConstructor
 public class BusinessGroupController {
 
