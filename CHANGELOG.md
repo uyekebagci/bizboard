@@ -34,6 +34,30 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.1] — 2026-05-20 (hotfix)
+
+**Hotfix — Admin Audit Log + diğer `/admin/**` endpoint'lerinde token expire olduğunda 403.** Kullanıcı admin olarak login olup audit log sayfasını ziyaret ettiğinde "Bir hata olustu" + arka planda `403 Forbidden` alıyordu. Sorun frontend'in token refresh akışı ile Spring Security 6'nın anonymous handling'inin uyumsuzluğu.
+
+### Fixed
+
+#### Backend
+- **`SecurityConfig` — `exceptionHandling`** wiring eklendi:
+  - **`authenticationEntryPoint`**: hiç JWT göndermeyen istemciler için `401 Unauthorized` (eskiden direkt 403 dönüyordu çünkü `AnonymousAuthenticationFilter` zaten "anonymousUser" set ediyor).
+  - **`accessDeniedHandler`**: authority eksikliğinde principal'a bakıp **anonymous → 401**, **gerçek authenticated kullanıcı + rol yok → 403** ayrımı yapıyor.
+  - Her ikisi de JSON body döner: `{status, code, message}`.
+
+### Root cause
+
+Spring Security 6'da `AnonymousAuthenticationFilter` her zaman çalışır ve unauthenticated kullanıcıyı "anonymousUser" + `ROLE_ANONYMOUS` ile işaretler. Sonrasında `AuthorizationFilter` `hasRole("ADMIN")` kontrolünü `ROLE_ANONYMOUS` üzerinde yapar, **`AccessDeniedException`** atar (NOT `AuthenticationException`). Bu da default `accessDeniedHandler` üzerinden **403** olarak döner — frontend'in `api/client.ts` 401-tek-refresh akışı **tetiklenmez** ve token expire kullanıcı sıkışır. Şimdi anonymous case'i 401'e map'liyoruz, silent refresh çalışıyor.
+
+### Notes
+
+- Etki sadece `/admin/**` endpoint'lerinde değil; tüm korunan endpoint'lerde token expire olunca artık 401 → silent refresh → retry akışı düzgün çalışacak.
+- Bug dashboard `/bugs` endpoint'inde kayıtlı.
+- Versiyon: 4-component hotfix (Maven `1.6.23.1`, npm `1.6.23-1`).
+
+---
+
 ## [1.6.23] — 2026-05-20
 
 **UI polish — işletme detay page header kompaktlaştırıldı.** Eski `BusinessHeader` widget'ı (kart şeklinde işletme adı + tipi + ekip üyesi sayısı) kaldırıldı; bu bilgi "← Geri" satırına alındı. Tek-satırlı page header artık: geri butonu + işletme adı + tip + ekip üyesi sayısı + admin sil + ayarlar.
