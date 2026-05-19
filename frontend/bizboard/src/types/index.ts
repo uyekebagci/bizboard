@@ -273,6 +273,31 @@ export interface PeriodSummary {
   net_profit_with_fixed: number;
 }
 
+// ---- v1.6.11+: Business Group Models ----
+export type GroupPriority = 0 | 1 | 2; // 0=PINNED, 1=HIGH, 2=NORMAL
+
+export type GroupColor =
+  | "zinc" | "blue" | "green" | "orange"
+  | "red" | "purple" | "pink" | "teal";
+
+export interface BusinessGroupMemberItem {
+  business_id: string;
+  business_name: string;
+  order_in_group: number;
+  added_at: string;
+}
+
+export interface BusinessGroup {
+  id: string;
+  name: string;
+  color: GroupColor | string;
+  priority: GroupPriority;
+  order_index: number;
+  members: BusinessGroupMemberItem[];
+  created_at: string;
+  updated_at: string;
+}
+
 // ---- Debt Models ----
 export type DebtDirection = "RECEIVABLE" | "PAYABLE";
 

@@ -16,8 +16,11 @@ import java.util.List;
  * GET /api/receivables — counterpart bazlı, settled=false RECEIVABLE özeti.
  * Erişim filtresi {@code accessibleBusinesses} üzerinden.
  */
+/**
+ * v1.6.11.1: `/api/receivables` → `/receivables` (projedeki diğer controller'larla uyumlu).
+ */
 @RestController
-@RequestMapping("/api/receivables")
+@RequestMapping("/receivables")
 @RequiredArgsConstructor
 public class ReceivableController {
 
