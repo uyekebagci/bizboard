@@ -44,6 +44,28 @@ public class TransactionDto {
     @JsonProperty("pos_rate")
     private BigDecimal posRate;
 
+    /** v1.6.21 (WP-4): snapshot at entry — cihaz oranı değişse de bu sabit. */
+    @JsonProperty("applied_pos_rate")
+    private BigDecimal appliedPosRate;
+
+    /** v1.6.21 (WP-4): hangi POS cihazında çekildi. */
+    @JsonProperty("pos_device_id")
+    private UUID posDeviceId;
+
+    @JsonProperty("pos_device_name")
+    private String posDeviceName;
+
+    /** v1.6.21 (WP-4): POS çekim banka hesabına düştü mü (true/false/null). */
+    @JsonProperty("pos_settled")
+    private Boolean posSettled;
+
+    /** v1.6.20 (WP-3): karşı taraf (counterpart). */
+    @JsonProperty("target_counterpart_id")
+    private UUID targetCounterpartId;
+
+    @JsonProperty("target_counterpart_name")
+    private String targetCounterpartName;
+
     private List<String> tags;
     private Map<String, Object> metadata;
 

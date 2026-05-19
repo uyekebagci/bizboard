@@ -34,6 +34,54 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.21] — 2026-05-20
+
+**v1.6 acil prod devam · WP-4 — POS Cihazı Yönetimi v2.** POS cihazı first-class entity'ye yükseldi: full CRUD + per-device last_used_rate cache + tx form auto-fill + POS Kar hesaplama + settled toggle + analytics endpoint + trend chart.
+
+### Added
+
+#### Backend
+- **`PosDeviceManagementService`** — POS cihazı CRUD (create/update/soft-delete). Soft-delete: `is_active=false`, fiziksel silinmez (tx ref'leri korunur). Audit log her aksiyonu izler (POS_DEVICE_CREATE/UPDATE/DELETE).
+- **`CreatePosDeviceRequest` + `UpdatePosDeviceRequest`** — snake_case JsonProperty.
+- **`PosDeviceController` CRUD endpoint'leri:**
+  - `GET /pos-devices` + `?include_inactive=true`
+  - `GET /pos-devices/{id}` detay
+  - `POST /pos-devices` create
+  - `PATCH /pos-devices/{id}` partial update
+  - `DELETE /pos-devices/{id}` soft delete
+  - `GET /pos-devices/analytics?from=&to=&deviceId=` — günlük seri (gross, commission, net, settled/unsettled count) + totals.
+- **`PosAnalyticsService`** — komisyon = amount × applied_pos_rate / 100; cihaz filtreli ya da sistem-wide POS tx'ler için. Sparse data için günler 0'la dolduruluyor (chart smooth).
+- **`PosAnalyticsDto`** — `series[]` + `totals` envelope.
+- **`UpdateTransactionRequest.pos_settled`** alanı — Boolean (true/false/null).
+- **`TransactionService.updateTransaction`** — `pos_settled` diff'i yakalar + audit changes'a yazar.
+- **`TransactionDto`** yeni alanlar: `applied_pos_rate`, `pos_device_id`, `pos_device_name`, `pos_settled`, `target_counterpart_id`, `target_counterpart_name`.
+- **`DtoMapper.toTransactionDto`** — yeni alanları map eder.
+- (WP-3'te zaten yapıldı): `TransactionService.createTransaction` POS device wire + applied_pos_rate snapshot + device.lastUsedRate update.
+
+#### Frontend
+- **`/dashboard/pos-cihazlari/yonetim`** — admin CRUD sayfası: liste tablo (name, owner, bank, default/last_used rate, status) + Yeni Cihaz modal + Düzenle modal + soft-delete confirm modal. Non-admin'ler `/pos-cihazlari`'ya yönlendirilir.
+- **`/dashboard/pos-cihazlari`** revize:
+  - Header'a admin-only "Cihaz Yönetimi" linki (`Settings` icon).
+  - Üstte **`PosTrendChart`** — 30 günlük gross/net iki-bar chart, cihaz dropdown filtresi, hover tooltip (date + tx count + brüt/komisyon/net + bekleyen), gradient gösterge.
+  - `useEffect` cihaz değişiminde analytics'i yeniden fetch eder.
+- **`/dashboard/add-transaction`** POS device select:
+  - `paymentMethod=POS` seçilince + cihaz listesi varsa dropdown görünür.
+  - Cihaz seçilince `last_used_rate ?? default_rate` `posRate` input'una auto-fill.
+  - Submit body'sine `pos_device_id` eklenir (yalnız POS modunda).
+- **`TransactionList` Detail Modal — view mode:**
+  - Ödeme satırında `pos_device_name` gösterimi.
+  - **`PosSettledToggle`** chip — paymentMethod=POS olan tx'lerde "Hesaba dustu" / "Bekleniyor" toggle (PATCH `/businesses/{id}/transactions/{txId}` `pos_settled` field).
+- **`Transaction` type** yeni alanlar: `applied_pos_rate`, `pos_device_id/name`, `pos_settled`, `target_counterpart_id/name`.
+- **Sidebar** — admin için yeni "Admin: POS Yonetim" linki.
+
+### Notes
+
+- Per-firma POS raporu (WP-4 TODO `41fe35ef`) ConsolidatedDashboardService'deki per-device today aggregate ile kısmi karşılanıyor; full standalone "counterpart detay sayfasında POS özeti" ileride genişletilebilir (yine sub-firma drill-down ile birleştirilebilir).
+- Backend `mvn compile` BUILD SUCCESS, frontend `next build` TS pass temiz.
+- 10 WP-4 TODO tamamlandı.
+
+---
+
 ## [1.6.20] — 2026-05-20
 
 **v1.6 acil prod devam · WP-3 — İşletme Detay Sayfa Revize + Widget'lar.** DGR işletme detay sayfası tüm operasyonun kalbi: tek-shot consolidated endpoint + 10 widget + kişi yönetim mini-sayfası + tx form'da counterpart entegrasyonu + sub-firma drill-down.

@@ -154,6 +154,16 @@ export interface Transaction {
   payment_method?: PaymentMethod;
   /** v1.6.3+: POS komisyon oranı (yüzde). Sadece payment_method=POS iken kullanılır. */
   pos_rate?: number | null;
+  /** v1.6.21 (WP-4): tx oluşturulduğu anki POS oranı snapshot. */
+  applied_pos_rate?: number | null;
+  /** v1.6.21 (WP-4): hangi POS cihazında çekildi. */
+  pos_device_id?: string | null;
+  pos_device_name?: string | null;
+  /** v1.6.21 (WP-4): POS çekim banka hesabına düştü mü (null=nakit). */
+  pos_settled?: boolean | null;
+  /** v1.6.20 (WP-3): karşı taraf. */
+  target_counterpart_id?: string | null;
+  target_counterpart_name?: string | null;
   tags: string[];
   metadata: Record<string, unknown>;
   created_by: string | null;

@@ -8,7 +8,7 @@
  *   GET /api/pos/transactions/daily  — son N gün için günlük POS işlemleri
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -19,29 +19,66 @@ import {
   Loader2,
   Building2,
   Plus,
+  Settings,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
-import type { PosBusinessSummary, PosTransactionRow } from "@/types";
+import { useAppStore } from "@/lib/store";
+import type { PosBusinessSummary, PosTransactionRow, PosDeviceListItem } from "@/types";
+
+/** v1.6.21 (WP-4): /pos-devices/analytics cevap tipi */
+interface PosAnalytics {
+  from: string;
+  to: string;
+  device_id: string | null;
+  series: Array<{
+    date: string;
+    gross: number;
+    commission: number;
+    net: number;
+    tx_count: number;
+    settled_count: number;
+    unsettled_count: number;
+  }>;
+  totals: {
+    gross: number;
+    commission: number;
+    net: number;
+    tx_count: number;
+    settled_count: number;
+    unsettled_count: number;
+  };
+}
 
 export default function PosCihazlariPage() {
   const router = useRouter();
+  const profile = useAppStore((s) => s.profile);
+  const isAdmin = profile?.role === "admin";
   const [summaries, setSummaries] = useState<PosBusinessSummary[]>([]);
   const [daily, setDaily] = useState<PosTransactionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBiz, setSelectedBiz] = useState<string | "all">("all");
 
+  // v1.6.21 (WP-4): per-device analytics
+  const [devices, setDevices] = useState<PosDeviceListItem[]>([]);
+  const [analytics, setAnalytics] = useState<PosAnalytics | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<string>("");
+
   useEffect(() => {
     async function load() {
       try {
-        const [s, d] = await Promise.all([
+        const [s, d, devs, an] = await Promise.all([
           api.get<PosBusinessSummary[]>("/pos/businesses").catch(() => []),
           api.get<PosTransactionRow[]>("/pos/transactions/daily?days=30").catch(() => []),
+          api.get<PosDeviceListItem[]>("/pos-devices").catch(() => []),
+          api.get<PosAnalytics>("/pos-devices/analytics").catch(() => null),
         ]);
         setSummaries(s || []);
         setDaily(d || []);
+        setDevices(devs || []);
+        setAnalytics(an);
       } catch (err) {
         logger.error("api", "POS data fetch failed", undefined, err);
       } finally {
@@ -50,6 +87,15 @@ export default function PosCihazlariPage() {
     }
     load();
   }, []);
+
+  // v1.6.21 (WP-4): cihaz seçimine göre analytics yeniden çek
+  useEffect(() => {
+    if (loading) return;
+    const url = selectedDevice
+      ? `/pos-devices/analytics?deviceId=${selectedDevice}`
+      : "/pos-devices/analytics";
+    api.get<PosAnalytics>(url).then(setAnalytics).catch(() => {});
+  }, [selectedDevice, loading]);
 
   const totalGross = summaries.reduce((a, b) => a + (b.total_gross || 0), 0);
   const totalCommission = summaries.reduce((a, b) => a + (b.total_commission || 0), 0);
@@ -69,25 +115,46 @@ export default function PosCihazlariPage() {
   return (
     <div className="space-y-5 pb-24">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
-        >
-          <ArrowLeft size={20} className="text-surface-300" />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
-            <CreditCard size={20} className="text-indigo-300" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">POS Cihazlari</h1>
-            <p className="text-xs text-surface-400">
-              Tum isletmelerdeki POS islemleri ve komisyon ozeti
-            </p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          >
+            <ArrowLeft size={20} className="text-surface-300" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+              <CreditCard size={20} className="text-indigo-300" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">POS Cihazlari</h1>
+              <p className="text-xs text-surface-400">
+                Tum POS cihaz islemleri + komisyon + trend
+              </p>
+            </div>
           </div>
         </div>
+        {isAdmin && (
+          <Link
+            href="/dashboard/pos-cihazlari/yonetim"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium"
+          >
+            <Settings size={14} />
+            Cihaz Yonetimi
+          </Link>
+        )}
       </div>
+
+      {/* v1.6.21 (WP-4): Analytics trend chart (30 gün) */}
+      {analytics && analytics.series.length > 0 && (
+        <PosTrendChart
+          analytics={analytics}
+          devices={devices}
+          selectedDevice={selectedDevice}
+          onDeviceChange={setSelectedDevice}
+        />
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
@@ -266,5 +333,94 @@ export default function PosCihazlariPage() {
         </>
       )}
     </div>
+  );
+}
+
+// ─── v1.6.21 (WP-4): POS Trend Chart ────────────────────────────────
+function PosTrendChart({
+  analytics, devices, selectedDevice, onDeviceChange,
+}: {
+  analytics: PosAnalytics;
+  devices: PosDeviceListItem[];
+  selectedDevice: string;
+  onDeviceChange: (id: string) => void;
+}) {
+  const series = analytics.series;
+  const maxNet = Math.max(...series.map((s) => Math.max(s.gross, s.net)), 1);
+  const t = analytics.totals;
+
+  return (
+    <section className="card p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold text-white">POS Kar Trendi (30 gün)</h2>
+          <p className="text-[11px] text-surface-400">
+            Brüt {formatCurrency(t.gross, "TRY")}
+            {" · Komisyon "}
+            <span className="text-red-300">-{formatCurrency(t.commission, "TRY")}</span>
+            {" · Net "}
+            <span className="text-emerald-300">{formatCurrency(t.net, "TRY")}</span>
+          </p>
+        </div>
+        {devices.length > 0 && (
+          <select
+            value={selectedDevice}
+            onChange={(e) => onDeviceChange(e.target.value)}
+            className="text-xs px-2 py-1.5 rounded-lg bg-surface-800 border border-surface-600 text-surface-200"
+          >
+            <option value="">Tüm cihazlar</option>
+            {devices.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      <div className="flex items-end gap-0.5 h-32">
+        {series.map((s, i) => {
+          const grossH = (s.gross / maxNet) * 100;
+          const netH = (s.net / maxNet) * 100;
+          return (
+            <div key={i} className="flex-1 flex flex-col items-center group relative min-w-0">
+              <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
+                <div className="bg-surface-800 text-white rounded-lg p-2 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
+                  <p className="font-bold mb-0.5">
+                    {new Date(s.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+                  </p>
+                  <p>{s.tx_count} çekim</p>
+                  <p>Brüt: {formatCurrency(s.gross, "TRY")}</p>
+                  <p className="text-red-300">Komisyon: -{formatCurrency(s.commission, "TRY")}</p>
+                  <p className="text-emerald-300">Net: {formatCurrency(s.net, "TRY")}</p>
+                  {s.unsettled_count > 0 && (
+                    <p className="text-amber-300">{s.unsettled_count} bekleyen</p>
+                  )}
+                </div>
+              </div>
+              <div className="w-full flex gap-px items-end h-28">
+                <div
+                  className="flex-1 bg-indigo-500/50 rounded-t-sm transition-all min-h-[1px]"
+                  style={{ height: `${Math.max(grossH, 1)}%` }}
+                  title="Brut"
+                />
+                <div
+                  className="flex-1 bg-emerald-500 rounded-t-sm transition-all min-h-[1px]"
+                  style={{ height: `${Math.max(netH, 1)}%` }}
+                  title="Net"
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-between text-[10px] text-surface-400">
+        <span>{series.length > 0 ? new Date(series[0].date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : ""}</span>
+        <span className="flex items-center gap-3">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-indigo-500/50" /> Brut</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> Net</span>
+        </span>
+        <span>{series.length > 0 ? new Date(series[series.length - 1].date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : ""}</span>
+      </div>
+    </section>
   );
 }

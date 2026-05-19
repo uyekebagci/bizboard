@@ -535,7 +535,7 @@ export function TransactionDetailModal({
                   </div>
                 )}
 
-                {/* v1.6.3+: Odeme yontemi */}
+                {/* v1.6.3+: Odeme yontemi + v1.6.21 (WP-4) POS settled toggle */}
                 <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
                   {(transaction.payment_method || "NAKIT") === "POS" ? (
                     <CreditCard size={16} className="text-indigo-300 mt-0.5 shrink-0" />
@@ -548,6 +548,9 @@ export function TransactionDetailModal({
                       {(transaction.payment_method || "NAKIT") === "POS" ? "POS" : "Nakit"}
                       {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_rate != null && (
                         <span className="ml-2 text-surface-300">%{transaction.pos_rate}</span>
+                      )}
+                      {transaction.pos_device_name && (
+                        <span className="ml-2 text-surface-400">· {transaction.pos_device_name}</span>
                       )}
                     </p>
                     {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_rate != null && (
@@ -563,6 +566,14 @@ export function TransactionDetailModal({
                           effectiveCurrency,
                         )}
                       </p>
+                    )}
+                    {/* v1.6.21 (WP-4): POS settled toggle (admin & herkes) */}
+                    {(transaction.payment_method || "NAKIT") === "POS" && (
+                      <PosSettledToggle
+                        transactionId={transaction.id}
+                        businessId={transaction.business_id}
+                        initial={transaction.pos_settled ?? false}
+                      />
                     )}
                   </div>
                 </div>
@@ -770,5 +781,51 @@ function DeleteTransactionModal({
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── v1.6.21 (WP-4): POS Settled Toggle ────────────────────────────────
+function PosSettledToggle({
+  transactionId,
+  businessId,
+  initial,
+}: {
+  transactionId: string;
+  businessId: string;
+  initial: boolean;
+}) {
+  const [settled, setSettled] = useState<boolean>(initial);
+  const [saving, setSaving] = useState(false);
+
+  async function toggle() {
+    const next = !settled;
+    setSaving(true);
+    try {
+      await api.put(`/businesses/${businessId}/transactions/${transactionId}`, {
+        pos_settled: next,
+      });
+      setSettled(next);
+    } catch {
+      // Sessiz fail — toggle değiştirilmez
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={saving}
+      className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border transition-colors ${
+        settled
+          ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+          : "bg-amber-500/15 text-amber-300 border-amber-500/30"
+      } ${saving ? "opacity-60" : "hover:opacity-80"}`}
+      title={settled ? "Hesaba dustu" : "Hesaba dusmedi (tikla)"}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${settled ? "bg-emerald-300" : "bg-amber-300"}`} />
+      {settled ? "Hesaba dustu" : "Bekleniyor"}
+    </button>
   );
 }

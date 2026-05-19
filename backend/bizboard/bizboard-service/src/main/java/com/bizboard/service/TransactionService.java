@@ -290,6 +290,14 @@ public class TransactionService {
                 transaction.setPosRate(request.getPosRate());
             }
         }
+        // v1.6.21 (WP-4): pos_settled toggle (POS çekimin hesaba düşüp düşmediği)
+        if (request.getPosSettled() != null
+                && !java.util.Objects.equals(request.getPosSettled(), transaction.getPosSettled())) {
+            changes.put("posSettled", Map.of(
+                    "from", transaction.getPosSettled() == null ? "null" : transaction.getPosSettled().toString(),
+                    "to", request.getPosSettled().toString()));
+            transaction.setPosSettled(request.getPosSettled());
+        }
 
         // v1.6.19 (WP-2): Tx PATCH olduğunda corrected=true + audit highlight=CORRECTION.
         // Yalnız gerçekten değişen alan varsa işaretle (no-op update'lerde corrected aktif olmasın).

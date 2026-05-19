@@ -64,6 +64,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/admin/debt-migration",       label: "Admin: Borc Migrate", icon: History,   adminOnly: true },
   { href: "/admin/my-companies",         label: "Admin: Sirketlerim", icon: Building2,  adminOnly: true },
   { href: "/admin/recurring",            label: "Admin: Recurring",   icon: Repeat,     adminOnly: true },
+  { href: "/dashboard/pos-cihazlari/yonetim", label: "Admin: POS Yonetim", icon: CreditCard, adminOnly: true },
 ];
 
 const SEARCH_THRESHOLD = 10;
