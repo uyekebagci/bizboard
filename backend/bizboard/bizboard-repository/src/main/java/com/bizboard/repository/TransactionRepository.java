@@ -62,4 +62,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("businessIds") List<UUID> businessIds,
             @Param("paymentMethod") String paymentMethod,
             @Param("date") LocalDate date);
+
+    /**
+     * v1.6.19 (WP-2): Bir takvim günündeki tüm transaction'lar (tek-tenant
+     * cash closing hesabı için — business filtresi yok).
+     */
+    List<Transaction> findByDate(LocalDate date);
 }

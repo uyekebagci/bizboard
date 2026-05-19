@@ -68,6 +68,22 @@ public class AuditLogService {
                                    String resourceType, UUID resourceId,
                                    String detail,
                                    Map<String, Object> metadata) {
+        recordEntityAction(action, userId, userName, resourceType, resourceId,
+                detail, metadata, null);
+    }
+
+    /**
+     * v1.6.19 (WP-2): highlight_type destekli overload.
+     * Backdated tx, correction, closing reopen gibi özel vurgu gereken
+     * eylemler için. Değerler için
+     * {@link com.bizboard.common.audit.AuditAction#HIGHLIGHT_BACKDATED} vs. bak.
+     */
+    public void recordEntityAction(String action,
+                                   UUID userId, String userName,
+                                   String resourceType, UUID resourceId,
+                                   String detail,
+                                   Map<String, Object> metadata,
+                                   String highlightType) {
         HttpServletRequest req = currentRequest();
         AuditLog entry = AuditLog.builder()
                 .userId(userId)
@@ -79,6 +95,7 @@ public class AuditLogService {
                 .userAgent(truncate(headerOrNull(req, "User-Agent"), 512))
                 .detail(truncate(detail, 1024))
                 .metadata(metadata)
+                .highlightType(highlightType)
                 .build();
         record(entry);
     }

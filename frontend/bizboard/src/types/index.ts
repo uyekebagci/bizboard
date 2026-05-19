@@ -298,6 +298,34 @@ export interface BusinessGroup {
   updated_at: string;
 }
 
+// ---- v1.6.19+ (WP-2): Cash Closing Models ----
+export type CashClosingStatus = "PENDING" | "CLOSED" | "REOPENED";
+export type CashClosingReason = "LOSS" | "MIS_ENTRY" | "ROUNDING" | "OTHER";
+
+export interface CashClosing {
+  id: string;
+  closing_date: string;        // ISO YYYY-MM-DD
+  opening_balance: number;
+  computed_closing: number;
+  actual_balance: number | null;
+  difference: number | null;
+  status: CashClosingStatus;
+  is_auto: boolean;
+  closed_at: string | null;
+  closed_by: string | null;
+  reason_category: CashClosingReason | string | null;
+  reason_note: string | null;
+}
+
+export interface CashClosingPreview {
+  date: string;
+  opening_balance: number;
+  computed_closing: number;
+  net_flow: number;
+  closed: boolean;
+  auto: boolean;
+}
+
 // ---- Debt Models ----
 export type DebtDirection = "RECEIVABLE" | "PAYABLE";
 
