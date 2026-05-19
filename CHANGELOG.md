@@ -34,6 +34,24 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.16.1] — 2026-05-20 (hotfix)
+
+**Hotfix — Audit Log paneli boş görünüyordu.** Kullanıcı admin olarak user/business CRUD yapsa bile audit log panelinde hiçbir kayıt görünmüyordu. Audit kayıtları DB'ye doğru yazılıyordu — sorun response envelope shape uyumsuzluğuydu.
+
+### Fixed
+
+#### Backend
+- **`AdminAuditController.search`** artık `PagedResponseDto<AuditLogDto>` döner (eskiden Spring native `Page<T>` ile `{content, totalElements, totalPages, last}` JSON üretiyordu). Frontend `types/index.ts#PagedResponse` ile birebir eşleşme: `{items, total_elements, total_pages, has_next, page, size}`.
+- **`PagedResponseDto<T>`** (yeni, common/dto) — generic envelope wrapper; `PagedResponseDto.of(Page<T>)` static helper Spring Data Page → snake_case JSON.
+
+### Notes
+
+- Etki: v1.3.x'te audit log endpoint'i eklendiğinden beri paneli boş gösteriyordu. Backend `auditLogService.recordEntityAction` çağrıları doğru çalışıyor (USER_CREATE, BUSINESS_CREATE, BUSINESS_DELETE, vs. hepsi audit_logs tablosuna yazıyor); sadece admin viewer'ı render edemiyordu.
+- Versiyon: 4-component hotfix (Maven `1.6.16.1`, npm `1.6.16-1`).
+- Bug dashboard'a v1.6.x bug-fix log WP'sinde TODO olarak kayıt edildi.
+
+---
+
 ## [1.6.16] — 2026-05-20
 
 **v1.6 ACİL PROD WP — Final cleanup + monitoring documentation.** v1.6.0 ACİL PROD work-package'i bu sürümle Sentry-dışı TÜM TODO'lar kapanmış olarak teslim edildi. Kod/yorum BizBoard referansları temizlendi + monitoring mimarisi `docs/MONITORING.md` altında dokümante edildi.

@@ -1,6 +1,6 @@
 {
   "name": "bizboard",
-  "version": "1.6.16",
+  "version": "1.6.16-1",
   "private": true,
   "scripts": {
     "dev": "next dev",
