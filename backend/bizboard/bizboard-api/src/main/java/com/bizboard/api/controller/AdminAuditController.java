@@ -1,9 +1,9 @@
 package com.bizboard.api.controller;
 
 import com.bizboard.common.dto.AuditLogDto;
+import com.bizboard.common.dto.PagedResponseDto;
 import com.bizboard.service.AuditLogQueryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -37,8 +37,15 @@ public class AdminAuditController {
      * snake_case alanları kabul eder: {@code actor_id}, {@code entity_type},
      * {@code action}, {@code from}, {@code to}.
      */
+    /**
+     * v1.6.16.1: Spring native {@code Page<T>} yerine {@link PagedResponseDto} döner —
+     * frontend {@code types/index.ts#PagedResponse} ile birebir snake_case eşleşme.
+     * Daha önce Page<T>'nin native {content, totalElements, totalPages, last}
+     * çıktısı frontend'in beklediği {items, total_elements, total_pages, has_next}
+     * ile uyuşmadığı için audit log paneli her zaman boş görünüyordu.
+     */
     @GetMapping
-    public ResponseEntity<Page<AuditLogDto>> search(
+    public ResponseEntity<PagedResponseDto<AuditLogDto>> search(
             @RequestParam(name = "actor_id", required = false) UUID actorId,
             @RequestParam(required = false) String action,
             @RequestParam(name = "entity_type", required = false) String entityType,
@@ -51,7 +58,7 @@ public class AdminAuditController {
         int safeSize = Math.min(Math.max(size, 1), 200);
         Pageable pageable = PageRequest.of(safePage, safeSize);
 
-        return ResponseEntity.ok(
-                auditLogQueryService.search(actorId, action, entityType, from, to, pageable));
+        return ResponseEntity.ok(PagedResponseDto.of(
+                auditLogQueryService.search(actorId, action, entityType, from, to, pageable)));
     }
 }
