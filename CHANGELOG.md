@@ -34,6 +34,22 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.10.1] — 2026-05-19 (hotfix)
+
+**Hotfix — zorunlu şifre değişimi 400 Bad Request veriyordu.** Non-admin kullanıcı oluşturup `mustChangePassword=true` ile geldiğinde `POST /me/password` endpoint'i `"currentPassword: boş değer olamaz, newPassword: boş değer olamaz"` döndürüyordu — kullanıcı şifresini değiştiremediği için tamamen kilitleniyordu.
+
+### Fixed
+
+#### Backend
+- **`ChangePasswordRequest`** — `@JsonProperty("current_password")` ve `@JsonProperty("new_password")` annotation'ları eksikti. Projede global `spring.jackson.property-naming-strategy=SNAKE_CASE` config'i yok; her DTO kendi mapping'ini taşıyor (CreateTransactionRequest, CreateDebtRequest, UpdateUserRequest, vs.). Bu DTO atlanmış olduğu için Jackson frontend'in gönderdiği `current_password`/`new_password` alanlarını eşleştiremiyor, alanlar `null` kalıp `@NotBlank` validation'ı tetikleniyordu.
+
+### Notes
+
+- Frontend zaten doğru body'yi yolluyordu (`{ current_password, new_password }` — bkz. `src/app/dashboard/change-password/page.tsx:39`). Düzeltme tamamen backend tarafında.
+- Versiyon 4-component (`v1.6.10.1` Maven / `v1.6.10-1` npm) — deployed `v1.6.10` üzerine hotfix kuralı gereği.
+
+---
+
 ## [1.6.10] — 2026-05-18
 
 **v1.6 ACİL PROD WP — `/counterparts` Geri dön butonu.** Küçük UX düzeltmesi.
