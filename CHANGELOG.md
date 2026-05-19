@@ -34,6 +34,49 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.11] — 2026-05-19
+
+**v1.6 ACİL PROD WP — Gruplama backend.** Kullanıcının dashboard'undaki işletmeleri öncelik seviyeli gruplara ayırma. `business_groups` + `business_group_members` tabloları + CRUD + reorder + üye yönetimi + sıkı user-isolation.
+
+### Added
+
+#### Backend
+- **`BusinessGroup` entity** — `id UUID PK`, `user_id FK CASCADE`, `name VARCHAR(80) NOT NULL`, `color VARCHAR(16)`, `order_index INT`, `priority INT DEFAULT 2` (sabit: 0=PINNED / 1=HIGH / 2=NORMAL), `created_at`, `updated_at`. KULLANICIYA ÖZEL.
+- **`BusinessGroupMember` entity** — `id UUID PK`, `group_id FK CASCADE`, `business_id FK CASCADE`, `order_in_group INT`, `added_at`. Unique constraint `(group_id, business_id)`.
+- **Repos:** `BusinessGroupRepository` (`findByUserIdOrderBy...`, `findByIdAndUserId` isolation guard); `BusinessGroupMemberRepository` (`findAllForUser` tek query'de tüm üyeler — N+1 önleyici).
+- **DTOs (snake_case `@JsonProperty`):** `BusinessGroupDto`, `BusinessGroupMemberDto`, `CreateBusinessGroupRequest`, `UpdateBusinessGroupRequest`, `AddGroupMemberRequest`, `ReorderRequest`.
+- **`BusinessGroupService`:**
+  - `listMyGroups(userId)` — priority ASC, orderIndex ASC, createdAt ASC; tüm üyeler tek query (N+1 önleme).
+  - `createGroup` — renk paleti (`zinc/blue/green/orange/red/purple/pink/teal`) + priority validation (0/1/2); aynı priority içinde son orderIndex+1 ile sıralanır.
+  - `updateGroup` — partial update (name/color/priority); priority değişimi yeni seviyenin sonuna iter.
+  - `deleteGroup` — cascade üyeler temizlenir + audit log.
+  - `addMember` — `BusinessAccessGuard.assertCanAccessBusiness` IDOR koruması + idempotent duplicate handling (frontend dnd retry'ları için).
+  - `removeMember` — bulk delete by composite key.
+  - `reorderGroups` — `WHERE user_id = currentUser` izolasyon + aynı priority kısıtı (spec'e göre cross-priority drag yasak).
+  - `reorderMembers` — order 0,1,2,...; listede olmayan üyeler sona iter (partial reorder safe).
+- **`BusinessGroupController` (`/api/me/business-groups`):**
+  - `GET /` list
+  - `POST /` create
+  - `PATCH /{groupId}` update (rename / color / priority)
+  - `DELETE /{groupId}` delete
+  - `POST /reorder` `{ ids: [...] }`
+  - `POST /{groupId}/members` add member
+  - `DELETE /{groupId}/members/{businessId}` remove member
+  - `POST /{groupId}/members/reorder` reorder
+
+### Security
+
+- Kullanıcı izolasyonu: tüm `findByIdAndUserId` lookup'ları başka kullanıcının grubuna erişimi `SecurityException` ile reddeder.
+- IDOR koruması: üye eklerken business erişimi `BusinessAccessGuard` üzerinden — kullanıcı görmediği işletmeyi grubuna ekleyemez.
+- Reorder izolasyonu: aynı priority kısıtı + sahip kontrolü hem grup hem üye reorder'da.
+
+### Notes
+
+- Backend compile temiz (`mvn -DskipTests compile` → BUILD SUCCESS).
+- Frontend (`v1.6.12`'de) — dnd-kit ile sürükle-bırak, "Yeni grup" modal'ı, collapsible + drag-to-reorder, edit menüsü, öncelik görsel ayrımı.
+
+---
+
 ## [1.6.10.1] — 2026-05-19 (hotfix)
 
 **Hotfix — zorunlu şifre değişimi 400 Bad Request veriyordu.** Non-admin kullanıcı oluşturup `mustChangePassword=true` ile geldiğinde `POST /me/password` endpoint'i `"currentPassword: boş değer olamaz, newPassword: boş değer olamaz"` döndürüyordu — kullanıcı şifresini değiştiremediği için tamamen kilitleniyordu.
