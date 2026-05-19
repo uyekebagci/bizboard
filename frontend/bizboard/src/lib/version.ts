@@ -1,7 +1,7 @@
 /**
  * v1.6.2.2: sürüm display formatlayıcı.
  *
- * Versiyonlama kuralı (BizBoard):
+ * Versiyonlama kuralı (ÇATI):
  * - Maven pom.xml 4-component native destekler: `1.6.2.1`, `1.6.3` vb.
  * - npm package.json SemVer strict; hotfix için pre-release tag kullanılır:
  *   - `1.6.3` → planlı sürüm (3-component)

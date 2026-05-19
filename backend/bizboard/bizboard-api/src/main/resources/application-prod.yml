@@ -1,4 +1,4 @@
-# Production overrides for BizBoard backend on Sevalla (or any container PaaS).
+# Production overrides for ÇATI backend on Sevalla (or any container PaaS).
 #
 # Activated via SPRING_PROFILES_ACTIVE=prod.
 #

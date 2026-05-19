@@ -1,5 +1,5 @@
 /**
- * BizBoard Frontend Logger
+ * ÇATI Frontend Logger
  * --------------------------------------------------------------
  * Dev   : renkli + emoji + hizali console.log (transport YOK)
  * Prod  : batch buffer (max 25 record / 5s) -> POST /api/logs
@@ -29,6 +29,10 @@ export type LogCategory =
 const IS_DEV = process.env.NODE_ENV !== "production";
 const APP_VER = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
 const APP_ENV = process.env.NEXT_PUBLIC_ENV ?? (IS_DEV ? "dev" : "prod");
+// v1.6.16+: marka adı ÇATI; backend log ingestion search hala "bizboard-web"
+// adıyla yazılmış geçmiş kayıtları da görebilir (öncesinde değiştirilen kayıt yok,
+// fakat ileride bu adı "cati-web" olarak güncellersek backend tarafta hem eski
+// hem yeni isim ile filtrelenebilir olmalı). Şu an internal stabilite için sabit.
 const SVC_NAME = "bizboard-web";
 const BATCH_MAX = 25;
 const BATCH_MS = 5_000;
