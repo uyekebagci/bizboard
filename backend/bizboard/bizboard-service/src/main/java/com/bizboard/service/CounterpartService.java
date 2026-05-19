@@ -42,11 +42,40 @@ public class CounterpartService {
 
     @Transactional(readOnly = true)
     public List<CounterpartDto> list(String role) {
-        if (role == null || role.isBlank()) {
-            return repository.findAllByOrderByNameAsc().stream().map(this::toDto).toList();
+        return list(role, null);
+    }
+
+    /**
+     * v1.6.20 (WP-3): role + kind kombinasyon filtresi.
+     * role: CUSTOMER/SUPPLIER/BOTH/OTHER; kind: PERSON/FIRM. Boş → tümü.
+     */
+    @Transactional(readOnly = true)
+    public List<CounterpartDto> list(String role, String kind) {
+        java.util.stream.Stream<Counterpart> base;
+        if (role != null && !role.isBlank()) {
+            base = repository.findByRoleOrderByNameAsc(parseRole(role)).stream();
+        } else if (kind != null && !kind.isBlank()) {
+            com.bizboard.common.enums.CounterpartKind k =
+                    com.bizboard.common.enums.CounterpartKind.valueOf(
+                            kind.trim().toUpperCase(java.util.Locale.ENGLISH));
+            return repository.findByKindOrderByNameAsc(k).stream().map(this::toDto).toList();
+        } else {
+            base = repository.findAllByOrderByNameAsc().stream();
         }
-        CounterpartRole r = parseRole(role);
-        return repository.findByRoleOrderByNameAsc(r).stream().map(this::toDto).toList();
+        if (kind != null && !kind.isBlank()) {
+            com.bizboard.common.enums.CounterpartKind k =
+                    com.bizboard.common.enums.CounterpartKind.valueOf(
+                            kind.trim().toUpperCase(java.util.Locale.ENGLISH));
+            base = base.filter(c -> c.getKind() == k);
+        }
+        return base.map(this::toDto).toList();
+    }
+
+    /** v1.6.20 (WP-3): Alt firmalar (parent_id == :id). */
+    @Transactional(readOnly = true)
+    public List<CounterpartDto> children(UUID parentId) {
+        return repository.findByParentIdOrderByNameAsc(parentId).stream()
+                .map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)

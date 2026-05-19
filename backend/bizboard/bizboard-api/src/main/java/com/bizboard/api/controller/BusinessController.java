@@ -2,6 +2,7 @@ package com.bizboard.api.controller;
 
 import com.bizboard.common.dto.BusinessDto;
 import com.bizboard.common.dto.CategoryDto;
+import com.bizboard.common.dto.ConsolidatedDashboardDto;
 import com.bizboard.common.dto.CreateBusinessRequest;
 import com.bizboard.common.dto.CreateTransactionRequest;
 import com.bizboard.common.dto.DeleteTransactionRequest;
@@ -10,6 +11,7 @@ import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.common.dto.UpdateTransactionRequest;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.BusinessService;
+import com.bizboard.service.ConsolidatedDashboardService;
 import com.bizboard.service.SummaryService;
 import com.bizboard.service.TransactionService;
 import jakarta.validation.Valid;
@@ -32,6 +34,7 @@ public class BusinessController {
     private final BusinessService businessService;
     private final TransactionService transactionService;
     private final SummaryService summaryService;
+    private final ConsolidatedDashboardService consolidatedService;
 
     @GetMapping
     public ResponseEntity<List<BusinessDto>> getBusinesses(@AuthenticationPrincipal UserPrincipal principal) {
@@ -102,6 +105,17 @@ public class BusinessController {
         }
 
         return ResponseEntity.ok(summaryService.getBusinessSummary(id, period, from, to));
+    }
+
+    /**
+     * v1.6.20 (WP-3): İşletme detay sayfasının tek-shot consolidated endpoint'i.
+     * Tüm widget verisini tek round-trip ile döner.
+     */
+    @GetMapping("/{id}/consolidated")
+    public ResponseEntity<ConsolidatedDashboardDto> getConsolidated(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(consolidatedService.getConsolidated(principal.getId(), id));
     }
 
     @PutMapping("/{id}/transactions/{txId}")

@@ -68,4 +68,25 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
      * cash closing hesabı için — business filtresi yok).
      */
     List<Transaction> findByDate(LocalDate date);
+
+    /**
+     * v1.6.20 (WP-3): "Hesaptan Harcama" widget — gün + paymentMethod + direction.
+     */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.date = :date " +
+            "  AND t.paymentMethod = :paymentMethod " +
+            "  AND t.direction = :direction " +
+            "ORDER BY t.createdAt DESC")
+    List<Transaction> findByDateAndPaymentMethodAndDirection(
+            @Param("date") LocalDate date,
+            @Param("paymentMethod") String paymentMethod,
+            @Param("direction") com.bizboard.common.enums.TransactionDirection direction);
+
+    /** v1.6.20 (WP-3): POS cihazı bazında bugünkü tx'ler. */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.posDevice.id = :deviceId AND t.date = :date " +
+            "ORDER BY t.createdAt DESC")
+    List<Transaction> findByPosDeviceIdAndDate(
+            @Param("deviceId") UUID deviceId,
+            @Param("date") LocalDate date);
 }

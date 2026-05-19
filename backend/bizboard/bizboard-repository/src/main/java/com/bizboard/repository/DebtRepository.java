@@ -39,4 +39,32 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
 
     /** Counterpart_id'si null olan (free-text only) borçlar — migration kaynağı. */
     List<Debt> findByCounterpartRefIsNull();
+
+    // ── v1.6.20 (WP-3): widget queries ─────────────────────────────
+
+    /** v1.6.20: belirli direction'daki tüm açık (settled=false) borçlar. */
+    List<Debt> findByDirectionAndSettledFalseOrderByDueDateAsc(
+            com.bizboard.common.enums.DebtDirection direction);
+
+    /** v1.6.20: önümüzdeki N gün vadeli açık çekler (chequeDueDate dolu, settled=false). */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.settled = false " +
+            "  AND d.chequeDueDate IS NOT NULL " +
+            "  AND d.chequeDueDate BETWEEN :from AND :to " +
+            "ORDER BY d.chequeDueDate ASC")
+    List<Debt> findUpcomingCheques(
+            @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
+            @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
+
+    /** v1.6.20: önümüzdeki N gün hatırlatma tarihli açık borçlar. */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.settled = false " +
+            "  AND d.reminderDate IS NOT NULL " +
+            "  AND d.reminderDate BETWEEN :from AND :to " +
+            "ORDER BY d.reminderDate ASC")
+    List<Debt> findUpcomingReminders(
+            @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
+            @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
 }

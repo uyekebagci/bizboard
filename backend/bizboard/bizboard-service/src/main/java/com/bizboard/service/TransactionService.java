@@ -40,6 +40,9 @@ public class TransactionService {
     private final LedgerService ledgerService;
     private final AuditLogService auditLogService;
     private final BusinessAccessGuard accessGuard;
+    // v1.6.20 (WP-3): counterpart + pos_device wiring
+    private final com.bizboard.repository.CounterpartRepository counterpartRepository;
+    private final com.bizboard.repository.PosDeviceRepository posDeviceRepository;
 
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
@@ -128,6 +131,32 @@ public class TransactionService {
         boolean backdated = request.getDate() != null
                 && request.getDate().isBefore(java.time.LocalDate.now());
 
+        // v1.6.20 (WP-3): karşı taraf + pos cihazı wiring
+        com.bizboard.common.entity.Counterpart targetCounterpart = null;
+        if (request.getTargetCounterpartId() != null) {
+            targetCounterpart = counterpartRepository
+                    .findById(request.getTargetCounterpartId())
+                    .orElse(null);
+        }
+        com.bizboard.common.entity.PosDevice posDevice = null;
+        java.math.BigDecimal appliedRate = null;
+        if ("POS".equals(pm) && request.getPosDeviceId() != null) {
+            posDevice = posDeviceRepository.findById(request.getPosDeviceId()).orElse(null);
+            if (posDevice != null) {
+                // Snapshot: cihazın o anki rate'ini sabitle.
+                appliedRate = posRate != null ? posRate
+                        : (posDevice.getDefaultRate() != null ? posDevice.getDefaultRate()
+                            : posDevice.getLastUsedRate());
+                // Cihazın "lastUsedRate"ini de güncelle.
+                if (posRate != null) {
+                    posDevice.setLastUsedRate(posRate);
+                    posDeviceRepository.save(posDevice);
+                }
+            }
+        } else if ("POS".equals(pm)) {
+            appliedRate = posRate;
+        }
+
         Transaction transaction = Transaction.builder()
                 .business(business)
                 .direction(TransactionDirection.valueOf(request.getDirection().toUpperCase(java.util.Locale.ENGLISH)))
@@ -138,6 +167,9 @@ public class TransactionService {
                 .category(category)
                 .paymentMethod(pm)
                 .posRate(posRate)
+                .targetCounterpart(targetCounterpart)
+                .posDevice(posDevice)
+                .appliedPosRate(appliedRate)
                 .backdated(backdated)
                 .tags(request.getTags())
                 .metadata(request.getMetadata())

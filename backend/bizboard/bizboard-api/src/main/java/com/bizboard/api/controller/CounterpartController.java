@@ -32,13 +32,23 @@ public class CounterpartController {
 
     @GetMapping
     public ResponseEntity<List<CounterpartDto>> list(
-            @RequestParam(required = false) String role) {
-        return ResponseEntity.ok(service.list(role));
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String kind) {
+        return ResponseEntity.ok(service.list(role, kind));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CounterpartDto> get(@PathVariable UUID id) {
         return ResponseEntity.ok(service.get(id));
+    }
+
+    /**
+     * v1.6.20 (WP-3): Alt firmalar (children). Bir parent firmanın altındaki
+     * tüm sub-firma'lar. Counterpart detay sayfası drill-down için.
+     */
+    @GetMapping("/{id}/children")
+    public ResponseEntity<List<CounterpartDto>> children(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.children(id));
     }
 
     @PostMapping
