@@ -46,8 +46,18 @@ public class FinanceService {
 
     // ─── Ana Finans Özeti ───────────────────────────────────────────────
 
+    /**
+     * v1.6.15+: `days` parametresi opsiyonel — set ise periyot son N gün olarak
+     * hesaplanır, monthly trend skip edilir (daily_cash_flow zaten son 30 gün
+     * sağlıyor). days=null/0 → eski months mantığı.
+     */
     @Transactional(readOnly = true)
     public FinanceOverviewDto getFinanceOverview(UUID userId, int months) {
+        return getFinanceOverview(userId, months, null);
+    }
+
+    @Transactional(readOnly = true)
+    public FinanceOverviewDto getFinanceOverview(UUID userId, int months, Integer days) {
         List<Business> businesses = getAccessibleBusinesses(userId);
         if (businesses.isEmpty()) {
             return emptyOverview();
@@ -55,10 +65,16 @@ public class FinanceService {
 
         List<UUID> businessIds = businesses.stream().map(Business::getId).toList();
         LocalDate today = LocalDate.now();
+        boolean dailyMode = days != null && days > 0;
 
-        // ─── Seçilen dönem (months=0 → tüm zamanlar) ──────────────────
+        // ─── Seçilen dönem ─────────────────────────────────────────────
+        // dailyMode → curStart = today-(days-1)..today
+        // months=0 → tüm zamanlar (eski mantık)
+        // months>0 → curStart = ayın 1'i, N ay geri
         LocalDate curStart;
-        if (months <= 0) {
+        if (dailyMode) {
+            curStart = today.minusDays(days - 1L);
+        } else if (months <= 0) {
             // Tüm zamanlar: en eski tarihi bul (işletme, sabit gider, işlem)
             LocalDate earliestBiz = businesses.stream()
                     .filter(b -> b.getCreatedAt() != null)
@@ -163,11 +179,18 @@ public class FinanceService {
                 .build();
 
         // ─── Aylık Trend ──────────────────────────────────────────────
-        int trendMonths = months <= 0
-                ? (int) java.time.temporal.ChronoUnit.MONTHS.between(
-                        YearMonth.from(curStart), YearMonth.from(curEnd)) + 1
-                : months;
-        List<FinanceOverviewDto.MonthData> monthlyTrend = buildMonthlyTrend(businessIds, trendMonths);
+        // v1.6.15+: dailyMode'da monthly trend boş döner — frontend daily_cash_flow
+        // üzerinden günlük bar chart render eder.
+        List<FinanceOverviewDto.MonthData> monthlyTrend;
+        if (dailyMode) {
+            monthlyTrend = List.of();
+        } else {
+            int trendMonths = months <= 0
+                    ? (int) java.time.temporal.ChronoUnit.MONTHS.between(
+                            YearMonth.from(curStart), YearMonth.from(curEnd)) + 1
+                    : months;
+            monthlyTrend = buildMonthlyTrend(businessIds, trendMonths);
+        }
 
         // ─── Kategori Kırılımı (seçilen dönem) ────────────────────────
         List<FinanceOverviewDto.CategoryData> expenseByCategory =
@@ -186,7 +209,14 @@ public class FinanceService {
                 buildTopTransactions(curTransactions, TransactionDirection.INCOME, 5);
 
         // ─── Günlük Nakit Akışı ──────────────────────────────────────
-        int cashFlowDays = months <= 0 ? 90 : Math.min(months * 30, 90);
+        // v1.6.15+: dailyMode'da kullanıcı son N günü ister — bar chart için
+        // en az 30 gün gönder ki seçilen N + arka plan doğal görünsün.
+        int cashFlowDays;
+        if (dailyMode) {
+            cashFlowDays = Math.max(days, 30);
+        } else {
+            cashFlowDays = months <= 0 ? 90 : Math.min(months * 30, 90);
+        }
         List<FinanceOverviewDto.DailyCashFlow> dailyCashFlow =
                 buildDailyCashFlow(businessIds, cashFlowDays);
 

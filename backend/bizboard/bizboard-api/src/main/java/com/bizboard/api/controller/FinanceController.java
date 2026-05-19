@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Finans modülü controller.
  *
- * GET /finance/overview?months=6  → Kapsamlı finans özeti (aylık trend, kategori kırılımı,
- *                                    işletme bazlı analiz, nakit akışı, top işlemler)
+ * GET /finance/overview?months=N        → N aylık periyot (klasik mod)
+ * GET /finance/overview?days=N          → N günlük periyot (v1.6.15+ daily mod)
+ *
+ * `days` set ise `months` görmezden gelinir. days mod'da `monthly_trend` boş döner;
+ * frontend `daily_cash_flow` üzerinden son N günü bar chart olarak render eder.
  */
 @RestController
 @RequestMapping("/finance")
@@ -24,7 +27,9 @@ public class FinanceController {
     @GetMapping("/overview")
     public ResponseEntity<FinanceOverviewDto> getFinanceOverview(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(defaultValue = "6") int months) {
-        return ResponseEntity.ok(financeService.getFinanceOverview(principal.getId(), months));
+            @RequestParam(defaultValue = "1") int months,
+            @RequestParam(required = false) Integer days) {
+        return ResponseEntity.ok(
+                financeService.getFinanceOverview(principal.getId(), months, days));
     }
 }
