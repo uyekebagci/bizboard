@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { PortfolioCard } from "@/components/dashboard/PortfolioCard";
 import { StatsRow } from "@/components/dashboard/StatsRow";
-import { BusinessGrid } from "@/components/dashboard/BusinessGrid";
+import { GroupedBusinessGrid } from "@/components/dashboard/groups/GroupedBusinessGrid";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { DebtWidget } from "@/components/dashboard/DebtWidget";
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             {businesses.length} aktif
           </span>
         </div>
-        <BusinessGrid businesses={businesses} portfolio={portfolio} />
+        <GroupedBusinessGrid businesses={businesses} portfolio={portfolio} />
       </section>
 
       {/* Recent Activity */}

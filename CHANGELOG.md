@@ -34,6 +34,46 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.12] — 2026-05-20
+
+**v1.6 ACİL PROD WP — Gruplama frontend.** Dashboard'da işletmeler artık öncelik seviyeli gruplar halinde — dnd-kit ile sürükle-bırak, "Yeni grup" modal'ı, edit ⋮ menüsü (rename / color / priority / delete), collapsible group cards, 8-renk palette, PINNED/HIGH/NORMAL görsel ayrımı.
+
+### Added
+
+#### Frontend
+- **`@dnd-kit/core` + `@dnd-kit/sortable` + `@dnd-kit/utilities`** dependencies.
+- **`lib/business-groups.ts`** — `Period`/priority sabitleri (`PRIORITY_PINNED=0`, `HIGH=1`, `NORMAL=2`), 8-renk palette + Tailwind sınıf haritası, `priorityIcon`/`priorityLabel`, `sortGroups` helper.
+- **`types/index.ts`** — `BusinessGroup`, `BusinessGroupMemberItem`, `GroupColor`, `GroupPriority` tipleri.
+- **`hooks/useBusinessGroups.ts`** — fetch + create/update/delete + add/remove member + reorder mutations; backend `/me/business-groups` ile konuşur.
+- **`components/dashboard/groups/CreateGroupModal.tsx`** — isim input (max 80) + 8-color palette + 3 priority chip.
+- **`components/dashboard/groups/EditGroupMenu.tsx`** — ⋮ dropdown: Rename (inline input) / Color (grid) / Priority (submenu) / Delete (confirm).
+- **`components/dashboard/groups/BusinessCardDraggable.tsx`** — `useDraggable` ile sürüklenebilir; gelir/gider/net kâr kart kalıbı korunur; grip handle + gruptan çıkar (X) butonu.
+- **`components/dashboard/groups/BusinessGroupCard.tsx`** — accent bar (sol kenar 3px) + header (priority ikonu + ad + üye sayısı + ⋮ + collapse) + droppable members area + SortableContext within-group reorder.
+- **`components/dashboard/groups/GroupedBusinessGrid.tsx`** — top-level orchestrator: DndContext + sortGroups (PINNED → HIGH → NORMAL) + "Grupsuz" virtual section + "Yeni Grup" butonu.
+- **PINNED visual:** 📌 ikon + accent bar + "PINNED" rozeti + `sticky top-0` (scroll'da en üstte kalır).
+- **HIGH visual:** ⭐ ikon + subtle ring.
+- **NORMAL visual:** nötr (sadece accent bar rengi).
+
+### Changed
+
+#### Frontend
+- **`app/dashboard/page.tsx`** — `BusinessGrid` → `GroupedBusinessGrid`. Eski flat grid mobile `/dashboard/businesses` sayfasında korunur.
+
+### UX behavior
+
+- **Drag from Grupsuz → Group**: target group'a üye eklenir; kaynak Grupsuz'da otomatik kaybolur (artık üye, listeden düşer).
+- **Drag from Group A → Group B**: B'ye eklenir + A'dan çıkarılır (move semantiği).
+- **Within-group reorder**: SortableContext + dnd-kit `rectSortingStrategy`.
+- **Cross-priority drag** UI'da izin verilmez (her grup kendi droppable'ı; priority değişimi yalnız ⋮ menüsünden).
+- **Pointer activation threshold 5px** — yanlışlıkla drag start önlenir (kart klik'leri /business/[id] route'una gider).
+
+### Notes
+
+- Frontend `next build` TypeScript compile + lint temiz; static export `NEXT_PUBLIC_API_URL` prerender hatası pre-existing.
+- 5 frontend Gruplama TODO'su kapatıldı (dnd, create UI, collapsible, edit menü, priority visual).
+
+---
+
 ## [1.6.11.1] — 2026-05-19 (hotfix)
 
 **Hotfix — controller path mismatch.** PosController, CashController, ReceivableController ve yeni BusinessGroupController `/api/...` prefix'i ile mapped'iyken projedeki diğer tüm controller'lar (BusinessController `/businesses`, PortfolioController `/portfolio`, UserController `/me`, vs.) prefix'siz. Frontend pattern'i de prefix'siz (`/pos/businesses`, `/cash/businesses`, `/receivables`). Bu nedenle POS/Nakit/Alacaklar sayfaları sessizce 404'lüyor ve `.catch(() => [])` ile boş state gösteriyordu — kullanıcı bu yüzden bu özellikleri henüz test edememişti.
