@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, LogOut, Shield } from "lucide-react";
+import { Search, LogOut, Shield, Menu } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { getInitials } from "@/lib/utils";
 import { logout } from "@/lib/api/client";
@@ -10,7 +10,12 @@ import Link from "next/link";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 import { formatVersion } from "@/lib/version";
 
-export function TopBar() {
+interface TopBarProps {
+  /** v1.6.13: mobile/tablet hamburger handler — sidebar açar/kapatır. */
+  onMenuClick?: () => void;
+}
+
+export function TopBar({ onMenuClick }: TopBarProps = {}) {
   const profile = useAppStore((s) => s.profile);
   const setProfile = useAppStore((s) => s.setProfile);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -43,7 +48,19 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-40 bg-surface-800/95 backdrop-blur-lg border-b border-surface-700">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="CATI ana sayfa">
+        <div className="flex items-center gap-2">
+          {/* v1.6.13: hamburger — sadece <lg ekranlarda + handler verilmişse */}
+          {onMenuClick && (
+            <button
+              type="button"
+              onClick={onMenuClick}
+              className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-surface-700 transition-colors"
+              aria-label="Menuyu ac"
+            >
+              <Menu size={20} className="text-surface-300" />
+            </button>
+          )}
+          <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="CATI ana sayfa">
           <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center">
             <span className="text-white font-bold text-sm">C</span>
           </div>
@@ -61,6 +78,7 @@ export function TopBar() {
             )}
           </div>
         </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           <button
