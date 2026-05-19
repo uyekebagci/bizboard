@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * v1.7.0 (WP-1): BankAccount repository.
+ * v1.6.18 (WP-1): BankAccount repository.
  *
  * <p>Default sorgular aktiflere göre filtreli — pasif hesaplar yalnız
  * explicit `IncludingInactive` varyantları ile gelir.</p>

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * v1.7.0 (WP-1): Tek tenant ayarları için anahtar-değer tablosu.
+ * v1.6.18 (WP-1): Tek tenant ayarları için anahtar-değer tablosu.
  * <p>
  * En önemli kullanımı: {@code tenant.single_business_id} — DGR roll-out'unda
  * sistemin tek bir işletmeye sabit kalması için. Boot anında değer NULL ise
@@ -42,6 +42,6 @@ public class SystemSetting {
     @Column(name = "updated_by")
     private UUID updatedBy;
 
-    /** v1.7.0 (WP-1): tek-tenant business id ayar key'i. */
+    /** v1.6.18 (WP-1): tek-tenant business id ayar key'i. */
     public static final String KEY_TENANT_BUSINESS_ID = "tenant.single_business_id";
 }

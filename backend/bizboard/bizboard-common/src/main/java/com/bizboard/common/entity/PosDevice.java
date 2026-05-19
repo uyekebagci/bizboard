@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * v1.7.0 (WP-1): POS cihazı entity.
+ * v1.6.18 (WP-1): POS cihazı entity.
  *
  * <p>Excel'deki "POS cihazı" kavramı — bir firma adına (firmamızın veya
  * tedarikçinin) bağlı, banka entegrasyonlu, belirli bir komisyon oranı taşıyan

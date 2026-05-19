@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.Optional;
 
 /**
- * v1.7.0 (WP-1): Boot guard — tek-tenant business id ayarı set edilmemişse
+ * v1.6.18 (WP-1): Boot guard — tek-tenant business id ayarı set edilmemişse
  * uyarı log düşürür (sistemin tek-işletme modu için gerekli).
  *
  * <p>Eksik ayar uygulamayı durdurmaz — yalnız operatöre bildirim. DGR
