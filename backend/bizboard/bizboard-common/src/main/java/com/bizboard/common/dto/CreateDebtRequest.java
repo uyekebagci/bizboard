@@ -50,6 +50,30 @@ public class CreateDebtRequest {
     @JsonProperty("receivable_type_other")
     private String receivableTypeOther;
 
+    // ── v1.6.22 (WP-5): Çek özel alanlar (receivable_type=CEK için anlamlı) ──
+
+    /** Çek vadesi. dueDate ile karıştırılmamalı (çekin özel tahsil tarihi). */
+    @JsonProperty("cheque_due_date")
+    private LocalDate chequeDueDate;
+
+    /** Çeki tahsile veren banka. */
+    @JsonProperty("cheque_collector_bank")
+    private String chequeCollectorBank;
+
+    /** Çek seri numarası. */
+    @JsonProperty("cheque_no")
+    private String chequeNo;
+
+    // ── v1.6.22 (WP-5): Hatırlatma alanları (her debt için opsiyonel) ──
+
+    /** Hatırlatma tarihi — cron her gün 09:00'da bu tarihtekiler için bildirim atar. */
+    @JsonProperty("reminder_date")
+    private LocalDate reminderDate;
+
+    /** Hatırlatma serbest metni. */
+    @JsonProperty("reminder_note")
+    private String reminderNote;
+
     @JsonProperty("due_date")
     private LocalDate dueDate;
 

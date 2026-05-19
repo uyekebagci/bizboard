@@ -469,6 +469,12 @@ export interface Debt {
   receivable_type?: ReceivableType | null;
   /** v1.6.5+: receivable_type=DIGER iken serbest metin tip adı. */
   receivable_type_other?: string | null;
+  // v1.6.22+ (WP-5): çek + reminder alanları
+  cheque_due_date?: string | null;
+  cheque_collector_bank?: string | null;
+  cheque_no?: string | null;
+  reminder_date?: string | null;
+  reminder_note?: string | null;
   due_date: string | null;
   is_settled: boolean;
   settled_at: string | null;

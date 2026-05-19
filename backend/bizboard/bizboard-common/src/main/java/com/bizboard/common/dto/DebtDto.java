@@ -49,6 +49,13 @@ public class DebtDto {
     @JsonProperty("receivable_type_other")
     private String receivableTypeOther;
 
+    // ── v1.6.22 (WP-5): Çek + reminder alanları ──
+    @JsonProperty("cheque_due_date")        private LocalDate chequeDueDate;
+    @JsonProperty("cheque_collector_bank")  private String chequeCollectorBank;
+    @JsonProperty("cheque_no")              private String chequeNo;
+    @JsonProperty("reminder_date")          private LocalDate reminderDate;
+    @JsonProperty("reminder_note")          private String reminderNote;
+
     @JsonProperty("due_date")
     private LocalDate dueDate;
 
