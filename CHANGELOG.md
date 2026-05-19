@@ -34,6 +34,27 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23] — 2026-05-20
+
+**UI polish — işletme detay page header kompaktlaştırıldı.** Eski `BusinessHeader` widget'ı (kart şeklinde işletme adı + tipi + ekip üyesi sayısı) kaldırıldı; bu bilgi "← Geri" satırına alındı. Tek-satırlı page header artık: geri butonu + işletme adı + tip + ekip üyesi sayısı + admin sil + ayarlar.
+
+### Changed
+
+#### Frontend
+- **`/business/[id]/page.tsx`:**
+  - `<BusinessHeader business={business} />` import + render kaldırıldı.
+  - "Geri" satırı revize edildi — sol tarafta `<ArrowLeft>` ikonu + işletme adı (`text-lg font-bold`) + altında `business_type_name · {n} ekip uyesi` (small text + `Users` ikon). Sağ tarafta admin sil + ayarlar butonları korundu.
+  - Truncate + `min-w-0 flex-1` ile uzun işletme adları header'da düzgün overflow olur.
+- Ekran alanından ~150px kazanıldı — consolidated widget grid daha hızlı görünür.
+
+### Notes
+
+- `BusinessHeader` component dosyası dokunulmadı (artık kullanılmıyor); ileride başka yerde gerekirse silinebilir.
+- Backend değişiklik yok.
+- v1.7 beta'ya kadar v1.6.x üzerinden patch'lemeye devam edilecek (kullanıcı talimatı).
+
+---
+
 ## [1.6.22] — 2026-05-20
 
 **v1.6 acil prod devam · WP-5 — Çek + Hatırlatma + Master Havuz (final WP).** Çek özel alanları (vade/banka/no), hatırlatma alanları (her debt için), `/cekler` ve `/hesaplar/havuz` sayfaları, çek vade reminder cron, bank account aktif/pasif toggle. v1.6 acil prod devam serisinin 5/5 WP'si bu sürümle tamamlandı.

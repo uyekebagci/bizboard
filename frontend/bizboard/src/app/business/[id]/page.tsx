@@ -2,14 +2,14 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote } from "lucide-react";
+import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { ConsolidatedWidgets } from "@/components/business/dashboard/ConsolidatedWidgets";
 import { CarryOverBanner } from "@/components/closing/CarryOverBanner";
 import { CloseTodayModal } from "@/components/closing/CloseTodayModal";
 import { useConsolidatedDashboard } from "@/hooks/useConsolidatedDashboard";
 import { useCashClosing } from "@/hooks/useCashClosing";
-import { BusinessHeader } from "@/components/business/BusinessHeader";
+// v1.6.23: BusinessHeader widget kaldırıldı — info "Geri" satırına taşındı.
 import { FinanceSummary } from "@/components/business/FinanceSummary";
 import { TransactionList } from "@/components/business/TransactionList";
 import { ModuleTabs } from "@/components/business/ModuleTabs";
@@ -71,16 +71,37 @@ export default function BusinessDetailPage() {
 
   return (
     <div className="space-y-5 pb-24 overflow-x-hidden max-w-full">
-      {/* Navigation */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-surface-300 hover:text-white transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span className="text-sm font-medium">Geri</span>
-        </button>
-        <div className="flex items-center gap-1">
+      {/* v1.6.23: Tek-satırlı page header — geri butonu + işletme adı + ekip
+          üyesi sayısı + admin aksiyonları. Eski BusinessHeader card'ı kaldırıldı. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <button
+            onClick={() => router.back()}
+            className="p-2 -ml-2 rounded-xl text-surface-300 hover:text-white hover:bg-surface-700 transition-colors shrink-0"
+            aria-label="Geri"
+            title="Geri"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-bold text-white truncate leading-tight">
+              {business.name}
+            </h1>
+            <p className="text-[11px] text-surface-400 flex items-center gap-1.5 mt-0.5">
+              <span className="capitalize">{business.business_type_name || "Isletme"}</span>
+              {business.members && business.members.length > 0 && (
+                <>
+                  <span className="opacity-40">·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <UsersIcon size={10} />
+                    {business.members.length} ekip uyesi
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
           {isAdmin && (
             <button
               onClick={() => setDeleteConfirm(true)}
@@ -93,6 +114,7 @@ export default function BusinessDetailPage() {
           <Link
             href={`/business/${businessId}/settings`}
             className="p-2 rounded-xl hover:bg-surface-600 transition-colors"
+            title="Ayarlar"
           >
             <Settings size={20} className="text-surface-300" />
           </Link>
@@ -138,8 +160,7 @@ export default function BusinessDetailPage() {
         </div>
       )}
 
-      {/* Business Header */}
-      <BusinessHeader business={business} />
+      {/* v1.6.23: BusinessHeader widget kaldırıldı — info "Geri" satırında. */}
 
       {/* v1.6.19 (WP-2): Dünden Kalan Eksik banner */}
       <CarryOverBanner />
