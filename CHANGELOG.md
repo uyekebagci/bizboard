@@ -34,6 +34,53 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.16] — 2026-05-20
+
+**v1.6 ACİL PROD WP — Final cleanup + monitoring documentation.** v1.6.0 ACİL PROD work-package'i bu sürümle Sentry-dışı TÜM TODO'lar kapanmış olarak teslim edildi. Kod/yorum BizBoard referansları temizlendi + monitoring mimarisi `docs/MONITORING.md` altında dokümante edildi.
+
+### Added
+
+- **`docs/MONITORING.md`** — yeni dokümantasyon:
+  - Mimari diyagram: Browser → Next.js `/api/logs` → Spring Boot `/internal/logs`
+  - 5 yakalama katmanı (React Error Boundary, Next root global-error, window.onerror, unhandledrejection, logger batch/keepalive) ayrıntılı açıklama
+  - Test reçeteleri (render crash, window error, unhandled rejection)
+  - Sentry SDK'nın neden v1.7+'a ertelendiği — `logger.ts` + `/api/logs` + ErrorBoundary kombo'su zaten Sentry-benzeri akış sağlıyor
+
+### Changed
+
+#### Backend
+- **`MyCompany.java`** — javadoc içinde "BizBoard'daki işletme" → "ÇATI'daki işletme".
+- **`BizBoardApplication.java`** — class-level javadoc eklendi: marka adı ÇATI; class adı + Java package path'leri `com.bizboard.*` internal stabilite için bilinçli olarak korundu.
+- **`application-prod.yml`** — header yorumu "BizBoard backend on Sevalla" → "ÇATI backend on Sevalla".
+
+#### Frontend
+- **`types/index.ts`** — başlık yorumu `// BizBoard - Type Definitions` → `// ÇATI - Type Definitions`.
+- **`lib/logger.ts`** — modul başlığı `BizBoard Frontend Logger` → `ÇATI Frontend Logger`; `SVC_NAME = "bizboard-web"` üzerinde açıklayıcı yorum (log ingestion uyumluluğu için sabit tutuldu).
+- **`lib/version.ts`** — versiyonlama kuralı javadoc'unda `BizBoard` → `ÇATI`.
+
+### Notes — Bilinçli olarak korunan internal referanslar
+
+Aşağıdaki BizBoard izleri kasıtlı olarak korundu — değiştirilmesi user-state veya prod stabilitesi için yüksek risk:
+
+1. **Java package path'leri `com.bizboard.*`** — Spring Boot component scan + tüm import path'leri; refactor edilirse 100+ dosya değişir. Etkisi yok (kullanıcı görmez); ileride büyük cleanup sürümünde ele alınabilir.
+2. **`BizBoardApplication` sınıf adı** — Spring main entry; değiştirilebilir ama Maven artifact path'leri etkilenir. Internal stability için sabit.
+3. **`bizboard.preferences.*` / `bizboard_draft_business` / `bb_session_id` / `bb_logout_signal` localStorage anahtarları** — değiştirme kullanıcı state'ini sıfırlar (period preference, draft, session). Migration kodu eklenmesi ayrı bir scope.
+4. **`SVC_NAME = "bizboard-web"`** — backend log ingestion search history bu adla yazılmış. Migration için backend tarafında hem eski hem yeni isimle filter desteği gerek; ayrı release.
+5. **Maven `groupId: com.bizboard`** — Maven artifact identifier; deploy pipeline'larını etkiler.
+
+Hepsi `BizBoardApplication.java` javadoc'unda + bu CHANGELOG'ta dokümante edildi.
+
+### Bu sürümle kapanan TODO'lar
+
+- **`e83947e1`** Rebrand: kod/yorumlardaki BizBoard referansları → temizlendi (yukarıdaki listede dokümante edilen "internal stability" sınırı ile).
+- **`62b3f0a2`** Error boundary + monitoring: dokümantasyon → `docs/MONITORING.md`.
+
+### v1.6.0 — ACİL PROD WP final özet
+
+Sentry frontend (`9a951a00`) ve Sentry backend (`698e6d9e`) dışında **51/53 TODO COMPLETED** (~%96). Sentry SDK'ları DSN + harici hesap gerektirdiği için kullanıcı tercihen v1.7+'da ele alınacak — mevcut `logger.ts` + `/api/logs` + `ErrorBoundary` stack'i Sentry'ye benzer rapor akışı zaten sağlıyor.
+
+---
+
 ## [1.6.15] — 2026-05-20
 
 **v1.6 ACİL PROD WP — Finance Center daily bucket + 'Bugun' preset.** `/finance` artık varsayılan olarak günlük modda; trend grafiği son 30 günün gün-gün bar chart'i; periyot selector'a "Bugun" eklendi.

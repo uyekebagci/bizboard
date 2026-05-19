@@ -13,7 +13,7 @@ import java.util.UUID;
 /**
  * "Benim Firmalarım" — kullanıcının yönettiği tüzel kişiler (Anonim/Limited/Şahıs vb).
  *
- * <p>Bir {@link Business} (BizBoard'daki "işletme") tek bir {@code MyCompany}'ye bağlıdır
+ * <p>Bir {@link Business} (ÇATI'daki "işletme") tek bir {@code MyCompany}'ye bağlıdır
  * (operasyonel birim → tüzel kişi). v1.5.0'da {@link Business#myCompany} FK olarak eklendi.</p>
  */
 @Entity
