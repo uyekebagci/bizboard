@@ -83,6 +83,67 @@ public class Transaction {
     @Column(name = "pos_rate", precision = 5, scale = 2)
     private java.math.BigDecimal posRate;
 
+    /**
+     * v1.7.0 (WP-1): Karşı taraf (counterpart) — işlem girilirken kullanıcı
+     * "kimden / kime" diye seçer. Tek-tenant modda işletme zaten DGR sabit;
+     * tx'in farkı counterpart'tır. Nullable — eski kayıtlarda doldurulmaz.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_counterpart_id")
+    private Counterpart targetCounterpart;
+
+    /**
+     * v1.7.0 (WP-1): Geriye dönük girildi mi? Tx tarihi kullanıcının kayıt
+     * oluşturma anından önceyse otomatik {@code true} olur. UI'da uyarı/rozet,
+     * audit_log'da {@code highlight_type=BACKDATED}.
+     */
+    @Column(name = "is_backdated", nullable = false)
+    @org.hibernate.annotations.ColumnDefault("false")
+    @Builder.Default
+    private boolean backdated = false;
+
+    /**
+     * v1.7.0 (WP-1): Bu kayıt başka bir tx'in düzeltilmesi sonucu oluştu mu?
+     * Düzeltme akışı orijinali "is_corrected=true" yapar + bu yeni tx
+     * {@code correctionOfTxId}'yi taşır.
+     */
+    @Column(name = "is_corrected", nullable = false)
+    @org.hibernate.annotations.ColumnDefault("false")
+    @Builder.Default
+    private boolean corrected = false;
+
+    /** v1.7.0 (WP-1): Bu tx başka bir tx'in düzeltmesi ise orijinalin id'si. */
+    @Column(name = "correction_of_tx_id")
+    private UUID correctionOfTxId;
+
+    /**
+     * v1.7.0 (WP-1): Tx oluşturulduğu anki POS oranı snapshot — cihazın
+     * {@code defaultRate}'i sonra değişse bile bu tx'in oranı sabit kalır.
+     * {@code paymentMethod=POS} için doldurulur; NAKIT için null.
+     */
+    @Column(name = "applied_pos_rate", precision = 5, scale = 2)
+    private java.math.BigDecimal appliedPosRate;
+
+    /**
+     * v1.7.0 (WP-1): POS cihazı FK. {@code paymentMethod=POS} olan tx'ler bu
+     * alanı doldurur — hangi cihazda çekildi raporlama için.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pos_device_id")
+    private PosDevice posDevice;
+
+    /**
+     * v1.7.0 (WP-1): POS çekimi banka hesabına düştü mü?
+     * <ul>
+     *   <li>null = nakit / non-POS (anlamsız)</li>
+     *   <li>false = POS çekildi ama hesaba henüz düşmedi</li>
+     *   <li>true = hesaba düştü</li>
+     * </ul>
+     * Excel'deki "POS ÇEKİM HESABA GELECEK OLAN" raporu bu flag'i kullanır.
+     */
+    @Column(name = "pos_settled")
+    private Boolean posSettled;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     @Builder.Default

@@ -1,5 +1,6 @@
 package com.bizboard.common.entity;
 
+import com.bizboard.common.enums.CounterpartKind;
 import com.bizboard.common.enums.CounterpartRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -49,6 +50,26 @@ public class Counterpart {
     @Column(nullable = false, length = 16)
     @Builder.Default
     private CounterpartRole role = CounterpartRole.OTHER;
+
+    /**
+     * v1.7.0 (WP-1): Varlık tipi — PERSON (gerçek kişi) veya FIRM (tüzel kişi).
+     * `role` (CUSTOMER/SUPPLIER/BOTH/OTHER) iş ilişkisini; `kind` (PERSON/FIRM) varlık
+     * tipini tanımlar. Mevcut kayıtlar default FIRM olur (DGR senaryosunda doğru).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    @ColumnDefault("'FIRM'")
+    @Builder.Default
+    private CounterpartKind kind = CounterpartKind.FIRM;
+
+    /**
+     * v1.7.0 (WP-1): Alt-firma hiyerarşisi. Bir firma başka bir firmanın altında
+     * olabilir (örn. holding → bağlı şirket). Tree depth maks 2 — uygulama
+     * katmanında zorlanır.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Counterpart parent;
 
     @Column(name = "contact_name")
     private String contactName;
