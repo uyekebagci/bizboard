@@ -5,7 +5,7 @@ import { PortfolioCard } from "@/components/dashboard/PortfolioCard";
 import { StatsRow } from "@/components/dashboard/StatsRow";
 import { GroupedBusinessGrid } from "@/components/dashboard/groups/GroupedBusinessGrid";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { QuickActions } from "@/components/dashboard/QuickActions";
+// v1.6.14: QuickActions kısayolları sidebar'a taşındı — widget kaldırıldı.
 import { DebtWidget } from "@/components/dashboard/DebtWidget";
 import { AlertsWidget } from "@/components/dashboard/AlertsWidget";
 import { ExpenseChart } from "@/components/dashboard/ExpenseChart";
@@ -112,10 +112,7 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Quick Actions */}
-      <section>
-        <QuickActions />
-      </section>
+      {/* v1.6.14: 'Kisayollar' widget'i kaldirildi — tum kisayollar yan menude. */}
 
       {/* Alerts */}
       <section>

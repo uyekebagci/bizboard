@@ -34,6 +34,48 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.13] — 2026-05-20
+
+**v1.6 ACİL PROD WP — Hamburger Sidebar + QuickActions widget kaldırıldı.** Tüm kısayollar artık tek alfabetik (TR locale) panelde; Cmd/Ctrl+B aç/kapat; 10+ item olduğunda arama input'u aktif; desktop'ta persistent 240px, mobile + tablet'te off-canvas overlay.
+
+### Added
+
+#### Frontend
+- **`components/layout/Sidebar.tsx`** — yeni hamburger sidebar:
+  - 20 link (admin role'a göre 15 + 5): Ana Sayfa, Alacaklar, Belgeler, Cari Hesap, Envanter, Finans, Isletmeler, Isletme Ekle, Islem Ekle, Islemler, Nakit, POS, Profil, Raporlar, Sifre Degistir + Admin: Audit Log / Borc Migrate / Recurring / Sirketlerim / Admin Paneli
+  - Alfabetik sıralama `Intl.Collator("tr")` ile — TR locale doğru "ç" ve "ı" handling
+  - Arama input'u 10+ item'da görünür (`Intl.Collator` sensitivity:"base" filter)
+  - `SidebarItem` component: icon + label + active state (sol kenar 3px brand-500 indicator) + optional count badge
+  - Klavye: `Cmd/Ctrl+B` aç/kapat (desktop = collapse; mobile = overlay)
+  - Desktop tercihi `bizboard.preferences.sidebarOpen` localStorage'da persist
+- **`components/layout/DashboardShell.tsx`** — Sidebar + TopBar + BottomNav + ErrorBoundary entegrasyon shell'i. Server component `DashboardLayout` bunu çağırır; mobile open/close state client-side.
+- **`TopBar.onMenuClick` prop** — hamburger butonu `<lg` ekranlarda görünür, mobile sidebar overlay'i açar.
+
+### Changed
+
+#### Frontend
+- **`app/dashboard/layout.tsx`** — `DashboardShell` ile sarmalandı.
+- **`app/business/[id]/layout.tsx`** — aynı `DashboardShell` kullanır (sidebar business detay sayfasında da var).
+- **`app/dashboard/page.tsx`** — `QuickActions` widget çağrısı kaldırıldı (v1.6.14 TODO `636cd83b`). Kısayollar artık sidebar'da.
+
+### UX behavior
+
+- **Desktop ≥1024px**: sidebar persistent 240px sol panel; `<ChevronLeft>` ile daraltılınca ekran kenarında küçük "aç" tab'ı kalır.
+- **Mobile + tablet <1024px**: TopBar hamburger ≡ tetikler; backdrop blur + click-outside kapatma; item click anında da kapanır.
+- **Active item**: brand-700/30 background + sol kenar 3px brand-500 indicator + brand-300 icon.
+- **Cmd/Ctrl+B**: hem mobile hem desktop'ta toggle; arama input'u açıkken bile çalışır.
+
+### Removed
+
+- **`app/dashboard/page.tsx`** içinden `<QuickActions />` render. Component dosyası şimdilik tutuldu (artık kullanılmıyor; v1.7+'da silinebilir).
+
+### Notes
+
+- Frontend `next build` TypeScript compile + lint temiz.
+- 6 Sidebar TODO + 1 QuickActions removal TODO kapatıldı (toplam 7).
+
+---
+
 ## [1.6.12] — 2026-05-20
 
 **v1.6 ACİL PROD WP — Gruplama frontend.** Dashboard'da işletmeler artık öncelik seviyeli gruplar halinde — dnd-kit ile sürükle-bırak, "Yeni grup" modal'ı, edit ⋮ menüsü (rename / color / priority / delete), collapsible group cards, 8-renk palette, PINNED/HIGH/NORMAL görsel ayrımı.
