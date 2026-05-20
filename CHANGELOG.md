@@ -34,6 +34,47 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.6] — 2026-05-20 (hotfix · MEDIUM — alacaklar sayfası boş)
+
+**Alacaklar (`/dashboard/alacaklar`) sayfası açılmıyordu — DTO snake_case mismatch.**
+
+**Symptom:** Kullanıcı raporu — alacaklar sayfası açılmıyor. Sayfa loading state'inden geçti ama tablo boş veya null-pointer hataları ile patladı.
+
+**Root cause:** `ReceivableAggregateDto` field'ları `@JsonProperty` annotation olmadan tanımlıydı — Jackson default ile **camelCase** JSON üretiyordu (`counterpartName`, `totalAmount`, `lastDueDate`). Frontend `types/index.ts#ReceivableAggregate` ise **snake_case** (`counterpart_name`, `total_amount`, `last_due_date`) bekliyordu → tüm field'lar `undefined` geldiği için tablo render etmiyor, sort comparator NaN dönüyor.
+
+Aynı pattern v1.6.16.1'de audit log sayfasında da görülmüştü (`Page<T>` JSON shape mismatch). DebtDto'da `@JsonProperty` annotation'ları doğru kullanılmıştı; receivable DTO'sunda atlanmış.
+
+### Fixed
+
+- **`ReceivableAggregateDto`** → tüm field'lara `@JsonProperty("snake_case")` annotation:
+  - `counterpart_id`, `counterpart_name`, `total_amount`, `receivable_types`, `last_due_date`
+  - `currency` ve `count` zaten doğrudan eşleşiyor (rename gerekmez)
+
+### Verified
+
+```bash
+GET /receivables
+[
+  {
+    "counterpart_id": "2af6fd05-...",
+    "counterpart_name": "TUNCAY ABİ",
+    "total_amount": 10400000.0,
+    "currency": "TRY",
+    "receivable_types": [...],
+    "count": 1
+  },
+  ...
+]
+```
+
+Frontend `/dashboard/alacaklar` sayfası artık 22 alacak kaydını listeliyor.
+
+### Not — gözden geçirme önerisi
+
+Benzer pattern başka DTO'larda var mı diye `grep -L "@JsonProperty"` ile camelCase-default DTO'lar taranmalı. Bu workflow v1.7-beta'da test coverage'ına eklenmeli (her DTO JSON shape contract test'i).
+
+---
+
 ## [1.6.23.5] — 2026-05-20 (hotfix · CRITICAL — sandbox verification bulguları)
 
 **System Architect verification raporunda (`sandbox-verification-2026-05-20.md`) tespit edilen 3 ek bug fix.**
