@@ -1,5 +1,6 @@
 package com.bizboard.api.controller;
 
+import com.bizboard.common.dto.BackdateClosingRequest;
 import com.bizboard.common.dto.CashClosingDto;
 import com.bizboard.common.dto.CloseTodayRequest;
 import com.bizboard.common.dto.PagedResponseDto;
@@ -73,6 +74,33 @@ public class CashClosingController {
         } catch (IllegalStateException e) {
             // Idempotency reddi — zaten kapatılmış.
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /**
+     * v1.6.23.4 (BUG-2 fix): Geçmiş tarih için kapanış oluştur veya günceller.
+     * Admin-only.
+     *
+     * <p>Davranış:
+     * <ul>
+     *   <li>{@code closing_date} body'de verilir (geçmiş ya da bugün)</li>
+     *   <li>Mevcut CLOSED varsa {@code override=true} gerekli (yoksa 409)</li>
+     *   <li>Audit log entry: highlight=BACKDATED_CLOSING</li>
+     * </ul>
+     */
+    @PostMapping
+    public ResponseEntity<?> closeBackdate(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody BackdateClosingRequest req) {
+        try {
+            CashClosingDto result = service.closeBackdate(principal.getId(), req);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 

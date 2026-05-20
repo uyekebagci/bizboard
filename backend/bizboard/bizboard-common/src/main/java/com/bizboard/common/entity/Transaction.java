@@ -66,14 +66,30 @@ public class Transaction {
     private boolean setupCost = false;
 
     /**
-     * v1.6.3: ödeme yöntemi. Yalnız iki değer: {@code POS} veya {@code NAKIT}.
-     * Geriye uyumluluk: mevcut tüm tx'ler {@code NAKIT} default'una düşer
-     * (Hibernate ddl-auto=update + columnDefinition default).
+     * v1.6.3: ödeme yöntemi. Geçerli değerler: {@code POS}, {@code NAKIT}, {@code HESAPDAN}.
+     *
+     * <p>v1.6.23.4 (sandbox-test): HESAPDAN eklendi — banka hesabından yapılan
+     * harcamalar (havale/EFT/kart). HESAPDAN tx'leri kasa kapanışına (NAKIT
+     * havuzu) DAHİL EDİLMEZ; ilgili {@link #bankAccount}'ın bakiyesini etkiler.
+     * Validation: HESAPDAN için {@code bankAccount} zorunludur.</p>
+     *
+     * <p>Geriye uyumluluk: mevcut tüm tx'ler {@code NAKIT} default'una düşer
+     * (Hibernate ddl-auto=update + columnDefinition default).</p>
      */
     @Column(name = "payment_method", nullable = false, length = 16)
     @org.hibernate.annotations.ColumnDefault("'NAKIT'")
     @Builder.Default
     private String paymentMethod = "NAKIT";
+
+    /**
+     * v1.6.23.4 (sandbox-test): HESAPDAN ödemeleri için banka hesabı FK.
+     * {@code paymentMethod=HESAPDAN} iken zorunlu, diğer payment_method'larda null.
+     * Tx kaydedildiğinde ilgili bank_account.current_balance bu tx'in
+     * direction'ına göre güncellenir (income → +, expense → -).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_account_id")
+    private BankAccount bankAccount;
 
     /**
      * v1.6.3: POS işlemi için banka komisyon oranı (yüzde). Yalnız

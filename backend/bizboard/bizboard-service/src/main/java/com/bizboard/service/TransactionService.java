@@ -43,6 +43,8 @@ public class TransactionService {
     // v1.6.20 (WP-3): counterpart + pos_device wiring
     private final com.bizboard.repository.CounterpartRepository counterpartRepository;
     private final com.bizboard.repository.PosDeviceRepository posDeviceRepository;
+    // v1.6.23.4 (sandbox-test): HESAPDAN ödemeleri için bank_account binding
+    private final com.bizboard.repository.BankAccountRepository bankAccountRepository;
 
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
@@ -122,9 +124,22 @@ public class TransactionService {
             category = categoryRepository.findById(request.getCategoryId()).orElse(null);
         }
 
-        // v1.6.3: payment_method normalize (POS/NAKIT) + pos_rate
+        // v1.6.3: payment_method normalize (POS/NAKIT)
+        // v1.6.23.4: HESAPDAN da geçerli — banka hesabından yapılan ödeme
         String pm = normalizePaymentMethod(request.getPaymentMethod());
         java.math.BigDecimal posRate = "POS".equals(pm) ? request.getPosRate() : null;
+
+        // v1.6.23.4: HESAPDAN için bank_account zorunlu + bakiye güncelleme
+        com.bizboard.common.entity.BankAccount bankAccount = null;
+        if ("HESAPDAN".equals(pm)) {
+            if (request.getBankAccountId() == null) {
+                throw new IllegalArgumentException(
+                        "HESAPDAN payment_method icin bank_account_id zorunlu");
+            }
+            bankAccount = bankAccountRepository.findById(request.getBankAccountId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Bank account bulunamadi: " + request.getBankAccountId()));
+        }
 
         // v1.6.19 (WP-2): backdated tespiti — tx tarihi bugünden önce ise işaretle.
         // Audit log highlight=BACKDATED ile rapor edilir.
@@ -170,6 +185,7 @@ public class TransactionService {
                 .targetCounterpart(targetCounterpart)
                 .posDevice(posDevice)
                 .appliedPosRate(appliedRate)
+                .bankAccount(bankAccount)
                 .backdated(backdated)
                 .tags(request.getTags())
                 .metadata(request.getMetadata())
@@ -177,6 +193,18 @@ public class TransactionService {
                 .build();
 
         transaction = transactionRepository.save(transaction);
+
+        // v1.6.23.4: HESAPDAN tx kaydedildikten sonra banka hesap bakiyesini güncelle.
+        // income → +, expense → -. Validation yukarıda yapıldığı için bankAccount non-null garanti.
+        if ("HESAPDAN".equals(pm) && bankAccount != null) {
+            java.math.BigDecimal delta = transaction.getAmount();
+            if (transaction.getDirection() == TransactionDirection.EXPENSE) {
+                delta = delta.negate();
+            }
+            bankAccount.setCurrentBalance(
+                    bankAccount.getCurrentBalance().add(delta));
+            bankAccountRepository.save(bankAccount);
+        }
 
         // Geriye dönük bir işlem mi? (kapanmış döneme ait)
         if (ledgerService.isClosedPeriod(request.getDate())) {
@@ -217,6 +245,14 @@ public class TransactionService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         accessGuard.assertCanAccessBusiness(userId, transaction.getBusiness().getId());
+
+        // v1.6.23.4 (BUG-1 fix): HESAPDAN tx update için bank balance reversal/apply.
+        // Eski state'i yakala — sonrasında reverse + apply yapacağız.
+        final String oldPm = transaction.getPaymentMethod() != null
+                ? transaction.getPaymentMethod() : "NAKIT";
+        final java.math.BigDecimal oldAmount = transaction.getAmount();
+        final TransactionDirection oldDirection = transaction.getDirection();
+        final com.bizboard.common.entity.BankAccount oldBank = transaction.getBankAccount();
 
         // ── Eski değerleri yakala (diff için) ───────────────────────────
         Map<String, Object> changes = new HashMap<>();
@@ -299,6 +335,31 @@ public class TransactionService {
             transaction.setPosSettled(request.getPosSettled());
         }
 
+        // v1.6.23.4 (BUG-1 fix): HESAPDAN bank_account update + balance reversal/apply.
+        // request.bankAccountId verilirse veya pm HESAPDAN ise burada handle ediyoruz.
+        final String newPm = transaction.getPaymentMethod() != null
+                ? transaction.getPaymentMethod() : "NAKIT";
+        com.bizboard.common.entity.BankAccount newBank = oldBank;
+        if (request.getBankAccountId() != null) {
+            newBank = bankAccountRepository.findById(request.getBankAccountId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Bank account bulunamadi: " + request.getBankAccountId()));
+            if (oldBank == null || !oldBank.getId().equals(newBank.getId())) {
+                changes.put("bankAccount", Map.of(
+                        "from", oldBank != null ? oldBank.getId().toString() : "null",
+                        "to", newBank.getId().toString()));
+                transaction.setBankAccount(newBank);
+            }
+        }
+        if ("HESAPDAN".equals(newPm) && transaction.getBankAccount() == null) {
+            throw new IllegalArgumentException(
+                    "HESAPDAN payment_method icin bank_account_id zorunlu");
+        }
+        // pm HESAPDAN'dan baska bir seye geciyorsa bank_account temizle
+        if (!"HESAPDAN".equals(newPm) && transaction.getBankAccount() != null) {
+            transaction.setBankAccount(null);
+        }
+
         // v1.6.19 (WP-2): Tx PATCH olduğunda corrected=true + audit highlight=CORRECTION.
         // Yalnız gerçekten değişen alan varsa işaretle (no-op update'lerde corrected aktif olmasın).
         if (!changes.isEmpty()) {
@@ -306,6 +367,31 @@ public class TransactionService {
         }
 
         transaction = transactionRepository.save(transaction);
+
+        // v1.6.23.4: Bank balance reversal + apply.
+        // 1) Eski tx HESAPDAN ise old bank'tan reverse et.
+        // 2) Yeni tx HESAPDAN ise new bank'a apply et.
+        if ("HESAPDAN".equals(oldPm) && oldBank != null) {
+            java.math.BigDecimal revert = oldDirection == TransactionDirection.EXPENSE
+                    ? oldAmount  // expense reversed → add back
+                    : oldAmount.negate();  // income reversed → subtract
+            oldBank.setCurrentBalance(
+                    (oldBank.getCurrentBalance() == null
+                            ? java.math.BigDecimal.ZERO
+                            : oldBank.getCurrentBalance()).add(revert));
+            bankAccountRepository.save(oldBank);
+        }
+        if ("HESAPDAN".equals(newPm) && transaction.getBankAccount() != null) {
+            com.bizboard.common.entity.BankAccount finalBank = transaction.getBankAccount();
+            java.math.BigDecimal delta = transaction.getDirection() == TransactionDirection.EXPENSE
+                    ? transaction.getAmount().negate()
+                    : transaction.getAmount();
+            finalBank.setCurrentBalance(
+                    (finalBank.getCurrentBalance() == null
+                            ? java.math.BigDecimal.ZERO
+                            : finalBank.getCurrentBalance()).add(delta));
+            bankAccountRepository.save(finalBank);
+        }
 
         Map<String, Object> meta = new HashMap<>();
         meta.put("businessId", transaction.getBusiness().getId());
@@ -430,13 +516,18 @@ public class TransactionService {
     }
 
     /**
-     * v1.6.3: payment_method normalize. Geçerli değerler: "POS", "NAKIT".
-     * Null/blank/diğer her şey "NAKIT" fallback'ine düşer.
+     * v1.6.3: payment_method normalize.
+     * v1.6.23.4: HESAPDAN eklendi — banka hesabından yapılan ödeme.
+     *
+     * <p>Geçerli değerler: {@code POS}, {@code NAKIT}, {@code HESAPDAN}.
+     * Null/blank/diğer her şey {@code NAKIT} fallback'ine düşer.</p>
      */
     private static String normalizePaymentMethod(String raw) {
         if (raw == null || raw.isBlank()) return "NAKIT";
         String upper = raw.trim().toUpperCase(java.util.Locale.ENGLISH);
-        return "POS".equals(upper) ? "POS" : "NAKIT";
+        if ("POS".equals(upper)) return "POS";
+        if ("HESAPDAN".equals(upper)) return "HESAPDAN";
+        return "NAKIT";
     }
 
 }

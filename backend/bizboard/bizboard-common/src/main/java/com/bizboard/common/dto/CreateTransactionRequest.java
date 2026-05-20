@@ -64,4 +64,12 @@ public class CreateTransactionRequest {
      */
     @JsonProperty("pos_device_id")
     private java.util.UUID posDeviceId;
+
+    /**
+     * v1.6.23.4 (sandbox-test): paymentMethod=HESAPDAN iken zorunlu banka hesabı.
+     * Hesabın {@code current_balance}'ı tx kaydedildiğinde direction'a göre
+     * güncellenir (income → +, expense → -). Diğer payment_method'larda yoksayılır.
+     */
+    @JsonProperty("bank_account_id")
+    private java.util.UUID bankAccountId;
 }

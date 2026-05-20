@@ -43,4 +43,13 @@ public class UpdateTransactionRequest {
      */
     @JsonProperty("pos_settled")
     private Boolean posSettled;
+
+    /**
+     * v1.6.23.4 (BUG-1 fix): paymentMethod=HESAPDAN için bank_account FK.
+     * Mevcut tx HESAPDAN ise bu alan opsiyonel (mevcut bank kullanılır);
+     * tx HESAPDAN'a çevriliyorsa zorunlu. Servis eski tx'in bank_account
+     * üzerindeki etkisini reverse edip yeni state'i uygular.
+     */
+    @JsonProperty("bank_account_id")
+    private UUID bankAccountId;
 }
