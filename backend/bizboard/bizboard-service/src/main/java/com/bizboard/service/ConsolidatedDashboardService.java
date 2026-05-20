@@ -48,10 +48,22 @@ public class ConsolidatedDashboardService {
 
         // ── BANK ACCOUNTS ────────────────────────────────────────────
         List<BankAccount> banks = bankAccountRepository.findByActiveTrueOrderByNameAsc();
-        BigDecimal totalCash = banks.stream()
+        BigDecimal totalBankBalance = banks.stream()
                 .map(BankAccount::getCurrentBalance)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // ── PHYSICAL CASH KASA (v1.6.23.5 BUG-V2 fix) ────────────────
+        // total_cash = bank account toplam bakiyesi + fiziksel kasa.
+        // Fiziksel kasa = en son cash_closing.actual_balance (yoksa computed_closing,
+        // yoksa 0). Önceki sürümde total_cash sadece bank toplam'ıydı; bu durumda
+        // DGR senaryosu gibi büyük physical kasa pozisyonları görülmez oluyordu.
+        BigDecimal physicalCash = cashClosingRepository.findFirstByOrderByClosingDateDesc()
+                .map(c -> c.getActualBalance() != null
+                        ? c.getActualBalance()
+                        : (c.getComputedClosing() != null ? c.getComputedClosing() : BigDecimal.ZERO))
+                .orElse(BigDecimal.ZERO);
+        BigDecimal totalCash = totalBankBalance.add(physicalCash);
 
         List<ConsolidatedDashboardDto.BankAccountSummary> bankRows = banks.stream()
                 .map(this::toBankSummary)
