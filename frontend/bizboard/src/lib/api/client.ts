@@ -151,6 +151,38 @@ export async function logout(): Promise<void> {
   }
 }
 
+/**
+ * v1.6.23.2: Silent refresh fail olunca güvenli logout — hard navigation.
+ *
+ * <p>Normal {@link logout} backend'e logout RPC'si yapar; bu çağrı zaten
+ * authenticated context gerektirir. Refresh fail olduğunda token yok, RPC
+ * yapamayız ve yapsak da bilgisizdir. Bu helper sadece local state'i temizler
+ * + hard navigate ile login sayfasına atar. ClientProviders bootstrap ve
+ * request retry sonrası refresh fail durumlarında çağrılır.</p>
+ *
+ * <p>Hard navigation (window.location.replace) seçildi çünkü:</p>
+ * <ul>
+ *   <li>Zustand store ve diğer in-memory state otomatik temizlenir.</li>
+ *   <li>Service worker / cached fetches reset olur.</li>
+ *   <li>React router'a bağımlı olmadığı için api/client.ts gibi non-React
+ *       context'lerden de çağırılabilir.</li>
+ *   <li>/auth/login'deyiz zaten ise no-op (sonsuz döngü önleme).</li>
+ * </ul>
+ */
+export function forceLogout(): void {
+  clearToken();
+  if (typeof document !== "undefined") {
+    document.cookie = "bb_session=; path=/; max-age=0; samesite=lax; secure";
+  }
+  if (typeof window !== "undefined") {
+    // Zaten login sayfasındaysa redirect etme (sonsuz döngü).
+    if (!window.location.pathname.startsWith("/auth/")) {
+      // Hard nav — React state'i temizle.
+      window.location.replace("/auth/login");
+    }
+  }
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────────────────
 
 interface RequestOptions extends RequestInit {
@@ -215,7 +247,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       await refreshAccessToken();
       res = await doFetch();
     } catch {
-      // refresh başarısız → 401 client'a yansır, yukarı throw aşağıda
+      // v1.6.23.2: Refresh fail → kullanıcıyı zombie state'te bırakma.
+      // Local state'i temizleyip login'e hard-redirect at.
+      forceLogout();
+      // Hard nav başlasa da bu fonksiyon dönmek zorunda — Promise zinciri
+      // tamamlanırken caller'a 401 throw'u atmaya devam ederiz (aşağıdaki
+      // !res.ok bloğu çalışır). Yine de redirect başlatıldığı için yeni
+      // istekler kesilir.
     }
   }
 
