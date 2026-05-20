@@ -34,6 +34,72 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.2] — 2026-05-20 (hotfix · CRITICAL)
+
+**CRITICAL Hotfix — silent refresh fail olunca kullanıcı zombie state'te kalıyordu.**
+
+**Symptom:** Kullanıcı browser'ı uzun süre açık bırakır (overnight), internet kesintisi yaşar, sonra browser'ı refresh eder. **Login durumunda kalır** — ama refresh fail olduysa accessToken null, herhangi bir API çağrısı sessizce fail olur. Sayfa görsel olarak "logged in" görünür ama hiçbir veri gelmez.
+
+### Fixed
+
+#### Frontend
+- **`ClientProviders.bootstrap()` — refresh başarısızlığında HER TÜRLÜ hatada login'e yönlendirir.**
+  - Önceki davranış: yalnız `ApiError && status === 401` → redirect. Diğer her şey (`ApiError 500`, `ApiError 0/NET-0`, raw `TypeError`) sadece `logger.error` ile yutuluyordu.
+  - Yeni davranış: 401 → `info` log + redirect, diğer her şey → `error` log + redirect. Her durumda `bb_session` cookie temizlenir, `router.replace("/auth/login")` çalışır.
+- **`api/client.ts` `request()` 401 retry path — refresh fail olursa `forceLogout()` çağırır.**
+  - Önceki davranış: refresh fail olursa exception sessizce yutulur, 401 caller'a yansır, caller tipik olarak handle etmez → kullanıcı stuck.
+  - Yeni davranış: refresh exception → `forceLogout()` → local state temizlenir + `window.location.replace("/auth/login")`. Hard navigation in-memory state'i de temizler.
+
+### Added
+
+#### Frontend
+- **`api/client.ts#forceLogout()`** — yeni helper. `clearToken()` + `bb_session` cookie temizle + `/auth/login`'e hard navigate. `/auth/*` üzerindeysen no-op (sonsuz döngü önleme). Backend logout RPC'si YAPMAZ — auth context yok zaten.
+
+### Verified (local test)
+
+Backend lokalde JWT_TTL=30s, REFRESH=1d ayarıyla başlatıldı. Senaryolar:
+- ✅ Login → 30s token + refresh cookie
+- ✅ `/me` valid token → 200
+- ✅ `/me` expired token → **401** (v1.6.23.1 fix)
+- ✅ `/auth/refresh` revoked cookie → **401**
+- ✅ `/auth/refresh` invalid/empty cookie → **401**
+- ✅ Frontend `next build` TypeScript check temiz
+
+### Root cause analysis
+
+Önceki bootstrap kodu:
+```javascript
+try {
+  await refreshAccessToken();
+} catch (err) {
+  if (err instanceof ApiError && err.status === 401) {
+    // redirect
+  } else {
+    logger.error("auth", "Silent refresh failed", undefined, err);
+    // ← STUCK STATE
+  }
+}
+```
+
+Senaryolar ki bu else branch'ine düşer:
+- Network error (cihaz offline, DNS fail) → `TypeError` (ApiError değil)
+- Backend 5xx error → `ApiError(500/...)` (401 değil)
+- Backend 403 (CORS misconfig vs.) → `ApiError(403)` (401 değil)
+- Backend tamamen down → fetch reject → `TypeError`
+
+Her birinde: `bb_session` cookie hala duruyor (30 gün) → middleware geçer → /dashboard render edilir → `accessToken` null → tüm API'lar 401/silent fail → kullanıcı "logged in görünür" ama ÖLÜ oturum.
+
+User'ın "geceden açık bıraktım, internet gitti geldi, hala login durumdayım" durumu bu pencereden geçti.
+
+### Notes
+
+- Versiyon: 4-component hotfix (Maven `1.6.23.2`, npm `1.6.23-2`).
+- Bug dashboard /bugs endpoint'ine CRITICAL olarak file edildi.
+- Version bump artık `jq`/Python ile precise (lockfile esquery sed corruption tekrarlamasın).
+- Backend değişikliği yok (sadece frontend).
+
+---
+
 ## [1.6.23.1] — 2026-05-20 (hotfix)
 
 **Hotfix — Admin Audit Log + diğer `/admin/**` endpoint'lerinde token expire olduğunda 403.** Kullanıcı admin olarak login olup audit log sayfasını ziyaret ettiğinde "Bir hata olustu" + arka planda `403 Forbidden` alıyordu. Sorun frontend'in token refresh akışı ile Spring Security 6'nın anonymous handling'inin uyumsuzluğu.

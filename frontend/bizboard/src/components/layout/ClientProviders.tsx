@@ -48,17 +48,26 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       try {
         await refreshAccessToken();
       } catch (err) {
+        // v1.6.23.2: SİLENT REFRESH FAIL — HER TÜRLÜ HATAYI LOGIN'E AT.
+        //
+        // Önceki davranış: yalnız 401'de login'e redirect; 500/403/network
+        // error'larda sadece logla. Bu durumda bb_session cookie hala duruyor
+        // (middleware geçer), accessToken null, kullanıcı "logged in görünüyor"
+        // ama API'lara erişemiyordu. Bug: zombie state — kullanıcı sayfayı
+        // refresh edince login'e gönderilmiyor.
+        //
+        // Yeni davranış: refresh fail = oturum yok demektir. Local state'i
+        // temizle + login'e hard-redirect. 401 ya da network/5xx fark etmez.
         if (err instanceof ApiError && err.status === 401) {
-          // Refresh cookie geçersiz/yok → frontend session bayrağını da temizle,
-          // aksi takdirde middleware login sayfasını "zaten login" sanıp dashboard'a
-          // yönlendirir ve sonsuz döngü oluşur.
-          if (typeof document !== "undefined") {
-            document.cookie = "bb_session=; path=/; max-age=0; samesite=lax; secure";
-          }
-          router.replace("/auth/login");
+          logger.info("auth", "Bootstrap: refresh 401 — redirecting to login");
         } else {
-          logger.error("auth", "Silent refresh failed", undefined, err);
+          // Network error, 500, 403, vb. — yine de logout flow'a sok.
+          logger.error("auth", "Bootstrap: silent refresh failed (non-401)", undefined, err);
         }
+        if (typeof document !== "undefined") {
+          document.cookie = "bb_session=; path=/; max-age=0; samesite=lax; secure";
+        }
+        router.replace("/auth/login");
       } finally {
         setBootstrapped(true);
       }
