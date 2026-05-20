@@ -238,9 +238,25 @@ function AddTransactionPage() {
 
         {/* Payment Method (v1.6.3+) */}
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">
-            Odeme Yontemi *
-          </label>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <label className="block text-sm font-medium text-surface-200">
+              Odeme Yontemi *
+            </label>
+            {/* v1.6.23.8 (DGR perspective): tooltip ile payment_method ayrımı netleştir. */}
+            <span
+              className="text-[10px] text-surface-400 cursor-help group relative"
+              title="NAKIT = fiziksel kasadan / kasaya. POS = kart çekimi (bankaya). HESAPDAN = banka havalesi / EFT (banka hesabından)."
+            >
+              ⓘ
+              <span className="absolute left-0 top-5 hidden group-hover:block z-10 w-72 p-2 rounded-lg bg-surface-900 border border-surface-600 text-[11px] text-surface-200 shadow-lg">
+                <b>NAKIT</b>: fiziksel kasaya/kasadan (gün-sonu kapanışını etkiler).
+                <br />
+                <b>POS</b>: kart çekimi — banka hesabına düşer (kasayı etkilemez).
+                <br />
+                <b>HESAPDAN</b>: banka havalesi/EFT — seçili banka hesabını günceller.
+              </span>
+            </span>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"

@@ -76,11 +76,15 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
 }
 
 function PositionStat({ label, value, tone }: { label: string; value: number; tone: "positive" | "negative" }) {
+  // v1.6.23.8 (DGR perspective hotfix): negative tone'da minus sign explicit.
+  // value < 0 ise formatCurrency zaten "-" prefix verir. Pozitif değerlerde
+  // tone=negative ise (defensive — caller -Math.abs zaten veriyor) yine minus göster.
+  const displayValue = tone === "negative" && value > 0 ? -value : value;
   return (
     <div>
       <p className="text-brand-200 uppercase tracking-wider">{label}</p>
       <p className={cn("text-sm font-bold mt-0.5", tone === "negative" ? "text-red-200" : "text-white")}>
-        {value >= 0 ? formatCurrency(value, "TRY") : formatCurrency(value, "TRY")}
+        {formatCurrency(displayValue, "TRY")}
       </p>
     </div>
   );
@@ -274,6 +278,8 @@ function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
   const total = list.reduce((a, x) => a + x.amount, 0);
   const within7d = list.filter((x) => x.days_to_due != null && x.days_to_due <= 7 && x.days_to_due >= 0);
   const within7dTotal = within7d.reduce((a, x) => a + x.amount, 0);
+  // v1.6.23.8 (DGR perspective): Verecekler DGR'den gidecek para — minus sign göster.
+  // Backend amount magnitude döner (positive); display layer'da negatife çeviriyoruz.
   return (
     <section className="card overflow-hidden">
       <div className="px-4 py-3 border-b border-surface-700">
@@ -297,7 +303,7 @@ function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
                 </p>
               </div>
               <p className={cn("text-sm font-semibold shrink-0", soon ? "text-amber-300" : "text-red-300")}>
-                {formatCurrency(p.amount, p.currency || "TRY")}
+                −{formatCurrency(p.amount, p.currency || "TRY")}
               </p>
             </div>
           );
@@ -306,10 +312,10 @@ function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
       <Footer
         left={`${list.length} verecek`}
         right={
-          <span>
-            Toplam {formatCurrency(total, "TRY")}
+          <span className="text-red-300">
+            Toplam −{formatCurrency(total, "TRY")}
             {within7d.length > 0 && (
-              <span className="ml-1.5 text-amber-300">· 7 gün: {formatCurrency(within7dTotal, "TRY")}</span>
+              <span className="ml-1.5 text-amber-300">· 7 gün: −{formatCurrency(within7dTotal, "TRY")}</span>
             )}
           </span>
         }

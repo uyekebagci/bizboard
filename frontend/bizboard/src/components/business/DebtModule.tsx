@@ -570,7 +570,22 @@ function CreateDebtModal({
 
           {/* Direction Toggle */}
           <div>
-            <label className="label">Tur</label>
+            <div className="flex items-center gap-1.5 mb-1">
+              <label className="label !mb-0">Tur</label>
+              {/* v1.6.23.8 (DGR perspective): tooltip ile convention netleştir. */}
+              <span
+                className="text-[10px] text-surface-400 cursor-help group relative"
+                title="Alacak = bu kişi/firma DGR'ye para verecek (alacağız, +).
+Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
+              >
+                ⓘ
+                <span className="absolute left-0 top-5 hidden group-hover:block z-10 w-64 p-2 rounded-lg bg-surface-900 border border-surface-600 text-[11px] text-surface-200 shadow-lg">
+                  <b>Alacak (+)</b>: bu kişi/firma DGR'ye para verecek (alacağız).
+                  <br />
+                  <b>Verecek (−)</b>: DGR bu kişi/firmaya para verecek (vereceğiz).
+                </span>
+              </span>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -582,7 +597,7 @@ function CreateDebtModal({
                 }`}
               >
                 <ArrowDownLeft size={16} />
-                Alacak
+                Alacak (+)
               </button>
               <button
                 type="button"
@@ -594,7 +609,7 @@ function CreateDebtModal({
                 }`}
               >
                 <ArrowUpRight size={16} />
-                Verecek
+                Verecek (−)
               </button>
             </div>
           </div>

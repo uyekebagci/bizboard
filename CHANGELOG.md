@@ -34,6 +34,84 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.8] — 2026-05-20 (hotfix · MEDIUM — DGR perspective sign convention)
+
+**WP `3cdf2a4f`: Entity hesaplamaları DGR perspektifine çevir.**
+
+Sandbox verification raporundan: Excel'i tutan kişi "alacak/verecek" kavramlarını karşı tarafın perspektifinden kullanmış. Çatı konvansiyonu **DGR perspektifi**:
+- **ALACAK** = DGR'ye gelecek para (+, RECEIVABLE)
+- **VERECEK / BORÇ** = DGR'den gidecek para (−, PAYABLE)
+- **NET** = total_cash + receivables − payables
+
+### Backend audit (TODO #1)
+
+`ConsolidatedDashboardService`, `DebtService`, `CounterpartLedgerService`, `ReceivableService` taraması — **MATH ZATEN DOĞRU**. Tüm net hesaplamaları DGR perspektifini uyguluyor:
+
+- `ConsolidatedDashboardService:114-115`: `net = totalCash + totalReceivables − totalPayables` ✓
+- `DebtService:362`: `netBalance = totalReceivable − totalPayable` ✓
+- `CounterpartLedgerService:55-58`: RECEIVABLE adds, PAYABLE subtracts ✓
+- `findByDirectionAndSettledFalse...` → her zaman positive magnitude ✓
+
+Smoke test: ALACAK +10K, VERECEK +3K → net=+7K ✓.
+
+### Fixed — Frontend display (TODO #2)
+
+- **`ConsolidatedWidgets.PayablesCard`** → tutarlar artık "−X TL" formatında (önceden +X gösteriyordu — yanıltıcı)
+- **`PositionStat`** → `tone="negative"` durumunda value pozitif gelirse otomatik negate
+- Tüm payables widget'larında footer "Toplam −X TL" + 7-gün uyarısı da negatif
+
+### Added — UI tooltips (TODO #5)
+
+- **`DebtModule.DebtFormModal`** → Tür select'inin yanında ⓘ tooltip:
+  > Alacak (+): bu kişi/firma DGR'ye para verecek (alacağız).
+  > Verecek (−): DGR bu kişi/firmaya para verecek (vereceğiz).
+- Button label'ları: "Alacak (+)" ve "Verecek (−)"
+- **`add-transaction` page** → Payment method select'inin yanında ⓘ tooltip:
+  > NAKIT: fiziksel kasaya/kasadan.
+  > POS: kart çekimi — bankaya.
+  > HESAPDAN: banka havalesi/EFT.
+
+### Added — API convention docs (TODO #3)
+
+- **`ConsolidatedDashboardDto.ConsolidatedPosition`** → class-level Javadoc + her field için magnitude/sign açıklaması
+- **`DebtSummaryDto`** → class-level Javadoc + field-level açıklamalar
+- Convention: tüm magnitude'lar her zaman POZİTİF döner; sign frontend layer'ında uygulanır
+
+### Added — Convention dokümanı (TODO #4)
+
+- **`docs/conventions.md`** — 7 başlıkta tam doküman:
+  1. Debt direction sign (ALACAK/VERECEK)
+  2. API response magnitude convention
+  3. Payment method (NAKIT/POS/HESAPDAN)
+  4. Frontend display patterns
+  5. Currency default
+  6. Versioning (4-component hotfix)
+  7. Cash closing convention (v1.6.23.5 fix dahil)
+
+### Verified (TODO #6)
+
+- Backend smoke test: 1 ALACAK + 1 VERECEK eklendi → `net = receivables − payables` ✓
+- Frontend TypeScript build temiz
+- Backend Maven build temiz
+- Existing 21+10 = 31/31 edge tests halen geçiyor (regresyon yok)
+
+### Backend yapı değişiklikleri
+
+- Hiçbir computation logic değişmedi (zaten doğruydu)
+- 2 DTO'ya açıklama Javadoc'u eklendi (Swagger için)
+
+### Frontend yapı değişiklikleri
+
+- `ConsolidatedWidgets.tsx`: PayablesCard "−X" formatına çevrildi; PositionStat tone-aware
+- `DebtModule.tsx`: form tooltip + (+)/(−) etiket
+- `add-transaction/page.tsx`: payment method tooltip
+
+### Doc
+
+- `docs/conventions.md` yeni dosya
+
+---
+
 ## [1.6.23.7] — 2026-05-20 (hotfix · BETA-CRITICAL — POS sayfası + V2/V6/V8 backlog cleanup)
 
 **Round 2 verification raporundan kalan tüm beta-blocker bug'lar fix'lendi + ek bir frontend DTO mismatch (POS sayfası) tespit edilip düzeltildi.**

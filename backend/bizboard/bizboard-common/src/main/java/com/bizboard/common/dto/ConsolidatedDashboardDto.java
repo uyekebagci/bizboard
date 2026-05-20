@@ -63,21 +63,46 @@ public class ConsolidatedDashboardDto {
     // ═══════════════════════════ İÇ TİPLER ═══════════════════════════════
 
     @Data @Builder
+    /**
+     * <h3>DGR perspective sign convention (v1.6.23.8)</h3>
+     *
+     * Tüm magnitude field'ları ({@code total_cash}, {@code total_bank_balance},
+     * {@code receivables}, {@code payables}, {@code credit_card_debt},
+     * {@code loan_principal}) <b>her zaman pozitif</b> döner. Sign visualization
+     * frontend layer'ının görevidir:
+     * <ul>
+     *   <li><b>ALACAK / RECEIVABLE</b> = DGR'ye gelecek para → display "+X TL" yeşil</li>
+     *   <li><b>VERECEK / PAYABLE</b> = DGR'den gidecek para → display "−X TL" kırmızı</li>
+     * </ul>
+     *
+     * Formül: {@code net = total_cash + total_bank_balance + receivables − payables}
+     * (− credit_card_debt − loan_principal, ikisi de WP-5 reserved). {@code net}
+     * field'ı işaretlidir (negatif olabilir).
+     *
+     * Convention dokümanı: {@code docs/conventions.md}.
+     */
     public static class ConsolidatedPosition {
         /**
          * v1.6.23.7 (BUG-V2 fix): total_cash artık YALNIZ fiziksel kasa
          * (closing.actual_balance) + CASH_HOLDER hesapları. CHECKING/SAVINGS
          * hesapları ayrı {@link #totalBankBalance} field'ında. Önceki sürümde
          * her ikisi total_cash'e dahildi → HESAPDAN flow'u double-counted.
+         *
+         * Magnitude, her zaman pozitif (>= 0).
          */
         @JsonProperty("total_cash")        private BigDecimal totalCash;        // physical kasa + CASH_HOLDER
-        /** v1.6.23.7: CHECKING+SAVINGS toplam — kasa-dışı banka pozisyonu. */
+        /** v1.6.23.7: CHECKING+SAVINGS toplam — kasa-dışı banka pozisyonu. Magnitude (>= 0). */
         @JsonProperty("total_bank_balance") private BigDecimal totalBankBalance;
-        @JsonProperty("credit_card_debt")  private BigDecimal creditCardDebt;  // (-) [reserved — WP-5]
-        @JsonProperty("loan_principal")    private BigDecimal loanPrincipal;   // (-) [reserved]
-        private BigDecimal receivables;     // (+)
-        private BigDecimal payables;        // (-)
-        private BigDecimal net;             // total_cash + total_bank_balance - cc - loan + receivables - payables
+        /** Magnitude (>= 0). Display: "−X TL" (DGR'den gidecek). Reserved WP-5. */
+        @JsonProperty("credit_card_debt")  private BigDecimal creditCardDebt;
+        /** Magnitude (>= 0). Display: "−X TL". Reserved. */
+        @JsonProperty("loan_principal")    private BigDecimal loanPrincipal;
+        /** Magnitude (>= 0). Display: "+X TL" yeşil. DGR'ye gelecek. */
+        private BigDecimal receivables;
+        /** Magnitude (>= 0). Display: "−X TL" kırmızı. DGR'den gidecek. */
+        private BigDecimal payables;
+        /** İşaretli sonuç: total_cash + total_bank_balance − cc − loan + receivables − payables. */
+        private BigDecimal net;
     }
 
     @Data @Builder
