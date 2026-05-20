@@ -2,6 +2,8 @@ package com.bizboard.api.controller;
 
 import com.bizboard.common.dto.BankAccountDto;
 import com.bizboard.common.dto.BankAccountToggleRequest;
+import com.bizboard.common.dto.CreateBankAccountRequest;
+import com.bizboard.common.dto.UpdateBankAccountRequest;
 import com.bizboard.common.entity.BankAccount;
 import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.security.UserPrincipal;
@@ -54,5 +56,42 @@ public class BankAccountController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(java.util.Map.of("error", e.getMessage()));
         }
+    }
+
+    /**
+     * v1.6.23.4 (BUG-3 fix): Yeni banka hesabı oluştur. Admin-only.
+     *
+     * <p>Validation servis tarafında:
+     * <ul>
+     *   <li>name + type zorunlu</li>
+     *   <li>type=CASH_HOLDER → holder_person_id zorunlu (counterpart.kind=PERSON)</li>
+     *   <li>currency default TRY, opening_balance default 0</li>
+     * </ul>
+     */
+    @PostMapping
+    public ResponseEntity<BankAccountDto> create(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody CreateBankAccountRequest req) {
+        if (!"admin".equalsIgnoreCase(principal.getRole())) {
+            throw new SecurityException("Sadece admin banka hesabı oluşturabilir");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(service.create(req, principal.getId()));
+    }
+
+    /**
+     * v1.6.23.4 (BUG-3 fix): Partial update. Yalnız name/bank_name/iban/notes
+     * değiştirilebilir; type/currency/holder/active immutable
+     * (active için ayrı PATCH /{id}/active var).
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<BankAccountDto> update(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateBankAccountRequest req) {
+        if (!"admin".equalsIgnoreCase(principal.getRole())) {
+            throw new SecurityException("Sadece admin banka hesabı güncelleyebilir");
+        }
+        return ResponseEntity.ok(service.update(id, req, principal.getId()));
     }
 }

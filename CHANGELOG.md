@@ -34,6 +34,82 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.4] — 2026-05-20 (hotfix · HIGH — sandbox test bulguları)
+
+**v1.6 ACİL PROD'da atlanmış 3 API yeteneği — DGR sandbox testi sırasında tespit edildi.**
+
+Sandbox-test sırasında `sandbox-test-transactions.md` spec'i uygulanırken backend'de 3 eksik API yeteneği tespit edildi. Hepsi de v1.6 ACİL PROD WP'lerinde atlanmış akış parçaları. Tek release'de toplu fixledik; sandbox seed bu fix'leri kullanarak baştan çalıştı ve verify edildi (10/10 edge case test geçti).
+
+### Added — Backend API
+
+#### **BUG-1 fix: `payment_method=HESAPDAN` + bank_account FK**
+
+İşletme bankadan yapılan ödemeleri (havale/EFT/kart) modelleyemiyordu. Backend kodu sadece `NAKIT` ve `POS` enum değerlerini kabul ediyordu; HESAPDAN string'i sessizce `NAKIT` fallback'ine düşüyordu. Sonuç: banka harcamaları yanlışlıkla kasa closing'e dahil ediliyor, bank balance hiç güncellenmiyordu.
+
+- **`TransactionService.normalizePaymentMethod`** → `NAKIT/POS/HESAPDAN` üçlü enum'a genişletildi
+- **`Transaction`** entity → `bankAccount` (FK) field eklendi (ddl-auto=update otomatik şema)
+- **`CreateTransactionRequest`** + **`UpdateTransactionRequest`** → `bank_account_id` field eklendi
+- **TransactionService.createTransaction** → HESAPDAN ise `bankAccountId` zorunlu (yoksa 400); tx kaydedildikten sonra `bank_account.current_balance` direction'a göre güncellenir (income → +, expense → −)
+- **TransactionService.updateTransaction** → eski tx'in bank balance etkisini reverse + yeni state apply (carry-over integrity)
+- **ClosingCalculator** dokunulmadı — yalnız NAKIT'i sayıyordu, HESAPDAN otomatik kasa dışında kalıyor ✓
+
+#### **BUG-2 fix: Backdate cash_closing endpoint**
+
+`POST /closings/today` yalnız bugünü kapatıyordu. Atlanmış günü doldurmak veya migration sırasında geçmiş günleri sisteme almak için DBA yardımı gerekiyordu.
+
+- **`POST /closings`** (yeni endpoint, admin-only) → request body'de `closing_date`, `actual_balance`, opsiyonel `reason_category/reason_note`, opsiyonel `override`
+- **`CashClosingService.closeBackdate`** → opening/computed otomatik chain'den hesaplanır; mevcut CLOSED varsa `override=true` gerekli (yoksa 409)
+- **Audit log**: yeni action `CASH_CLOSING_BACKDATED` + highlight `BACKDATED_CLOSING`
+- Validation: gelecek tarih reddi, admin role zorunluluğu
+
+#### **BUG-3 fix: BankAccount CRUD endpoint**
+
+`BankAccountController` yalnız GET + PATCH/active sunuyordu. Yeni banka hesabı eklemek için doğrudan SQL gerekiyordu — production'da admin akışı yok.
+
+- **`POST /bank-accounts`** (admin-only) → `CreateBankAccountRequest` (name, type, bank_name, iban, currency, holder_person_id, opening_balance, notes)
+- **`PATCH /bank-accounts/{id}`** (admin-only) → `UpdateBankAccountRequest` (name, bank_name, iban, notes) — type/currency/holder/active immutable
+- Validation: `type=CASH_HOLDER` ise `holder_person_id` zorunlu + `Counterpart.kind=PERSON` kontrolü
+- Audit log: yeni action'lar `BANK_ACCOUNT_CREATED` + `BANK_ACCOUNT_UPDATED`
+
+### Verified
+
+**10/10 edge case test geçti** (`sandbox/verify_fixes.py`):
+
+| Test | Beklenen | Sonuç |
+|---|---|---|
+| HESAPDAN tx without bank_account_id | 400 | ✓ |
+| HESAPDAN tx with valid bank_account_id | 201 | ✓ |
+| POST /closings future date | 400 | ✓ |
+| POST /closings duplicate without override | 409 | ✓ |
+| POST /closings duplicate with override=true | 201 | ✓ |
+| POST /bank-accounts CASH_HOLDER no holder | 400 | ✓ |
+| POST /bank-accounts CASH_HOLDER + FIRM holder | 400 | ✓ |
+| POST /bank-accounts CASH_HOLDER + PERSON holder | 201 | ✓ |
+| PATCH /bank-accounts/{id} update | 200 | ✓ |
+| POST /bank-accounts invalid type | 400 | ✓ |
+
+**Sandbox seed end-to-end** — `sandbox/seed.py` baştan çalıştırıldı, **SQL fallback kullanmadan tüm seed API üzerinden** yapıldı:
+
+- 1 business (DGR), 120 counterparts (46 FIRM + 74 PERSON)
+- 49 bank_accounts (26 active + 23 inactive) via **POST /bank-accounts**
+- 10 POS devices, 39 debts
+- 129 transactions (67 HESAPDAN + NAKIT + POS karışık)
+- 11 cash_closings via **POST /closings** backdate (1 opening + 10 günlük)
+- 49 + 11 = 60 audit_log entry (CREATE + BACKDATED action'ları)
+
+### Backend yapı değişiklikleri
+
+- 3 yeni DTO: `CreateBankAccountRequest`, `UpdateBankAccountRequest`, `BackdateClosingRequest`
+- `Transaction` entity: `bankAccount` FK
+- `BankAccountService`: `create()` + `update()` metodları (constructor'a `CounterpartRepository` injected)
+- `CashClosingService`: `closeBackdate()` metodu
+- `AuditAction`: `CASH_CLOSING_BACKDATED` + `HIGHLIGHT_BACKDATED_CLOSING` sabitleri
+- 2 controller: BankAccountController + CashClosingController endpoint ekleri
+
+Frontend etkilenmez (sadece versiyon bumpı). UI iyileştirmeleri (HESAPDAN dropdown, BankAccount admin sayfası) v1.7.0-beta WP'sinde takip edilecek — `test-issues-2026-05-20.md` backlog tablosunda listeli.
+
+---
+
 ## [1.6.23.3] — 2026-05-20 (hotfix · HIGH)
 
 **Audit log paneli her zaman 500 hatası dönüyordu — Postgres parametre tip çıkarımı başarısız.**

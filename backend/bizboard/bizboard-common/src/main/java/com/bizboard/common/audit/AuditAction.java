@@ -63,10 +63,14 @@ public final class AuditAction {
     public static final String CASH_CLOSING_CLOSED      = "CASH_CLOSING_CLOSED";
     public static final String CASH_CLOSING_AUTO_CLOSED = "CASH_CLOSING_AUTO_CLOSED";
     public static final String CASH_CLOSING_REOPENED    = "CASH_CLOSING_REOPENED";
+    // v1.6.23.4 (BUG-2 fix): backdate kapanış action'ı
+    public static final String CASH_CLOSING_BACKDATED   = "CASH_CLOSING_BACKDATED";
 
     // ── v1.6.19 (WP-2): Audit highlight type sabitleri (AuditLog.highlightType) ───
     public static final String HIGHLIGHT_BACKDATED         = "BACKDATED";
     public static final String HIGHLIGHT_CORRECTION        = "CORRECTION";
     public static final String HIGHLIGHT_CLOSING_REOPEN    = "CLOSING_REOPEN";
     public static final String HIGHLIGHT_POS_RATE_OVERRIDE = "POS_RATE_OVERRIDE";
+    // v1.6.23.4 (BUG-2 fix): backdate kapanış için highlight (UI rozet için)
+    public static final String HIGHLIGHT_BACKDATED_CLOSING = "BACKDATED_CLOSING";
 }

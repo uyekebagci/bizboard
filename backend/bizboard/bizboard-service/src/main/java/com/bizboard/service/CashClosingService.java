@@ -1,6 +1,7 @@
 package com.bizboard.service;
 
 import com.bizboard.common.audit.AuditAction;
+import com.bizboard.common.dto.BackdateClosingRequest;
 import com.bizboard.common.dto.CashClosingDto;
 import com.bizboard.common.dto.CloseTodayRequest;
 import com.bizboard.common.dto.ReopenClosingRequest;
@@ -94,6 +95,90 @@ public class CashClosingService {
                 "CASH_CLOSING", closing.getId(),
                 "Günlük kapanış: " + today + " (fark: " + difference + ")",
                 meta, null);
+
+        return toDto(closing);
+    }
+
+    // ───────────────────────── BACKDATE CLOSE (v1.6.23.4) ─────────────────────────
+
+    /**
+     * v1.6.23.4 (BUG-2 fix): Geçmiş bir tarih için kapanış oluştur veya günceller.
+     * Admin-only. Migration ve atlanmış günleri toparlamak için.
+     *
+     * <p>Davranış:</p>
+     * <ul>
+     *   <li>{@code closing_date > today} → IllegalArgumentException (gelecek yok)</li>
+     *   <li>Mevcut CLOSED kayıt + {@code override=false} → IllegalStateException (409)</li>
+     *   <li>Aksi halde upsert: opening + computed_closing ClosingCalculator'dan,
+     *       difference = actual - computed</li>
+     *   <li>Audit log entry: action=CASH_CLOSING_BACKDATED, highlight=BACKDATED_CLOSING</li>
+     * </ul>
+     */
+    @Transactional
+    public CashClosingDto closeBackdate(UUID userId, BackdateClosingRequest req) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!"admin".equalsIgnoreCase(user.getRole())) {
+            throw new SecurityException("Sadece admin geçmiş tarih için kapanış oluşturabilir");
+        }
+
+        LocalDate date = req.getClosingDate();
+        if (date == null) {
+            throw new IllegalArgumentException("closing_date zorunlu");
+        }
+        if (date.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("closing_date gelecek tarih olamaz: " + date);
+        }
+
+        Optional<CashClosing> existing = repository.findByClosingDate(date);
+        boolean override = Boolean.TRUE.equals(req.getOverride());
+        if (existing.isPresent()
+                && existing.get().getStatus() == CashClosingStatus.CLOSED
+                && !override) {
+            throw new IllegalStateException(
+                    "Bu tarih icin kapanis zaten var: " + date + " (override=true ile uzerine yaz)");
+        }
+
+        BigDecimal opening = calculator.getOpeningBalance(date);
+        BigDecimal computed = calculator.computeClosing(date);
+        BigDecimal actual = req.getActualBalance();
+        BigDecimal difference = actual.subtract(computed);
+
+        CashClosing closing = existing.orElseGet(() -> CashClosing.builder()
+                .closingDate(date)
+                .auto(false)
+                .build());
+        closing.setOpeningBalance(opening);
+        closing.setComputedClosing(computed);
+        closing.setActualBalance(actual);
+        closing.setDifference(difference);
+        closing.setStatus(CashClosingStatus.CLOSED);
+        closing.setAuto(false);
+        closing.setClosedAt(LocalDateTime.now());
+        closing.setClosedBy(userId);
+        closing.setReasonCategory(normalizeReason(req.getReasonCategory()));
+        closing.setReasonNote(req.getReasonNote());
+
+        closing = repository.save(closing);
+
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("date", date.toString());
+        meta.put("opening", opening);
+        meta.put("computed", computed);
+        meta.put("actual", actual);
+        meta.put("difference", difference);
+        meta.put("override", override);
+        meta.put("source", "BACKDATE");
+        auditLogService.recordEntityAction(
+                AuditAction.CASH_CLOSING_BACKDATED,
+                user.getId(), user.getUsername(),
+                "CASH_CLOSING", closing.getId(),
+                "Backdate kapanis: " + date + " (fark: " + difference + ")",
+                meta,
+                AuditAction.HIGHLIGHT_BACKDATED_CLOSING);
+
+        log.info("[backdate-close] date={} actual={} computed={} diff={} by={}",
+                date, actual, computed, difference, user.getUsername());
 
         return toDto(closing);
     }
