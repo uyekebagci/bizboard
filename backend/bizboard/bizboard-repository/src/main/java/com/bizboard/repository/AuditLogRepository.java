@@ -26,22 +26,44 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
     /**
      * Admin viewer filter — tüm parametreler opsiyonel; null geldiğinde o filtre devre dışı.
      * Tek sorgu ile filtrelenebilir liste döndürür; pagination ile sayfalanır.
+     *
+     * <p><b>v1.6.23.3:</b> Native query + PostgreSQL explicit CAST. JPQL
+     * {@code (:param is null or col = :param)} pattern'i Hibernate tarafından
+     * Postgres'e {@code (? IS NULL OR col = ?)} olarak gönderiliyordu; aynı
+     * parametre iki kez bağlandığı için Postgres parametre tipini çıkaramıyor
+     * (özellikle UUID ve TIMESTAMP için) → {@code ERROR: could not determine
+     * data type of parameter $N}. Yan etki: tüm audit log paneli 500 dönüyordu
+     * (frontend silent-refresh chain'i de yanlış 401 yorumluyordu).</p>
+     *
+     * <p>Çözüm: native SQL ile {@code CAST(:p AS uuid/text/timestamp)} kullanarak
+     * her bağlama için tip context'i Postgres'e açıkça veriyoruz. Pageable için
+     * countQuery da explicit yazıldı.</p>
      */
-    @Query("""
-            select a from AuditLog a
-            where (:userId is null or a.userId = :userId)
-              and (:action is null or a.action = :action)
-              and (:resourceType is null or a.resourceType = :resourceType)
-              and (:from is null or a.createdAt >= :from)
-              and (:to is null or a.createdAt < :to)
-            order by a.createdAt desc
-            """)
+    @Query(
+            value = """
+                    SELECT * FROM audit_logs
+                    WHERE (CAST(:userId AS uuid) IS NULL OR user_id = CAST(:userId AS uuid))
+                      AND (CAST(:action AS text) IS NULL OR action = CAST(:action AS text))
+                      AND (CAST(:resourceType AS text) IS NULL OR resource_type = CAST(:resourceType AS text))
+                      AND (CAST(:fromTs AS timestamp) IS NULL OR created_at >= CAST(:fromTs AS timestamp))
+                      AND (CAST(:toTs AS timestamp) IS NULL OR created_at < CAST(:toTs AS timestamp))
+                    ORDER BY created_at DESC
+                    """,
+            countQuery = """
+                    SELECT count(*) FROM audit_logs
+                    WHERE (CAST(:userId AS uuid) IS NULL OR user_id = CAST(:userId AS uuid))
+                      AND (CAST(:action AS text) IS NULL OR action = CAST(:action AS text))
+                      AND (CAST(:resourceType AS text) IS NULL OR resource_type = CAST(:resourceType AS text))
+                      AND (CAST(:fromTs AS timestamp) IS NULL OR created_at >= CAST(:fromTs AS timestamp))
+                      AND (CAST(:toTs AS timestamp) IS NULL OR created_at < CAST(:toTs AS timestamp))
+                    """,
+            nativeQuery = true)
     Page<AuditLog> search(
             @Param("userId") UUID userId,
             @Param("action") String action,
             @Param("resourceType") String resourceType,
-            @Param("from") LocalDateTime from,
-            @Param("to") LocalDateTime to,
+            @Param("fromTs") LocalDateTime from,
+            @Param("toTs") LocalDateTime to,
             Pageable pageable);
 
     /**
