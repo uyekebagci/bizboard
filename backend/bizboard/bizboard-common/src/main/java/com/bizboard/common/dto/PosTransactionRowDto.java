@@ -10,12 +10,17 @@ import java.util.UUID;
 
 /**
  * v1.6.3: günlük POS işlemleri tablosu için satır DTO.
+ *
+ * <p><b>v1.6.23.7:</b> Frontend ({@code PosTransactionRow}) ile JSON field
+ * isimleri hizalandı: {@code tx_id}→{@code transaction_id},
+ * {@code pos_commission}→{@code commission}, {@code net_amount}→{@code net},
+ * {@code time}→{@code date}. Java field isimleri korundu (builder uyumu).</p>
  */
 @Data
 @Builder
 public class PosTransactionRowDto {
 
-    @JsonProperty("tx_id")
+    @JsonProperty("transaction_id")
     private UUID txId;
 
     @JsonProperty("business_id")
@@ -31,15 +36,16 @@ public class PosTransactionRowDto {
     private BigDecimal posRate;
 
     /** Banka komisyonu (amount * pos_rate / 100). */
-    @JsonProperty("pos_commission")
+    @JsonProperty("commission")
     private BigDecimal posCommission;
 
     /** Net tutar (amount - pos_commission). */
-    @JsonProperty("net_amount")
+    @JsonProperty("net")
     private BigDecimal netAmount;
 
     private String description;
 
     /** İşlem zamanı (createdAt). */
+    @JsonProperty("date")
     private LocalDateTime time;
 }

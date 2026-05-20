@@ -63,6 +63,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("paymentMethod") String paymentMethod,
             @Param("date") LocalDate date);
 
+    // v1.6.23.7: tarih aralığı (frontend pos-cihazlari sayfası days=30 için).
+    @Query("SELECT t FROM Transaction t WHERE t.business.id IN :businessIds " +
+            "AND t.paymentMethod = :paymentMethod AND t.date BETWEEN :from AND :to " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findByBusinessIdInAndPaymentMethodAndDateBetween(
+            @Param("businessIds") List<UUID> businessIds,
+            @Param("paymentMethod") String paymentMethod,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
     /**
      * v1.6.19 (WP-2): Bir takvim günündeki tüm transaction'lar (tek-tenant
      * cash closing hesabı için — business filtresi yok).

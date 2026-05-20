@@ -48,22 +48,42 @@ public class ConsolidatedDashboardService {
 
         // ── BANK ACCOUNTS ────────────────────────────────────────────
         List<BankAccount> banks = bankAccountRepository.findByActiveTrueOrderByNameAsc();
+
+        // v1.6.23.7 (BUG-V2 fix): total_cash hesabını ayrıştırıyoruz.
+        // CHECKING/SAVINGS hesapları bankada duran para — bunlar receivables/payables
+        // bütçesinde ayrı bir kategori, kasa pozisyonuyla karıştırılmamalı.
+        // CASH_HOLDER hesapları (örn. GÖKHAN ELDEKİ) fiziksel kişide tutulan nakit —
+        // bu kasa pozisyonunun parçası.
+        //
+        // Önceki davranış (v1.6.23.5): totalCash = sum(active banks) + closing.actual
+        //   → CHECKING bakiyesi + physical kasa double-counted (HESAPDAN tx kasayı
+        //   azaltmamış ama bank balance'a yansımış). Round 2 verification raporu
+        //   bunu BUG-V2 olarak işaretledi.
+        //
+        // Yeni: totalCash = closing.actual_balance + sum(CASH_HOLDER bakiyeleri).
+        // CHECKING/SAVINGS bakiyeleri ayrı widget olarak (bankRows zaten gönderiliyor).
+        BigDecimal cashHolderTotal = banks.stream()
+                .filter(b -> b.getType() != null
+                        && "CASH_HOLDER".equals(b.getType().name()))
+                .map(BankAccount::getCurrentBalance)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalBankBalance = banks.stream()
+                .filter(b -> b.getType() != null
+                        && !"CASH_HOLDER".equals(b.getType().name()))
                 .map(BankAccount::getCurrentBalance)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // ── PHYSICAL CASH KASA (v1.6.23.5 BUG-V2 fix) ────────────────
-        // total_cash = bank account toplam bakiyesi + fiziksel kasa.
-        // Fiziksel kasa = en son cash_closing.actual_balance (yoksa computed_closing,
-        // yoksa 0). Önceki sürümde total_cash sadece bank toplam'ıydı; bu durumda
-        // DGR senaryosu gibi büyük physical kasa pozisyonları görülmez oluyordu.
+        // ── PHYSICAL CASH KASA (en son closing) ──────────────────────
         BigDecimal physicalCash = cashClosingRepository.findFirstByOrderByClosingDateDesc()
                 .map(c -> c.getActualBalance() != null
                         ? c.getActualBalance()
                         : (c.getComputedClosing() != null ? c.getComputedClosing() : BigDecimal.ZERO))
                 .orElse(BigDecimal.ZERO);
-        BigDecimal totalCash = totalBankBalance.add(physicalCash);
+
+        // total_cash = fiziksel kasa + CASH_HOLDER bakiyeleri (her ikisi de "kasa" semantik)
+        BigDecimal totalCash = physicalCash.add(cashHolderTotal);
 
         List<ConsolidatedDashboardDto.BankAccountSummary> bankRows = banks.stream()
                 .map(this::toBankSummary)
@@ -80,14 +100,17 @@ public class ConsolidatedDashboardService {
 
         // ── CONSOLIDATED POSITION ────────────────────────────────────
         // KK / loan rezerve — WP-5 öncesi 0.
+        // v1.6.23.7: net hesabı artık total_cash + total_bank_balance dahil.
         ConsolidatedDashboardDto.ConsolidatedPosition consolidated =
                 ConsolidatedDashboardDto.ConsolidatedPosition.builder()
                         .totalCash(totalCash)
+                        .totalBankBalance(totalBankBalance)
                         .creditCardDebt(BigDecimal.ZERO)
                         .loanPrincipal(BigDecimal.ZERO)
                         .receivables(totalReceivables)
                         .payables(totalPayables)
                         .net(totalCash
+                                .add(totalBankBalance)
                                 .add(totalReceivables)
                                 .subtract(totalPayables))
                         .build();

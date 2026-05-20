@@ -36,14 +36,21 @@ public class PosController {
 
     /**
      * Günlük POS işlemleri tablosu.
-     * @param date opsiyonel — verilmezse bugün
+     * @param date opsiyonel — verilmezse bugün (days verilmediğinde)
+     * @param days opsiyonel — v1.6.23.7: son N gün için POS tx'leri (date göz ardı).
+     *             Frontend `pos-cihazlari` sayfası days=30 ile çağırıyor.
      * @param businessId opsiyonel — verilmezse tüm erişilebilir işletmeler
      */
     @GetMapping("/transactions/daily")
     public ResponseEntity<List<PosTransactionRowDto>> getDailyTransactions(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Integer days,
             @RequestParam(name = "businessId", required = false) UUID businessId,
             @AuthenticationPrincipal UserPrincipal principal) {
+        if (days != null && days > 0) {
+            return ResponseEntity.ok(
+                    posService.getRecentTransactions(principal.getId(), days, businessId));
+        }
         return ResponseEntity.ok(posService.getDailyTransactions(principal.getId(), date, businessId));
     }
 }

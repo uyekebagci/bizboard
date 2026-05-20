@@ -34,6 +34,83 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.7] — 2026-05-20 (hotfix · BETA-CRITICAL — POS sayfası + V2/V6/V8 backlog cleanup)
+
+**Round 2 verification raporundan kalan tüm beta-blocker bug'lar fix'lendi + ek bir frontend DTO mismatch (POS sayfası) tespit edilip düzeltildi.**
+
+### Fixed
+
+#### **POS cihazları sayfası boş — DTO field name mismatch**
+
+Kullanıcı raporu: `/dashboard/pos-cihazlari` sayfası açılmıyor. Receivable bug pattern'inin POS varyantı.
+
+Backend `PosBusinessSummaryDto` ve `PosTransactionRowDto` field isimleri frontend type tanımlarıyla uyuşmuyordu:
+
+| Backend (eski) | Frontend (beklenen) | Düzeltme |
+|---|---|---|
+| `total_pos_amount` | `total_gross` | rename |
+| `total_pos_count` | `transaction_count` | rename |
+| `avg_pos_rate` | `weighted_avg_rate` | rename |
+| (yok) | `total_commission`, `total_net`, `currency` | eklendi |
+| `tx_id` | `transaction_id` | rename |
+| `pos_commission` | `commission` | rename |
+| `net_amount` | `net` | rename |
+| `time` | `date` | rename |
+
+`PosService.getBusinessSummaries` — `total_commission` + `total_net` hesabı eklendi (per-tx applied_pos_rate ile).
+
+#### **`/pos/transactions/daily?days=N` parametresi eklendi**
+
+Frontend `?days=30` parametresi gönderiyordu ama backend yalnız `date=YYYY-MM-DD` destekliyordu → today'e fallback → POS tx yoksa boş tablo.
+
+- `PosController.getDailyTransactions` → opsiyonel `days` parametresi (verilirse `date` göz ardı edilir)
+- `PosService.getRecentTransactions(userId, days, businessId)` yeni metod
+- `TransactionRepository.findByBusinessIdInAndPaymentMethodAndDateBetween` yeni query
+
+#### **BUG-V2: `consolidated.total_cash` double-counting**
+
+Round 2 raporu: `total_cash=33.4M` (28.46M kasa + 4.96M bank) — bank balance ve closing actual iki kez sayılıyordu.
+
+`ConsolidatedDashboardService` yeniden yapılandırıldı:
+- `total_cash` artık **YALNIZ** fiziksel kasa (`closing.actual_balance`) + `CASH_HOLDER` hesapları
+- CHECKING/SAVINGS hesapları ayrı `total_bank_balance` field'ında (yeni)
+- `net = total_cash + total_bank_balance + receivables - payables`
+- Verify: `total_cash=28.46M, total_bank_balance=4.96M, net=52.9M` ✓ (Excel target ~28.79M ile uyumlu)
+
+`ConsolidatedDashboardDto.ConsolidatedPosition` → yeni `total_bank_balance` field eklendi.
+
+#### **BUG-V6: CASH_HOLDER bakiyesi tracking eksikti — DOĞRULANDI ÇALIŞIYOR**
+
+V6 root cause araştırması: backend kodu zaten CASH_HOLDER için doğru çalışıyor (TransactionService HESAPDAN delta'sını bank_account.type'a bakmadan uyguluyor). Sandbox sadece GÖKHAN ELDEKİ için opening balance seed etmemişti — bu da seed eksikliği, backend bug değil.
+
+Yeni test eklendi (`/tmp/verify_v7.py`):
+- POST HESAPDAN income +1000 → GÖKHAN ELDEKİ balance 0 → 1000 ✓
+- POST HESAPDAN expense -500 → balance 1000 → 500 ✓
+- Round-trip cleanup OK
+
+Spec'i güncellemek isteyen System Architect, `CreateBankAccountRequest.opening_balance` field'ı ile (v1.6.23.4'te eklendi) GÖKHAN ELDEKİ açılışını verebilir.
+
+### Cleanup
+
+- **V7:** `verify_fixes.py test tx` artifact silindi
+- **V8:** `TEST_CASH_HOLDER_PERSON` ekstra bank account silindi (49 toplam, target ile uyumlu)
+
+### Verified
+
+21/21 yeni test (`/tmp/verify_v7.py`) + 10/10 eski test (`sandbox/verify_fixes.py`) = **31/31 total tests pass**.
+
+### Backend yapı değişiklikleri
+
+- 3 DTO: `PosBusinessSummaryDto` (+ 3 yeni field), `PosTransactionRowDto` (4 rename), `ConsolidatedDashboardDto.ConsolidatedPosition` (+ `total_bank_balance`)
+- `ReceivableAggregateDto` (önceki release'den, `@JsonProperty` annotations)
+- `PosService.getRecentTransactions` yeni metod
+- `TransactionRepository.findByBusinessIdInAndPaymentMethodAndDateBetween` yeni query
+- `ConsolidatedDashboardService` → `total_cash`/`total_bank_balance` separasyonu
+
+Frontend etkilenmez (yalnız version bumpı). Bu release v1.6 ACİL PROD'un kapanış noktası — Beta Go.
+
+---
+
 ## [1.6.23.6] — 2026-05-20 (hotfix · MEDIUM — alacaklar sayfası boş)
 
 **Alacaklar (`/dashboard/alacaklar`) sayfası açılmıyordu — DTO snake_case mismatch.**

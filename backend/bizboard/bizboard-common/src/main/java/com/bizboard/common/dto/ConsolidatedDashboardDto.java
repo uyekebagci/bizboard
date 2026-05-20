@@ -64,12 +64,20 @@ public class ConsolidatedDashboardDto {
 
     @Data @Builder
     public static class ConsolidatedPosition {
-        @JsonProperty("total_cash")        private BigDecimal totalCash;       // CASH + CASH_HOLDER + CHECKING + SAVINGS
+        /**
+         * v1.6.23.7 (BUG-V2 fix): total_cash artık YALNIZ fiziksel kasa
+         * (closing.actual_balance) + CASH_HOLDER hesapları. CHECKING/SAVINGS
+         * hesapları ayrı {@link #totalBankBalance} field'ında. Önceki sürümde
+         * her ikisi total_cash'e dahildi → HESAPDAN flow'u double-counted.
+         */
+        @JsonProperty("total_cash")        private BigDecimal totalCash;        // physical kasa + CASH_HOLDER
+        /** v1.6.23.7: CHECKING+SAVINGS toplam — kasa-dışı banka pozisyonu. */
+        @JsonProperty("total_bank_balance") private BigDecimal totalBankBalance;
         @JsonProperty("credit_card_debt")  private BigDecimal creditCardDebt;  // (-) [reserved — WP-5]
         @JsonProperty("loan_principal")    private BigDecimal loanPrincipal;   // (-) [reserved]
         private BigDecimal receivables;     // (+)
         private BigDecimal payables;        // (-)
-        private BigDecimal net;             // total_cash - cc - loan + receivables - payables
+        private BigDecimal net;             // total_cash + total_bank_balance - cc - loan + receivables - payables
     }
 
     @Data @Builder

@@ -60,30 +60,80 @@ public class PosService {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             // Ağırlıklı ortalama oran: SUM(amount * rate) / SUM(amount)
+            // v1.6.23.7: total_commission ve total_net hesabı da burada (her tx'in
+            // applied_pos_rate'i ya da pos_rate'i kullanılarak per-tx komisyon).
             BigDecimal weightedSum = BigDecimal.ZERO;
             BigDecimal denom = BigDecimal.ZERO;
+            BigDecimal totalCommission = BigDecimal.ZERO;
             for (Transaction t : list) {
                 BigDecimal amt = t.getAmount() != null ? t.getAmount() : BigDecimal.ZERO;
-                BigDecimal rate = t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO;
+                BigDecimal rate = t.getAppliedPosRate() != null
+                        ? t.getAppliedPosRate()
+                        : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
                 weightedSum = weightedSum.add(amt.multiply(rate));
                 denom = denom.add(amt);
+                totalCommission = totalCommission.add(
+                        amt.multiply(rate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
             }
             BigDecimal avgRate = denom.signum() > 0
                     ? weightedSum.divide(denom, 2, RoundingMode.HALF_UP)
                     : BigDecimal.ZERO;
+            BigDecimal totalNet = total.subtract(totalCommission);
 
             Transaction first = list.get(0); // findBy ORDER BY date DESC, createdAt DESC
             out.add(PosBusinessSummaryDto.builder()
                     .businessId(e.getKey())
                     .businessName(first.getBusiness().getName())
+                    .currency(first.getCurrency() != null ? first.getCurrency() : "TRY")
                     .totalPosCount(count)
                     .totalPosAmount(total)
+                    .totalCommission(totalCommission)
+                    .totalNet(totalNet)
                     .avgPosRate(avgRate)
                     .lastTxAt(first.getCreatedAt())
                     .build());
         }
         out.sort((a, b) -> b.getTotalPosAmount().compareTo(a.getTotalPosAmount()));
         return out;
+    }
+
+    /**
+     * v1.6.23.7: Son N gün için tüm POS tx'leri toparlayan helper.
+     * `/pos/transactions/daily?days=N` parametresi için kullanılır.
+     */
+    @Transactional(readOnly = true)
+    public List<PosTransactionRowDto> getRecentTransactions(UUID userId, int days, UUID filterBusinessId) {
+        LocalDate today = LocalDate.now();
+        LocalDate from = today.minusDays(Math.max(1, days) - 1);
+        List<UUID> businessIds = accessibleBusinessIds(userId);
+        if (businessIds.isEmpty()) return List.of();
+        if (filterBusinessId != null) {
+            if (!businessIds.contains(filterBusinessId)) return List.of();
+            businessIds = List.of(filterBusinessId);
+        }
+        List<Transaction> txs = transactionRepository
+                .findByBusinessIdInAndPaymentMethodAndDateBetween(businessIds, "POS", from, today);
+        return txs.stream().map(this::toRowDto).toList();
+    }
+
+    private PosTransactionRowDto toRowDto(Transaction t) {
+        BigDecimal amount = t.getAmount() != null ? t.getAmount() : BigDecimal.ZERO;
+        BigDecimal rate = t.getAppliedPosRate() != null
+                ? t.getAppliedPosRate()
+                : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
+        BigDecimal commission = amount.multiply(rate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        BigDecimal net = amount.subtract(commission);
+        return PosTransactionRowDto.builder()
+                .txId(t.getId())
+                .businessId(t.getBusiness().getId())
+                .businessName(t.getBusiness().getName())
+                .amount(amount)
+                .posRate(rate)
+                .posCommission(commission)
+                .netAmount(net)
+                .description(t.getDescription())
+                .time(t.getCreatedAt())
+                .build();
     }
 
     @Transactional(readOnly = true)
