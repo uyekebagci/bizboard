@@ -34,6 +34,50 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.3] — 2026-05-20 (hotfix · HIGH)
+
+**Audit log paneli her zaman 500 hatası dönüyordu — Postgres parametre tip çıkarımı başarısız.**
+
+**Symptom:** Admin kullanıcısı `/admin/audit-logs` sayfasını açtığında 500 / "yetkisiz" gibi hatalar alıyordu. Frontend silent-refresh chain'i bu cevabı yorumlamakta zorlandığı için yer yer 401 olarak da görünüyordu — gerçek sebep server-side bir veri tabanı hatasıydı.
+
+**Backend log'unda:**
+```
+ERROR: could not determine data type of parameter $7
+JDBC exception executing SQL [select al1_0.id,...
+   from audit_logs al1_0
+   where (? is null or al1_0.user_id=?)
+     and (? is null or al1_0.action=?)
+     and (? is null or al1_0.resource_type=?)
+     and (? is null or al1_0.created_at>=?)
+     and (? is null or al1_0.created_at<?)
+   order by al1_0.created_at desc
+   fetch first ? rows only]
+```
+
+**Root cause:** `AuditLogRepository.search()` JPQL'inde `(:param is null or col = :param)` pattern'i kullanılıyordu. Hibernate bu JPQL'i Postgres'e `(? IS NULL OR col = ?)` olarak gönderiyor. Postgres `? IS NULL` ifadesindeki parametre için tip context'i çıkaramıyor — özellikle UUID ve `TIMESTAMP` parametreleri için (`text` literal'i için inference çalışıyor). Tüm parametreler null geldiğinde (varsayılan filtresiz sorgu) prepared statement reddediliyordu. Sonuç: audit panel kullanıcısı sayfayı açar açmaz 500 alıyordu.
+
+### Fixed
+
+#### Backend
+- **`AuditLogRepository.search()` JPQL → native query + explicit `CAST(:param AS uuid/text/timestamp)`.** Her parametre bağlamasına Postgres'in tip çıkarabileceği explicit CAST ekledik. Pageable için ayrı `countQuery` da explicit yazıldı. JPQL kalıcı olarak güvenilir parametre inference yapamıyor — runtime'da kullandığımız native PG semantiği daha sağlam.
+
+### Verified (Postgres ile birebir reproduce)
+
+Local Postgres'te bug reproduce edildi (broken JPQL pattern → `ERROR: could not determine data type`), sonra fix prepared statement olarak test edildi:
+
+- Tüm null parametre → 8 satır (filtre yok) ✓
+- `action='user.login'` → 0 satır ✓
+- `from`/`to` date range → 8 satır ✓
+
+Backend Maven build temiz. Frontend tarafı bu fix'ten etkilenmez (sadece versiyon bumpı).
+
+### Etki
+
+- v1.6.0 Audit Log panel'i tanıtıldığında native query yerine JPQL kullanılmıştı; bu pattern Postgres + Hibernate 6 kombinasyonunda her zaman fail oluyormuş ama tablo boş kaldığında (early prod) sorgu boş set döndürdüğünde fark edilmiyordu. **v1.6.16.1** Page<T> JSON shape fix'inden sonra tablo gerçekten kayıt taşımaya başlayınca bu bug ortaya çıktı.
+- Aynı broken pattern (`is null or`) backend repository'lerinde başka yerde yok — `grep` ile doğrulandı.
+
+---
+
 ## [1.6.23.2] — 2026-05-20 (hotfix · CRITICAL)
 
 **CRITICAL Hotfix — silent refresh fail olunca kullanıcı zombie state'te kalıyordu.**
