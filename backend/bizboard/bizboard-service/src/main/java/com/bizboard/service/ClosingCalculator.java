@@ -42,29 +42,52 @@ public class ClosingCalculator {
 
     /**
      * Verilen tarih için açılış bakiyesi.
+     *
+     * <p><b>v1.6.23.5 (BUG-V1 fix):</b> Opening kaynağı artık
+     * {@code prev.actualBalance ?? prev.computedClosing ?? 0}. Önceki sürümlerde
+     * yalnız {@code computedClosing} kullanılıyordu; bu durumda opening seed
+     * satırı (örn. sistem ilk kullanımı, 03.05 sandbox seed) computed=0 olarak
+     * geçtiyse tüm zincir negatife kayıyordu. Defensive fallback chain:</p>
+     *
      * <ul>
-     *   <li>Eğer önceki gün(ler) için en az bir CashClosing varsa → en son
-     *       kapanışın {@code computedClosing}'i (actual değil — kasıtlı).</li>
-     *   <li>Hiç kapanış yoksa → 0 (sistem ilk kez kullanılıyor; admin manuel
-     *       opening_balance girene kadar).</li>
+     *   <li>{@code prev.actual_balance} dolu ise onu kullan (manuel sayım sonucu
+     *       — sistemden daha güvenilir kasa bilgisi)</li>
+     *   <li>Aksi halde {@code prev.computed_closing} (sistem hesabı)</li>
+     *   <li>İkisi de yoksa 0 (sistem ilk kez kullanılıyor)</li>
      * </ul>
+     *
+     * <p><b>Tasarım gerekçesi:</b> Önceki sürümde "actual değil — kasıtlı"
+     * yorumu, kasıtlı bir disiplin kararıydı: sistemin computed'ı kullanıcının
+     * actual sayımıyla "drift" olabilirdi, ama drift biliniyor. v1.6.23.5'te
+     * bunu değiştiriyoruz çünkü sandbox-test net olarak gösterdi ki — gerçek
+     * çalışma akışında actual physical sayım baz noktası olmalı, computed
+     * günlük operasyonel kontrol mekanizması. Drift artık opening'e taşınmıyor,
+     * her gün fresh sayım üzerinden başlıyor.</p>
      */
     @Transactional(readOnly = true)
     public BigDecimal getOpeningBalance(LocalDate date) {
         Optional<CashClosing> last = cashClosingRepository.findFirstByOrderByClosingDateDesc();
+        CashClosing prev = null;
         if (last.isPresent() && last.get().getClosingDate().isBefore(date)) {
-            BigDecimal computed = last.get().getComputedClosing();
-            return computed != null ? computed : BigDecimal.ZERO;
-        }
-        // Eğer aynı gün veya gelecek tarih için zaten kapanış varsa, ondan bir
-        // önceki kayda bak.
-        if (last.isPresent() && !last.get().getClosingDate().isBefore(date)) {
-            return cashClosingRepository.findByClosingDateBetweenOrderByClosingDateAsc(
+            prev = last.get();
+        } else if (last.isPresent() && !last.get().getClosingDate().isBefore(date)) {
+            // Eğer aynı gün veya gelecek tarih için zaten kapanış varsa, ondan bir
+            // önceki kayda bak.
+            prev = cashClosingRepository.findByClosingDateBetweenOrderByClosingDateAsc(
                             LocalDate.of(2000, 1, 1), date.minusDays(1))
                     .stream()
                     .reduce((a, b) -> b) // last
-                    .map(c -> c.getComputedClosing() == null ? BigDecimal.ZERO : c.getComputedClosing())
-                    .orElse(BigDecimal.ZERO);
+                    .orElse(null);
+        }
+        if (prev == null) {
+            return BigDecimal.ZERO;
+        }
+        // v1.6.23.5: actual_balance varsa onu kullan, yoksa computed_closing, yoksa 0
+        if (prev.getActualBalance() != null) {
+            return prev.getActualBalance();
+        }
+        if (prev.getComputedClosing() != null) {
+            return prev.getComputedClosing();
         }
         return BigDecimal.ZERO;
     }

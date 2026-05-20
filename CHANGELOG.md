@@ -34,6 +34,87 @@ _Henüz yayınlanmamış değişiklikler buraya gelir._
 
 ---
 
+## [1.6.23.5] — 2026-05-20 (hotfix · CRITICAL — sandbox verification bulguları)
+
+**System Architect verification raporunda (`sandbox-verification-2026-05-20.md`) tespit edilen 3 ek bug fix.**
+
+`v1.6.23.4`'ten sonra yapılan sandbox verification turunda, daha temel olan bir bug ortaya çıktı: **closing chain'in opening_balance carry-over'ı bozuktu**. Önceki sürümde `ClosingCalculator` yalnız `prev.computed_closing` kullanıyordu; seed satırı computed=0 ile başladığı için tüm zincir negatif kümülatif olarak büyüyordu (15.05'te computed=-2.5M TL, gerçekte 28.46M olmalıydı — 31M açık).
+
+Bunun yanı sıra `consolidated.total_cash` fiziksel kasayı görmüyordu (sadece bank balance) ve POS analytics'in `settled/unsettled_count` field'ları her zaman 0 dönüyordu.
+
+### Fixed
+
+#### **BUG-V1 (CRITICAL): ClosingCalculator carry-over bozuk**
+
+- `ClosingCalculator.getOpeningBalance` defensive logic: `prev.actualBalance ?? prev.computedClosing ?? 0`
+- Önceki sürümde "actual değil — kasıtlı" disiplin kararıydı (drift biliniyor); sandbox-test gösterdi ki gerçek akışta `actual_balance` baz olmalı, drift opening'e taşınmamalı
+- Fix sonrası: 11 günlük chain self-consistent, computed → actual sapması ±%5 içinde (Excel ile uyumlu)
+- Mevcut closing kayıtları için recompute path: `POST /closings` (backdate, `override=true`) ile her satır yeniden hesaplanır
+
+#### **BUG-V2 (HIGH): consolidated.total_cash physical kasayı kapsamıyordu**
+
+- `ConsolidatedDashboardService.totalCash` = `sum(bank_accounts.current_balance)` idi
+- Yeni: `totalCash = sum(bank_balances) + latest_closing.actual_balance` (defensive fallback computed/0)
+- Sandbox verify: V1 fix öncesi total_cash=4.95M (yalnız HESAPDAN birikimleri); V2 fix sonrası 33.41M (fiziksel kasa 28.46M + bank 4.95M). Excel beklentisi 28.79M; kalan +4.62M overshoot, seed'in tüm HESAPDAN tx'lerini tek default banka (`DGR FİNANS`) altında toplamasından kaynaklı (gerçek prod kullanımında HESAPDAN'lar dağılır)
+
+#### **BUG-V3 (MEDIUM): POS analytics settled_count + unsettled_count = 0**
+
+- `TransactionService.createTransaction` → POS tx'leri için `pos_settled = false` default (önceden `null`)
+- `PosAnalyticsService` kodu `Boolean.FALSE.equals(t.getPosSettled())` ile sayıyordu — null durumunda false dönüyordu
+- Fix sonrası: 46 POS tx için unsettled_count=46 ✓
+
+### Verified
+
+**10/10 edge case test geçiyor** (`sandbox/verify_fixes.py` — mevcut testler):
+
+V1 dürüstçe verify edildi:
+
+| Tarih | Opening (sys) | Computed (sys) | Actual | Diff |
+|---|---:|---:|---:|---:|
+| 2026-05-03 | 0 | 0 | 28,387,221 | (seed) |
+| 2026-05-04 | **28,387,221** | 27,464,533 | 28,981,633 | +1,517,100 |
+| 2026-05-05 | 28,981,633 | 28,242,763 | 27,493,589 | -749,174 |
+| ... | ... | ... | ... | ... |
+| 2026-05-15 | 28,667,181 | 28,573,281 | 28,458,014 | -115,267 |
+
+Chain integrity ✓ — her gün opening = prev gün actual. Computed vs actual sapması ±%5 içinde.
+
+V3 verify (POS analytics):
+
+```json
+{ "tx_count": 46, "settled_count": 0, "unsettled_count": 46 }
+```
+
+V2 verify (consolidated):
+
+```json
+{ "total_cash": 33414564.00, "receivables": 26948313.73, "payables": 7456316.00, "net": 52906561.73 }
+```
+
+### BUG-V4 (HIGH): Per-day flow Excel semantik mismatch — DIAGNOSED, NOT FIXED
+
+V4 root cause diagnostic'i yapıldı:
+
+- Excel kullanıcı modeli: kasa = `NAKIT + HESAPDAN + POS_Kar` tek havuz; POS gross withdrawal banka tarafı
+- Backend modeli: `ClosingCalculator` yalnız NAKIT'i kasaya etki ediyor sayar; HESAPDAN bank balance'ı etkiler
+- Sapma: 04.05 örnek — Excel kasa delta = +594K, backend NAKIT delta = -922K, fark ~1.5M (HESAPDAN income + POS Kar)
+
+Çözüm seçenekleri (v1.7-beta'da değerlendirilmeli, bu release scope dışı):
+
+1. **Spec re-categorize**: KEZBAN ÇEK, ÖZKAN GELEN PARA, POS KAR gibi belirsiz tx'ler NAKIT olarak girilir
+2. **Backend yeni alan**: `affects_cash_kasa` flag (payment_method'tan bağımsız); kasaya etki opt-in
+3. **DGR-spesifik mod**: Excel sıklığıyla "consolidated kasa" görünümü (NAKIT+HESAPDAN birleşik chart)
+
+Sandbox spec yeniden gözden geçirilmeli — DGR'nin gerçek workflow'u: HESAPDAN harcamalar fiziksel kasayı azaltıyor mu (havale yapıyor da kasadan mı ayrılıyor), yoksa banka hesabından mı çıkıyor? Bu ayrım clarify edildikten sonra V4'ün tipi netleşir.
+
+### Backend yapı değişiklikleri
+
+- `ClosingCalculator.getOpeningBalance`: actual/computed fallback chain
+- `ConsolidatedDashboardService`: totalCash hesabı = banks + physical kasa
+- `TransactionService.createTransaction`: POS tx için pos_settled=false default
+
+---
+
 ## [1.6.23.4] — 2026-05-20 (hotfix · HIGH — sandbox test bulguları)
 
 **v1.6 ACİL PROD'da atlanmış 3 API yeteneği — DGR sandbox testi sırasında tespit edildi.**

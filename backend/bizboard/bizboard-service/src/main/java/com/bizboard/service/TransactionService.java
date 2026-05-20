@@ -172,6 +172,13 @@ public class TransactionService {
             appliedRate = posRate;
         }
 
+        // v1.6.23.5 (BUG-V3 fix): POS tx için pos_settled default=false (NULL değil).
+        // Önceki davranış: pos_settled NULL → analytics settled/unsettled count'ları
+        // 0 dönüyordu çünkü Boolean.FALSE.equals(NULL) = false. Şimdi default false
+        // veriyoruz ki "henüz hesaba düşmedi" durumu doğru sayılsın. NAKIT/HESAPDAN
+        // için null (anlamsız) kalır.
+        Boolean posSettledDefault = "POS".equals(pm) ? Boolean.FALSE : null;
+
         Transaction transaction = Transaction.builder()
                 .business(business)
                 .direction(TransactionDirection.valueOf(request.getDirection().toUpperCase(java.util.Locale.ENGLISH)))
@@ -185,6 +192,7 @@ public class TransactionService {
                 .targetCounterpart(targetCounterpart)
                 .posDevice(posDevice)
                 .appliedPosRate(appliedRate)
+                .posSettled(posSettledDefault)
                 .bankAccount(bankAccount)
                 .backdated(backdated)
                 .tags(request.getTags())
