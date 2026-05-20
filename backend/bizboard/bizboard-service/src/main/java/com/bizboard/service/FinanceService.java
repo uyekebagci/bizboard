@@ -415,9 +415,11 @@ public class FinanceService {
     // ─── Yardımcı Metodlar ──────────────────────────────────────────────
 
     private BigDecimal sumByDirection(List<Transaction> transactions, TransactionDirection dir) {
+        // v1.6.23.8 (TODO ad8afc6f): POS tx için net (= amount − commission) kullan.
+        // "Net kar" hesabı fiilen banka hesabına düşen tutarı yansıtmalı.
         return transactions.stream()
                 .filter(t -> t.getDirection() == dir)
-                .map(Transaction::getAmount)
+                .map(SummaryService::effectiveAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

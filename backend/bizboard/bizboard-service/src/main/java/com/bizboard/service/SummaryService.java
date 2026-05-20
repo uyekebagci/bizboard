@@ -318,8 +318,25 @@ public class SummaryService {
     private BigDecimal sumByDirection(List<Transaction> transactions, TransactionDirection dir) {
         return transactions.stream()
                 .filter(t -> t.getDirection() == dir)
-                .map(Transaction::getAmount)
+                .map(SummaryService::effectiveAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * v1.6.23.8 (TODO ad8afc6f): POS tx için net (= amount − commission) kullan.
+     * "Net kar" hesabı kullanıcının fiilen elde ettiği parayı yansıtmalı; bankanın
+     * aldığı komisyon income'a dahil edilmemeli. NAKIT/HESAPDAN: amount direkt.
+     */
+    static BigDecimal effectiveAmount(Transaction t) {
+        if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
+        if (!"POS".equalsIgnoreCase(t.getPaymentMethod())) return t.getAmount();
+        java.math.BigDecimal rate = t.getAppliedPosRate() != null
+                ? t.getAppliedPosRate()
+                : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
+        if (rate.signum() == 0) return t.getAmount();
+        BigDecimal commission = t.getAmount().multiply(rate)
+                .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        return t.getAmount().subtract(commission);
     }
 
     private Map<String, Map<String, BigDecimal>> buildCategoryBreakdown(List<Transaction> transactions) {
