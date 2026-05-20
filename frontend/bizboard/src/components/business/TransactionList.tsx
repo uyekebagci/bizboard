@@ -96,12 +96,22 @@ export function TransactionList({ transactions, currency, paymentFilter = "ALL" 
 
               <span
                 className={cn(
-                  "text-sm font-semibold flex-shrink-0",
+                  "text-sm font-semibold flex-shrink-0 text-right",
                   isIncome ? "text-green-600" : "text-red-600"
                 )}
               >
+                {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net (= amount − commission)
+                    göster; gross'u küçük not olarak yanına yaz. NAKIT/HESAPDAN: amount. */}
                 {isIncome ? "+" : "-"}
-                {formatCurrency(tx.amount, currency)}
+                {formatCurrency(
+                  isPos && tx.pos_net != null ? tx.pos_net : tx.amount,
+                  currency
+                )}
+                {isPos && tx.pos_net != null && tx.pos_net !== tx.amount && (
+                  <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
+                    brüt {formatCurrency(tx.amount, currency)}
+                  </span>
+                )}
               </span>
 
               {/* Delete button */}
@@ -486,8 +496,24 @@ export function TransactionDetailModal({
                   "text-3xl font-bold",
                   isIncome ? "text-green-700" : "text-red-700"
                 )}>
-                  {isIncome ? "+" : "-"}{formatCurrency(transaction.amount, effectiveCurrency)}
+                  {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net göster; gross alt-bilgi olarak. */}
+                  {isIncome ? "+" : "-"}
+                  {formatCurrency(
+                    (transaction.payment_method || "NAKIT") === "POS" && transaction.pos_net != null
+                      ? transaction.pos_net
+                      : transaction.amount,
+                    effectiveCurrency,
+                  )}
                 </p>
+                {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_net != null
+                  && transaction.pos_net !== transaction.amount && (
+                  <p className="text-xs text-surface-400 mt-1">
+                    Brüt: {formatCurrency(transaction.amount, effectiveCurrency)}
+                    {transaction.pos_commission != null && (
+                      <> · Komisyon: {formatCurrency(transaction.pos_commission, effectiveCurrency)}</>
+                    )}
+                  </p>
+                )}
               </div>
 
               {/* Details Grid */}
@@ -553,16 +579,22 @@ export function TransactionDetailModal({
                         <span className="ml-2 text-surface-400">· {transaction.pos_device_name}</span>
                       )}
                     </p>
-                    {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_rate != null && (
+                    {(transaction.payment_method || "NAKIT") === "POS"
+                      && (transaction.pos_commission != null || transaction.pos_rate != null) && (
                       <p className="text-[11px] text-surface-400 mt-0.5">
+                        {/* v1.6.23.8: backend-derived field varsa onu, yoksa hesapla. */}
                         Komisyon: {formatCurrency(
-                          (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
+                          transaction.pos_commission != null
+                            ? transaction.pos_commission
+                            : (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
                           effectiveCurrency,
                         )}
                         {" · Net: "}
                         {formatCurrency(
-                          Number(transaction.amount) -
-                            (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
+                          transaction.pos_net != null
+                            ? transaction.pos_net
+                            : Number(transaction.amount) -
+                              (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
                           effectiveCurrency,
                         )}
                       </p>

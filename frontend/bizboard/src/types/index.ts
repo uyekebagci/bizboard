@@ -161,6 +161,10 @@ export interface Transaction {
   pos_device_name?: string | null;
   /** v1.6.21 (WP-4): POS çekim banka hesabına düştü mü (null=nakit). */
   pos_settled?: boolean | null;
+  /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived komisyon. NAKIT/HESAPDAN'da null. */
+  pos_commission?: number | null;
+  /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived net (= amount − pos_commission). */
+  pos_net?: number | null;
   /** v1.6.20 (WP-3): karşı taraf. */
   target_counterpart_id?: string | null;
   target_counterpart_name?: string | null;

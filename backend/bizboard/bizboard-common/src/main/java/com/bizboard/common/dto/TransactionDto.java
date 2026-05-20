@@ -59,6 +59,22 @@ public class TransactionDto {
     @JsonProperty("pos_settled")
     private Boolean posSettled;
 
+    /**
+     * v1.6.23.8 (WP 3cdf2a4f / TODO ad8afc6f): POS tx için derived komisyon.
+     * Formül: {@code amount × applied_pos_rate / 100} (applied_pos_rate yoksa
+     * pos_rate fallback). NAKIT/HESAPDAN için null. Tx list'lerde net göstermek
+     * isteyen UI bu field'ı okumalı — gross göstermek isterse {@code amount}.
+     */
+    @JsonProperty("pos_commission")
+    private BigDecimal posCommission;
+
+    /**
+     * v1.6.23.8: POS tx için derived net (= amount − pos_commission).
+     * Bank account'a düşen gerçek tutar. NAKIT/HESAPDAN için null.
+     */
+    @JsonProperty("pos_net")
+    private BigDecimal posNet;
+
     /** v1.6.20 (WP-3): karşı taraf (counterpart). */
     @JsonProperty("target_counterpart_id")
     private UUID targetCounterpartId;

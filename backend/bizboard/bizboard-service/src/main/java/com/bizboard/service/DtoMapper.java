@@ -59,6 +59,19 @@ public final class DtoMapper {
     }
 
     public static TransactionDto toTransactionDto(Transaction t) {
+        // v1.6.23.8 (WP 3cdf2a4f / TODO ad8afc6f): POS tx için derived
+        // commission + net (UI'da gross yerine net gösterilmek istenirse).
+        java.math.BigDecimal posCommission = null;
+        java.math.BigDecimal posNet = null;
+        if ("POS".equalsIgnoreCase(t.getPaymentMethod()) && t.getAmount() != null) {
+            java.math.BigDecimal rate = t.getAppliedPosRate() != null
+                    ? t.getAppliedPosRate()
+                    : (t.getPosRate() != null ? t.getPosRate() : java.math.BigDecimal.ZERO);
+            posCommission = t.getAmount().multiply(rate)
+                    .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            posNet = t.getAmount().subtract(posCommission);
+        }
+
         return TransactionDto.builder()
                 .id(t.getId())
                 .businessId(t.getBusiness().getId())
@@ -77,6 +90,8 @@ public final class DtoMapper {
                 .posDeviceId(t.getPosDevice() != null ? t.getPosDevice().getId() : null)
                 .posDeviceName(t.getPosDevice() != null ? t.getPosDevice().getName() : null)
                 .posSettled(t.getPosSettled())
+                .posCommission(posCommission)
+                .posNet(posNet)
                 .targetCounterpartId(t.getTargetCounterpart() != null ? t.getTargetCounterpart().getId() : null)
                 .targetCounterpartName(t.getTargetCounterpart() != null ? t.getTargetCounterpart().getName() : null)
                 .tags(t.getTags())

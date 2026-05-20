@@ -319,12 +319,24 @@ export default function AllTransactionsPage() {
 
                 <span
                   className={cn(
-                    "text-sm font-semibold flex-shrink-0",
+                    "text-sm font-semibold flex-shrink-0 text-right",
                     isIncome ? "text-green-600" : "text-red-600"
                   )}
                 >
+                  {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net göster. */}
                   {isIncome ? "+" : "-"}
-                  {formatCurrency(tx.amount, tx.currency)}
+                  {formatCurrency(
+                    (tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
+                      ? tx.pos_net
+                      : tx.amount,
+                    tx.currency
+                  )}
+                  {(tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
+                    && tx.pos_net !== tx.amount && (
+                    <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
+                      brüt {formatCurrency(tx.amount, tx.currency)}
+                    </span>
+                  )}
                 </span>
 
                 <button
@@ -420,8 +432,21 @@ function DeleteModal({
                   })}
                 </p>
               </div>
-              <span className={cn("text-base font-bold", isIncome ? "text-green-600" : "text-red-600")}>
-                {isIncome ? "+" : "-"}{formatCurrency(transaction.amount, transaction.currency)}
+              <span className={cn("text-base font-bold text-right", isIncome ? "text-green-600" : "text-red-600")}>
+                {/* v1.6.23.8 (TODO ad8afc6f): POS net göster. */}
+                {isIncome ? "+" : "-"}
+                {formatCurrency(
+                  (transaction.payment_method || "NAKIT") === "POS" && transaction.pos_net != null
+                    ? transaction.pos_net
+                    : transaction.amount,
+                  transaction.currency
+                )}
+                {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_net != null
+                  && transaction.pos_net !== transaction.amount && (
+                  <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
+                    brüt {formatCurrency(transaction.amount, transaction.currency)}
+                  </span>
+                )}
               </span>
             </div>
           </div>
