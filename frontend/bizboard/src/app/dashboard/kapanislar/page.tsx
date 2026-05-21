@@ -15,6 +15,7 @@ import {
   ArrowLeft, Loader2, CalendarCheck, Lock, AlertCircle, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useBusinesses } from "@/hooks/useBusinesses";
 import { useCashClosing } from "@/hooks/useCashClosing";
 import { CloseTodayModal } from "@/components/closing/CloseTodayModal";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -23,12 +24,17 @@ import type { CashClosing } from "@/types";
 export default function KapanislarPage() {
   const router = useRouter();
   const profile = useAppStore((s) => s.profile);
+  // v1.6.23.21 (Security WP): cash closing artık tenant-scoped — kullanıcının
+  // ilk erişebildiği işletmeyi default kabul ediyoruz. Multi-tenant UI'da
+  // business selector eklenmesi gerek (TODO).
+  const { businesses } = useBusinesses();
+  const businessId = businesses?.[0]?.id ?? null;
   const {
     preview, today,
     closings, page, hasNext, totalElements,
     loading, error,
     list, refresh,
-  } = useCashClosing();
+  } = useCashClosing(businessId);
   const [showCloseModal, setShowCloseModal] = useState(false);
 
   useEffect(() => { void list(0, 50); }, [list]);
@@ -156,9 +162,10 @@ export default function KapanislarPage() {
         </>
       )}
 
-      {showCloseModal && preview && (
+      {showCloseModal && preview && businessId && (
         <CloseTodayModal
           preview={preview}
+          businessId={businessId}
           onClose={() => setShowCloseModal(false)}
           onClosed={() => { void refresh(); void list(0, 50); }}
         />

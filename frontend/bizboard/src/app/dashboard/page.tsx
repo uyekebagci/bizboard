@@ -80,8 +80,9 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* v1.6.19 (WP-2): 'Dünden Kalan Eksik' banner — yalnız önceki günde fark varsa */}
-      <CarryOverBanner />
+      {/* v1.6.19 (WP-2) + v1.6.23.21: 'Dünden Kalan Eksik' banner — kullanıcının
+          ilk işletmesi için. Multi-tenant'da business selector eklenmesi gerek (TODO). */}
+      <CarryOverBanner businessId={businesses?.[0]?.id ?? null} />
 
       {/* v1.6.23.14 (TODO 935f5c52): DGR kullanım profili için 5 gereksiz
           widget kaldırıldı: StatsRow (Toplam Gelir, Toplam Gider, Personel,

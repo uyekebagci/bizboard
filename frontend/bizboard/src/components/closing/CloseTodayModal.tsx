@@ -27,11 +27,13 @@ const REASONS: { value: CashClosingReason; label: string }[] = [
 
 interface Props {
   preview: CashClosingPreview;
+  /** v1.6.23.21 (Security WP): cash closing artık tenant-scoped — zorunlu. */
+  businessId: string;
   onClose: () => void;
   onClosed: (closing: CashClosing) => void;
 }
 
-export function CloseTodayModal({ preview, onClose, onClosed }: Props) {
+export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Props) {
   const [actualInput, setActualInput] = useState("");
   const [reason, setReason] = useState<CashClosingReason | "">("");
   const [note, setNote] = useState("");
@@ -53,7 +55,7 @@ export function CloseTodayModal({ preview, onClose, onClosed }: Props) {
 
     setSubmitting(true);
     try {
-      const result = await api.post<CashClosing>("/closings/today", {
+      const result = await api.post<CashClosing>(`/closings/today?business_id=${businessId}`, {
         actual_balance: actual,
         reason_category: hasDiff ? reason : null,
         reason_note: hasDiff ? note.trim() : null,

@@ -5,9 +5,11 @@ import com.bizboard.common.dto.BackdateClosingRequest;
 import com.bizboard.common.dto.CashClosingDto;
 import com.bizboard.common.dto.CloseTodayRequest;
 import com.bizboard.common.dto.ReopenClosingRequest;
+import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.CashClosing;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.CashClosingStatus;
+import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CashClosingRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -45,26 +47,36 @@ public class CashClosingService {
     private final UserRepository userRepository;
     private final ClosingCalculator calculator;
     private final AuditLogService auditLogService;
+    private final BusinessRepository businessRepository;
+    private final BusinessAccessGuard accessGuard;
 
     // ───────────────────────── CLOSE TODAY ─────────────────────────
 
+    /**
+     * v1.6.23.21 (Security WP / arch-rules §1.1): business-scoped closeToday.
+     */
     @Transactional
-    public CashClosingDto closeToday(UUID userId, CloseTodayRequest req) {
+    public CashClosingDto closeToday(UUID userId, UUID businessId, CloseTodayRequest req) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         LocalDate today = LocalDate.now();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
 
-        Optional<CashClosing> existing = repository.findByClosingDate(today);
+        Optional<CashClosing> existing = repository.findByBusinessIdAndClosingDate(businessId, today);
         if (existing.isPresent() && existing.get().getStatus() == CashClosingStatus.CLOSED) {
             throw new IllegalStateException("Bugün zaten kapatılmış");
         }
 
-        BigDecimal opening = calculator.getOpeningBalance(today);
-        BigDecimal computed = calculator.computeClosing(today);
+        BigDecimal opening = calculator.getOpeningBalance(businessId, today);
+        BigDecimal computed = calculator.computeClosing(businessId, today);
         BigDecimal actual = req.getActualBalance();
         BigDecimal difference = actual.subtract(computed);
 
+        final Business _biz = business;
         CashClosing closing = existing.orElseGet(() -> CashClosing.builder()
+                .business(_biz)
                 .closingDate(today)
                 .auto(false)
                 .build());
@@ -115,12 +127,15 @@ public class CashClosingService {
      * </ul>
      */
     @Transactional
-    public CashClosingDto closeBackdate(UUID userId, BackdateClosingRequest req) {
+    public CashClosingDto closeBackdate(UUID userId, UUID businessId, BackdateClosingRequest req) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!"admin".equalsIgnoreCase(user.getRole())) {
             throw new SecurityException("Sadece admin geçmiş tarih için kapanış oluşturabilir");
         }
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
 
         LocalDate date = req.getClosingDate();
         if (date == null) {
@@ -130,7 +145,7 @@ public class CashClosingService {
             throw new IllegalArgumentException("closing_date gelecek tarih olamaz: " + date);
         }
 
-        Optional<CashClosing> existing = repository.findByClosingDate(date);
+        Optional<CashClosing> existing = repository.findByBusinessIdAndClosingDate(businessId, date);
         boolean override = Boolean.TRUE.equals(req.getOverride());
         if (existing.isPresent()
                 && existing.get().getStatus() == CashClosingStatus.CLOSED
@@ -139,12 +154,14 @@ public class CashClosingService {
                     "Bu tarih icin kapanis zaten var: " + date + " (override=true ile uzerine yaz)");
         }
 
-        BigDecimal opening = calculator.getOpeningBalance(date);
-        BigDecimal computed = calculator.computeClosing(date);
+        BigDecimal opening = calculator.getOpeningBalance(businessId, date);
+        BigDecimal computed = calculator.computeClosing(businessId, date);
         BigDecimal actual = req.getActualBalance();
         BigDecimal difference = actual.subtract(computed);
 
+        final Business _biz = business;
         CashClosing closing = existing.orElseGet(() -> CashClosing.builder()
+                .business(_biz)
                 .closingDate(date)
                 .auto(false)
                 .build());
@@ -185,44 +202,51 @@ public class CashClosingService {
 
     // ───────────────────────── AUTO CLOSE (cron) ─────────────────────────
 
+    /**
+     * v1.6.23.21: cron — tüm işletmeler için otomatik kapanış.
+     * Tek-tenant DGR çağrısı: businesses tablosunda DGR var ise yalnız onu işler.
+     */
     @Transactional
-    public Optional<CashClosingDto> autoCloseToday() {
+    public List<CashClosingDto> autoCloseToday() {
         LocalDate today = LocalDate.now();
-        Optional<CashClosing> existing = repository.findByClosingDate(today);
-        if (existing.isPresent() && existing.get().getStatus() == CashClosingStatus.CLOSED) {
-            log.debug("[auto-close] Bugün zaten kapatılmış — atlanıyor.");
-            return Optional.empty();
+        List<CashClosingDto> closed = new ArrayList<>();
+        for (Business b : businessRepository.findAll()) {
+            UUID bizId = b.getId();
+            Optional<CashClosing> existing = repository.findByBusinessIdAndClosingDate(bizId, today);
+            if (existing.isPresent() && existing.get().getStatus() == CashClosingStatus.CLOSED) {
+                continue;
+            }
+            BigDecimal opening = calculator.getOpeningBalance(bizId, today);
+            BigDecimal computed = calculator.computeClosing(bizId, today);
+            final Business _biz = b;
+            CashClosing closing = existing.orElseGet(() -> CashClosing.builder()
+                    .business(_biz)
+                    .closingDate(today)
+                    .build());
+            closing.setOpeningBalance(opening);
+            closing.setComputedClosing(computed);
+            closing.setActualBalance(null);
+            closing.setDifference(null);
+            closing.setStatus(CashClosingStatus.CLOSED);
+            closing.setAuto(true);
+            closing.setClosedAt(LocalDateTime.now());
+            closing.setClosedBy(null);
+            closing.setReasonCategory(null);
+            closing.setReasonNote(null);
+            closing = repository.save(closing);
+            auditLogService.recordEntityAction(
+                    AuditAction.CASH_CLOSING_AUTO_CLOSED,
+                    null, "system",
+                    "CASH_CLOSING", closing.getId(),
+                    "Otomatik kapanış (20:00) [" + b.getName() + "]: " + today + " — computed=" + computed,
+                    Map.of("date", today.toString(), "businessId", bizId,
+                            "opening", opening, "computed", computed),
+                    null);
+            log.info("[auto-close] business={} {} otomatik kapatıldı (computed={})",
+                    b.getName(), today, computed);
+            closed.add(toDto(closing));
         }
-
-        BigDecimal opening = calculator.getOpeningBalance(today);
-        BigDecimal computed = calculator.computeClosing(today);
-
-        CashClosing closing = existing.orElseGet(() -> CashClosing.builder()
-                .closingDate(today)
-                .build());
-        closing.setOpeningBalance(opening);
-        closing.setComputedClosing(computed);
-        closing.setActualBalance(null);
-        closing.setDifference(null);
-        closing.setStatus(CashClosingStatus.CLOSED);
-        closing.setAuto(true);
-        closing.setClosedAt(LocalDateTime.now());
-        closing.setClosedBy(null);
-        closing.setReasonCategory(null);
-        closing.setReasonNote(null);
-
-        closing = repository.save(closing);
-
-        auditLogService.recordEntityAction(
-                AuditAction.CASH_CLOSING_AUTO_CLOSED,
-                null, "system",
-                "CASH_CLOSING", closing.getId(),
-                "Otomatik kapanış (20:00): " + today + " — computed=" + computed,
-                Map.of("date", today.toString(), "opening", opening, "computed", computed),
-                null);
-
-        log.info("[auto-close] {} otomatik kapatıldı (computed={})", today, computed);
-        return Optional.of(toDto(closing));
+        return closed;
     }
 
     // ───────────────────────── REOPEN (admin) ─────────────────────────
@@ -237,6 +261,9 @@ public class CashClosingService {
 
         CashClosing closing = repository.findById(closingId)
                 .orElseThrow(() -> new IllegalArgumentException("Kapanış bulunamadı"));
+        // v1.6.23.21: cross-tenant reopen engeli.
+        accessGuard.assertCanAccessBusiness(userId,
+                closing.getBusiness() != null ? closing.getBusiness().getId() : null);
 
         closing.setStatus(CashClosingStatus.REOPENED);
         closing.setReasonNote(
@@ -259,37 +286,56 @@ public class CashClosingService {
 
     // ───────────────────────── QUERY ─────────────────────────
 
+    /** v1.6.23.21: business-scoped paged list. */
     @Transactional(readOnly = true)
-    public Page<CashClosingDto> list(int page, int size) {
+    public Page<CashClosingDto> list(UUID userId, UUID businessId, int page, int size) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         int safePage = Math.max(0, page);
         int safeSize = Math.min(Math.max(size, 1), 200);
         Pageable pageable = PageRequest.of(safePage, safeSize,
                 Sort.by(Sort.Direction.DESC, "closingDate"));
-        return repository.findAll(pageable).map(this::toDto);
+        // JPA Pageable + custom query: kullan basit listeyi sayfala (kayıt sayısı düşük).
+        List<CashClosing> all = repository
+                .findByBusinessIdAndClosingDateBetweenOrderByClosingDateAsc(
+                        businessId, LocalDate.of(2000, 1, 1), LocalDate.now().plusDays(365));
+        all = all.stream()
+                .sorted((a, b) -> b.getClosingDate().compareTo(a.getClosingDate()))
+                .toList();
+        int total = all.size();
+        int fromIdx = Math.min(safePage * safeSize, total);
+        int toIdx = Math.min(fromIdx + safeSize, total);
+        List<CashClosingDto> slice = all.subList(fromIdx, toIdx).stream()
+                .map(this::toDto).toList();
+        return new org.springframework.data.domain.PageImpl<>(slice, pageable, total);
     }
 
-    /** Bugün için kapanış var mı (status değil — varlığı). */
+    /** v1.6.23.21: business-scoped today. */
     @Transactional(readOnly = true)
-    public Optional<CashClosingDto> getToday() {
-        return repository.findByClosingDate(LocalDate.now()).map(this::toDto);
+    public Optional<CashClosingDto> getToday(UUID userId, UUID businessId) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
+        return repository.findByBusinessIdAndClosingDate(businessId, LocalDate.now()).map(this::toDto);
     }
 
-    /** Dünün kapanışı — widget "Dünden Kalan Eksik" için. */
+    /** v1.6.23.21: business-scoped yesterday. */
     @Transactional(readOnly = true)
-    public Optional<CashClosingDto> getYesterday() {
-        return repository.findByClosingDate(LocalDate.now().minusDays(1)).map(this::toDto);
+    public Optional<CashClosingDto> getYesterday(UUID userId, UUID businessId) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
+        return repository.findByBusinessIdAndClosingDate(businessId, LocalDate.now().minusDays(1))
+                .map(this::toDto);
     }
 
-    /** "Bugün ne durumda?" preview — kapatılmamışsa real-time computed. */
+    /** v1.6.23.21: business-scoped preview. */
     @Transactional(readOnly = true)
-    public Map<String, Object> getTodayPreview() {
+    public Map<String, Object> getTodayPreview(UUID userId, UUID businessId) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         LocalDate today = LocalDate.now();
-        BigDecimal opening = calculator.getOpeningBalance(today);
-        BigDecimal computed = calculator.computeClosing(today);
-        Optional<CashClosing> existing = repository.findByClosingDate(today);
+        BigDecimal opening = calculator.getOpeningBalance(businessId, today);
+        BigDecimal computed = calculator.computeClosing(businessId, today);
+        Optional<CashClosing> existing = repository.findByBusinessIdAndClosingDate(businessId, today);
 
         Map<String, Object> m = new HashMap<>();
         m.put("date", today.toString());
+        m.put("business_id", businessId);
         m.put("opening_balance", opening);
         m.put("computed_closing", computed);
         m.put("net_flow", computed.subtract(opening));

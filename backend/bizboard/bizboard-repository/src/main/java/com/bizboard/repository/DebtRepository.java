@@ -46,6 +46,10 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
     List<Debt> findByDirectionAndSettledFalseOrderByDueDateAsc(
             com.bizboard.common.enums.DebtDirection direction);
 
+    /** v1.6.23.21 (Security WP / arch-rules §1.3.A): business-scoped varyant. */
+    List<Debt> findByBusinessIdAndDirectionAndSettledFalseOrderByDueDateAsc(
+            UUID businessId, com.bizboard.common.enums.DebtDirection direction);
+
     /** v1.6.20: önümüzdeki N gün vadeli açık çekler (chequeDueDate dolu, settled=false). */
     @org.springframework.data.jpa.repository.Query(
             "SELECT d FROM Debt d " +
@@ -57,6 +61,19 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
             @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
             @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
 
+    /** v1.6.23.21 (Security WP / arch-rules §1.3.A): business-scoped cheque varyant. */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id = :businessId " +
+            "  AND d.settled = false " +
+            "  AND d.chequeDueDate IS NOT NULL " +
+            "  AND d.chequeDueDate BETWEEN :from AND :to " +
+            "ORDER BY d.chequeDueDate ASC")
+    List<Debt> findUpcomingChequesByBusiness(
+            @org.springframework.data.repository.query.Param("businessId") UUID businessId,
+            @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
+            @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
+
     /** v1.6.20: önümüzdeki N gün hatırlatma tarihli açık borçlar. */
     @org.springframework.data.jpa.repository.Query(
             "SELECT d FROM Debt d " +
@@ -65,6 +82,19 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
             "  AND d.reminderDate BETWEEN :from AND :to " +
             "ORDER BY d.reminderDate ASC")
     List<Debt> findUpcomingReminders(
+            @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
+            @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
+
+    /** v1.6.23.21 (Security WP / arch-rules §1.3.A): business-scoped reminder varyant. */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id = :businessId " +
+            "  AND d.settled = false " +
+            "  AND d.reminderDate IS NOT NULL " +
+            "  AND d.reminderDate BETWEEN :from AND :to " +
+            "ORDER BY d.reminderDate ASC")
+    List<Debt> findUpcomingRemindersByBusiness(
+            @org.springframework.data.repository.query.Param("businessId") UUID businessId,
             @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
             @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
 }

@@ -22,7 +22,8 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "cash_closings", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_cash_closing_date", columnNames = "closing_date")
+        @UniqueConstraint(name = "uk_cash_closings_business_date",
+                columnNames = {"business_id", "closing_date"})
 })
 @Getter
 @Setter
@@ -35,7 +36,15 @@ public class CashClosing {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "closing_date", nullable = false, unique = true)
+    /**
+     * v1.6.23.21 (Security WP / arch-rules §1.1): tenant binding.
+     * Eski tek-tenant model (DGR) için tüm satırlar DGR'ye backfill edildi.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "business_id", nullable = false)
+    private Business business;
+
+    @Column(name = "closing_date", nullable = false)
     private LocalDate closingDate;
 
     /** Açılış bakiyesi — bir önceki günün kapanışı (chain). */

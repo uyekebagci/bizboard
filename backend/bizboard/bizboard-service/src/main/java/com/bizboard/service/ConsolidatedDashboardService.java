@@ -47,7 +47,13 @@ public class ConsolidatedDashboardService {
         LocalDate today = LocalDate.now();
 
         // ── BANK ACCOUNTS ────────────────────────────────────────────
-        List<BankAccount> banks = bankAccountRepository.findByActiveTrueOrderByNameAsc();
+        // v1.6.23.21 (Security WP / arch-rules §1.1): business-scoped.
+        // Eskiden findByActiveTrueOrderByNameAsc() çağrısı tüm tenant'ların
+        // bank hesaplarını döndürüyor, böylece konsolide widget'lar diğer
+        // tenant'ın bakiyelerini gösteriyordu (Test İşletmesi A → DGR
+        // bank balance leak). Şu an business_id filter zorunlu.
+        List<BankAccount> banks = bankAccountRepository
+                .findByActiveTrueAndBusinessIdInOrderByNameAsc(List.of(businessId));
 
         // v1.6.23.7 (BUG-V2 fix): total_cash hesabını ayrıştırıyoruz.
         // CHECKING/SAVINGS hesapları bankada duran para — bunlar receivables/payables
@@ -76,7 +82,9 @@ public class ConsolidatedDashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // ── PHYSICAL CASH KASA (en son closing) ──────────────────────
-        BigDecimal physicalCash = cashClosingRepository.findFirstByOrderByClosingDateDesc()
+        // v1.6.23.21: business-scoped. Eski tek-tenant fallback DGR'ye sızıyordu.
+        BigDecimal physicalCash = cashClosingRepository
+                .findFirstByBusinessIdOrderByClosingDateDesc(businessId)
                 .map(c -> c.getActualBalance() != null
                         ? c.getActualBalance()
                         : (c.getComputedClosing() != null ? c.getComputedClosing() : BigDecimal.ZERO))
@@ -90,18 +98,22 @@ public class ConsolidatedDashboardService {
                 .toList();
 
         // ── DEBTS: payables (BORC) + receivables ─────────────────────
+        // v1.6.23.21: business-scoped.
         List<Debt> payableDebts = debtRepository
-                .findByDirectionAndSettledFalseOrderByDueDateAsc(DebtDirection.PAYABLE);
+                .findByBusinessIdAndDirectionAndSettledFalseOrderByDueDateAsc(
+                        businessId, DebtDirection.PAYABLE);
         BigDecimal totalPayables = sumDebt(payableDebts);
 
         List<Debt> receivableDebts = debtRepository
-                .findByDirectionAndSettledFalseOrderByDueDateAsc(DebtDirection.RECEIVABLE);
+                .findByBusinessIdAndDirectionAndSettledFalseOrderByDueDateAsc(
+                        businessId, DebtDirection.RECEIVABLE);
         BigDecimal totalReceivables = sumDebt(receivableDebts);
 
         // ── PENDING POS RECEIVABLES (v1.6.23.9 TODO 8c7ffaac) ────────
         // Settled olmamış POS tx'lerinin net toplamı. Net'e DAHIL DEĞİL —
         // settled olunca bank_balance'a yansıyacak (çift sayım önlemi).
-        BigDecimal pendingPosReceivables = computePendingPosReceivables();
+        // v1.6.23.21: business-scoped.
+        BigDecimal pendingPosReceivables = computePendingPosReceivables(businessId);
         BigDecimal netCurrent = totalCash
                 .add(totalBankBalance)
                 .add(totalReceivables)
@@ -125,11 +137,13 @@ public class ConsolidatedDashboardService {
                         .build();
 
         // ── TODAY CLOSING ────────────────────────────────────────────
-        BigDecimal opening = closingCalculator.getOpeningBalance(today);
-        BigDecimal computed = closingCalculator.computeClosing(today);
-        Optional<CashClosing> existing = cashClosingRepository.findByClosingDate(today);
-        BigDecimal incoming = sumByDirection(today, "NAKIT", TransactionDirection.INCOME);
-        BigDecimal outgoing = sumByDirection(today, "NAKIT", TransactionDirection.EXPENSE);
+        // v1.6.23.21: business-scoped opening/computed + closing record.
+        BigDecimal opening = closingCalculator.getOpeningBalance(businessId, today);
+        BigDecimal computed = closingCalculator.computeClosing(businessId, today);
+        Optional<CashClosing> existing = cashClosingRepository
+                .findByBusinessIdAndClosingDate(businessId, today);
+        BigDecimal incoming = sumByDirection(businessId, today, "NAKIT", TransactionDirection.INCOME);
+        BigDecimal outgoing = sumByDirection(businessId, today, "NAKIT", TransactionDirection.EXPENSE);
 
         ConsolidatedDashboardDto.TodayClosing todayClosing =
                 ConsolidatedDashboardDto.TodayClosing.builder()
@@ -147,7 +161,9 @@ public class ConsolidatedDashboardService {
                         .build();
 
         // ── POS DEVICES (bugün) ──────────────────────────────────────
-        List<PosDevice> activeDevices = posDeviceRepository.findByActiveTrueOrderByNameAsc();
+        // v1.6.23.21: business-scoped.
+        List<PosDevice> activeDevices = posDeviceRepository
+                .findByActiveTrueAndBusinessIdInOrderByNameAsc(List.of(businessId));
         List<ConsolidatedDashboardDto.PosDeviceToday> posRows = activeDevices.stream()
                 .map(d -> buildPosDeviceToday(d, today))
                 .toList();
@@ -183,14 +199,18 @@ public class ConsolidatedDashboardService {
                         .build();
 
         // ── CASH OUTFLOWS (bugün, NAKIT, EXPENSE) ────────────────────
+        // v1.6.23.21: business-scoped.
         List<Transaction> outflowsToday = transactionRepository
-                .findByDateAndPaymentMethodAndDirection(today, "NAKIT", TransactionDirection.EXPENSE);
+                .findByBusinessIdAndDateAndPaymentMethodAndDirection(
+                        businessId, today, "NAKIT", TransactionDirection.EXPENSE);
         List<ConsolidatedDashboardDto.TxRow> outflowRows = outflowsToday.stream()
                 .map(this::toTxRow)
                 .toList();
 
         // ── UPCOMING CHEQUES (next 30 days) ──────────────────────────
-        List<Debt> upcomingCheques = debtRepository.findUpcomingCheques(today, today.plusDays(30));
+        // v1.6.23.21: business-scoped.
+        List<Debt> upcomingCheques = debtRepository
+                .findUpcomingChequesByBusiness(businessId, today, today.plusDays(30));
         List<ConsolidatedDashboardDto.ChequeRow> chequeRows = upcomingCheques.stream()
                 .map(d -> ConsolidatedDashboardDto.ChequeRow.builder()
                         .debtId(d.getId())
@@ -204,7 +224,9 @@ public class ConsolidatedDashboardService {
                 .toList();
 
         // ── UPCOMING REMINDERS (next 7 days) ─────────────────────────
-        List<Debt> upcomingReminders = debtRepository.findUpcomingReminders(today, today.plusDays(7));
+        // v1.6.23.21: business-scoped.
+        List<Debt> upcomingReminders = debtRepository
+                .findUpcomingRemindersByBusiness(businessId, today, today.plusDays(7));
         List<ConsolidatedDashboardDto.ReminderRow> reminderRows = upcomingReminders.stream()
                 .map(d -> ConsolidatedDashboardDto.ReminderRow.builder()
                         .debtId(d.getId())
@@ -321,8 +343,10 @@ public class ConsolidatedDashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal sumByDirection(LocalDate date, String pm, TransactionDirection dir) {
-        return transactionRepository.findByDateAndPaymentMethodAndDirection(date, pm, dir)
+    /** v1.6.23.21: business-scoped. */
+    private BigDecimal sumByDirection(UUID businessId, LocalDate date, String pm, TransactionDirection dir) {
+        return transactionRepository
+                .findByBusinessIdAndDateAndPaymentMethodAndDirection(businessId, date, pm, dir)
                 .stream()
                 .map(Transaction::getAmount)
                 .filter(Objects::nonNull)
@@ -330,12 +354,12 @@ public class ConsolidatedDashboardService {
     }
 
     /**
-     * v1.6.23.9 (TODO 8c7ffaac): Bekleyen (settled olmamış) POS tx'lerinin
-     * net toplam'ı. Hesap: SUM(amount × (1 − applied_pos_rate/100)).
-     * applied_pos_rate yoksa pos_rate fallback.
+     * v1.6.23.9 (TODO 8c7ffaac) + v1.6.23.21: Bekleyen POS tx net toplamı —
+     * business-scoped. Hesap: SUM(amount × (1 − applied_pos_rate/100)).
      */
-    private BigDecimal computePendingPosReceivables() {
-        List<Transaction> unsettled = transactionRepository.findUnsettledPosTransactions();
+    private BigDecimal computePendingPosReceivables(UUID businessId) {
+        List<Transaction> unsettled = transactionRepository
+                .findUnsettledPosTransactionsByBusinessId(businessId);
         BigDecimal total = BigDecimal.ZERO;
         for (Transaction t : unsettled) {
             if (t.getAmount() == null) continue;

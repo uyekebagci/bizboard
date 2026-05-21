@@ -14,16 +14,25 @@ import { api } from "@/lib/api/client";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { CashClosing } from "@/types";
 
-export function CarryOverBanner() {
+interface Props {
+  /** v1.6.23.21 (Security WP): hangi işletmenin dünkü kapanışı. */
+  businessId?: string | null;
+}
+
+export function CarryOverBanner({ businessId }: Props = {}) {
   const [yesterday, setYesterday] = useState<CashClosing | null>(null);
 
   useEffect(() => {
+    if (!businessId) {
+      setYesterday(null);
+      return;
+    }
     let alive = true;
-    api.get<CashClosing>("/closings/yesterday")
+    api.get<CashClosing>(`/closings/yesterday?business_id=${businessId}`)
       .then((r) => { if (alive) setYesterday(r); })
       .catch(() => { /* No content / err — banner gösterilmez */ });
     return () => { alive = false; };
-  }, []);
+  }, [businessId]);
 
   if (!yesterday || yesterday.difference == null || yesterday.difference === 0) {
     return null;

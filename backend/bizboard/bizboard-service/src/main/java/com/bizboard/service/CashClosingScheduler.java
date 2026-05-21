@@ -80,9 +80,10 @@ public class CashClosingScheduler {
     @Scheduled(cron = "0 0 20 * * *", zone = "Europe/Istanbul")
     public void runAutoClose() {
         LocalDate today = LocalDate.now();
+        // v1.6.23.21: autoCloseToday artık tüm işletmeler için döner.
         var result = closingService.autoCloseToday();
         if (result.isEmpty()) {
-            log.debug("[auto-close] {} zaten kapatılmış — atlanıyor.", today);
+            log.debug("[auto-close] {} — tüm işletmeler zaten kapatılmış, işlem yok.", today);
             return;
         }
 

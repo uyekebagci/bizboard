@@ -120,6 +120,33 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("date") LocalDate date);
 
     /**
+     * v1.6.23.21 (Security WP / arch-rules §1.3.A): business-scoped gün+pm+dir.
+     * ConsolidatedDashboard "Hesaptan Harcama" widget'ı için.
+     */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.business.id = :businessId " +
+            "  AND t.date = :date " +
+            "  AND t.paymentMethod = :paymentMethod " +
+            "  AND t.direction = :direction " +
+            "ORDER BY t.createdAt DESC")
+    List<Transaction> findByBusinessIdAndDateAndPaymentMethodAndDirection(
+            @Param("businessId") UUID businessId,
+            @Param("date") LocalDate date,
+            @Param("paymentMethod") String paymentMethod,
+            @Param("direction") com.bizboard.common.enums.TransactionDirection direction);
+
+    /**
+     * v1.6.23.21 (Security WP): business-scoped unsettled POS — consolidated
+     * pending POS receivables hesabı için.
+     */
+    @Query("SELECT t FROM Transaction t WHERE t.paymentMethod = 'POS' " +
+            "AND (t.posSettled IS NULL OR t.posSettled = false) " +
+            "AND t.business.id = :businessId " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findUnsettledPosTransactionsByBusinessId(
+            @Param("businessId") UUID businessId);
+
+    /**
      * v1.6.23.19 (UI Fix WP TODO 8b961444): Banka hesabı detay modalı — son N tx
      * + 30 günlük bakiye trendi için kaynak. paymentMethod=HESAPDAN olan tüm
      * tx'ler bu hesabın bakiyesini etkiler.

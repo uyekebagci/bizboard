@@ -14,12 +14,26 @@ import java.util.UUID;
  */
 public interface CashClosingRepository extends JpaRepository<CashClosing, UUID> {
 
+    // Legacy single-tenant — yalnız global cron'da fallback için tutuluyor;
+    // yeni kod aşağıdaki business-scoped varyantları kullanmalı.
     Optional<CashClosing> findByClosingDate(LocalDate date);
 
     List<CashClosing> findByStatusOrderByClosingDateDesc(CashClosingStatus status);
 
     List<CashClosing> findByClosingDateBetweenOrderByClosingDateAsc(LocalDate from, LocalDate to);
 
-    /** En son kapanış kaydı (chain için bir önceki günü çözmekte yardımcı). */
+    /** En son kapanış kaydı (tek-tenant fallback). */
     Optional<CashClosing> findFirstByOrderByClosingDateDesc();
+
+    // ── v1.6.23.21 (Security WP / arch-rules §1.1): business-scoped ──────────
+
+    Optional<CashClosing> findByBusinessIdAndClosingDate(UUID businessId, LocalDate date);
+
+    List<CashClosing> findByBusinessIdAndStatusOrderByClosingDateDesc(
+            UUID businessId, CashClosingStatus status);
+
+    List<CashClosing> findByBusinessIdAndClosingDateBetweenOrderByClosingDateAsc(
+            UUID businessId, LocalDate from, LocalDate to);
+
+    Optional<CashClosing> findFirstByBusinessIdOrderByClosingDateDesc(UUID businessId);
 }

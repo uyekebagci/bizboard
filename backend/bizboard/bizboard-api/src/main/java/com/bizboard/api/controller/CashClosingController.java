@@ -38,42 +38,73 @@ public class CashClosingController {
     private final CashClosingService service;
 
     @GetMapping
-    public ResponseEntity<PagedResponseDto<CashClosingDto>> list(
+    public ResponseEntity<?> list(
             @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(PagedResponseDto.of(service.list(page, size)));
+        try {
+            return ResponseEntity.ok(PagedResponseDto.of(
+                    service.list(principal.getId(), businessId, page, size)));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Kapanışlar bulunamadi"));
+        }
     }
 
     @GetMapping("/today")
-    public ResponseEntity<CashClosingDto> today(@AuthenticationPrincipal UserPrincipal principal) {
-        return service.getToday()
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+    public ResponseEntity<?> today(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId) {
+        try {
+            return service.getToday(principal.getId(), businessId)
+                    .map(d -> (ResponseEntity<?>) ResponseEntity.ok(d))
+                    .orElseGet(() -> ResponseEntity.noContent().build());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Kapanış bulunamadi"));
+        }
     }
 
     @GetMapping("/yesterday")
-    public ResponseEntity<CashClosingDto> yesterday(@AuthenticationPrincipal UserPrincipal principal) {
-        return service.getYesterday()
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+    public ResponseEntity<?> yesterday(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId) {
+        try {
+            return service.getYesterday(principal.getId(), businessId)
+                    .map(d -> (ResponseEntity<?>) ResponseEntity.ok(d))
+                    .orElseGet(() -> ResponseEntity.noContent().build());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Kapanış bulunamadi"));
+        }
     }
 
     @GetMapping("/preview")
-    public ResponseEntity<Map<String, Object>> preview(@AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(service.getTodayPreview());
+    public ResponseEntity<?> preview(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId) {
+        try {
+            return ResponseEntity.ok(service.getTodayPreview(principal.getId(), businessId));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "İşletme bulunamadi"));
+        }
     }
 
     @PostMapping("/today")
-    public ResponseEntity<CashClosingDto> closeToday(
+    public ResponseEntity<?> closeToday(
             @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
             @Valid @RequestBody CloseTodayRequest req) {
         try {
-            CashClosingDto result = service.closeToday(principal.getId(), req);
+            CashClosingDto result = service.closeToday(principal.getId(), businessId, req);
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (IllegalStateException e) {
-            // Idempotency reddi — zaten kapatılmış.
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "İşletme bulunamadi"));
         }
     }
 
@@ -91,9 +122,10 @@ public class CashClosingController {
     @PostMapping
     public ResponseEntity<?> closeBackdate(
             @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
             @Valid @RequestBody BackdateClosingRequest req) {
         try {
-            CashClosingDto result = service.closeBackdate(principal.getId(), req);
+            CashClosingDto result = service.closeBackdate(principal.getId(), businessId, req);
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -101,6 +133,9 @@ public class CashClosingController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "İşletme bulunamadi"));
         }
     }
 

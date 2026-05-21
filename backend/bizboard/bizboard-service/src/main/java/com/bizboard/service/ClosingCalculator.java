@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * v1.6.19 (WP-2): Günlük kasa kapanışı hesaplama yardımcısı.
@@ -64,6 +65,34 @@ public class ClosingCalculator {
      * günlük operasyonel kontrol mekanizması. Drift artık opening'e taşınmıyor,
      * her gün fresh sayım üzerinden başlıyor.</p>
      */
+    /**
+     * v1.6.23.21 (Security WP / arch-rules §1.1): business-scoped opening.
+     * Eski tek-tenant overload sadece DGR fallback için tutuluyor; yeni
+     * çağrılar bu versiyonu kullanmalı.
+     */
+    @Transactional(readOnly = true)
+    public BigDecimal getOpeningBalance(UUID businessId, LocalDate date) {
+        Optional<CashClosing> last = cashClosingRepository
+                .findFirstByBusinessIdOrderByClosingDateDesc(businessId);
+        CashClosing prev = null;
+        if (last.isPresent() && last.get().getClosingDate().isBefore(date)) {
+            prev = last.get();
+        } else if (last.isPresent() && !last.get().getClosingDate().isBefore(date)) {
+            prev = cashClosingRepository
+                    .findByBusinessIdAndClosingDateBetweenOrderByClosingDateAsc(
+                            businessId, LocalDate.of(2000, 1, 1), date.minusDays(1))
+                    .stream()
+                    .reduce((a, b) -> b)
+                    .orElse(null);
+        }
+        if (prev == null) return BigDecimal.ZERO;
+        if (prev.getActualBalance() != null) return prev.getActualBalance();
+        if (prev.getComputedClosing() != null) return prev.getComputedClosing();
+        return BigDecimal.ZERO;
+    }
+
+    /** Deprecated single-tenant — DGR fallback'i için tutuldu, yeni kod kullanmamalı. */
+    @Deprecated
     @Transactional(readOnly = true)
     public BigDecimal getOpeningBalance(LocalDate date) {
         Optional<CashClosing> last = cashClosingRepository.findFirstByOrderByClosingDateDesc();
@@ -71,31 +100,42 @@ public class ClosingCalculator {
         if (last.isPresent() && last.get().getClosingDate().isBefore(date)) {
             prev = last.get();
         } else if (last.isPresent() && !last.get().getClosingDate().isBefore(date)) {
-            // Eğer aynı gün veya gelecek tarih için zaten kapanış varsa, ondan bir
-            // önceki kayda bak.
             prev = cashClosingRepository.findByClosingDateBetweenOrderByClosingDateAsc(
                             LocalDate.of(2000, 1, 1), date.minusDays(1))
                     .stream()
-                    .reduce((a, b) -> b) // last
+                    .reduce((a, b) -> b)
                     .orElse(null);
         }
-        if (prev == null) {
-            return BigDecimal.ZERO;
-        }
-        // v1.6.23.5: actual_balance varsa onu kullan, yoksa computed_closing, yoksa 0
-        if (prev.getActualBalance() != null) {
-            return prev.getActualBalance();
-        }
-        if (prev.getComputedClosing() != null) {
-            return prev.getComputedClosing();
-        }
+        if (prev == null) return BigDecimal.ZERO;
+        if (prev.getActualBalance() != null) return prev.getActualBalance();
+        if (prev.getComputedClosing() != null) return prev.getComputedClosing();
         return BigDecimal.ZERO;
     }
 
     /**
-     * Verilen tarihteki NAKIT akış toplamı = income - expense.
-     * Yalnız {@code paymentMethod=NAKIT} olan transaction'lar sayılır.
+     * v1.6.23.21: business-scoped NAKIT akışı.
      */
+    @Transactional(readOnly = true)
+    public BigDecimal sumCashFlowForDate(UUID businessId, LocalDate date) {
+        List<Transaction> txs = transactionRepository.findByDate(date);
+        BigDecimal income = BigDecimal.ZERO;
+        BigDecimal expense = BigDecimal.ZERO;
+        for (Transaction t : txs) {
+            if (t.getBusiness() == null || !businessId.equals(t.getBusiness().getId())) continue;
+            if (!"NAKIT".equalsIgnoreCase(Objects.requireNonNullElse(t.getPaymentMethod(), "NAKIT"))) {
+                continue;
+            }
+            if (t.getDirection() == TransactionDirection.INCOME) {
+                income = income.add(t.getAmount());
+            } else if (t.getDirection() == TransactionDirection.EXPENSE) {
+                expense = expense.add(t.getAmount());
+            }
+        }
+        return income.subtract(expense);
+    }
+
+    /** Deprecated single-tenant — yeni kod sumCashFlowForDate(businessId, date) kullansın. */
+    @Deprecated
     @Transactional(readOnly = true)
     public BigDecimal sumCashFlowForDate(LocalDate date) {
         List<Transaction> txs = transactionRepository.findByDate(date);
@@ -114,14 +154,20 @@ public class ClosingCalculator {
         return income.subtract(expense);
     }
 
-    /** Verilen tarih için hesaplanmış kapanış = opening + net cash flow. */
+    /** v1.6.23.21: business-scoped. */
+    @Transactional(readOnly = true)
+    public BigDecimal computeClosing(UUID businessId, LocalDate date) {
+        BigDecimal opening = getOpeningBalance(businessId, date);
+        BigDecimal flow = sumCashFlowForDate(businessId, date);
+        return opening.add(flow);
+    }
+
+    /** Deprecated single-tenant. */
+    @Deprecated
     @Transactional(readOnly = true)
     public BigDecimal computeClosing(LocalDate date) {
         BigDecimal opening = getOpeningBalance(date);
         BigDecimal flow = sumCashFlowForDate(date);
-        BigDecimal closing = opening.add(flow);
-        log.debug("Closing computed: date={} opening={} flow={} closing={}",
-                date, opening, flow, closing);
-        return closing;
+        return opening.add(flow);
     }
 }

@@ -38,7 +38,7 @@ export default function BusinessDetailPage() {
 
   // v1.6.20 (WP-3): consolidated dashboard verisi + Günü Kapat modal kontrolü
   const { data: consolidated, refresh: refreshConsolidated } = useConsolidatedDashboard(businessId);
-  const { preview, refresh: refreshClosing } = useCashClosing();
+  const { preview, refresh: refreshClosing } = useCashClosing(businessId);
   const [showCloseModal, setShowCloseModal] = useState(false);
 
   async function handleDelete() {
@@ -163,7 +163,7 @@ export default function BusinessDetailPage() {
       {/* v1.6.23: BusinessHeader widget kaldırıldı — info "Geri" satırında. */}
 
       {/* v1.6.19 (WP-2): Dünden Kalan Eksik banner */}
-      <CarryOverBanner />
+      <CarryOverBanner businessId={businessId} />
 
       {/* v1.6.20 (WP-3): Consolidated dashboard widgets — DGR pano */}
       {consolidated && (
@@ -174,6 +174,7 @@ export default function BusinessDetailPage() {
       {showCloseModal && preview && (
         <CloseTodayModal
           preview={preview}
+          businessId={businessId}
           onClose={() => setShowCloseModal(false)}
           onClosed={() => { void refreshClosing(); void refreshConsolidated(); }}
         />
