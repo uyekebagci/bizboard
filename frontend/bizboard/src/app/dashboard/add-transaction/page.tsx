@@ -177,7 +177,19 @@ function AddTransactionPage() {
 
       setSuccess(true);
       triggerRefresh();
-      setTimeout(() => router.push("/dashboard"), 1200);
+      // v1.6.23.13: Submit sonrası kullanıcıyı /dashboard'a atmak yerine geldiği
+      // sayfaya geri dön. ?from=/some/path query param verildiyse oraya git,
+      // yoksa router.back() (browser history). Hiç history yoksa fallback /dashboard.
+      const from = searchParams.get("from");
+      setTimeout(() => {
+        if (from) {
+          router.push(from);
+        } else if (typeof window !== "undefined" && window.history.length > 1) {
+          router.back();
+        } else {
+          router.push("/dashboard");
+        }
+      }, 1200);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Islem eklenirken bir hata olustu"));
     } finally {
