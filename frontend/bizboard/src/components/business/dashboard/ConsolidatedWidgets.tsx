@@ -592,11 +592,15 @@ function BankAccountsCard({ d, compact }: { d: ConsolidatedDashboard; compact?: 
 }
 
 function TypeBadge({ type }: { type: string }) {
+  // v1.6.23.25: MAIN_CASH (Ana Kasa, amber/locked) + SUB_CASH (Alt Kasa, emerald)
+  // ayrımı. Legacy CASH (kullanılmıyor ama eski cache için fallback olarak SUB_CASH'a map'li).
   const map: Record<string, { label: string; cls: string; icon: typeof Wallet }> = {
-    CHECKING:    { label: "Banka",         cls: "bg-blue-500/15 text-blue-300 border-blue-500/30",   icon: Building2 },
-    SAVINGS:     { label: "Vadeli",        cls: "bg-purple-500/15 text-purple-300 border-purple-500/30", icon: Building2 },
-    CASH:        { label: "Kasa",          cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", icon: Banknote },
-    CASH_HOLDER: { label: "Kişide",        cls: "bg-orange-500/15 text-orange-300 border-orange-500/30", icon: HandCoins },
+    CHECKING:    { label: "Banka",     cls: "bg-blue-500/15 text-blue-300 border-blue-500/30",         icon: Building2 },
+    SAVINGS:     { label: "Vadeli",    cls: "bg-purple-500/15 text-purple-300 border-purple-500/30",   icon: Building2 },
+    MAIN_CASH:   { label: "Ana Kasa",  cls: "bg-amber-500/15 text-amber-300 border-amber-500/40",      icon: Banknote },
+    SUB_CASH:    { label: "Alt Kasa",  cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", icon: Banknote },
+    CASH:        { label: "Kasa",      cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", icon: Banknote },
+    CASH_HOLDER: { label: "Kişide",    cls: "bg-orange-500/15 text-orange-300 border-orange-500/30",   icon: HandCoins },
   };
   const m = map[type] || { label: type, cls: "bg-surface-700 text-surface-300 border-surface-600", icon: Wallet };
   const Icon = m.icon;

@@ -29,7 +29,20 @@ public class BankAccountDto {
     private String businessName;
 
     private String name;
-    private String type; // CHECKING / SAVINGS / CASH / CASH_HOLDER
+    /** v1.6.23.25: CHECKING / SAVINGS / MAIN_CASH / SUB_CASH / CASH_HOLDER */
+    private String type;
+
+    /**
+     * v1.6.23.25 (UI Fix WP TODO e9a619e3): UI MAIN_CASH satırını görsel
+     * olarak ayırmak için flag — frontend bu alanı kullanarak kilit ikonu
+     * gösterir + delete butonunu disable eder.
+     */
+    @JsonProperty("is_main_cash")
+    private boolean mainCash;
+
+    /** v1.6.23.25: false ise UI delete butonunu disable eder (MAIN_CASH = false). */
+    @JsonProperty("is_user_deletable")
+    private boolean userDeletable;
 
     @JsonProperty("bank_name")
     private String bankName;

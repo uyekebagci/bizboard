@@ -122,7 +122,21 @@ public class BankAccountService {
             type = BankAccountType.valueOf(req.getType().trim().toUpperCase(Locale.ENGLISH));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
-                    "Gecersiz type: '" + req.getType() + "' — CHECKING / SAVINGS / CASH / CASH_HOLDER olmali");
+                    "Gecersiz type: '" + req.getType() +
+                            "' — CHECKING / SAVINGS / SUB_CASH / CASH_HOLDER olmali");
+        }
+
+        // v1.6.23.25 (UI Fix WP / arch-rules): MAIN_CASH user create edemez —
+        // her business için BusinessService hook'u tarafından otomatik yaratılır
+        // ve DB unique partial index ile garanti edilir.
+        if (!type.isUserCreatable()) {
+            throw new IllegalArgumentException(
+                    "type=" + type + " kullanici tarafindan olusturulamaz; otomatik yaratilir.");
+        }
+        // Legacy CASH tipi reject (SUB_CASH'a migrate edildi)
+        if ("CASH".equalsIgnoreCase(req.getType().trim())) {
+            throw new IllegalArgumentException(
+                    "type=CASH artik kullanilmiyor — SUB_CASH kullan.");
         }
 
         // CASH_HOLDER → holder_person zorunlu + counterpart.kind=PERSON kontrolü
@@ -196,27 +210,37 @@ public class BankAccountService {
         // v1.6.23.19 (Security WP TODO 7432143f): cross-tenant update'i engelle.
         accessGuard.assertCanAccessBusiness(actorUserId,
                 a.getBusiness() != null ? a.getBusiness().getId() : null);
+        // v1.6.23.25 (UI Fix WP TODO e9a619e3): MAIN_CASH üzerinde yalnız
+        // {@code name} güncellenebilir — bank_name/iban/holder/notes sessizce
+        // yoksayılır (request body'den gelse de uygulanmaz).
+        boolean isMainCash = a.getType() == BankAccountType.MAIN_CASH;
         Map<String, Object> changes = new HashMap<>();
 
         if (req.getName() != null && !req.getName().equals(a.getName())) {
             changes.put("name", Map.of("from", a.getName(), "to", req.getName()));
             a.setName(req.getName().trim());
         }
-        if (req.getBankName() != null && !req.getBankName().equals(a.getBankName())) {
-            changes.put("bankName", Map.of(
-                    "from", a.getBankName() != null ? a.getBankName() : "",
-                    "to", req.getBankName()));
-            a.setBankName(req.getBankName());
-        }
-        if (req.getIban() != null && !req.getIban().equals(a.getIban())) {
-            changes.put("iban", Map.of(
-                    "from", a.getIban() != null ? a.getIban() : "",
-                    "to", req.getIban()));
-            a.setIban(req.getIban());
-        }
-        if (req.getNotes() != null && !req.getNotes().equals(a.getNotes())) {
-            changes.put("notes_updated", true);
-            a.setNotes(req.getNotes());
+        // MAIN_CASH için aşağıdaki alanlar değiştirilemez — sessizce yoksay.
+        if (!isMainCash) {
+            if (req.getBankName() != null && !req.getBankName().equals(a.getBankName())) {
+                changes.put("bankName", Map.of(
+                        "from", a.getBankName() != null ? a.getBankName() : "",
+                        "to", req.getBankName()));
+                a.setBankName(req.getBankName());
+            }
+            if (req.getIban() != null && !req.getIban().equals(a.getIban())) {
+                changes.put("iban", Map.of(
+                        "from", a.getIban() != null ? a.getIban() : "",
+                        "to", req.getIban()));
+                a.setIban(req.getIban());
+            }
+            if (req.getNotes() != null && !req.getNotes().equals(a.getNotes())) {
+                changes.put("notes_updated", true);
+                a.setNotes(req.getNotes());
+            }
+        } else if (req.getBankName() != null || req.getIban() != null || req.getNotes() != null) {
+            log.warn("[bank-account-update] MAIN_CASH id={} — yalniz name guncellenebilir, " +
+                    "diger alanlar yoksayildi", a.getId());
         }
 
         if (changes.isEmpty()) {
@@ -233,6 +257,82 @@ public class BankAccountService {
                 Map.of("changes", changes));
         log.info("BankAccount updated: id={} fields={}", a.getId(), changes.keySet());
         return toDto(a);
+    }
+
+    // ───────────────────────── DELETE (v1.6.23.25) ─────────────────────────
+
+    /**
+     * v1.6.23.25 (UI Fix WP TODO d1876594 + 5f82395a):
+     *
+     * <p>SUB_CASH ve diğer kullanıcı-yaratılmış tipler delete edilebilir.
+     * MAIN_CASH yalnız business cascade ile silinir — kullanıcı doğrudan
+     * silemez ({@link IllegalStateException} → controller 409).</p>
+     */
+    @Transactional
+    public void delete(UUID id, UUID actorUserId) {
+        BankAccount a = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + id));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                a.getBusiness() != null ? a.getBusiness().getId() : null);
+
+        if (!a.getType().isUserDeletable()) {
+            throw new IllegalStateException(
+                    "Ana Kasa silinemez. Yalniz isletme silinince otomatik kaldirilir.");
+        }
+        // Bağlı tx kontrol — varsa pasif yapmak öneriliyor.
+        long txCount = transactionRepository.findByBankAccountIdOrderByDateDesc(
+                id, PageRequest.of(0, 1)).size();
+        if (txCount > 0) {
+            throw new IllegalStateException(
+                    "Bu hesaba bagli islem var; once pasif yapmayi dene.");
+        }
+
+        String name = a.getName();
+        repository.delete(a);
+
+        User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+        auditLogService.recordEntityAction(
+                "BANK_ACCOUNT_DELETED",
+                actorUserId, actor != null ? actor.getUsername() : null,
+                "BANK_ACCOUNT", id,
+                name + " silindi (" + a.getType() + ")",
+                Map.of("name", name, "type", a.getType().name()));
+        log.info("BankAccount deleted: id={} name='{}' type={}", id, name, a.getType());
+    }
+
+    // ───────────────────────── MAIN_CASH HOOK (v1.6.23.25) ─────────────────────────
+
+    /**
+     * v1.6.23.25 (UI Fix WP TODO 5cf7590b): BusinessService tarafından
+     * çağrılır — yeni işletme yaratıldığında otomatik "Ana Kasa" oluşturur.
+     * DB unique partial index ile aynı business için ikinci MAIN_CASH
+     * yaratma denemesi başarısız olur (idempotent garanti).
+     *
+     * <p>actorUserId burada business owner / actor — audit log için.</p>
+     */
+    @Transactional
+    public BankAccount createMainCashForBusiness(Business business, UUID actorUserId) {
+        BankAccount mainCash = BankAccount.builder()
+                .business(business)
+                .name("Ana Kasa")
+                .type(BankAccountType.MAIN_CASH)
+                .currency("TRY")
+                .currentBalance(BigDecimal.ZERO)
+                .active(true)
+                .build();
+        mainCash = repository.save(mainCash);
+
+        User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+        auditLogService.recordEntityAction(
+                "BANK_ACCOUNT_CREATED",
+                actorUserId, actor != null ? actor.getUsername() : null,
+                "BANK_ACCOUNT", mainCash.getId(),
+                "Ana Kasa otomatik olusturuldu — isletme: " + business.getName(),
+                Map.of("auto", true, "type", "MAIN_CASH",
+                        "businessId", business.getId().toString()));
+        log.info("MAIN_CASH auto-created for business={} id={}",
+                business.getName(), mainCash.getId());
+        return mainCash;
     }
 
     // ───────────────────────── DETAIL (v1.6.23.19) ─────────────────────────
@@ -318,12 +418,15 @@ public class BankAccountService {
     }
 
     public static BankAccountDto toDto(BankAccount b) {
+        BankAccountType type = b.getType();
         return BankAccountDto.builder()
                 .id(b.getId())
                 .businessId(b.getBusiness() != null ? b.getBusiness().getId() : null)
                 .businessName(b.getBusiness() != null ? b.getBusiness().getName() : null)
                 .name(b.getName())
-                .type(b.getType() != null ? b.getType().name() : null)
+                .type(type != null ? type.name() : null)
+                .mainCash(type == BankAccountType.MAIN_CASH)
+                .userDeletable(type != null && type.isUserDeletable())
                 .bankName(b.getBankName())
                 .iban(b.getIban())
                 .currency(b.getCurrency())

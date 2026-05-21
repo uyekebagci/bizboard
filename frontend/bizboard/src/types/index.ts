@@ -411,13 +411,21 @@ export interface ConsolidatedDashboard {
   };
 }
 
+/** v1.6.23.25 (UI Fix WP TODO 39a4218b): Kasa hiyerarşisi enum. */
+export type BankAccountType =
+  | "CHECKING"
+  | "SAVINGS"
+  | "MAIN_CASH"   // Ana Kasa — auto, unique per business, silinemez
+  | "SUB_CASH"    // Alt kasa — manuel CRUD
+  | "CASH_HOLDER";
+
 export interface BankAccountListItem {
   id: string;
   /** v1.6.23.19 (Security WP 667d8a71): multi-tenant binding — UI'da rozet/filter. */
   business_id: string | null;
   business_name: string | null;
   name: string;
-  type: "CHECKING" | "SAVINGS" | "CASH" | "CASH_HOLDER";
+  type: BankAccountType;
   bank_name: string | null;
   iban: string | null;
   currency: string;
@@ -426,6 +434,10 @@ export interface BankAccountListItem {
   current_balance: number;
   is_active: boolean;
   notes: string | null;
+  /** v1.6.23.25: UI MAIN_CASH satırını ayırt etmek için flag. */
+  is_main_cash?: boolean;
+  /** v1.6.23.25: false = delete butonu disable (MAIN_CASH). */
+  is_user_deletable?: boolean;
 }
 
 /**

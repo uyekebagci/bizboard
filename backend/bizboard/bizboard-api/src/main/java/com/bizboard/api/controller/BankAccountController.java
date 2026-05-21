@@ -145,6 +145,9 @@ public class BankAccountController {
      *
      * <p>v1.6.23.22 (Security WP TODO a96dd1b5): admin-only kısıt kaldırıldı.
      * Tenant izolasyonu service tarafında.</p>
+     *
+     * <p>v1.6.23.25 (UI Fix WP TODO e9a619e3): MAIN_CASH için yalnız name
+     * güncellenebilir — diğer alanlar service tarafında sessizce yoksayılır.</p>
      */
     @PatchMapping("/{id}")
     public ResponseEntity<?> update(
@@ -158,6 +161,33 @@ public class BankAccountController {
                     .body(java.util.Map.of("error", "Hesap bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * v1.6.23.25 (UI Fix WP TODO d1876594 + 5f82395a): DELETE /bank-accounts/{id}.
+     *
+     * <p>SUB_CASH (ve diğer kullanıcı-yaratılmış tipler) silinebilir; ancak
+     * bağlı tx varsa 409 — önce pasif yapma önerilir. MAIN_CASH silinemez:
+     * service {@link IllegalStateException} fırlatır, controller 409 döner
+     * ("Sadece business cascade ile silinir.").</p>
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id) {
+        try {
+            service.delete(id, principal.getId());
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(java.util.Map.of("error", e.getMessage()));
         }
     }

@@ -33,6 +33,8 @@ public class BusinessService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    // v1.6.23.25 (UI Fix WP TODO 5cf7590b): yeni işletme → otomatik Ana Kasa.
+    private final BankAccountService bankAccountService;
 
     @Transactional(readOnly = true)
     public List<BusinessDto> getBusinessesForUser(UUID userId) {
@@ -164,6 +166,12 @@ public class BusinessService {
 
         // Save business (cascades modules and members)
         business = businessRepository.save(business);
+
+        // v1.6.23.25 (UI Fix WP TODO 5cf7590b): her yeni işletmeye otomatik
+        // "Ana Kasa" hesabı oluştur — atomic; aynı transaction içinde, audit log'lu.
+        // DB unique partial index ile aynı business için ikinci MAIN_CASH yaratma
+        // (örn. retry race) deny edilir; bu yüzden ek try-catch'e gerek yok.
+        bankAccountService.createMainCashForBusiness(business, owner.getId());
 
         // v1.5.7: yeni wizard manuel akışı — setup_costs[] ve monthly_fixed_costs[]
         // her ikisi de aynı transaction içinde üretilir; biri patlarsa rollback.

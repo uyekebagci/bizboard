@@ -2,40 +2,40 @@
 
 /**
  * v1.6.23.22 (UI Fix WP TODO 9fff2618): Banka Hesapları (eski "Hesap Havuzu").
+ * v1.6.23.25 (UI Fix WP TODO 9b3dcd5b + e9a619e3 + 5f82395a): Kasa hiyerarşisi
+ *   + "+ Yeni Hesap" modal + MAIN_CASH visual lock + SUB_CASH full CRUD.
  *
- * <p>v1.6.23.19'da multi-tenant izolasyonu backend'de tamamlandı; v1.6.23.22'de
- * sayfa adminden çıkarılıp herkese açıldı (sidebar TODO cb3fa697). Bu sayfa
- * USER için sadece kendi tenant(lar)ındaki hesapları gösterir; ADMIN için tümü.</p>
- *
- * <p>Özellikler:</p>
- * <ul>
- *   <li>Arama: name / bank_name / iban / holder_person / business_name</li>
- *   <li>Tip filtresi: chip — Tümü / Banka (CHECKING+SAVINGS) / Kasa / Kişide</li>
- *   <li>İşletme filtresi: chip — kullanıcının erişebildiği businesses (1'den fazla
- *       ise gösterilir; tek tenant'ta gizlenir)</li>
- *   <li>Aktif/Pasif toggle</li>
- *   <li>Satır click → BankAccountDetailModal</li>
- * </ul>
+ * <p>Tip enum: CHECKING / SAVINGS / MAIN_CASH (auto/unique/silinmez) /
+ * SUB_CASH (manuel CRUD) / CASH_HOLDER (holder_person_id zorunlu).</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Loader2, AlertTriangle, Wallet, Banknote, Building2, HandCoins,
-  ToggleLeft, ToggleRight, X, Search,
+  ToggleLeft, ToggleRight, X, Search, Plus, Trash2, Lock,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
-import type { BankAccountListItem } from "@/types";
+import { useBusinesses } from "@/hooks/useBusinesses";
+import type { BankAccountListItem, BankAccountType } from "@/types";
 import { BankAccountDetailModal } from "@/components/bank/BankAccountDetailModal";
 
-type TypeFilter = "ALL" | "BANK" | "CASH" | "CASH_HOLDER";
+type TypeFilter = "ALL" | "BANK" | "KASA" | "CASH_HOLDER";
 const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
   { key: "ALL",         label: "Tümü" },
   { key: "BANK",        label: "Banka" },
-  { key: "CASH",        label: "Kasa" },
+  { key: "KASA",        label: "Kasa" },         // MAIN_CASH + SUB_CASH
   { key: "CASH_HOLDER", label: "Kişide" },
+];
+
+/** v1.6.23.25: Create modal'da seçilebilir tipler — MAIN_CASH yok (auto). */
+const CREATABLE_TYPES: { value: Exclude<BankAccountType, "MAIN_CASH">; label: string; hint?: string }[] = [
+  { value: "CHECKING",    label: "Banka (Vadesiz)", hint: "Banka cari hesabı" },
+  { value: "SAVINGS",     label: "Vadeli Hesap",     hint: "Vadeli mevduat hesabı" },
+  { value: "SUB_CASH",    label: "Alt Kasa",         hint: "Ana kasa dışında ek nakit havuzu" },
+  { value: "CASH_HOLDER", label: "Kişide Tutulan",   hint: "Bir kişide bulunan nakit (holder seç)" },
 ];
 
 export default function HesaplarPage() {
@@ -46,10 +46,11 @@ export default function HesaplarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ account: BankAccountListItem; active: boolean; force?: boolean } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BankAccountListItem | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [detailAccount, setDetailAccount] = useState<BankAccountListItem | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // v1.6.23.22: search + filter state
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [businessFilter, setBusinessFilter] = useState<string | null>(null);
@@ -92,23 +93,33 @@ export default function HesaplarPage() {
     }
   }
 
-  // Filter list — search + type + business
+  async function deleteAccount(a: BankAccountListItem) {
+    setBusyId(a.id);
+    try {
+      await api.delete(`/bank-accounts/${a.id}`);
+      setDeleteTarget(null);
+      await refresh();
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Silinemedi";
+      setError(msg);
+      logger.error("api", "bank-account delete failed", { id: a.id }, err);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return list.filter((a) => {
-      // Type filter
       if (typeFilter !== "ALL") {
         if (typeFilter === "BANK" && a.type !== "CHECKING" && a.type !== "SAVINGS") return false;
-        if (typeFilter === "CASH" && a.type !== "CASH") return false;
+        if (typeFilter === "KASA" && a.type !== "MAIN_CASH" && a.type !== "SUB_CASH") return false;
         if (typeFilter === "CASH_HOLDER" && a.type !== "CASH_HOLDER") return false;
       }
-      // Business filter
       if (businessFilter && a.business_id !== businessFilter) return false;
-      // Search
       if (q) {
-        const hay = [
-          a.name, a.bank_name, a.iban, a.holder_person_name, a.business_name,
-        ].filter(Boolean).join(" ").toLowerCase();
+        const hay = [a.name, a.bank_name, a.iban, a.holder_person_name, a.business_name]
+          .filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -123,25 +134,47 @@ export default function HesaplarPage() {
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [list]);
 
+  // MAIN_CASH her zaman en üstte (her business için)
+  const sortedFiltered = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      // Önce business name (gruplama), sonra type (MAIN_CASH üstte), sonra name
+      const bn = (a.business_name || "").localeCompare(b.business_name || "");
+      if (bn !== 0) return bn;
+      const typeRank = (t: string) => t === "MAIN_CASH" ? 0 : t === "SUB_CASH" ? 1 : 2;
+      const tr = typeRank(a.type) - typeRank(b.type);
+      if (tr !== 0) return tr;
+      return a.name.localeCompare(b.name);
+    });
+  }, [filtered]);
+
   const activeFiltered = filtered.filter((a) => a.is_active);
   const inactiveFiltered = filtered.filter((a) => !a.is_active);
   const totalActive = activeFiltered.reduce((sum, a) => sum + (a.current_balance || 0), 0);
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
-        >
-          <ArrowLeft size={20} className="text-surface-300" />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold text-white">Banka Hesapları</h1>
-          <p className="text-xs text-surface-400">
-            Banka + kasa + kişide tutulan — tüm hesaplarınız tek panelde
-          </p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          >
+            <ArrowLeft size={20} className="text-surface-300" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-white">Banka Hesapları</h1>
+            <p className="text-xs text-surface-400">
+              Banka + kasa + kişide tutulan — tüm hesaplarınız tek panelde
+            </p>
+          </div>
         </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold shadow-sm"
+        >
+          <Plus size={14} />
+          Yeni Hesap
+        </button>
       </div>
 
       {/* Stats */}
@@ -245,6 +278,9 @@ export default function HesaplarPage() {
         <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
           <AlertTriangle size={14} className="mt-0.5" />
           <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-auto -mr-1 p-0.5 hover:bg-red-500/20 rounded">
+            <X size={12} />
+          </button>
         </div>
       )}
 
@@ -252,7 +288,7 @@ export default function HesaplarPage() {
         <div className="flex items-center justify-center py-16">
           <Loader2 size={28} className="animate-spin text-surface-400" />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : sortedFiltered.length === 0 ? (
         <div className="card p-8 text-center">
           <Wallet size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">
@@ -271,67 +307,99 @@ export default function HesaplarPage() {
         </div>
       ) : (
         <section className="card divide-y divide-surface-700">
-          {filtered.map((a) => (
-            <div
-              key={a.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => setDetailAccount(a)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setDetailAccount(a);
-                }
-              }}
-              className={cn(
-                "p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-surface-700/40 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-500/50",
-                !a.is_active && "opacity-50",
-              )}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <AccountTypeBadge type={a.type} />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{a.name}</p>
-                  <p className="text-[11px] text-surface-400 truncate">
-                    {a.type === "CASH_HOLDER" && a.holder_person_name
-                      ? `Kişide: ${a.holder_person_name}`
-                      : a.bank_name || "—"}
-                    {a.iban && <> · {a.iban}</>}
-                    {a.business_name && <> · {a.business_name}</>}
+          {sortedFiltered.map((a) => {
+            const isMain = a.is_main_cash || a.type === "MAIN_CASH";
+            const canDelete = a.is_user_deletable ?? !isMain;
+            return (
+              <div
+                key={a.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setDetailAccount(a)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setDetailAccount(a);
+                  }
+                }}
+                className={cn(
+                  "p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-surface-700/40 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-500/50",
+                  !a.is_active && "opacity-50",
+                  isMain && "bg-amber-500/[0.04]",
+                )}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <AccountTypeBadge type={a.type} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
+                      {a.name}
+                      {isMain && (
+                        <Lock size={11} className="text-amber-300/70 shrink-0" />
+                      )}
+                    </p>
+                    <p className="text-[11px] text-surface-400 truncate">
+                      {a.type === "CASH_HOLDER" && a.holder_person_name
+                        ? `Kişide: ${a.holder_person_name}`
+                        : isMain
+                        ? "Otomatik yaratılır, silinemez"
+                        : a.bank_name || "—"}
+                      {a.iban && <> · {a.iban}</>}
+                      {a.business_name && <> · {a.business_name}</>}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <p className="text-sm font-semibold text-white">
+                    {formatCurrency(a.current_balance, a.currency || "TRY")}
                   </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (a.is_active && (a.current_balance ?? 0) !== 0) {
+                        setConfirmAction({ account: a, active: false });
+                      } else {
+                        void toggleActive(a);
+                      }
+                    }}
+                    disabled={busyId === a.id}
+                    className={cn(
+                      "p-1 rounded-md transition-colors",
+                      a.is_active ? "text-emerald-400 hover:bg-emerald-500/10" : "text-surface-400 hover:bg-surface-700",
+                    )}
+                    title={a.is_active ? "Pasif yap" : "Aktif yap"}
+                  >
+                    {busyId === a.id ? (
+                      <Loader2 size={20} className="animate-spin" />
+                    ) : a.is_active ? (
+                      <ToggleRight size={24} />
+                    ) : (
+                      <ToggleLeft size={24} />
+                    )}
+                  </button>
+                  {canDelete ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(a);
+                      }}
+                      disabled={busyId === a.id}
+                      className="p-1 rounded-md text-surface-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                      title="Sil"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  ) : (
+                    <span
+                      className="p-1 rounded-md text-surface-600 cursor-not-allowed"
+                      title="Ana Kasa silinemez"
+                    >
+                      <Lock size={16} />
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <p className="text-sm font-semibold text-white">
-                  {formatCurrency(a.current_balance, a.currency || "TRY")}
-                </p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (a.is_active && (a.current_balance ?? 0) !== 0) {
-                      setConfirmAction({ account: a, active: false });
-                    } else {
-                      void toggleActive(a);
-                    }
-                  }}
-                  disabled={busyId === a.id}
-                  className={cn(
-                    "p-1 rounded-md transition-colors",
-                    a.is_active ? "text-emerald-400 hover:bg-emerald-500/10" : "text-surface-400 hover:bg-surface-700",
-                  )}
-                  title={a.is_active ? "Pasif yap" : "Aktif yap"}
-                >
-                  {busyId === a.id ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : a.is_active ? (
-                    <ToggleRight size={24} />
-                  ) : (
-                    <ToggleLeft size={24} />
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
       )}
 
@@ -345,6 +413,23 @@ export default function HesaplarPage() {
         />
       )}
 
+      {deleteTarget && (
+        <ConfirmDeleteModal
+          account={deleteTarget}
+          busy={busyId === deleteTarget.id}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => deleteAccount(deleteTarget)}
+        />
+      )}
+
+      {showCreateModal && (
+        <CreateBankAccountModal
+          businesses={businesses}
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => { setShowCreateModal(false); void refresh(); }}
+        />
+      )}
+
       <BankAccountDetailModal
         account={detailAccount}
         onClose={() => setDetailAccount(null)}
@@ -353,14 +438,15 @@ export default function HesaplarPage() {
   );
 }
 
-function AccountTypeBadge({ type }: { type: string }) {
-  const map: Record<string, { label: string; cls: string; icon: typeof Wallet }> = {
-    CHECKING:    { label: "Banka",   cls: "bg-blue-500/15 text-blue-300 border-blue-500/30",     icon: Building2 },
-    SAVINGS:     { label: "Vadeli",  cls: "bg-purple-500/15 text-purple-300 border-purple-500/30", icon: Building2 },
-    CASH:        { label: "Kasa",    cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", icon: Banknote },
-    CASH_HOLDER: { label: "Kişide",  cls: "bg-orange-500/15 text-orange-300 border-orange-500/30",   icon: HandCoins },
+function AccountTypeBadge({ type }: { type: BankAccountType }) {
+  const map: Record<BankAccountType, { label: string; cls: string; icon: typeof Wallet }> = {
+    CHECKING:    { label: "Banka",     cls: "bg-blue-500/15 text-blue-300 border-blue-500/30",         icon: Building2 },
+    SAVINGS:     { label: "Vadeli",    cls: "bg-purple-500/15 text-purple-300 border-purple-500/30",   icon: Building2 },
+    MAIN_CASH:   { label: "Ana Kasa",  cls: "bg-amber-500/15 text-amber-300 border-amber-500/40",      icon: Banknote },
+    SUB_CASH:    { label: "Alt Kasa",  cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", icon: Banknote },
+    CASH_HOLDER: { label: "Kişide",    cls: "bg-orange-500/15 text-orange-300 border-orange-500/30",   icon: HandCoins },
   };
-  const m = map[type] || { label: type, cls: "bg-surface-700 text-surface-300 border-surface-600", icon: Wallet };
+  const m = map[type] ?? { label: type, cls: "bg-surface-700 text-surface-300 border-surface-600", icon: Wallet };
   const Icon = m.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] border ${m.cls}`}>
@@ -419,6 +505,294 @@ function ConfirmToggleModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ConfirmDeleteModal({
+  account, busy, onClose, onConfirm,
+}: {
+  account: BankAccountListItem;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-surface-800 rounded-2xl border border-red-500/30 w-full max-w-sm p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+            <Trash2 size={16} className="text-red-400" />
+            Hesabı sil
+          </h3>
+          <button onClick={onClose} disabled={busy} className="p-1 rounded-lg hover:bg-surface-700">
+            <X size={16} className="text-surface-400" />
+          </button>
+        </div>
+        <p className="text-sm text-surface-300">
+          <strong className="text-white">{account.name}</strong> hesabını kalıcı olarak silmek
+          istediğine emin misin? Bağlı işlem varsa silinemez; önce pasif yapmanı öneririz.
+        </p>
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="flex-1 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm disabled:opacity-50"
+          >
+            Vazgeç
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={busy}
+            className="flex-1 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            {busy && <Loader2 size={14} className="animate-spin" />}
+            Sil
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────── CREATE MODAL (v1.6.23.25 / TODO 9b3dcd5b) ───────────────────────
+
+function CreateBankAccountModal({
+  businesses, onClose, onCreated,
+}: {
+  businesses: { id: string; name: string }[];
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { businesses: allBusinesses } = useBusinesses();
+  // Eğer list'ten gelen businesses boşsa (henüz hesap yok), useBusinesses fallback
+  const bizOptions = businesses.length > 0
+    ? businesses
+    : (allBusinesses ?? []).map((b) => ({ id: b.id, name: b.name }));
+
+  const [businessId, setBusinessId] = useState<string>(bizOptions[0]?.id ?? "");
+  const [type, setType] = useState<typeof CREATABLE_TYPES[number]["value"]>("CHECKING");
+  const [name, setName] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [iban, setIban] = useState("");
+  const [openingBalance, setOpeningBalance] = useState("");
+  const [holderPersonId, setHolderPersonId] = useState("");
+  const [persons, setPersons] = useState<{ id: string; name: string }[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // CASH_HOLDER seçilince person dropdown — tenant scoped counterpart list
+  useEffect(() => {
+    if (type !== "CASH_HOLDER" || !businessId) {
+      setPersons([]);
+      return;
+    }
+    api.get<Array<{ id: string; name: string; business_id: string; kind?: string }>>(
+      "/counterparts?kind=PERSON"
+    )
+      .then((all) => {
+        const scoped = (all || []).filter((c) => c.business_id === businessId);
+        setPersons(scoped);
+        if (scoped.length > 0) setHolderPersonId(scoped[0].id);
+      })
+      .catch(() => setPersons([]));
+  }, [type, businessId]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!businessId) { setError("İşletme seçin"); return; }
+    if (!name.trim()) { setError("Hesap adı zorunlu"); return; }
+    if (type === "CASH_HOLDER" && !holderPersonId) {
+      setError("Kişide tutulan için holder seçin (PERSON tipinde counterpart)");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const body: Record<string, unknown> = {
+        business_id: businessId,
+        name: name.trim(),
+        type,
+      };
+      if (bankName.trim()) body.bank_name = bankName.trim();
+      if (iban.trim()) body.iban = iban.trim().toUpperCase();
+      if (openingBalance) body.opening_balance = Number(openingBalance);
+      if (type === "CASH_HOLDER") body.holder_person_id = holderPersonId;
+
+      await api.post("/bank-accounts", body);
+      onCreated();
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Hesap olusturulamadi";
+      setError(msg);
+      logger.error("api", "bank-account create failed", { type, businessId }, err);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+            <Plus size={16} className="text-brand-400" />
+            Yeni Hesap
+          </h3>
+          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-surface-700">
+            <X size={16} className="text-surface-400" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-3">
+          {error && (
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+              <AlertTriangle size={12} className="mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* İşletme */}
+          <div>
+            <label className="text-[11px] text-surface-400 uppercase mb-1 block">İşletme</label>
+            <select
+              value={businessId}
+              onChange={(e) => setBusinessId(e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              required
+            >
+              {bizOptions.length === 0 && <option value="">İşletme yok</option>}
+              {bizOptions.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tip */}
+          <div>
+            <label className="text-[11px] text-surface-400 uppercase mb-1 block">Tip</label>
+            <div className="grid grid-cols-2 gap-2">
+              {CREATABLE_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setType(t.value)}
+                  className={cn(
+                    "p-2.5 rounded-lg border text-left transition-colors",
+                    type === t.value
+                      ? "border-brand-500 bg-brand-500/10 text-white"
+                      : "border-surface-600 bg-surface-900 hover:border-surface-500 text-surface-200",
+                  )}
+                >
+                  <p className="text-sm font-medium">{t.label}</p>
+                  {t.hint && <p className="text-[10px] text-surface-400 mt-0.5">{t.hint}</p>}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-amber-300/80 mt-1.5 flex items-center gap-1">
+              <Lock size={9} />
+              "Ana Kasa" otomatik yaratılır — yeni hesap olarak seçilemez.
+            </p>
+          </div>
+
+          {/* Hesap adı */}
+          <div>
+            <label className="text-[11px] text-surface-400 uppercase mb-1 block">Hesap Adı</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={type === "SUB_CASH" ? "Ör. Kasa #2" : "Ör. Garanti Vakif"}
+              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              required
+            />
+          </div>
+
+          {/* Banka adı + IBAN — sadece CHECKING/SAVINGS için anlamlı */}
+          {(type === "CHECKING" || type === "SAVINGS") && (
+            <>
+              <div>
+                <label className="text-[11px] text-surface-400 uppercase mb-1 block">Banka Adı</label>
+                <input
+                  type="text"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  placeholder="Ör. Garanti BBVA"
+                  className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-surface-400 uppercase mb-1 block">IBAN</label>
+                <input
+                  type="text"
+                  value={iban}
+                  onChange={(e) => setIban(e.target.value)}
+                  placeholder="TR..."
+                  className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50 font-mono"
+                />
+              </div>
+            </>
+          )}
+
+          {/* CASH_HOLDER → holder person */}
+          {type === "CASH_HOLDER" && (
+            <div>
+              <label className="text-[11px] text-surface-400 uppercase mb-1 block">
+                Kişi (counterpart, PERSON)
+              </label>
+              <select
+                value={holderPersonId}
+                onChange={(e) => setHolderPersonId(e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+                required
+              >
+                {persons.length === 0 && (
+                  <option value="">PERSON kayıt yok — önce ekle</option>
+                )}
+                {persons.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Açılış bakiyesi */}
+          <div>
+            <label className="text-[11px] text-surface-400 uppercase mb-1 block">
+              Açılış Bakiyesi (opsiyonel)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={openingBalance}
+              onChange={(e) => setOpeningBalance(e.target.value)}
+              placeholder="0.00"
+              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2 p-4 border-t border-surface-700">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="flex-1 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm disabled:opacity-50"
+          >
+            Vazgeç
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex-1 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            {submitting && <Loader2 size={14} className="animate-spin" />}
+            Oluştur
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
