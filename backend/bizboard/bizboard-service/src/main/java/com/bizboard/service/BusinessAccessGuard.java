@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -85,5 +86,48 @@ public class BusinessAccessGuard {
         if (!canAccessBusiness(userId, businessId)) {
             throw new SecurityException("Access denied");
         }
+    }
+
+    /**
+     * v1.6.23.19 (Security WP TODO 809834ef): kullanıcının erişebildiği tüm
+     * business id'leri. Admin için TÜM businesses döner; user için
+     * accessible_businesses CSV'sinden parse edilir, "all" değerinde admin
+     * gibi davranır. Multi-tenant filter query'lerinde kullanılır.
+     *
+     * @return boş set = hiçbir business erişilebilir değil (yetkisiz);
+     *         null değer DÖNDÜRÜLMEZ.
+     */
+    public List<UUID> accessibleBusinessIds(UUID userId) {
+        if (userId == null) return List.of();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return List.of();
+
+        if ("admin".equalsIgnoreCase(user.getRole())) {
+            return businessRepository.findAll().stream().map(Business::getId).toList();
+        }
+        String accessible = user.getAccessibleBusinesses();
+        if (accessible != null && !accessible.isBlank()) {
+            String trimmed = accessible.trim();
+            if ("all".equalsIgnoreCase(trimmed)) {
+                return businessRepository.findAll().stream().map(Business::getId).toList();
+            }
+            return Arrays.stream(trimmed.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(s -> {
+                        try { return UUID.fromString(s); } catch (Exception e) { return null; }
+                    })
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+        }
+        // Legacy: owner + member relations
+        return businessRepository.findAll().stream()
+                .filter(b ->
+                    (b.getOwner() != null && b.getOwner().getId().equals(userId)) ||
+                    (b.getMembers() != null && b.getMembers().stream()
+                        .anyMatch(m -> m.getUser() != null && m.getUser().getId().equals(userId)))
+                )
+                .map(Business::getId)
+                .toList();
     }
 }

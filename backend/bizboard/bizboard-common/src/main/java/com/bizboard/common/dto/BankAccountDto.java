@@ -16,6 +16,18 @@ import java.util.UUID;
 public class BankAccountDto {
 
     private UUID id;
+
+    /**
+     * v1.6.23.19 (Security WP 667d8a71 / TODO 7432143f): hesabın bağlı olduğu
+     * işletmenin id'si — UI multi-tenant filter / etiketleme için kullanır.
+     */
+    @JsonProperty("business_id")
+    private UUID businessId;
+
+    /** İşletme görünür adı (UI rozet/etiket). */
+    @JsonProperty("business_name")
+    private String businessName;
+
     private String name;
     private String type; // CHECKING / SAVINGS / CASH / CASH_HOLDER
 

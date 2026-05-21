@@ -34,6 +34,16 @@ public class BankAccount {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * v1.6.23.19 (Security WP 667d8a71 / TODO 7432143f): multi-tenant izolasyon
+     * için zorunlu. Önceki sürümlerde bu kolon yoktu — DGR tek tenant olduğu
+     * sürece tetiklenmeyen data leakage riskiydi. Migration: SQL ile mevcut tüm
+     * satırlara DGR id'si yazıldı, sonra NOT NULL constraint set edildi.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "business_id", nullable = false)
+    private Business business;
+
     @Column(nullable = false, length = 120)
     private String name;
 

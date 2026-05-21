@@ -1,25 +1,37 @@
 package com.bizboard.service;
 
+import com.bizboard.common.dto.BankAccountDetailDto;
 import com.bizboard.common.dto.BankAccountDto;
 import com.bizboard.common.dto.BankAccountToggleRequest;
 import com.bizboard.common.dto.CreateBankAccountRequest;
+import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.common.dto.UpdateBankAccountRequest;
 import com.bizboard.common.entity.BankAccount;
+import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Counterpart;
+import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.BankAccountType;
+import com.bizboard.common.enums.TransactionDirection;
 import com.bizboard.repository.BankAccountRepository;
+import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CounterpartRepository;
+import com.bizboard.repository.TransactionRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -39,12 +51,18 @@ public class BankAccountService {
     private final BankAccountRepository repository;
     private final UserRepository userRepository;
     private final CounterpartRepository counterpartRepository;
+    private final BusinessRepository businessRepository;
+    private final TransactionRepository transactionRepository;
+    private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
 
     @Transactional
     public BankAccountDto toggleActive(UUID id, BankAccountToggleRequest req, UUID actorUserId) {
         BankAccount a = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + id));
+        // v1.6.23.19 (Security WP TODO 7432143f): actor bu işletmeye erişebiliyor mu?
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                a.getBusiness() != null ? a.getBusiness().getId() : null);
         User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
 
         boolean newActive = Boolean.TRUE.equals(req.getIsActive());
@@ -89,6 +107,15 @@ public class BankAccountService {
      */
     @Transactional
     public BankAccountDto create(CreateBankAccountRequest req, UUID actorUserId) {
+        // v1.6.23.19 (Security WP TODO 7432143f): business binding zorunlu.
+        if (req.getBusinessId() == null) {
+            throw new IllegalArgumentException("business_id zorunlu");
+        }
+        Business business = businessRepository.findById(req.getBusinessId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "business_id bulunamadi: " + req.getBusinessId()));
+        accessGuard.assertCanAccessBusiness(actorUserId, business.getId());
+
         // Type validation
         BankAccountType type;
         try {
@@ -124,6 +151,7 @@ public class BankAccountService {
                 ? req.getOpeningBalance() : BigDecimal.ZERO;
 
         BankAccount entity = BankAccount.builder()
+                .business(business)
                 .name(req.getName().trim())
                 .type(type)
                 .bankName(req.getBankName())
@@ -165,6 +193,9 @@ public class BankAccountService {
     public BankAccountDto update(UUID id, UpdateBankAccountRequest req, UUID actorUserId) {
         BankAccount a = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + id));
+        // v1.6.23.19 (Security WP TODO 7432143f): cross-tenant update'i engelle.
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                a.getBusiness() != null ? a.getBusiness().getId() : null);
         Map<String, Object> changes = new HashMap<>();
 
         if (req.getName() != null && !req.getName().equals(a.getName())) {
@@ -204,9 +235,93 @@ public class BankAccountService {
         return toDto(a);
     }
 
+    // ───────────────────────── DETAIL (v1.6.23.19) ─────────────────────────
+
+    /**
+     * v1.6.23.19 (UI Fix WP 8b961444): Hesap detay modalı için aggregate.
+     *
+     * <p>Access check: actor bu hesabın business'ına erişemiyorsa
+     * {@link SecurityException} fırlatır (controller 403'e çevirir).</p>
+     *
+     * @param recentLimit son N tx (default 10)
+     * @param trendDays   bakiye trendi gün sayısı (default 30)
+     */
+    @Transactional(readOnly = true)
+    public BankAccountDetailDto getDetail(UUID id, UUID actorUserId,
+                                          int recentLimit, int trendDays) {
+        BankAccount account = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + id));
+        UUID businessId = account.getBusiness() != null ? account.getBusiness().getId() : null;
+        // v1.6.23.19 (Security WP TODO 7432143f): cross-tenant access engeli.
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+
+        // Son N tx
+        List<Transaction> recent = transactionRepository
+                .findByBankAccountIdOrderByDateDesc(id, PageRequest.of(0, Math.max(1, recentLimit)));
+        List<TransactionDto> recentDtos = recent.stream()
+                .map(DtoMapper::toTransactionDto)
+                .toList();
+
+        // Bekleyen POS (business level)
+        List<TransactionDto> pendingPos = businessId == null ? List.of() :
+                transactionRepository.findUnsettledPosTransactionsByBusiness(businessId).stream()
+                        .map(DtoMapper::toTransactionDto)
+                        .toList();
+
+        // 30 günlük bakiye trendi — gün sonu running balance.
+        // Yöntem: cari bakiyeden geriye doğru çalışıp her günü hesapla.
+        int days = Math.max(1, trendDays);
+        LocalDate today = LocalDate.now();
+        LocalDate from = today.minusDays(days - 1L);
+
+        List<Transaction> sinceTx = transactionRepository
+                .findByBankAccountIdSince(id, from);
+        // Toplam tx etkisi (from..today arası — HESAPDAN her zaman bankAccount'a
+        // dokunur; direction IN→+, OUT→-).
+        BigDecimal currentBal = account.getCurrentBalance() != null
+                ? account.getCurrentBalance() : BigDecimal.ZERO;
+
+        // Tx'leri tarihe göre grupla (gün toplamı net)
+        TreeMap<LocalDate, BigDecimal> dailyNet = new TreeMap<>();
+        for (Transaction t : sinceTx) {
+            BigDecimal delta = t.getAmount() != null ? t.getAmount() : BigDecimal.ZERO;
+            if (t.getDirection() == TransactionDirection.EXPENSE) {
+                delta = delta.negate();
+            }
+            dailyNet.merge(t.getDate(), delta, BigDecimal::add);
+        }
+
+        // Bugünden geriye yürüyerek günlük running balance.
+        BigDecimal running = currentBal;
+        Map<LocalDate, BigDecimal> trendMap = new HashMap<>();
+        for (LocalDate d = today; !d.isBefore(from); d = d.minusDays(1)) {
+            trendMap.put(d, running);
+            BigDecimal todayNet = dailyNet.getOrDefault(d, BigDecimal.ZERO);
+            // O günün net etkisini çıkararak dünün gün sonu bakiyesine geçeriz.
+            running = running.subtract(todayNet);
+        }
+
+        List<BankAccountDetailDto.BalanceTrendPoint> trend = new ArrayList<>(days);
+        for (LocalDate d = from; !d.isAfter(today); d = d.plusDays(1)) {
+            trend.add(BankAccountDetailDto.BalanceTrendPoint.builder()
+                    .date(d)
+                    .balance(trendMap.getOrDefault(d, currentBal))
+                    .build());
+        }
+
+        return BankAccountDetailDto.builder()
+                .account(toDto(account))
+                .recentTransactions(recentDtos)
+                .pendingPosTransactions(pendingPos)
+                .balanceTrend(trend)
+                .build();
+    }
+
     public static BankAccountDto toDto(BankAccount b) {
         return BankAccountDto.builder()
                 .id(b.getId())
+                .businessId(b.getBusiness() != null ? b.getBusiness().getId() : null)
+                .businessName(b.getBusiness() != null ? b.getBusiness().getName() : null)
                 .name(b.getName())
                 .type(b.getType() != null ? b.getType().name() : null)
                 .bankName(b.getBankName())

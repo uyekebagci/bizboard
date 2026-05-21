@@ -118,4 +118,38 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findByPosDeviceIdAndDate(
             @Param("deviceId") UUID deviceId,
             @Param("date") LocalDate date);
+
+    /**
+     * v1.6.23.19 (UI Fix WP TODO 8b961444): Banka hesabı detay modalı — son N tx
+     * + 30 günlük bakiye trendi için kaynak. paymentMethod=HESAPDAN olan tüm
+     * tx'ler bu hesabın bakiyesini etkiler.
+     */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.bankAccount.id = :bankAccountId " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findByBankAccountIdOrderByDateDesc(
+            @Param("bankAccountId") UUID bankAccountId, Pageable pageable);
+
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.bankAccount.id = :bankAccountId " +
+            "AND t.date >= :from " +
+            "ORDER BY t.date ASC, t.createdAt ASC")
+    List<Transaction> findByBankAccountIdSince(
+            @Param("bankAccountId") UUID bankAccountId,
+            @Param("from") LocalDate from);
+
+    /**
+     * v1.6.23.19 (UI Fix WP TODO 8b961444): Banka hesabı detay modalı — aynı
+     * işletmenin henüz settle edilmemiş POS tx'leri ("bu hesaba düşmesi
+     * beklenen POS"). Bankacılık tarafında POS device → bank_account ilişkisi
+     * yok; settle anında tx.bankAccount set ediliyor. O yüzden filtre tek
+     * business level kalır.
+     */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.paymentMethod = 'POS' " +
+            "AND (t.posSettled IS NULL OR t.posSettled = false) " +
+            "AND t.business.id = :businessId " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findUnsettledPosTransactionsByBusiness(
+            @Param("businessId") UUID businessId);
 }

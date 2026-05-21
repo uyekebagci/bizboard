@@ -27,6 +27,16 @@ import java.util.UUID;
 @Data
 public class CreateBankAccountRequest {
 
+    /**
+     * v1.6.23.19 (Security WP 667d8a71 / TODO 7432143f): hesabın bağlı olduğu
+     * işletme. Multi-tenant izolasyonu için zorunlu — service tarafında
+     * {@code BusinessAccessGuard.assertCanAccessBusiness} ile actor'ın bu
+     * işletmeye erişimi kontrol edilir.
+     */
+    @NotNull
+    @JsonProperty("business_id")
+    private UUID businessId;
+
     @NotBlank
     private String name;
 

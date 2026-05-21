@@ -1,5 +1,6 @@
 package com.bizboard.api.controller;
 
+import com.bizboard.common.dto.BankAccountDetailDto;
 import com.bizboard.common.dto.BankAccountDto;
 import com.bizboard.common.dto.BankAccountToggleRequest;
 import com.bizboard.common.dto.CreateBankAccountRequest;
@@ -8,6 +9,7 @@ import com.bizboard.common.entity.BankAccount;
 import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.BankAccountService;
+import com.bizboard.service.BusinessAccessGuard;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,11 @@ import java.util.UUID;
 /**
  * v1.6.20 (WP-3): Banka hesabı listeleme endpoint'i.
  * v1.6.22 (WP-5): aktif/pasif toggle endpoint'i eklendi.
+ * v1.6.23.19 (Security WP 667d8a71): multi-tenant filter zorunlu — USER yalnız
+ *   erişebildiği işletme(ler)in hesaplarını görür; ADMIN tüm hesaplara erişir.
+ * v1.6.23.19 (UI Fix WP 8b961444): {@code GET /bank-accounts/{id}} detay
+ *   aggregate endpoint'i eklendi (hesap info + son 10 tx + bekleyen POS +
+ *   30 günlük bakiye trendi).
  */
 @RestController
 @RequestMapping("/bank-accounts")
@@ -29,15 +36,49 @@ public class BankAccountController {
 
     private final BankAccountRepository repository;
     private final BankAccountService service;
+    private final BusinessAccessGuard accessGuard;
 
     @GetMapping
     public ResponseEntity<List<BankAccountDto>> list(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(name = "include_inactive", defaultValue = "false") boolean includeInactive) {
+        // v1.6.23.19 (Security WP TODO 809834ef): multi-tenant filter.
+        List<UUID> allowed = accessGuard.accessibleBusinessIds(principal.getId());
+        if (allowed.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
         List<BankAccount> all = includeInactive
-                ? repository.findAllByOrderByActiveDescNameAsc()
-                : repository.findByActiveTrueOrderByNameAsc();
+                ? repository.findByBusinessIdInOrderByActiveDescNameAsc(allowed)
+                : repository.findByActiveTrueAndBusinessIdInOrderByNameAsc(allowed);
         return ResponseEntity.ok(all.stream().map(BankAccountService::toDto).toList());
+    }
+
+    /**
+     * v1.6.23.19 (UI Fix WP 8b961444): hesap detay aggregate.
+     *
+     * <p>Response: hesap info + son N tx + bekleyen POS + 30 günlük bakiye
+     * trendi. Access check service tarafında (404 yerine 403 fırlatır;
+     * cross-tenant fish'i engeller — leakage yok).</p>
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> detail(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id,
+            @RequestParam(name = "recent_limit", defaultValue = "10") int recentLimit,
+            @RequestParam(name = "trend_days", defaultValue = "30") int trendDays) {
+        try {
+            BankAccountDetailDto detail = service.getDetail(id, principal.getId(),
+                    recentLimit, trendDays);
+            return ResponseEntity.ok(detail);
+        } catch (IllegalArgumentException e) {
+            // Hesap bulunamadı
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            // Erişim yok — info sızdırmamak için 404 dönüyoruz (existence reveal kapalı).
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
+        }
     }
 
     /**

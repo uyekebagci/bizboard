@@ -26,4 +26,8 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> 
 
     /** Bir person counterpart'a bağlı kasa hesabı var mı (delete guard). */
     long countByHolderPersonId(UUID counterpartId);
+
+    // v1.6.23.19 (Security WP TODO 809834ef): business-scoped queries.
+    List<BankAccount> findByActiveTrueAndBusinessIdInOrderByNameAsc(List<UUID> businessIds);
+    List<BankAccount> findByBusinessIdInOrderByActiveDescNameAsc(List<UUID> businessIds);
 }

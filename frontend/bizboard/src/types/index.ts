@@ -413,6 +413,9 @@ export interface ConsolidatedDashboard {
 
 export interface BankAccountListItem {
   id: string;
+  /** v1.6.23.19 (Security WP 667d8a71): multi-tenant binding — UI'da rozet/filter. */
+  business_id: string | null;
+  business_name: string | null;
   name: string;
   type: "CHECKING" | "SAVINGS" | "CASH" | "CASH_HOLDER";
   bank_name: string | null;
@@ -423,6 +426,29 @@ export interface BankAccountListItem {
   current_balance: number;
   is_active: boolean;
   notes: string | null;
+}
+
+/**
+ * v1.6.23.19 (UI Fix WP 8b961444): {@code GET /bank-accounts/{id}} aggregate.
+ */
+export interface BankAccountDetail {
+  account: BankAccountListItem;
+  recent_transactions: BankAccountTxRow[];
+  pending_pos_transactions: BankAccountTxRow[];
+  balance_trend: { date: string; balance: number }[];
+}
+
+export interface BankAccountTxRow {
+  id: string;
+  business_id: string;
+  direction: "INCOME" | "EXPENSE";
+  amount: number;
+  currency: string;
+  description: string | null;
+  date: string;
+  payment_method: string;
+  pos_settled: boolean | null;
+  pos_device_name: string | null;
 }
 
 export interface PosDeviceListItem {

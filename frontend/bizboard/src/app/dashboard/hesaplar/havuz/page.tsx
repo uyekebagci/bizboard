@@ -19,6 +19,7 @@ import { useAppStore } from "@/lib/store";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { BankAccountListItem } from "@/types";
+import { BankAccountDetailModal } from "@/components/bank/BankAccountDetailModal";
 
 export default function HesapHavuzuPage() {
   const router = useRouter();
@@ -31,6 +32,8 @@ export default function HesapHavuzuPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ account: BankAccountListItem; active: boolean; force?: boolean } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // v1.6.23.19 (UI Fix WP 8b961444): detay modal — satır tıklayınca açılır.
+  const [detailAccount, setDetailAccount] = useState<BankAccountListItem | null>(null);
 
   useEffect(() => {
     if (profile && !isAdmin) router.replace("/dashboard");
@@ -140,10 +143,22 @@ export default function HesapHavuzuPage() {
       ) : (
         <section className="card divide-y divide-surface-700">
           {list.map((a) => (
-            <div key={a.id} className={cn(
-              "p-4 flex items-center justify-between gap-3",
-              !a.is_active && "opacity-50",
-            )}>
+            <div
+              key={a.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setDetailAccount(a)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setDetailAccount(a);
+                }
+              }}
+              className={cn(
+                "p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-surface-700/40 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-500/50",
+                !a.is_active && "opacity-50",
+              )}
+            >
               <div className="flex items-center gap-2 min-w-0">
                 <AccountTypeBadge type={a.type} />
                 <div className="min-w-0">
@@ -153,6 +168,7 @@ export default function HesapHavuzuPage() {
                       ? `Kişide: ${a.holder_person_name}`
                       : a.bank_name || "—"}
                     {a.iban && <> · {a.iban}</>}
+                    {a.business_name && <> · {a.business_name}</>}
                   </p>
                 </div>
               </div>
@@ -161,7 +177,8 @@ export default function HesapHavuzuPage() {
                   {formatCurrency(a.current_balance, a.currency || "TRY")}
                 </p>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (a.is_active && (a.current_balance ?? 0) !== 0) {
                       setConfirmAction({ account: a, active: false });
                     } else {
@@ -198,6 +215,12 @@ export default function HesapHavuzuPage() {
           onConfirm={() => toggleActive(confirmAction.account, true)}
         />
       )}
+
+      {/* v1.6.23.19 (UI Fix WP 8b961444): detay modalı */}
+      <BankAccountDetailModal
+        account={detailAccount}
+        onClose={() => setDetailAccount(null)}
+      />
     </div>
   );
 }
