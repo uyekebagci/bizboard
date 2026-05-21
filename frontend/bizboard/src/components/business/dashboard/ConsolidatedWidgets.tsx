@@ -308,6 +308,8 @@ function TodayClosingCard({ d, onCloseDay }: { d: ConsolidatedDashboard; onClose
 // ───────────────────────── 3. POS CİHAZLARI ─────────────────────────
 
 function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: boolean }) {
+  // v1.6.23.16 (TODO d0ccb7f0 expansion): tıkla → modal
+  const [showDetail, setShowDetail] = useState(false);
   const devs = d.pos_devices;
   if (devs.length === 0) {
     return (
@@ -323,7 +325,11 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
   const totalTx = devs.reduce((a, x) => a + x.tx_count, 0);
 
   return (
-    <section className="card overflow-hidden">
+    <>
+    <section
+      onClick={() => setShowDetail(true)}
+      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-indigo-500/40 transition-all"
+    >
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <SectionTitle icon={CreditCard} label="POS Cihazları (Bugün)" inline />
         {unsettled > 0 && (
@@ -365,12 +371,62 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
         }
       />
     </section>
+    <WidgetDetailModal
+      open={showDetail}
+      onClose={() => setShowDetail(false)}
+      title="POS Cihazları — Detay"
+      subtitle={`${devs.length} cihaz · ${totalTx} bugünkü çekim · ${unsettled} bekleyen`}
+      size="lg"
+      headerAction={
+        <Link
+          href="/dashboard/pos-cihazlari"
+          onClick={() => setShowDetail(false)}
+          className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+        >
+          Tüm POS Sayfası →
+        </Link>
+      }
+    >
+      <p className="text-xs text-surface-400 mb-3">
+        Her cihaza tıklayarak detay sayfasına (analytics + tüm tx + bekleyen tahsilatlar) gidebilirsiniz.
+      </p>
+      <div className="space-y-2">
+        {devs.map((dev) => (
+          <Link
+            key={dev.device_id}
+            href={`/dashboard/pos-cihazlari/${dev.device_id}`}
+            onClick={() => setShowDetail(false)}
+            className="block p-3 rounded-lg border border-surface-700 hover:border-indigo-500/40 hover:bg-surface-700/40 transition-colors"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-white">{dev.device_name}</p>
+                <p className="text-[11px] text-surface-400 mt-0.5">
+                  {dev.tx_count} bugünkü çekim
+                  {dev.unsettled_count > 0 && (
+                    <span className="ml-1.5 text-amber-300">· {dev.unsettled_count} hesaba düşmedi</span>
+                  )}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-sm font-semibold text-white">{formatCurrency(dev.today_gross, "TRY")} brüt</p>
+                <p className="text-[10px] text-emerald-300">{formatCurrency(dev.today_net, "TRY")} net</p>
+              </div>
+              <ChevronRight size={14} className="text-surface-400" />
+            </div>
+          </Link>
+        ))}
+      </div>
+    </WidgetDetailModal>
+    </>
   );
 }
 
 // ───────────────────────── 4. PARA BULUNAN HESAPLAR ─────────────────────────
 
 function BankAccountsCard({ d, compact }: { d: ConsolidatedDashboard; compact?: boolean }) {
+  // v1.6.23.16 (TODO d0ccb7f0 expansion): tıkla → modal
+  const [showDetail, setShowDetail] = useState(false);
   const accounts = d.bank_accounts;
   if (accounts.length === 0) {
     return (
@@ -382,7 +438,11 @@ function BankAccountsCard({ d, compact }: { d: ConsolidatedDashboard; compact?: 
   }
   const total = accounts.reduce((a, x) => a + x.balance, 0);
   return (
-    <section className="card overflow-hidden">
+    <>
+    <section
+      onClick={() => setShowDetail(true)}
+      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-blue-500/40 transition-all"
+    >
       <div className="px-4 py-3 border-b border-surface-700">
         <SectionTitle icon={Wallet} label="Para Bulunan Hesaplar" inline />
       </div>
@@ -408,6 +468,38 @@ function BankAccountsCard({ d, compact }: { d: ConsolidatedDashboard; compact?: 
       </div>
       <Footer left={`${accounts.length} hesap`} right={`Toplam ${formatCurrency(total, "TRY")}`} />
     </section>
+    <WidgetDetailModal
+      open={showDetail}
+      onClose={() => setShowDetail(false)}
+      title="Para Bulunan Hesaplar — Detay"
+      subtitle={`${accounts.length} hesap · toplam ${formatCurrency(total, "TRY")}`}
+      size="md"
+    >
+      <div className="space-y-2">
+        {accounts.map((a) => (
+          <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-surface-700">
+            <TypeBadge type={a.type} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-white">{a.name}</p>
+              <p className="text-[11px] text-surface-400">
+                {a.type === "CASH_HOLDER" && a.holder_name
+                  ? `Kişide: ${a.holder_name}`
+                  : a.bank_name || "—"}
+                {a.currency && a.currency !== "TRY" && ` · ${a.currency}`}
+              </p>
+            </div>
+            <p className="text-sm font-semibold text-white shrink-0">
+              {formatCurrency(a.balance, a.currency || "TRY")}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 pt-3 border-t border-surface-700 flex items-center justify-between text-sm">
+        <span className="text-surface-300">Toplam</span>
+        <span className="font-bold text-white">{formatCurrency(total, "TRY")}</span>
+      </div>
+    </WidgetDetailModal>
+    </>
   );
 }
 
@@ -431,6 +523,8 @@ function TypeBadge({ type }: { type: string }) {
 // ───────────────────────── 5. VERECEKLER (PAYABLES) ─────────────────────────
 
 function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
+  // v1.6.23.16 (TODO d0ccb7f0 expansion): tıkla → modal
+  const [showDetail, setShowDetail] = useState(false);
   const list = d.payables;
   if (list.length === 0) {
     return (
@@ -446,7 +540,11 @@ function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
   // v1.6.23.8 (DGR perspective): Verecekler DGR'den gidecek para — minus sign göster.
   // Backend amount magnitude döner (positive); display layer'da negatife çeviriyoruz.
   return (
-    <section className="card overflow-hidden">
+    <>
+    <section
+      onClick={() => setShowDetail(true)}
+      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-red-500/40 transition-all"
+    >
       <div className="px-4 py-3 border-b border-surface-700">
         <SectionTitle icon={TrendingDown} label="Verecekler" inline />
       </div>
@@ -486,12 +584,59 @@ function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
         }
       />
     </section>
+    <WidgetDetailModal
+      open={showDetail}
+      onClose={() => setShowDetail(false)}
+      title="Verecekler — Detay"
+      subtitle={`${list.length} satır · toplam −${formatCurrency(total, "TRY")}`}
+      size="md"
+    >
+      <div className="space-y-2">
+        {list.map((p) => {
+          const soon = p.days_to_due != null && p.days_to_due <= 7 && p.days_to_due >= 0;
+          return (
+            <div
+              key={p.debt_id}
+              className={cn(
+                "flex items-center justify-between gap-3 p-3 rounded-lg border",
+                soon ? "border-amber-500/40 bg-amber-500/5" : "border-surface-700",
+              )}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-white">{p.counterpart_name}</p>
+                <p className="text-[11px] text-surface-400">
+                  {p.instrument_type || "—"}
+                  {p.due_date && (
+                    <> · Vade {new Date(p.due_date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}</>
+                  )}
+                  {p.days_to_due != null && (
+                    <span className={soon ? "ml-1.5 text-amber-300" : "ml-1.5 text-surface-500"}>
+                      ({p.days_to_due >= 0 ? `${p.days_to_due} gün` : `${Math.abs(p.days_to_due)} gün geçti`})
+                    </span>
+                  )}
+                </p>
+              </div>
+              <p className={cn("text-sm font-semibold shrink-0", soon ? "text-amber-300" : "text-red-300")}>
+                −{formatCurrency(p.amount, p.currency || "TRY")}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 pt-3 border-t border-surface-700 flex items-center justify-between text-sm">
+        <span className="text-surface-300">Toplam</span>
+        <span className="font-bold text-red-300">−{formatCurrency(total, "TRY")}</span>
+      </div>
+    </WidgetDetailModal>
+    </>
   );
 }
 
 // ───────────────────────── 6. ALACAKLAR ÖZETİ ─────────────────────────
 
 function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
+  // v1.6.23.16 (TODO d0ccb7f0 expansion): tıkla → modal
+  const [showDetail, setShowDetail] = useState(false);
   const r = d.receivables;
   if (r.total_count === 0) {
     return (
@@ -501,8 +646,13 @@ function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
       </section>
     );
   }
+  // v1.6.23.16 (TODO d0ccb7f0 expansion): tıkla → modal (önce Link idi)
   return (
-    <Link href="/dashboard/alacaklar" className="card overflow-hidden hover:ring-1 hover:ring-amber-500/30 transition-all">
+    <>
+    <section
+      onClick={() => setShowDetail(true)}
+      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-amber-500/40 transition-all"
+    >
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <SectionTitle icon={HandCoins} label="Alacaklar" inline />
         <ChevronRight size={14} className="text-surface-400" />
@@ -528,7 +678,53 @@ function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
           </span>
         }
       />
-    </Link>
+    </section>
+    <WidgetDetailModal
+      open={showDetail}
+      onClose={() => setShowDetail(false)}
+      title="Alacaklar — Özet"
+      subtitle={`${r.total_count} kayıt · toplam ${formatCurrency(r.total, "TRY")}`}
+      size="md"
+      headerAction={
+        <Link
+          href="/dashboard/alacaklar"
+          onClick={() => setShowDetail(false)}
+          className="text-xs px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
+        >
+          Tüm Alacaklar →
+        </Link>
+      }
+    >
+      <div className="space-y-3 text-sm text-surface-200">
+        <div>
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider mb-1">Toplam Alacak</p>
+          <p className="text-2xl font-bold text-amber-300">{formatCurrency(r.total, "TRY")}</p>
+          {r.overdue_count > 0 && (
+            <p className="text-xs text-red-300 mt-1">
+              {r.overdue_count} kayıt vadesi geçmiş — acil takip
+            </p>
+          )}
+        </div>
+        <div className="pt-3 border-t border-surface-700">
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider mb-2">Tip Dağılımı</p>
+          <div className="space-y-1.5">
+            {r.type_breakdown.map((t) => (
+              <div key={t.type} className="flex items-center justify-between gap-3 text-xs">
+                <span className="text-surface-300">
+                  {t.type === "UNSPECIFIED" ? "Belirtilmemiş" : t.type}
+                  <span className="ml-2 text-surface-500">({t.count} kayıt)</span>
+                </span>
+                <span className="font-mono text-white">{formatCurrency(t.amount, "TRY")}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-[11px] text-surface-400 pt-2">
+          Tüm kayıtların satır-satır listesi için yukarıdaki "Tüm Alacaklar" butonuna tıkla.
+        </p>
+      </div>
+    </WidgetDetailModal>
+    </>
   );
 }
 

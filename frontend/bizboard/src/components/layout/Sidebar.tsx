@@ -377,10 +377,12 @@ function BusinessesSection({
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(b.id); }}
                   className={cn(
-                    "absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded transition-opacity",
+                    // v1.6.23.16: pin ikonu her zaman görünür — mobile'da hover
+                    // yok, desktop'ta kullanıcı keşfetmek için hover gerekiyordu.
+                    "absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded transition-all hover:bg-surface-700",
                     pinned
-                      ? "opacity-100 text-brand-400 hover:text-brand-300"
-                      : "opacity-0 group-hover:opacity-100 text-surface-400 hover:text-white"
+                      ? "text-brand-400 hover:text-brand-300 opacity-100"
+                      : "text-surface-500 hover:text-white opacity-60 hover:opacity-100"
                   )}
                   aria-label={pinned ? "Unpin" : "Pin"}
                   title={pinned ? "Sabitlemeyi kaldır" : "Sabitle (üste taşı)"}
