@@ -40,7 +40,10 @@ interface SidebarLink {
   count?: number;
 }
 
-/** v1.6.13: tüm route'lar — sidebar tek panelinde alfabetik gösterilir. */
+/** v1.6.13: tüm route'lar — sidebar tek panelinde alfabetik gösterilir.
+ *  v1.6.23.17: "Isletmeler" ve "Isletme Ekle" kaldırıldı.
+ *   - İşletme listesi artık üstteki BusinessesSection dropdown'ında (pin'li üstte).
+ *   - İşletme ekleme sadece ana sayfada (BusinessGrid'in üst butonu). */
 const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard",                  label: "Ana Sayfa",     icon: LayoutDashboard },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins },
@@ -51,8 +54,6 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3 },
   { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck },
   { href: "/dashboard/kisiler",          label: "Kisiler",       icon: User },
-  { href: "/dashboard/businesses",       label: "Isletmeler",    icon: Building2 },
-  { href: "/dashboard/add",              label: "Isletme Ekle",  icon: Plus },
   { href: "/dashboard/add-transaction",  label: "Islem Ekle",    icon: Receipt },
   { href: "/dashboard/transactions",     label: "Islemler",      icon: Receipt },
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote },
@@ -199,24 +200,27 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
                 Eslesen kisayol yok
               </p>
             ) : (
-              <ul className="space-y-0.5">
-                {visible.map((item) => (
-                  <li key={item.href}>
-                    <SidebarItem
-                      item={item}
-                      active={pathname === item.href}
-                      onClick={() => onMobileOpenChange(false)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
+              <>
+                {/* v1.6.23.17: İşletmeler dropdown EN ÜSTTE — pinli üstte,
+                    sonra alfabetik kalanlar. Sabit menü itemleri ALTTA. */}
+                <BusinessesSection
+                  currentPath={pathname || ""}
+                  onItemClick={() => onMobileOpenChange(false)}
+                />
 
-            {/* v1.6.23.15 (TODO 815006ad): İşletmeler collapsible + pin */}
-            <BusinessesSection
-              currentPath={pathname || ""}
-              onItemClick={() => onMobileOpenChange(false)}
-            />
+                <ul className="space-y-0.5 mt-3 pt-3 border-t border-surface-700">
+                  {visible.map((item) => (
+                    <li key={item.href}>
+                      <SidebarItem
+                        item={item}
+                        active={pathname === item.href}
+                        onClick={() => onMobileOpenChange(false)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </nav>
         </div>
       </aside>
@@ -338,7 +342,7 @@ function BusinessesSection({
   if (!businesses || businesses.length === 0) return null;
 
   return (
-    <div className="mt-4 pt-3 border-t border-surface-700">
+    <div>
       <button
         type="button"
         onClick={toggleOpen}
@@ -357,12 +361,15 @@ function BusinessesSection({
             const active = currentPath === `/business/${b.id}`;
             const pinned = !!pins[b.id];
             return (
-              <li key={b.id} className="group relative">
+              <li key={b.id} className="relative flex items-stretch">
+                {/* v1.6.23.17: Pin butonu kesin görünür — Link'in DIŞINDA
+                    flex sibling olarak, opacity yok, her zaman gösterilir.
+                    Önceki version'larda absolute + opacity yüzünden gizliydi. */}
                 <Link
                   href={`/business/${b.id}`}
                   onClick={onItemClick}
                   className={cn(
-                    "relative flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors",
+                    "flex items-center gap-2.5 px-3 py-1.5 rounded-l-lg text-sm transition-colors flex-1 min-w-0",
                     active
                       ? "bg-brand-700/30 text-white"
                       : "text-surface-300 hover:bg-surface-800 hover:text-white",
@@ -377,17 +384,15 @@ function BusinessesSection({
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(b.id); }}
                   className={cn(
-                    // v1.6.23.16: pin ikonu her zaman görünür — mobile'da hover
-                    // yok, desktop'ta kullanıcı keşfetmek için hover gerekiyordu.
-                    "absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded transition-all hover:bg-surface-700",
+                    "shrink-0 px-2 rounded-r-lg flex items-center justify-center transition-colors",
                     pinned
-                      ? "text-brand-400 hover:text-brand-300 opacity-100"
-                      : "text-surface-500 hover:text-white opacity-60 hover:opacity-100"
+                      ? "text-brand-400 hover:text-brand-300 hover:bg-surface-700"
+                      : "text-surface-500 hover:text-white hover:bg-surface-700"
                   )}
                   aria-label={pinned ? "Unpin" : "Pin"}
                   title={pinned ? "Sabitlemeyi kaldır" : "Sabitle (üste taşı)"}
                 >
-                  {pinned ? <Pin size={12} /> : <PinOff size={12} />}
+                  {pinned ? <Pin size={12} fill="currentColor" /> : <Pin size={12} />}
                 </button>
               </li>
             );

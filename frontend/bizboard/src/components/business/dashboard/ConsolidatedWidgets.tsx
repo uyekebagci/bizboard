@@ -8,7 +8,7 @@
  */
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   TrendingUp, TrendingDown, Wallet, CreditCard, Banknote, Building2,
   HandCoins, AlertCircle, CalendarClock, Bell, Lock, ChevronRight,
@@ -310,6 +310,11 @@ function TodayClosingCard({ d, onCloseDay }: { d: ConsolidatedDashboard; onClose
 function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: boolean }) {
   // v1.6.23.16 (TODO d0ccb7f0 expansion): tıkla → modal
   const [showDetail, setShowDetail] = useState(false);
+  // v1.6.23.17: modal içinde cihaz seçilince in-place detay (geri = liste).
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+  const selectedDevice = selectedDeviceId
+    ? d.pos_devices.find((dev) => dev.device_id === selectedDeviceId) || null
+    : null;
   const devs = d.pos_devices;
   if (devs.length === 0) {
     return (
@@ -373,50 +378,74 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
     </section>
     <WidgetDetailModal
       open={showDetail}
-      onClose={() => setShowDetail(false)}
-      title="POS Cihazları — Detay"
-      subtitle={`${devs.length} cihaz · ${totalTx} bugünkü çekim · ${unsettled} bekleyen`}
+      onClose={() => { setShowDetail(false); setSelectedDeviceId(null); }}
+      title={selectedDevice ? selectedDevice.device_name : "POS Cihazları — Detay"}
+      subtitle={
+        selectedDevice
+          ? `${selectedDevice.tx_count} bugünkü çekim · ${selectedDevice.unsettled_count} bekleyen`
+          : `${devs.length} cihaz · ${totalTx} bugünkü çekim · ${unsettled} bekleyen`
+      }
       size="lg"
       headerAction={
-        <Link
-          href="/dashboard/pos-cihazlari"
-          onClick={() => setShowDetail(false)}
-          className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
-        >
-          Tüm POS Sayfası →
-        </Link>
+        selectedDevice ? (
+          <button
+            type="button"
+            onClick={() => setSelectedDeviceId(null)}
+            className="text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-200 flex items-center gap-1"
+          >
+            ← Cihaz Listesi
+          </button>
+        ) : (
+          <Link
+            href="/dashboard/pos-cihazlari"
+            onClick={() => { setShowDetail(false); setSelectedDeviceId(null); }}
+            className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            Tüm POS Sayfası →
+          </Link>
+        )
       }
     >
-      <p className="text-xs text-surface-400 mb-3">
-        Her cihaza tıklayarak detay sayfasına (analytics + tüm tx + bekleyen tahsilatlar) gidebilirsiniz.
-      </p>
-      <div className="space-y-2">
-        {devs.map((dev) => (
-          <Link
-            key={dev.device_id}
-            href={`/dashboard/pos-cihazlari/${dev.device_id}`}
-            onClick={() => setShowDetail(false)}
-            className="block p-3 rounded-lg border border-surface-700 hover:border-indigo-500/40 hover:bg-surface-700/40 transition-colors"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-white">{dev.device_name}</p>
-                <p className="text-[11px] text-surface-400 mt-0.5">
-                  {dev.tx_count} bugünkü çekim
-                  {dev.unsettled_count > 0 && (
-                    <span className="ml-1.5 text-amber-300">· {dev.unsettled_count} hesaba düşmedi</span>
-                  )}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-semibold text-white">{formatCurrency(dev.today_gross, "TRY")} brüt</p>
-                <p className="text-[10px] text-emerald-300">{formatCurrency(dev.today_net, "TRY")} net</p>
-              </div>
-              <ChevronRight size={14} className="text-surface-400" />
-            </div>
-          </Link>
-        ))}
-      </div>
+      {selectedDevice ? (
+        // v1.6.23.17: cihaz detay görünümü — modal içinde inline
+        <PosDeviceModalDetail
+          device={selectedDevice}
+          onClose={() => { setShowDetail(false); setSelectedDeviceId(null); }}
+        />
+      ) : (
+        <>
+          <p className="text-xs text-surface-400 mb-3">
+            Her cihaza tıklayarak detayını bu modal üzerinde görebilirsin (sayfa değişimi yok).
+          </p>
+          <div className="space-y-2">
+            {devs.map((dev) => (
+              <button
+                key={dev.device_id}
+                type="button"
+                onClick={() => setSelectedDeviceId(dev.device_id)}
+                className="w-full text-left block p-3 rounded-lg border border-surface-700 hover:border-indigo-500/40 hover:bg-surface-700/40 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-white">{dev.device_name}</p>
+                    <p className="text-[11px] text-surface-400 mt-0.5">
+                      {dev.tx_count} bugünkü çekim
+                      {dev.unsettled_count > 0 && (
+                        <span className="ml-1.5 text-amber-300">· {dev.unsettled_count} hesaba düşmedi</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-white">{formatCurrency(dev.today_gross, "TRY")} brüt</p>
+                    <p className="text-[10px] text-emerald-300">{formatCurrency(dev.today_net, "TRY")} net</p>
+                  </div>
+                  <ChevronRight size={14} className="text-surface-400" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </WidgetDetailModal>
     </>
   );
@@ -926,3 +955,202 @@ function Footer({ left, right }: { left: React.ReactNode; right: React.ReactNode
     </div>
   );
 }
+
+// v1.6.23.17 (TODO d0ccb7f0 expansion): POS device detay — modal içinde inline.
+// /pos-cihazlari/[id] sayfasının kompakt versiyonu.
+function PosDeviceModalDetail({
+  device,
+  onClose,
+}: {
+  device: ConsolidatedDashboard["pos_devices"][number];
+  onClose: () => void;
+}) {
+  type DeviceInfo = {
+    id: string; name: string; is_active: boolean;
+    default_rate?: number | null; last_used_rate?: number | null;
+    owner_counterpart_name?: string | null; bank_name?: string | null;
+  };
+  type Tx = {
+    id: string; date: string; amount: number;
+    pos_net?: number | null; pos_settled?: boolean | null;
+    settled_bank_account_name?: string | null; description?: string | null;
+    currency: string;
+  };
+  type Analytics = {
+    totals: {
+      gross: number; commission: number; net: number;
+      tx_count: number; settled_count: number; unsettled_count: number;
+    };
+  };
+
+  const [info, setInfo] = useState<DeviceInfo | null>(null);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [txs, setTxs] = useState<Tx[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const [d, an, tx] = await Promise.all([
+          import("@/lib/api/client").then(({ api }) =>
+            api.get<DeviceInfo>(`/pos-devices/${device.device_id}`),
+          ),
+          import("@/lib/api/client").then(({ api }) =>
+            api.get<Analytics>(`/pos-devices/analytics?deviceId=${device.device_id}`).catch(() => null),
+          ),
+          import("@/lib/api/client").then(({ api }) =>
+            api.get<Tx[]>(`/pos-devices/${device.device_id}/transactions`).catch(() => []),
+          ),
+        ]);
+        if (!alive) return;
+        setInfo(d);
+        setAnalytics(an);
+        setTxs(tx || []);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [device.device_id]);
+
+  const unsettledTxs = useMemo(() => txs.filter((t) => !t.pos_settled), [txs]);
+
+  if (loading) {
+    return (
+      <div className="py-12 flex items-center justify-center">
+        <span className="text-sm text-surface-400">Yükleniyor...</span>
+      </div>
+    );
+  }
+  if (!info) {
+    return <div className="py-8 text-center text-sm text-surface-400">Cihaz bulunamadı</div>;
+  }
+
+  const t = analytics?.totals;
+  return (
+    <div className="space-y-4">
+      {/* Cihaz info */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <Info label="Sahibi" value={info.owner_counterpart_name || "—"} />
+        <Info label="Banka" value={info.bank_name || "—"} />
+        <Info label="Varsayılan oran" value={info.default_rate != null ? `%${info.default_rate}` : "—"} />
+        <Info label="Durum" value={info.is_active ? "Aktif" : "Pasif"} tone={info.is_active ? "pos" : "neg"} />
+      </div>
+
+      {/* Analytics totals */}
+      {t && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Stat2 label="Brüt" value={formatCurrency(t.gross, "TRY")} />
+          <Stat2 label="Komisyon" value={`−${formatCurrency(t.commission, "TRY")}`} tone="neg" />
+          <Stat2 label="Net" value={formatCurrency(t.net, "TRY")} tone="pos" />
+          <Stat2 label="Settled / Bekleyen" value={`${t.settled_count} / ${t.unsettled_count}`} />
+        </div>
+      )}
+
+      {/* Bekleyen tahsilatlar */}
+      {unsettledTxs.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-amber-300 uppercase tracking-wider mb-2">
+            Bekleyen Tahsilatlar ({unsettledTxs.length})
+          </h4>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {unsettledTxs.slice(0, 10).map((tx) => (
+              <TxMiniRow key={tx.id} tx={tx} />
+            ))}
+            {unsettledTxs.length > 10 && (
+              <p className="text-[11px] text-surface-400 text-center pt-1">
+                + {unsettledTxs.length - 10} daha (tam liste detay sayfasında)
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Son tx'ler */}
+      <div>
+        <h4 className="text-xs font-semibold text-surface-300 uppercase tracking-wider mb-2">
+          Son İşlemler ({txs.length} toplam)
+        </h4>
+        {txs.length === 0 ? (
+          <p className="text-xs text-surface-500 text-center py-4">Bu cihaz için işlem yok</p>
+        ) : (
+          <div className="space-y-1 max-h-60 overflow-y-auto">
+            {txs.slice(0, 15).map((tx) => (
+              <TxMiniRow key={tx.id} tx={tx} />
+            ))}
+            {txs.length > 15 && (
+              <p className="text-[11px] text-surface-400 text-center pt-1">
+                + {txs.length - 15} daha
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="pt-3 border-t border-surface-700 flex justify-end">
+        <Link
+          href={`/dashboard/pos-cihazlari/${device.device_id}`}
+          onClick={onClose}
+          className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+        >
+          Tam Detay Sayfasına Git →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, value, tone }: { label: string; value: string; tone?: "pos" | "neg" }) {
+  return (
+    <div>
+      <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
+      <p className={cn("text-sm font-medium mt-0.5",
+        tone === "pos" && "text-emerald-300",
+        tone === "neg" && "text-red-300",
+        !tone && "text-white"
+      )}>{value}</p>
+    </div>
+  );
+}
+
+function Stat2({ label, value, tone }: { label: string; value: string; tone?: "pos" | "neg" }) {
+  return (
+    <div className="card p-2.5">
+      <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
+      <p className={cn("text-sm font-bold mt-0.5",
+        tone === "pos" && "text-emerald-300",
+        tone === "neg" && "text-red-300",
+        !tone && "text-white"
+      )}>{value}</p>
+    </div>
+  );
+}
+
+function TxMiniRow({ tx }: { tx: { id: string; date: string; amount: number; pos_net?: number | null; pos_settled?: boolean | null; settled_bank_account_name?: string | null; description?: string | null; currency: string } }) {
+  const net = tx.pos_net ?? tx.amount;
+  const settled = tx.pos_settled === true;
+  return (
+    <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded bg-surface-700/30 text-xs">
+      <div className="min-w-0 flex-1">
+        <p className="text-surface-200 truncate">{tx.description || "POS çekim"}</p>
+        <p className="text-[10px] text-surface-400">
+          {new Date(tx.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+          {settled && tx.settled_bank_account_name && ` · ${tx.settled_bank_account_name}`}
+        </p>
+      </div>
+      <div className="text-right shrink-0">
+        <p className="text-emerald-300 font-semibold">+{formatCurrency(net, tx.currency)}</p>
+        <p className="text-[9px]">
+          {settled ? (
+            <span className="text-emerald-300">✓ düştü</span>
+          ) : (
+            <span className="text-amber-300">⏳ bekliyor</span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
