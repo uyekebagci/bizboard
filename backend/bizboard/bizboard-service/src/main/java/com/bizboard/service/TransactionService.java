@@ -334,13 +334,16 @@ public class TransactionService {
                 transaction.setPosRate(request.getPosRate());
             }
         }
-        // v1.6.21 (WP-4): pos_settled toggle (POS çekimin hesaba düşüp düşmediği)
+        // v1.6.21 (WP-4) / v1.6.23.11 fix:
+        // pos_settled artık YALNIZ dedicated endpoint'ler (PATCH /settle, /unsettle)
+        // üzerinden değişir — çünkü bank_account.current_balance senkron lazım.
+        // Eski PUT path'i pos_settled toggle'a izin veriyordu ama balance'a
+        // dokunmuyordu → settle drift bug. Şimdi explicit reddediyoruz.
         if (request.getPosSettled() != null
                 && !java.util.Objects.equals(request.getPosSettled(), transaction.getPosSettled())) {
-            changes.put("posSettled", Map.of(
-                    "from", transaction.getPosSettled() == null ? "null" : transaction.getPosSettled().toString(),
-                    "to", request.getPosSettled().toString()));
-            transaction.setPosSettled(request.getPosSettled());
+            throw new IllegalArgumentException(
+                    "pos_settled bu endpoint'ten degistirilemez; "
+                            + "PATCH /businesses/{bizId}/transactions/{txId}/settle veya /unsettle kullan.");
         }
 
         // v1.6.23.4 (BUG-1 fix): HESAPDAN bank_account update + balance reversal/apply.
