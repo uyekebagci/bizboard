@@ -18,6 +18,7 @@ import { useBusiness } from "@/hooks/useBusiness";
 import { useAppStore } from "@/lib/store";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
+import { AddTransactionModal } from "@/components/transactions/AddTransactionModal";
 import Link from "next/link";
 
 export default function BusinessDetailPage() {
@@ -172,6 +173,10 @@ export default function BusinessDetailPage() {
         <ConsolidatedWidgets
           data={consolidated}
           onCloseDay={() => setShowCloseModal(true)}
+          onChange={() => {
+            void refreshConsolidated();
+            triggerRefresh();
+          }}
           recentTransactionsSlot={
             <RecentTransactionsSection
               businessId={businessId}
@@ -229,28 +234,44 @@ function RecentTransactionsSection({
   setPaymentFilter: (p: "ALL" | PaymentMethod) => void;
   onChange: () => void;
 }) {
+  // v1.6.23.26 (UI Fix WP TODO 06c8f232): "+ Yeni İşlem" + POS shortcut artık
+  // modal açıyor (sayfa değişimi yok). Modal kapanınca onChange ile cache
+  // invalidate edilir.
+  const [showAddModal, setShowAddModal] = useState<null | "ALL" | "POS">(null);
+
   return (
     <section className="card overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-white">Son İşlemler</h2>
         <div className="flex items-center gap-1.5">
-          <Link
-            href={`/dashboard/add-transaction?business=${businessId}&payment_method=POS`}
+          <button
+            type="button"
+            onClick={() => setShowAddModal("POS")}
             className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md text-indigo-200 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30"
             title="POS işlemi oluştur"
           >
             <CreditCard size={11} />
             POS
-          </Link>
-          <Link
-            href={`/dashboard/add-transaction?business=${businessId}`}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAddModal("ALL")}
             className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md bg-brand-600 hover:bg-brand-500 text-white shadow-sm"
           >
             <Plus size={12} />
             Yeni İşlem
-          </Link>
+          </button>
         </div>
       </div>
+
+      <AddTransactionModal
+        open={showAddModal !== null}
+        businessId={businessId}
+        preselectedPaymentMethod={showAddModal === "POS" ? "POS" : null}
+        preselectedType={showAddModal === "POS" ? "income" : null}
+        onClose={() => setShowAddModal(null)}
+        onSuccess={onChange}
+      />
 
       <div className="px-4 py-2 border-b border-surface-700 flex gap-1.5">
         <button
