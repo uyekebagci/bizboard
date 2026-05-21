@@ -84,6 +84,10 @@ public class BankAccountController {
     /**
      * v1.6.22 (WP-5): aktif/pasif toggle. Pasif yaparken bakiye 0 değilse
      * 409 dönülür (force=true ile zorla geçilebilir).
+     *
+     * <p>v1.6.23.22 (Security WP TODO a96dd1b5): admin-only kısıt kaldırıldı.
+     * Service tarafında {@code assertCanAccessBusiness} ile tenant izolasyonu
+     * zaten var — USER kendi işletmesindeki hesabı toggle edebilir.</p>
      */
     @PatchMapping("/{id}/active")
     public ResponseEntity<?> toggleActive(
@@ -96,43 +100,65 @@ public class BankAccountController {
             // Bakiye 0 değil ve force=false → 409
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(java.util.Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            // Cross-tenant — existence reveal kapalı.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
         }
     }
 
     /**
-     * v1.6.23.4 (BUG-3 fix): Yeni banka hesabı oluştur. Admin-only.
+     * v1.6.23.4 (BUG-3 fix): Yeni banka hesabı oluştur.
+     *
+     * <p>v1.6.23.22 (Security WP TODO a96dd1b5): admin-only kısıt kaldırıldı.
+     * Service tarafında {@code business_id} zorunlu + actor'ın o işletmeye
+     * erişimi {@code assertCanAccessBusiness} ile kontrol edilir; cross-tenant
+     * yaratma engellenir.</p>
      *
      * <p>Validation servis tarafında:
      * <ul>
-     *   <li>name + type zorunlu</li>
+     *   <li>business_id + name + type zorunlu</li>
      *   <li>type=CASH_HOLDER → holder_person_id zorunlu (counterpart.kind=PERSON)</li>
      *   <li>currency default TRY, opening_balance default 0</li>
      * </ul>
      */
     @PostMapping
-    public ResponseEntity<BankAccountDto> create(
+    public ResponseEntity<?> create(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreateBankAccountRequest req) {
-        if (!"admin".equalsIgnoreCase(principal.getRole())) {
-            throw new SecurityException("Sadece admin banka hesabı oluşturabilir");
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(service.create(req, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of("error", "Access denied"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", e.getMessage()));
         }
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(service.create(req, principal.getId()));
     }
 
     /**
      * v1.6.23.4 (BUG-3 fix): Partial update. Yalnız name/bank_name/iban/notes
      * değiştirilebilir; type/currency/holder/active immutable
      * (active için ayrı PATCH /{id}/active var).
+     *
+     * <p>v1.6.23.22 (Security WP TODO a96dd1b5): admin-only kısıt kaldırıldı.
+     * Tenant izolasyonu service tarafında.</p>
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<BankAccountDto> update(
+    public ResponseEntity<?> update(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id,
             @Valid @RequestBody UpdateBankAccountRequest req) {
-        if (!"admin".equalsIgnoreCase(principal.getRole())) {
-            throw new SecurityException("Sadece admin banka hesabı güncelleyebilir");
+        try {
+            return ResponseEntity.ok(service.update(id, req, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", e.getMessage()));
         }
-        return ResponseEntity.ok(service.update(id, req, principal.getId()));
     }
 }

@@ -47,6 +47,9 @@ interface SidebarLink {
 const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard",                  label: "Ana Sayfa",     icon: LayoutDashboard },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins },
+  // v1.6.23.22 (UI Fix WP TODO cb3fa697): Banka Hesapları herkese görünür
+  // (tenant izolasyonu backend'de) — eski "Admin: Hesap Havuzu" buraya taşındı.
+  { href: "/dashboard/hesaplar",         label: "Banka Hesaplari", icon: Wallet },
   { href: "/dashboard/documents",        label: "Belgeler",      icon: FolderOpen },
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users },
   { href: "/dashboard/cekler",           label: "Cekler",        icon: FileText },
@@ -70,7 +73,6 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/admin/my-companies",         label: "Admin: Sirketlerim", icon: Building2,  adminOnly: true },
   { href: "/admin/recurring",            label: "Admin: Recurring",   icon: Repeat,     adminOnly: true },
   { href: "/dashboard/pos-cihazlari/yonetim", label: "Admin: POS Yonetim", icon: CreditCard, adminOnly: true },
-  { href: "/dashboard/hesaplar/havuz",   label: "Admin: Hesap Havuzu", icon: Wallet,    adminOnly: true },
 ];
 
 const SEARCH_THRESHOLD = 10;
