@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { PortfolioCard } from "@/components/dashboard/PortfolioCard";
-import { StatsRow } from "@/components/dashboard/StatsRow";
+// v1.6.23.14 (TODO 935f5c52): StatsRow + ExpenseChart kaldırıldı (DGR profili
+// için gereksiz — rapor merkezi için anlamlı, ana sayfada dikkat dağıtıyordu).
 import { GroupedBusinessGrid } from "@/components/dashboard/groups/GroupedBusinessGrid";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { CarryOverBanner } from "@/components/closing/CarryOverBanner";
 // v1.6.14: QuickActions kısayolları sidebar'a taşındı — widget kaldırıldı.
 import { DebtWidget } from "@/components/dashboard/DebtWidget";
 import { AlertsWidget } from "@/components/dashboard/AlertsWidget";
-import { ExpenseChart } from "@/components/dashboard/ExpenseChart";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { api } from "@/lib/api/client";
@@ -41,28 +41,10 @@ export default function DashboardPage() {
     setDefaultPeriod(next);
   }
 
-  // Aggregated employee data
-  const [employeeData, setEmployeeData] = useState<{ count: number; cost: number } | null>(null);
+  // v1.6.23.14: employeeData aggregation kaldırıldı — Personel widget'ı
+  // ana sayfadan kaldırıldığı için artık gereksiz. /businesses/{id}/employees/summary
+  // endpoint'i kullanılmaya devam ediyor (Finans Merkezi / işletme detayı).
   const [debtData, setDebtData] = useState<{ receivable: number; payable: number } | null>(null);
-
-  useEffect(() => {
-    async function fetchEmployeeTotals() {
-      if (businesses.length === 0) return;
-      try {
-        const results = await Promise.all(
-          businesses.map((b) =>
-            api.get<{ active_employees: number; total_cost: number }>(`/businesses/${b.id}/employees/summary`).catch(() => null)
-          )
-        );
-        let count = 0, cost = 0;
-        for (const r of results) {
-          if (r) { count += r.active_employees || 0; cost += r.total_cost || 0; }
-        }
-        setEmployeeData({ count, cost });
-      } catch { }
-    }
-    fetchEmployeeTotals();
-  }, [businesses]);
 
   const isLoading = bizLoading || portLoading;
 
@@ -101,15 +83,15 @@ export default function DashboardPage() {
       {/* v1.6.19 (WP-2): 'Dünden Kalan Eksik' banner — yalnız önceki günde fark varsa */}
       <CarryOverBanner />
 
-      {/* Portfolio (50%) + Stats 2x2 (50%) */}
+      {/* v1.6.23.14 (TODO 935f5c52): DGR kullanım profili için 5 gereksiz
+          widget kaldırıldı: StatsRow (Toplam Gelir, Toplam Gider, Personel,
+          Kar Marjı) + ExpenseChart (Gelir-Gider Dağılımı). DGR günlük kasa
+          + konsolide pozisyon odaklı çalışıyor; bu widget'lar rapor merkezi
+          için anlamlı, ana sayfada dikkat dağıtıyordu.
+          Backend endpoint'leri/queryler ölü kod değil — Finans Merkezi'nde
+          kullanılmaya devam ediyor. */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <PortfolioCard portfolio={portfolio} period={period} />
-        <StatsRow portfolio={portfolio} debtData={debtData} employeeData={employeeData} />
-      </section>
-
-      {/* Charts + Debt */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <ExpenseChart portfolio={portfolio} />
         <DebtWidget
           businesses={businesses}
           onTotalChange={(data) => setDebtData(data)}

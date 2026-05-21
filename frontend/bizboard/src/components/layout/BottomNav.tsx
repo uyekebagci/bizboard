@@ -5,10 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+// v1.6.23.14 (TODO 37f116fa): FAB en sık aksiyon olmalı.
+// Eski: /dashboard/add (Yeni İşletme) — ömür boyu 1-3 kez.
+// Yeni: /dashboard/add-transaction (Yeni İşlem) — günde 30-50 kez.
+// İşletme yaratma sidebar'da + ana sayfada ayrı buton ile erişilir.
 const navItems = [
   { href: "/dashboard", label: "Ana Sayfa", icon: LayoutDashboard },
   { href: "/dashboard/businesses", label: "Isletmeler", icon: Building2 },
-  { href: "/dashboard/add", label: "Ekle", icon: PlusCircle, accent: true },
+  { href: "/dashboard/add-transaction", label: "Islem", icon: PlusCircle, accent: true },
   { href: "/dashboard/reports", label: "Raporlar", icon: BarChart3 },
   { href: "/dashboard/profile", label: "Profil", icon: User },
 ];

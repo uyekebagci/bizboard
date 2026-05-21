@@ -285,7 +285,15 @@ function AddTransactionPage() {
             </button>
             <button
               type="button"
-              onClick={() => setPaymentMethod("POS")}
+              onClick={() => {
+                // v1.6.23.14 (TODO 7ab3e7cb): POS seçilince direction otomatik
+                // 'income' — POS işlemleri DGR'ye gelir (kullanıcı override edebilir).
+                setPaymentMethod("POS");
+                if (direction !== "income") {
+                  setDirection("income");
+                  setCategoryId("");
+                }
+              }}
               className={cn(
                 "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
                 paymentMethod === "POS"
