@@ -130,15 +130,34 @@ public class TransactionService {
         java.math.BigDecimal posRate = "POS".equals(pm) ? request.getPosRate() : null;
 
         // v1.6.23.4: HESAPDAN için bank_account zorunlu + bakiye güncelleme
+        // v1.6.23.27 (UI Fix WP TODO 8764a6a4 + 7e0c5333): NAKIT için
+        // bank_account_id verilmezse business'ın system "Genel Nakit"
+        // CASH_HOLDER hesabına otomatik route. Bu sayede her tx mutlaka bir
+        // bank_account'a bağlıdır → MAIN aggregate formülü (Σ ba.balance)
+        // çift sayım yapmadan doğru çalışır.
         com.bizboard.common.entity.BankAccount bankAccount = null;
-        if ("HESAPDAN".equals(pm)) {
-            if (request.getBankAccountId() == null) {
-                throw new IllegalArgumentException(
-                        "HESAPDAN payment_method icin bank_account_id zorunlu");
-            }
+        if (request.getBankAccountId() != null) {
             bankAccount = bankAccountRepository.findById(request.getBankAccountId())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Bank account bulunamadi: " + request.getBankAccountId()));
+        }
+        if ("HESAPDAN".equals(pm) && bankAccount == null) {
+            throw new IllegalArgumentException(
+                    "HESAPDAN payment_method icin bank_account_id zorunlu");
+        }
+        if ("NAKIT".equals(pm) && bankAccount == null) {
+            // Default "Genel Nakit" (is_system=true CASH_HOLDER) bul.
+            bankAccount = bankAccountRepository
+                    .findByActiveTrueAndBusinessIdInOrderByNameAsc(java.util.List.of(businessId))
+                    .stream()
+                    .filter(ba -> ba.isSystem()
+                            && ba.getType() == com.bizboard.common.enums.BankAccountType.CASH_HOLDER)
+                    .findFirst()
+                    .orElse(null);
+            if (bankAccount == null) {
+                log.warn("[tx-create] NAKIT tx — business={} icin 'Genel Nakit' sistem hesabi bulunamadi; " +
+                        "tx bank_account NULL kayit ediliyor (legacy fallback)", businessId);
+            }
         }
 
         // v1.6.19 (WP-2): backdated tespiti — tx tarihi bugünden önce ise işaretle.
@@ -203,14 +222,18 @@ public class TransactionService {
         transaction = transactionRepository.save(transaction);
 
         // v1.6.23.4: HESAPDAN tx kaydedildikten sonra banka hesap bakiyesini güncelle.
-        // income → +, expense → -. Validation yukarıda yapıldığı için bankAccount non-null garanti.
-        if ("HESAPDAN".equals(pm) && bankAccount != null) {
+        // v1.6.23.27 (TODO 8764a6a4): NAKIT tx de artık bir bank_account'a route
+        // edildiği için aynı kuralla balance güncellenir. Aggregate formülü
+        // Σ ba.current_balance üzerinden hesaplandığı için bu güncelleme MAIN
+        // ve sub-cash aggregate'lerine doğru yansır.
+        if (bankAccount != null && ("HESAPDAN".equals(pm) || "NAKIT".equals(pm))) {
             java.math.BigDecimal delta = transaction.getAmount();
             if (transaction.getDirection() == TransactionDirection.EXPENSE) {
                 delta = delta.negate();
             }
             bankAccount.setCurrentBalance(
-                    bankAccount.getCurrentBalance().add(delta));
+                    (bankAccount.getCurrentBalance() != null
+                            ? bankAccount.getCurrentBalance() : java.math.BigDecimal.ZERO).add(delta));
             bankAccountRepository.save(bankAccount);
         }
 

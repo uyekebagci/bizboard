@@ -88,6 +88,19 @@ public class BankAccount {
     @Builder.Default
     private boolean active = true;
 
+    /**
+     * v1.6.23.27 (UI Fix WP TODO 7e0c5333): Sistem-managed hesap.
+     * Her business için 1 default "Genel Nakit" CASH_HOLDER auto-create
+     * edilir ({@code is_system=true}). NAKIT tx bank_account_id boşsa buraya
+     * route edilir. User silinemez, name dışındaki alanları edit edemez.
+     * Validation: {@code is_system=true} CASH_HOLDER için
+     * {@code holder_person_id} null olabilir.
+     */
+    @Column(name = "is_system", nullable = false)
+    @ColumnDefault("false")
+    @Builder.Default
+    private boolean system = false;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

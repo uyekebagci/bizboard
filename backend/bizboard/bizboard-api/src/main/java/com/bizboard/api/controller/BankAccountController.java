@@ -10,6 +10,7 @@ import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.BankAccountService;
 import com.bizboard.service.BusinessAccessGuard;
+import com.bizboard.service.SubCashAggregateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,8 @@ public class BankAccountController {
     private final BankAccountRepository repository;
     private final BankAccountService service;
     private final BusinessAccessGuard accessGuard;
+    // v1.6.23.27 (UI Fix WP TODO d884a0ec): MAIN/SUB için computed aggregate.
+    private final SubCashAggregateService aggregateService;
 
     @GetMapping
     public ResponseEntity<List<BankAccountDto>> list(
@@ -50,7 +53,26 @@ public class BankAccountController {
         List<BankAccount> all = includeInactive
                 ? repository.findByBusinessIdInOrderByActiveDescNameAsc(allowed)
                 : repository.findByActiveTrueAndBusinessIdInOrderByNameAsc(allowed);
-        return ResponseEntity.ok(all.stream().map(BankAccountService::toDto).toList());
+        // v1.6.23.27 (UI Fix WP TODO d884a0ec): MAIN/SUB için computed
+        // aggregate overlay (entity'deki current_balance kalıcı 0).
+        java.util.Map<UUID, java.math.BigDecimal> mainByBiz = new java.util.HashMap<>();
+        java.util.Map<UUID, java.math.BigDecimal> subAgg = new java.util.HashMap<>();
+        for (UUID bizId : allowed) {
+            mainByBiz.put(bizId, aggregateService.mainAggregate(bizId));
+            subAgg.putAll(aggregateService.subCashAggregatesForBusiness(bizId));
+        }
+        return ResponseEntity.ok(all.stream()
+                .map(b -> {
+                    java.math.BigDecimal override = null;
+                    if (b.getType() == com.bizboard.common.enums.BankAccountType.MAIN_CASH
+                            && b.getBusiness() != null) {
+                        override = mainByBiz.get(b.getBusiness().getId());
+                    } else if (b.getType() == com.bizboard.common.enums.BankAccountType.SUB_CASH) {
+                        override = subAgg.getOrDefault(b.getId(), java.math.BigDecimal.ZERO);
+                    }
+                    return BankAccountService.toDto(b, override);
+                })
+                .toList());
     }
 
     /**

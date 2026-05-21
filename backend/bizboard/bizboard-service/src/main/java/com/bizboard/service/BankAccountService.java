@@ -55,6 +55,9 @@ public class BankAccountService {
     private final TransactionRepository transactionRepository;
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
+    // v1.6.23.27 (UI Fix WP TODO 63229465): SUB_CASH silinmeden önce
+    // assignment'lar cascade kaldırılır (entity'ler Ana Kasa'ya iade).
+    private final com.bizboard.repository.SubCashAssignmentRepository subCashAssignmentRepository;
 
     @Transactional
     public BankAccountDto toggleActive(UUID id, BankAccountToggleRequest req, UUID actorUserId) {
@@ -140,6 +143,11 @@ public class BankAccountService {
         }
 
         // CASH_HOLDER → holder_person zorunlu + counterpart.kind=PERSON kontrolü
+        // v1.6.23.27 (UI Fix WP TODO 7e0c5333): system-managed CASH_HOLDER
+        // (örn. "Genel Nakit") için holder_person_id null olabilir. Kullanıcı
+        // create endpoint'inden is_system=true gönderemez (request DTO'da
+        // bu alan yok); system hesaplar yalnız BusinessService hook'undan
+        // yaratılır.
         Counterpart holder = null;
         if (type == BankAccountType.CASH_HOLDER) {
             if (req.getHolderPersonId() == null) {
@@ -279,12 +287,33 @@ public class BankAccountService {
             throw new IllegalStateException(
                     "Ana Kasa silinemez. Yalniz isletme silinince otomatik kaldirilir.");
         }
+        // v1.6.23.27 (UI Fix WP TODO 7e0c5333): sistem hesaplar (Genel Nakit)
+        // silinemez — sadece business cascade ile.
+        if (a.isSystem()) {
+            throw new IllegalStateException(
+                    "Sistem hesabi silinemez (Genel Nakit). Yalniz isletme silinince otomatik kaldirilir.");
+        }
         // Bağlı tx kontrol — varsa pasif yapmak öneriliyor.
         long txCount = transactionRepository.findByBankAccountIdOrderByDateDesc(
                 id, PageRequest.of(0, 1)).size();
         if (txCount > 0) {
             throw new IllegalStateException(
                     "Bu hesaba bagli islem var; once pasif yapmayi dene.");
+        }
+
+        // v1.6.23.27 (TODO 63229465): SUB_CASH siliniyorsa önce tüm
+        // assignment'ları cascade kaldır — entity'ler Ana Kasa'ya iade.
+        // (sub_cash_assignments tablosunda ON DELETE CASCADE var ama
+        // audit log için açıkça temizliyoruz; entity verisi etkilenmez.)
+        if (a.getType() == BankAccountType.SUB_CASH) {
+            int unassigned = subCashAssignmentRepository
+                    .findBySubCashIdOrderByAssignedAtDesc(a.getId()).size();
+            if (unassigned > 0) {
+                subCashAssignmentRepository.findBySubCashIdOrderByAssignedAtDesc(a.getId())
+                        .forEach(subCashAssignmentRepository::delete);
+                log.info("[bank-account delete] SUB_CASH {} silindi; {} atama Ana Kasa'ya iade edildi",
+                        a.getName(), unassigned);
+            }
         }
 
         String name = a.getName();
@@ -417,8 +446,25 @@ public class BankAccountService {
                 .build();
     }
 
+    /**
+     * v1.6.23.27 (UI Fix WP TODO d884a0ec): MAIN/SUB için DTO'da computed
+     * aggregate kullanılır. Caller {@code BankAccountService.toDto(b, aggregate)}
+     * versiyonunu kullanmalı; eski {@code toDto(b)} backward-compat için
+     * current_balance'ı entity'den alır (MAIN/SUB için 0).
+     */
     public static BankAccountDto toDto(BankAccount b) {
+        return toDto(b, null);
+    }
+
+    public static BankAccountDto toDto(BankAccount b, java.math.BigDecimal aggregateOverride) {
         BankAccountType type = b.getType();
+        // v1.6.23.27: MAIN/SUB current_balance entity'de 0; gerçek değer aggregate.
+        java.math.BigDecimal effectiveBalance;
+        if (aggregateOverride != null && (type == BankAccountType.MAIN_CASH || type == BankAccountType.SUB_CASH)) {
+            effectiveBalance = aggregateOverride;
+        } else {
+            effectiveBalance = b.getCurrentBalance();
+        }
         return BankAccountDto.builder()
                 .id(b.getId())
                 .businessId(b.getBusiness() != null ? b.getBusiness().getId() : null)
@@ -426,13 +472,14 @@ public class BankAccountService {
                 .name(b.getName())
                 .type(type != null ? type.name() : null)
                 .mainCash(type == BankAccountType.MAIN_CASH)
-                .userDeletable(type != null && type.isUserDeletable())
+                .userDeletable(type != null && type.isUserDeletable() && !b.isSystem())
+                .system(b.isSystem())
                 .bankName(b.getBankName())
                 .iban(b.getIban())
                 .currency(b.getCurrency())
                 .holderPersonId(b.getHolderPerson() != null ? b.getHolderPerson().getId() : null)
                 .holderPersonName(b.getHolderPerson() != null ? b.getHolderPerson().getName() : null)
-                .currentBalance(b.getCurrentBalance())
+                .currentBalance(effectiveBalance)
                 .active(b.isActive())
                 .notes(b.getNotes())
                 .createdAt(b.getCreatedAt())

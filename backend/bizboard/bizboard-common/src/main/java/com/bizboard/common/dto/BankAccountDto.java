@@ -44,6 +44,14 @@ public class BankAccountDto {
     @JsonProperty("is_user_deletable")
     private boolean userDeletable;
 
+    /**
+     * v1.6.23.27 (UI Fix WP TODO 7e0c5333): sistem-managed hesap (örn.
+     * "Genel Nakit" default CASH_HOLDER). UI bu flag ile delete/edit'i
+     * kısıtlar — name dışındaki alanlar disabled, delete tamamen disabled.
+     */
+    @JsonProperty("is_system")
+    private boolean system;
+
     @JsonProperty("bank_name")
     private String bankName;
 
