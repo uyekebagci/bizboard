@@ -16,6 +16,7 @@ import {
 import { formatCurrency, cn } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
 import { WidgetDetailModal } from "./WidgetDetailModal";
+import { BankAccountDetailContent } from "@/components/bank/BankAccountDetailContent";
 
 interface Props {
   data: ConsolidatedDashboard;
@@ -454,9 +455,16 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
 // ───────────────────────── 4. PARA BULUNAN HESAPLAR ─────────────────────────
 
 function BankAccountsCard({ d, compact }: { d: ConsolidatedDashboard; compact?: boolean }) {
-  // v1.6.23.16 (TODO d0ccb7f0 expansion): tıkla → modal
+  // v1.6.23.16 (TODO d0ccb7f0): tıkla → modal
+  // v1.6.23.23: POS modal-in-modal pattern'iyle birebir uyumlu — modal içinde
+  // bir hesap satırına tıklayınca aynı modalda hesabın detayı yüklenir
+  // (GET /bank-accounts/{id}); "← Hesap Listesi" geri butonu liste'ye döner.
   const [showDetail, setShowDetail] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const accounts = d.bank_accounts;
+  const selectedAccount = selectedAccountId
+    ? accounts.find((a) => a.id === selectedAccountId) || null
+    : null;
   if (accounts.length === 0) {
     return (
       <section className="card p-4">
@@ -499,34 +507,76 @@ function BankAccountsCard({ d, compact }: { d: ConsolidatedDashboard; compact?: 
     </section>
     <WidgetDetailModal
       open={showDetail}
-      onClose={() => setShowDetail(false)}
-      title="Para Bulunan Hesaplar — Detay"
-      subtitle={`${accounts.length} hesap · toplam ${formatCurrency(total, "TRY")}`}
-      size="md"
+      onClose={() => { setShowDetail(false); setSelectedAccountId(null); }}
+      title={selectedAccount ? selectedAccount.name : "Para Bulunan Hesaplar — Detay"}
+      subtitle={
+        selectedAccount
+          ? `${selectedAccount.type}${selectedAccount.bank_name ? " · " + selectedAccount.bank_name : ""}`
+          : `${accounts.length} hesap · toplam ${formatCurrency(total, "TRY")}`
+      }
+      size="lg"
+      headerAction={
+        selectedAccount ? (
+          <button
+            type="button"
+            onClick={() => setSelectedAccountId(null)}
+            className="text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-200 flex items-center gap-1"
+          >
+            ← Hesap Listesi
+          </button>
+        ) : (
+          <Link
+            href="/dashboard/hesaplar"
+            onClick={() => { setShowDetail(false); setSelectedAccountId(null); }}
+            className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Tüm Hesaplar Sayfası →
+          </Link>
+        )
+      }
     >
-      <div className="space-y-2">
-        {accounts.map((a) => (
-          <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-surface-700">
-            <TypeBadge type={a.type} />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-white">{a.name}</p>
-              <p className="text-[11px] text-surface-400">
-                {a.type === "CASH_HOLDER" && a.holder_name
-                  ? `Kişide: ${a.holder_name}`
-                  : a.bank_name || "—"}
-                {a.currency && a.currency !== "TRY" && ` · ${a.currency}`}
-              </p>
-            </div>
-            <p className="text-sm font-semibold text-white shrink-0">
-              {formatCurrency(a.balance, a.currency || "TRY")}
-            </p>
+      {selectedAccount ? (
+        <BankAccountDetailContent accountId={selectedAccount.id} />
+      ) : (
+        <>
+          <p className="text-xs text-surface-400 mb-3">
+            Her hesaba tıklayarak detayını bu modal üzerinde görebilirsin (sayfa değişimi yok).
+          </p>
+          <div className="space-y-2">
+            {accounts.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => setSelectedAccountId(a.id)}
+                className="w-full text-left block p-3 rounded-lg border border-surface-700 hover:border-blue-500/40 hover:bg-surface-700/40 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1 flex items-center gap-2">
+                    <TypeBadge type={a.type} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{a.name}</p>
+                      <p className="text-[11px] text-surface-400 truncate">
+                        {a.type === "CASH_HOLDER" && a.holder_name
+                          ? `Kişide: ${a.holder_name}`
+                          : a.bank_name || "—"}
+                        {a.currency && a.currency !== "TRY" && ` · ${a.currency}`}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-white shrink-0">
+                    {formatCurrency(a.balance, a.currency || "TRY")}
+                  </p>
+                  <ChevronRight size={14} className="text-surface-400" />
+                </div>
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-      <div className="mt-4 pt-3 border-t border-surface-700 flex items-center justify-between text-sm">
-        <span className="text-surface-300">Toplam</span>
-        <span className="font-bold text-white">{formatCurrency(total, "TRY")}</span>
-      </div>
+          <div className="mt-4 pt-3 border-t border-surface-700 flex items-center justify-between text-sm">
+            <span className="text-surface-300">Toplam</span>
+            <span className="font-bold text-white">{formatCurrency(total, "TRY")}</span>
+          </div>
+        </>
+      )}
     </WidgetDetailModal>
     </>
   );
