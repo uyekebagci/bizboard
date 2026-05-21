@@ -18,9 +18,16 @@ interface Props {
   currency: string;
   /** v1.6.3+: opsiyonel ödeme yöntemi filtresi. Bilinmiyorsa NAKIT varsayılır. */
   paymentFilter?: "ALL" | PaymentMethod;
+  /** v1.6.23.10: POS settle/unsettle veya tx update sonrası parent refresh callback. */
+  onChange?: () => void;
 }
 
-export function TransactionList({ transactions, currency, paymentFilter = "ALL" }: Props) {
+export function TransactionList({
+  transactions,
+  currency,
+  paymentFilter = "ALL",
+  onChange,
+}: Props) {
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
 
@@ -135,6 +142,7 @@ export function TransactionList({ transactions, currency, paymentFilter = "ALL" 
           currency={currency}
           onClose={() => setDetailTarget(null)}
           onDelete={() => { setDetailTarget(null); setDeleteTarget(detailTarget); }}
+          onChange={onChange}
         />
       )}
 
@@ -156,11 +164,14 @@ export function TransactionDetailModal({
   currency,
   onClose,
   onDelete,
+  onChange,
 }: {
   transaction: Transaction;
   currency?: string;
   onClose: () => void;
   onDelete?: () => void;
+  /** v1.6.23.10: settle/unsettle sonrası parent refresh. */
+  onChange?: () => void;
 }) {
   const { triggerRefresh } = useAppStore();
   const isIncome = transaction.direction === "income";
@@ -606,6 +617,7 @@ export function TransactionDetailModal({
                         businessId={transaction.business_id}
                         initial={transaction.pos_settled ?? false}
                         settledBankName={transaction.settled_bank_account_name}
+                        onSettleChange={onChange}
                       />
                     )}
                   </div>
@@ -826,25 +838,56 @@ function PosSettledToggle({
   businessId,
   initial,
   settledBankName,
+  onSettleChange,
 }: {
   transactionId: string;
   businessId: string;
   initial: boolean;
   settledBankName?: string | null;
+  /** v1.6.23.10: settle/unsettle sonrası parent refresh (consolidated widget vs.). */
+  onSettleChange?: () => void;
 }) {
   const [settled, setSettled] = useState<boolean>(initial);
   const [bankName, setBankName] = useState<string | null>(settledBankName || null);
   const [showModal, setShowModal] = useState(false);
+  const [unsettling, setUnsettling] = useState(false);
+
+  // v1.6.23.10: settle iptali (admin için inline buton)
+  async function handleUnsettle() {
+    if (!confirm("Bu POS işleminin 'hesaba düştü' onayını iptal etmek istediğinden emin misin?")) return;
+    setUnsettling(true);
+    try {
+      await api.patch(`/businesses/${businessId}/transactions/${transactionId}/unsettle`);
+      setSettled(false);
+      setBankName(null);
+      onSettleChange?.();
+    } catch {
+      // silent — toggle değiştirilmez
+    } finally {
+      setUnsettling(false);
+    }
+  }
 
   if (settled) {
     return (
-      <span
-        className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-        title={bankName ? `Hesaba dustu: ${bankName}` : "Hesaba dustu"}
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
-        Hesaba düştü{bankName ? ` · ${bankName}` : ""}
-      </span>
+      <div className="mt-2 flex items-center gap-2 flex-wrap">
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+          title={bankName ? `Hesaba dustu: ${bankName}` : "Hesaba dustu"}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+          Hesaba düştü{bankName ? ` · ${bankName}` : ""}
+        </span>
+        <button
+          type="button"
+          onClick={handleUnsettle}
+          disabled={unsettling}
+          className="text-[10px] text-surface-400 hover:text-red-300 underline-offset-2 hover:underline disabled:opacity-50"
+          title="Settle iptali (admin)"
+        >
+          {unsettling ? "iptal ediliyor…" : "iptal et"}
+        </button>
+      </div>
     );
   }
   return (
@@ -866,6 +909,7 @@ function PosSettledToggle({
             setSettled(true);
             setBankName(bankNameResult);
             setShowModal(false);
+            onSettleChange?.();
           }}
         />
       )}

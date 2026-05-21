@@ -256,6 +256,13 @@ export default function BusinessDetailPage() {
           transactions={transactions}
           currency={business.currency}
           paymentFilter={paymentFilter}
+          /* v1.6.23.10: POS settle/unsettle sonrası consolidated widget +
+             tx listesini dinamik yenile (sayfa reload gerekmesin). */
+          onChange={() => {
+            void refreshConsolidated();
+            void refreshClosing();
+            triggerRefresh();
+          }}
         />
       </section>
     </div>

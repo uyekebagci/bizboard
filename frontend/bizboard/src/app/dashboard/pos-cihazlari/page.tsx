@@ -446,6 +446,10 @@ type UnsettledTx = {
 type BankRow = { id: string; name: string; type: string; bank_name?: string | null };
 
 function PendingSettlementsCard() {
+  // v1.6.23.10: bulk-settle sonrası global refresh — dashboard'daki diğer
+  // sayfalar (konsolide widget vs.) bir sonraki açılışta güncel olsun.
+  const triggerRefresh = useAppStore((s) => s.triggerRefresh);
+  const refreshKey = useAppStore((s) => s.refreshKey);
   const [items, setItems] = useState<UnsettledTx[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -463,9 +467,12 @@ function PendingSettlementsCard() {
     }
   }
 
+  // refreshKey global trigger'a tepki ver — başka sayfadan settle olduysa
+  // bu listeyi de senkron tut.
   useEffect(() => {
     refresh();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   if (loading) {
     return (
@@ -580,6 +587,9 @@ function PendingSettlementsCard() {
             setShowBulkModal(false);
             setSelectedIds(new Set());
             refresh();
+            // v1.6.23.10: global trigger — başka sayfalardaki konsolide
+            // widget refreshKey değişimiyle yeniden çekecek.
+            triggerRefresh();
           }}
         />
       )}
