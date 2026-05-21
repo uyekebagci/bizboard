@@ -165,9 +165,28 @@ export default function BusinessDetailPage() {
       {/* v1.6.19 (WP-2): Dünden Kalan Eksik banner */}
       <CarryOverBanner businessId={businessId} />
 
-      {/* v1.6.20 (WP-3): Consolidated dashboard widgets — DGR pano */}
+      {/* v1.6.20 (WP-3) + v1.6.23.24 (UI Fix WP): Consolidated dashboard widgets — DGR pano.
+          Son İşlemler bölümü Row 2 col 1'e slot olarak veriliyor (Hesaptan Harcama
+          ile yan yana). "+ Yeni İşlem" butonu vurgulu solid renkli. */}
       {consolidated && (
-        <ConsolidatedWidgets data={consolidated} onCloseDay={() => setShowCloseModal(true)} />
+        <ConsolidatedWidgets
+          data={consolidated}
+          onCloseDay={() => setShowCloseModal(true)}
+          recentTransactionsSlot={
+            <RecentTransactionsSection
+              businessId={businessId}
+              transactions={transactions}
+              currency={business.currency}
+              paymentFilter={paymentFilter}
+              setPaymentFilter={setPaymentFilter}
+              onChange={() => {
+                void refreshConsolidated();
+                void refreshClosing();
+                triggerRefresh();
+              }}
+            />
+          }
+        />
       )}
 
       {/* Close Today Modal */}
@@ -188,85 +207,98 @@ export default function BusinessDetailPage() {
 
       {/* Module Tabs */}
       <ModuleTabs business={business} />
+    </div>
+  );
+}
 
-      {/* Recent Transactions */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-white">
-            Son Islemler
-          </h2>
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/dashboard/add-transaction?business=${businessId}&payment_method=POS`}
-              className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-indigo-300 hover:text-indigo-200"
-              title="POS islemi olustur"
-            >
-              <CreditCard size={14} />
-              POS Islem
-            </Link>
-            <Link
-              href={`/dashboard/add-transaction?business=${businessId}`}
-              className="flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700"
-            >
-              <Plus size={16} />
-              Ekle
-            </Link>
-          </div>
-        </div>
-
-        {/* v1.6.4: POS / Nakit filter chips */}
-        <div className="flex gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setPaymentFilter("ALL")}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-              paymentFilter === "ALL"
-                ? "bg-surface-600 border-surface-500 text-white"
-                : "bg-surface-700 border-surface-600 text-surface-300"
-            }`}
-          >
-            Tumu
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentFilter("POS")}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors flex items-center gap-1 ${
-              paymentFilter === "POS"
-                ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
-                : "bg-surface-700 border-surface-600 text-surface-300"
-            }`}
+/**
+ * v1.6.23.24 (UI Fix WP): Son İşlemler widget'ı — ConsolidatedWidgets'ın
+ * Row 2 col 1'inde Hesaptan Harcama ile yan yana 50% genişlikte yer alır.
+ *
+ * <p>"+ Yeni İşlem" CTA solid brand renkli (önceki text-link versiyondan
+ * yükseltildi — user'a göre "vurgulu" olmalı). POS / Nakit filter chip'leri
+ * + TransactionList aynen taşındı.</p>
+ */
+function RecentTransactionsSection({
+  businessId, transactions, currency, paymentFilter, setPaymentFilter, onChange,
+}: {
+  businessId: string;
+  transactions: Parameters<typeof TransactionList>[0]["transactions"];
+  currency: string;
+  paymentFilter: "ALL" | PaymentMethod;
+  setPaymentFilter: (p: "ALL" | PaymentMethod) => void;
+  onChange: () => void;
+}) {
+  return (
+    <section className="card overflow-hidden flex flex-col">
+      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-white">Son İşlemler</h2>
+        <div className="flex items-center gap-1.5">
+          <Link
+            href={`/dashboard/add-transaction?business=${businessId}&payment_method=POS`}
+            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md text-indigo-200 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30"
+            title="POS işlemi oluştur"
           >
             <CreditCard size={11} />
             POS
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentFilter("NAKIT")}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors flex items-center gap-1 ${
-              paymentFilter === "NAKIT"
-                ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
-                : "bg-surface-700 border-surface-600 text-surface-300"
-            }`}
+          </Link>
+          <Link
+            href={`/dashboard/add-transaction?business=${businessId}`}
+            className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md bg-brand-600 hover:bg-brand-500 text-white shadow-sm"
           >
-            <Banknote size={11} />
-            Nakit
-          </button>
+            <Plus size={12} />
+            Yeni İşlem
+          </Link>
         </div>
+      </div>
 
+      <div className="px-4 py-2 border-b border-surface-700 flex gap-1.5">
+        <button
+          type="button"
+          onClick={() => setPaymentFilter("ALL")}
+          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+            paymentFilter === "ALL"
+              ? "bg-surface-600 border-surface-500 text-white"
+              : "bg-surface-700 border-surface-600 text-surface-300"
+          }`}
+        >
+          Tümü
+        </button>
+        <button
+          type="button"
+          onClick={() => setPaymentFilter("POS")}
+          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors inline-flex items-center gap-1 ${
+            paymentFilter === "POS"
+              ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
+              : "bg-surface-700 border-surface-600 text-surface-300"
+          }`}
+        >
+          <CreditCard size={10} />
+          POS
+        </button>
+        <button
+          type="button"
+          onClick={() => setPaymentFilter("NAKIT")}
+          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors inline-flex items-center gap-1 ${
+            paymentFilter === "NAKIT"
+              ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
+              : "bg-surface-700 border-surface-600 text-surface-300"
+          }`}
+        >
+          <Banknote size={10} />
+          Nakit
+        </button>
+      </div>
+
+      <div className="max-h-[480px] overflow-y-auto">
         <TransactionList
           transactions={transactions}
-          currency={business.currency}
+          currency={currency}
           paymentFilter={paymentFilter}
-          /* v1.6.23.10: POS settle/unsettle sonrası consolidated widget +
-             tx listesini dinamik yenile (sayfa reload gerekmesin). */
-          onChange={() => {
-            void refreshConsolidated();
-            void refreshClosing();
-            triggerRefresh();
-          }}
+          onChange={onChange}
         />
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 

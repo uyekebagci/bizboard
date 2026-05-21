@@ -30,41 +30,41 @@ interface Props {
 }
 
 export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot }: Props) {
-  // v1.6.23.13 (TODO 3e55858e): Layout reorg.
+  // v1.6.23.24 (UI Fix WP): Layout reorg.
   //
-  // Yeni sıra:
-  //   1. ConsolidatedPositionCard (DGR konsolide net)
-  //   2. TodayClosingCard + NetPositionCard (yan yana)
-  //   3. [Son İşlemler slot] — kasa durumunun hemen altında
-  //   4. Alacaklar + Verecekler (yan yana)
-  //   5. Hesaptan Harcama (bugün)
-  //   6. Çek + Hatırlatma (yan yana)
-  //   7. EN ALT: Banka Hesapları + POS Cihazları (yan yana, compact)
+  // Yeni sıra (user spec):
+  //   Row 1: [Konsolide DGR (Net + Genel Kasa) | Bugünün Kasa Durumu]    50/50
+  //   Row 2: [Son İşlemler + Yeni İşlem (vurgulu) | Hesaptan Harcama]    50/50
+  //   Row 3: Diğer widget'lar — Alacaklar/Verecekler + Çek/Hatırlatma
+  //   Row 4 (en altta): [Para Bulunan Hesaplar | POS Cihazları]          50/50
+  //
+  // Kaldırılan: NetPositionCard (kapsam ConsolidatedPositionCard tarafından
+  // zaten karşılanıyor).
   return (
     <div className="space-y-4">
-      <ConsolidatedPositionCard d={data} />
-
+      {/* Row 1 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <ConsolidatedPositionCard d={data} />
         <TodayClosingCard d={data} onCloseDay={onCloseDay} />
-        <NetPositionCard d={data} />
       </div>
 
-      {/* v1.6.23.13: Son İşlemler — kasa durumu altında (TODO 0adbee2a). */}
-      {recentTransactionsSlot}
+      {/* Row 2 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+        {recentTransactionsSlot ?? <div />}
+        <CashOutflowsTodayCard d={data} />
+      </div>
 
+      {/* Row 3 — diğer widget'lar (alacak/verecek + çek/hatırlatma) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <PayablesCard d={data} />
         <ReceivablesSummaryCard d={data} />
       </div>
-
-      <CashOutflowsTodayCard d={data} />
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <UpcomingChequesCard d={data} />
         <UpcomingRemindersCard d={data} />
       </div>
 
-      {/* v1.6.23.13: EN ALT — banka hesapları + POS cihazları (yan yana, compact). */}
+      {/* Row 4 — en altta */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <BankAccountsCard d={data} compact />
         <PosDevicesCard d={data} compact />
@@ -83,54 +83,63 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   const pendingPos = c.pending_pos_receivables ?? 0;
   const expectedNet = c.expected_net ?? c.net;
   // v1.6.23.15 (TODO d0ccb7f0): widget tıklanabilir → detay modal
+  // v1.6.23.24: 50% width layout için kompakt versiyon. Net + Genel Kasa
+  // (= toplam nakit + bank bakiyesi) öne çıkar; KK/Kredi sub-stat'leri detay
+  // modal'a taşındı.
   const [showDetail, setShowDetail] = useState(false);
+  const genelKasa = (c.total_cash ?? 0) + (c.total_bank_balance ?? 0);
   return (
     <>
     <section
       onClick={() => setShowDetail(true)}
-      className="card p-5 bg-gradient-to-br from-brand-700 to-brand-900 text-white cursor-pointer hover:ring-1 hover:ring-brand-400 transition-all"
+      className="card p-4 bg-gradient-to-br from-brand-700 to-brand-900 text-white cursor-pointer hover:ring-1 hover:ring-brand-400 transition-all flex flex-col h-full"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowDetail(true); } }}
     >
-      <p className="text-brand-200 text-xs uppercase tracking-wider mb-1">Konsolide Net</p>
-      <p className="text-4xl font-bold">{formatCurrency(c.net, "TRY")}</p>
+      <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-2">Konsolide DGR</p>
 
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-3 text-[11px]">
-        <PositionStat label="Toplam Nakit" value={c.total_cash} tone="positive" />
-        <PositionStat label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="negative" />
-        <PositionStat label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="negative" />
-        <PositionStat label="Alacaklar" value={c.receivables} tone="positive" />
-        <PositionStat label="Verecekler" value={-Math.abs(c.payables)} tone="negative" />
-      </div>
-
-      <div className="mt-3 flex items-center gap-1.5 text-xs text-brand-200">
-        {sign === "pos" && <><TrendingUp size={12} /> Net pozitif</>}
-        {sign === "neg" && <><TrendingDown size={12} /> Net negatif</>}
-        {sign === "zero" && <>— Net sıfır</>}
-      </div>
-
-      {/* v1.6.23.9 (TODO 8c7ffaac): Bekleyen POS tahsilatı satırı */}
-      {pendingPos > 0 && (
-        <div className="mt-3 pt-3 border-t border-brand-600/50 grid grid-cols-2 gap-3 text-xs">
-          <div>
-            <p className="text-amber-200 text-[10px] uppercase tracking-wider">
-              Bekleyen POS tahsilatı
-            </p>
-            <p className="text-amber-200 font-bold mt-0.5">
-              +{formatCurrency(pendingPos, "TRY")}
-            </p>
-            <p className="text-amber-200/70 text-[10px] mt-0.5">Settle olunca eklenecek</p>
-          </div>
-          <div>
-            <p className="text-brand-200 text-[10px] uppercase tracking-wider">
-              Beklenen Net
-            </p>
-            <p className="text-white font-bold mt-0.5">{formatCurrency(expectedNet, "TRY")}</p>
-            <p className="text-brand-200/70 text-[10px] mt-0.5">Tüm settle sonrası</p>
+      {/* Net + Genel Kasa — yan yana iki primary metric */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Net</p>
+          <p className="text-2xl font-bold truncate" title={formatCurrency(c.net, "TRY")}>
+            {formatCurrency(c.net, "TRY")}
+          </p>
+          <div className="mt-1 flex items-center gap-1 text-[10px] text-brand-200">
+            {sign === "pos" && <><TrendingUp size={10} /> pozitif</>}
+            {sign === "neg" && <><TrendingDown size={10} /> negatif</>}
+            {sign === "zero" && <>— sıfır</>}
           </div>
         </div>
-      )}
+        <div>
+          <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Genel Kasa</p>
+          <p className="text-2xl font-bold truncate" title={formatCurrency(genelKasa, "TRY")}>
+            {formatCurrency(genelKasa, "TRY")}
+          </p>
+          <p className="mt-1 text-[10px] text-brand-200">nakit + banka</p>
+        </div>
+      </div>
+
+      {/* Sub-stat row: 3 küçük metric */}
+      <div className="mt-3 pt-3 border-t border-brand-600/50 grid grid-cols-3 gap-2 text-[10px]">
+        <PositionStat label="Alacaklar" value={c.receivables} tone="positive" />
+        <PositionStat label="Verecekler" value={-Math.abs(c.payables)} tone="negative" />
+        {pendingPos > 0 ? (
+          <div>
+            <p className="text-amber-200 uppercase tracking-wider">Bekleyen POS</p>
+            <p className="text-sm font-bold text-amber-200 mt-0.5">
+              +{formatCurrency(pendingPos, "TRY")}
+            </p>
+          </div>
+        ) : (
+          <PositionStat
+            label="KK + Kredi"
+            value={-(Math.abs(c.credit_card_debt) + Math.abs(c.loan_principal))}
+            tone="negative"
+          />
+        )}
+      </div>
     </section>
     <WidgetDetailModal
       open={showDetail}
@@ -807,42 +816,9 @@ function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
   );
 }
 
-// ───────────────────────── 7. NET ALACAK/VERECEK ─────────────────────────
-
-function NetPositionCard({ d }: { d: ConsolidatedDashboard }) {
-  const n = d.net_position;
-  // v1.6.23.13 (TODO bb3fceb5): net=0 default (nötr) — net>0 yeşil, net<0 kırmızı.
-  // Önceki davranış net>=0 → her zaman yeşil (sıfırda da yeşildi).
-  const sign: "pos" | "neg" | "zero" = n.net > 0 ? "pos" : n.net < 0 ? "neg" : "zero";
-  const cardClasses: Record<typeof sign, string> = {
-    pos:  "border-emerald-500/30 bg-emerald-500/5",
-    neg:  "border-red-500/30 bg-red-500/5",
-    zero: "border-surface-600/40 bg-surface-700/30",
-  };
-  const valueClasses: Record<typeof sign, string> = {
-    pos:  "text-emerald-300",
-    neg:  "text-red-300",
-    zero: "text-surface-200",
-  };
-  const labels: Record<typeof sign, string> = {
-    pos:  "Net Alacaklı",
-    neg:  "Net Borçlu",
-    zero: "Net Sıfır",
-  };
-  const Icon = sign === "pos" ? TrendingUp : sign === "neg" ? TrendingDown : HandCoins;
-  return (
-    <section className={cn("card p-4 border", cardClasses[sign])}>
-      <SectionTitle icon={Icon} label="Net Pozisyon" />
-      <p className={cn("mt-2 text-2xl font-bold", valueClasses[sign])}>
-        {labels[sign]}{sign !== "zero" ? `: ${formatCurrency(Math.abs(n.net), "TRY")}` : ""}
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
-        <Stat label="Alacaklar" value={n.receivables} tone="positive" />
-        <Stat label="Verecekler" value={-n.payables} tone="negative" />
-      </div>
-    </section>
-  );
-}
+// v1.6.23.24 (UI Fix WP): NetPositionCard kaldırıldı. Net pozisyon zaten
+// ConsolidatedPositionCard'da gösteriliyor (Net + sub-stat'ler), ayrı widget
+// gereksizdi.
 
 // ───────────────────────── 8. HESAPTAN HARCAMA (BUGÜN) ─────────────────────────
 
