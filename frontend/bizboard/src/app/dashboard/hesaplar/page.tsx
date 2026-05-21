@@ -301,7 +301,10 @@ export default function HesaplarPage() {
         <section className="card divide-y divide-surface-700">
           {sortedFiltered.map((a) => {
             const isMain = a.is_main_cash || a.type === "MAIN_CASH";
-            const canDelete = a.is_user_deletable ?? !isMain;
+            const isSystem = a.is_system === true;
+            // v1.6.23.27 (UI Fix WP TODO 7b6258b8): MAIN_CASH ve sistem hesapları (Genel Nakit) lock'lu.
+            const canDelete = (a.is_user_deletable ?? !isMain) && !isSystem;
+            const isLocked = isMain || isSystem;
             return (
               <div
                 key={a.id}
@@ -318,6 +321,7 @@ export default function HesaplarPage() {
                   "p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-surface-700/40 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-500/50",
                   !a.is_active && "opacity-50",
                   isMain && "bg-amber-500/[0.04]",
+                  isSystem && !isMain && "bg-purple-500/[0.04]",
                 )}
               >
                 <div className="flex items-center gap-2 min-w-0">
@@ -325,12 +329,17 @@ export default function HesaplarPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
                       {a.name}
-                      {isMain && (
-                        <Lock size={11} className="text-amber-300/70 shrink-0" />
+                      {isLocked && (
+                        <Lock size={11} className={cn(
+                          "shrink-0",
+                          isMain ? "text-amber-300/70" : "text-purple-300/70",
+                        )} />
                       )}
                     </p>
                     <p className="text-[11px] text-surface-400 truncate">
-                      {a.type === "CASH_HOLDER" && a.holder_person_name
+                      {isSystem
+                        ? "Sistem hesabı (otomatik yaratılır, silinemez)"
+                        : a.type === "CASH_HOLDER" && a.holder_person_name
                         ? `Kişide: ${a.holder_person_name}`
                         : isMain
                         ? "Otomatik yaratılır, silinemez"
@@ -383,7 +392,7 @@ export default function HesaplarPage() {
                   ) : (
                     <span
                       className="p-1 rounded-md text-surface-600 cursor-not-allowed"
-                      title="Ana Kasa silinemez"
+                      title={isSystem ? "Sistem hesabı silinemez (Genel Nakit)" : "Ana Kasa silinemez"}
                     >
                       <Lock size={16} />
                     </span>
@@ -425,6 +434,9 @@ export default function HesaplarPage() {
       <BankAccountDetailModal
         account={detailAccount}
         onClose={() => setDetailAccount(null)}
+        // v1.6.23.27: SUB_CASH assignment değişince havuz listesini de yenile
+        // (aggregate balance UI'da yansır).
+        onChange={() => { void refresh(); }}
       />
     </div>
   );
@@ -509,13 +521,23 @@ function ConfirmDeleteModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  // v1.6.23.27 (UI Fix WP TODO 78596760): SUB_CASH siliniyorsa kullanıcıya
+  // "X assignment Ana Kasa'ya iade edilecek" uyarısı göster.
+  const [assignmentCount, setAssignmentCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (account.type !== "SUB_CASH") return;
+    api.get<{ assignments: { id: string }[] }>(`/bank-accounts/${account.id}/sub-cash-detail?tx_limit=0`)
+      .then((d) => setAssignmentCount(d.assignments?.length ?? 0))
+      .catch(() => setAssignmentCount(0));
+  }, [account]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-surface-800 rounded-2xl border border-red-500/30 w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
             <Trash2 size={16} className="text-red-400" />
-            Hesabı sil
+            {account.type === "SUB_CASH" ? "Alt Kasayı sil" : "Hesabı sil"}
           </h3>
           <button onClick={onClose} disabled={busy} className="p-1 rounded-lg hover:bg-surface-700">
             <X size={16} className="text-surface-400" />
@@ -525,6 +547,13 @@ function ConfirmDeleteModal({
           <strong className="text-white">{account.name}</strong> hesabını kalıcı olarak silmek
           istediğine emin misin? Bağlı işlem varsa silinemez; önce pasif yapmanı öneririz.
         </p>
+        {account.type === "SUB_CASH" && assignmentCount !== null && assignmentCount > 0 && (
+          <p className="mt-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+            ⚠ Bu alt kasada <strong>{assignmentCount}</strong> entity atalı.
+            Silersen tüm atamalar kaldırılır ve entity'ler Ana Kasa'ya iade olur
+            (entity verisi silinmez).
+          </p>
+        )}
         <div className="flex gap-2 mt-4">
           <button
             onClick={onClose}

@@ -11,15 +11,19 @@
 
 import { WidgetDetailModal } from "@/components/business/dashboard/WidgetDetailModal";
 import { BankAccountDetailContent } from "./BankAccountDetailContent";
+import { SubCashDetailContent } from "./SubCashDetailContent";
 import type { BankAccountListItem } from "@/types";
 
 interface Props {
   account: BankAccountListItem | null;
   onClose: () => void;
+  /** v1.6.23.27: SUB_CASH unassign sonrası parent refresh (havuz listesi). */
+  onChange?: () => void;
 }
 
-export function BankAccountDetailModal({ account, onClose }: Props) {
+export function BankAccountDetailModal({ account, onClose, onChange }: Props) {
   const open = !!account;
+  const isSubCash = account?.type === "SUB_CASH";
   return (
     <WidgetDetailModal
       open={open}
@@ -28,7 +32,11 @@ export function BankAccountDetailModal({ account, onClose }: Props) {
       subtitle={account ? `${account.business_name ?? "?"} · ${account.type}` : undefined}
       size="lg"
     >
-      {account && <BankAccountDetailContent accountId={account.id} />}
+      {account && (
+        isSubCash
+          ? <SubCashDetailContent subCashId={account.id} onChange={onChange} />
+          : <BankAccountDetailContent accountId={account.id} />
+      )}
     </WidgetDetailModal>
   );
 }

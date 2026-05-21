@@ -438,6 +438,35 @@ export interface BankAccountListItem {
   is_main_cash?: boolean;
   /** v1.6.23.25: false = delete butonu disable (MAIN_CASH). */
   is_user_deletable?: boolean;
+  /** v1.6.23.27 (UI Fix WP TODO 7b6258b8): sistem-managed (Genel Nakit) — delete/edit kısıtlı. */
+  is_system?: boolean;
+}
+
+// ─────────── v1.6.23.27 Sub-Cash Aggregator (UI Fix WP) ───────────
+
+export type SubCashEntityType = "COUNTERPART" | "POS_DEVICE" | "BANK_ACCOUNT";
+
+export interface SubCashAssignment {
+  id: string;
+  sub_cash_id: string;
+  sub_cash_name: string;
+  business_id: string;
+  entity_type: SubCashEntityType;
+  entity_id: string;
+  entity_name: string;
+  entity_balance_contribution: number;
+  assigned_at: string;
+  assigned_by: string | null;
+}
+
+export interface SubCashDetail {
+  sub_cash: BankAccountListItem;
+  /** Σ assigned BANK_ACCOUNT.current_balance */
+  aggregate: number;
+  main_aggregate: number;
+  unassigned_aggregate: number;
+  assignments: SubCashAssignment[];
+  transactions: BankAccountTxRow[];
 }
 
 /**
