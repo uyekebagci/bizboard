@@ -1,7 +1,9 @@
 package com.bizboard.service;
 
 import com.bizboard.common.dto.PosAnalyticsDto;
+import com.bizboard.common.entity.PosDevice;
 import com.bizboard.common.entity.Transaction;
+import com.bizboard.repository.PosDeviceRepository;
 import com.bizboard.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +31,29 @@ import java.util.*;
 public class PosAnalyticsService {
 
     private final TransactionRepository transactionRepository;
+    private final PosDeviceRepository posDeviceRepository;
+    private final BusinessAccessGuard accessGuard;
 
+    /**
+     * v1.6.23.20 (Security WP / arch-rules §1.3.B): tenant-aware POS analytics.
+     *
+     * <p>{@code deviceId} verilirse o cihazın business'ına actor erişebiliyor mu
+     * kontrol edilir; verilmezse actor'ın erişebildiği tüm business'lardaki POS
+     * tx'leri toplanır.</p>
+     */
     @Transactional(readOnly = true)
-    public PosAnalyticsDto analytics(LocalDate from, LocalDate to, java.util.UUID deviceId) {
+    public PosAnalyticsDto analytics(LocalDate from, LocalDate to,
+                                     java.util.UUID deviceId, java.util.UUID actorUserId) {
+        // Access check
+        java.util.List<java.util.UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        if (deviceId != null) {
+            PosDevice d = posDeviceRepository.findById(deviceId).orElse(null);
+            if (d == null || d.getBusiness() == null
+                    || !allowed.contains(d.getBusiness().getId())) {
+                throw new SecurityException("Access denied");
+            }
+        }
+
         LocalDate fromDate = from != null ? from : LocalDate.now().minusDays(29);
         LocalDate toDate = to != null ? to : LocalDate.now();
         if (toDate.isBefore(fromDate)) {
@@ -52,9 +74,12 @@ public class PosAnalyticsService {
             if (deviceId != null) {
                 txs = transactionRepository.findByPosDeviceIdAndDate(deviceId, d);
             } else {
-                // Tüm POS tx'ler (paymentMethod=POS) o gün.
+                // Tüm POS tx'ler (paymentMethod=POS) o gün — actor'ın erişebildiği tenant'lar.
+                final java.util.List<java.util.UUID> filterBiz = allowed;
                 txs = transactionRepository.findByDate(d).stream()
                         .filter(t -> "POS".equalsIgnoreCase(t.getPaymentMethod()))
+                        .filter(t -> t.getBusiness() != null
+                                && filterBiz.contains(t.getBusiness().getId()))
                         .toList();
             }
             DailyAcc a = acc.get(d);

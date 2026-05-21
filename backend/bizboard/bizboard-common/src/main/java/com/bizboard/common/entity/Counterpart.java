@@ -36,6 +36,17 @@ public class Counterpart {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * v1.6.23.20 (Security WP / arch-rules §1.1): counterpart tenant binding.
+     * Eski model "shared lake" kabul ediyordu — multi-tenant gelince leak
+     * oluşturuyordu (USER B, USER A'nın müşterilerini görüyordu). NOT NULL FK
+     * ile her counterpart bir işletmeye ait; tüm endpoint'ler
+     * {@code accessibleBusinessIds} filter'iyla geçer.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "business_id", nullable = false)
+    private Business business;
+
     @Column(nullable = false)
     private String name;
 

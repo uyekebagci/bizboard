@@ -35,6 +35,15 @@ public class PosDevice {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * v1.6.23.20 (Security WP 667d8a71 / arch-rules §1.1): multi-tenant izolasyon
+     * için zorunlu. Önceki sürümlerde yoktu — POS device DGR-only varsayımıyla
+     * unutulmuştu. Tüm mevcut satırlar DGR'ye backfill edildi.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "business_id", nullable = false)
+    private Business business;
+
     @Column(nullable = false, length = 120)
     private String name;
 

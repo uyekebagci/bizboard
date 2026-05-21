@@ -28,4 +28,17 @@ public interface CounterpartRepository extends JpaRepository<Counterpart, UUID> 
     List<Counterpart> findByKindOrderByNameAsc(CounterpartKind kind);
 
     long countByParentId(UUID parentId);
+
+    // ── v1.6.23.20 (Security WP / arch-rules §1.1): multi-tenant filter ──
+
+    List<Counterpart> findByBusinessIdInOrderByNameAsc(List<UUID> businessIds);
+
+    List<Counterpart> findByBusinessIdInAndRoleOrderByNameAsc(
+            List<UUID> businessIds, CounterpartRole role);
+
+    List<Counterpart> findByBusinessIdInAndKindOrderByNameAsc(
+            List<UUID> businessIds, CounterpartKind kind);
+
+    List<Counterpart> findByBusinessIdInAndParentIdOrderByNameAsc(
+            List<UUID> businessIds, UUID parentId);
 }

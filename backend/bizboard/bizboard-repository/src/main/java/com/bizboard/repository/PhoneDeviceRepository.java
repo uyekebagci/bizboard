@@ -13,6 +13,14 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, UUID> 
 
     List<PhoneDevice> findByBusinessIdAndActiveTrueOrderByDeviceNumberAsc(UUID businessId);
 
+    /**
+     * v1.6.23.20 (Security WP TODO 15b1dd12): multi-tenant filter — list endpoint
+     * için. accessibleBusinessIds list'i ile birden çok tenant aynı anda gelir.
+     */
+    List<PhoneDevice> findByBusinessIdInOrderByDeviceNumberAsc(List<UUID> businessIds);
+
+    List<PhoneDevice> findByBusinessIdInAndActiveTrueOrderByDeviceNumberAsc(List<UUID> businessIds);
+
     List<PhoneDevice> findByAssignedCounterpartIdOrderByDeviceNumberAsc(UUID counterpartId);
 
     @Query("SELECT COALESCE(MAX(p.deviceNumber), 0) FROM PhoneDevice p WHERE p.business.id = :businessId")

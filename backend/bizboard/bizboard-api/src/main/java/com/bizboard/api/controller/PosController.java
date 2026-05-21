@@ -48,7 +48,7 @@ public class PosController {
     public ResponseEntity<List<TransactionDto>> getUnsettled(
             @RequestParam(name = "deviceId", required = false) UUID deviceId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(posService.getUnsettledTransactions(deviceId));
+        return ResponseEntity.ok(posService.getUnsettledTransactions(deviceId, principal.getId()));
     }
 
     /**

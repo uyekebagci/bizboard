@@ -32,14 +32,25 @@ public class CounterpartController {
 
     @GetMapping
     public ResponseEntity<List<CounterpartDto>> list(
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String kind) {
-        return ResponseEntity.ok(service.list(role, kind));
+        return ResponseEntity.ok(service.list(role, kind, principal.getId()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CounterpartDto> get(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.get(id));
+    public ResponseEntity<?> get(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id) {
+        try {
+            return ResponseEntity.ok(service.get(id, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        }
     }
 
     /**
@@ -47,32 +58,49 @@ public class CounterpartController {
      * tüm sub-firma'lar. Counterpart detay sayfası drill-down için.
      */
     @GetMapping("/{id}/children")
-    public ResponseEntity<List<CounterpartDto>> children(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.children(id));
+    public ResponseEntity<List<CounterpartDto>> children(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(service.children(id, principal.getId()));
     }
 
     @PostMapping
-    public ResponseEntity<CounterpartDto> create(
+    public ResponseEntity<?> create(
             @Valid @RequestBody CreateCounterpartRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(service.create(request, principal.getId()));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(service.create(request, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of("error", "Access denied"));
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CounterpartDto> update(
+    public ResponseEntity<?> update(
             @PathVariable UUID id,
             @Valid @RequestBody CreateCounterpartRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(service.update(id, request, principal.getId()));
+        try {
+            return ResponseEntity.ok(service.update(id, request, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<?> delete(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
-        service.delete(id, principal.getId());
-        return ResponseEntity.noContent().build();
+        try {
+            service.delete(id, principal.getId());
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+        }
     }
 
     /**
@@ -81,10 +109,21 @@ public class CounterpartController {
      * bugüne kadar.
      */
     @GetMapping("/{id}/statement")
-    public ResponseEntity<CounterpartStatementDto> statement(
+    public ResponseEntity<?> statement(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        // v1.6.23.20: counterpart erişim kontrolü — statement leak'i kapatır.
+        try {
+            service.get(id, principal.getId());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        }
         return ResponseEntity.ok(ledgerService.getStatement(id, from, to));
     }
 }

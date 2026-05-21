@@ -57,11 +57,16 @@ public class PhoneController {
 
     // ── DEVICES ───────────────────────────────────────────────
 
+    /**
+     * v1.6.23.20 (Security WP TODO 15b1dd12): multi-tenant filter.
+     * USER yalnız erişebildiği işletmelerin telefonlarını görür; ADMIN hepsi.
+     */
     @GetMapping("/phone-devices")
     public ResponseEntity<List<PhoneDeviceDto>> listDevices(
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(name = "business_id", required = false) UUID businessId,
             @RequestParam(name = "include_inactive", defaultValue = "false") boolean includeInactive) {
-        return ResponseEntity.ok(service.listDevices(businessId, includeInactive));
+        return ResponseEntity.ok(service.listDevices(businessId, includeInactive, principal.getId()));
     }
 
     @PostMapping("/phone-devices")
@@ -71,6 +76,9 @@ public class PhoneController {
         try {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(service.create(req, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Access denied"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -83,17 +91,26 @@ public class PhoneController {
             @AuthenticationPrincipal UserPrincipal principal) {
         try {
             return ResponseEntity.ok(service.update(id, req, principal.getId()));
+        } catch (SecurityException e) {
+            // Existence reveal kapalı — 404 dön.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Phone device bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/phone-devices/{id}")
-    public ResponseEntity<Void> deleteDevice(
+    public ResponseEntity<?> deleteDevice(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
-        service.softDelete(id, principal.getId());
-        return ResponseEntity.noContent().build();
+        try {
+            service.softDelete(id, principal.getId());
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Phone device bulunamadi"));
+        }
     }
 
     // ── DEVICE BANKS (subresource) ────────────────────────────
@@ -105,25 +122,34 @@ public class PhoneController {
             @AuthenticationPrincipal UserPrincipal principal) {
         try {
             return ResponseEntity.ok(service.addBank(id, req, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Phone device bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/phone-devices/{id}/banks/{bankName}")
-    public ResponseEntity<PhoneDeviceDto> removeBank(
+    public ResponseEntity<?> removeBank(
             @PathVariable UUID id,
             @PathVariable String bankName,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(service.removeBank(id, bankName, principal.getId()));
+        try {
+            return ResponseEntity.ok(service.removeBank(id, bankName, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Phone device bulunamadi"));
+        }
     }
 
     // ── COUNTERPART expand (for /counterparts/{id}/phones) ────
 
     @GetMapping("/counterparts/{counterpartId}/phones")
     public ResponseEntity<List<PhoneDeviceDto>> listByCounterpart(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID counterpartId) {
-        return ResponseEntity.ok(service.listByCounterpart(counterpartId));
+        return ResponseEntity.ok(service.listByCounterpart(counterpartId, principal.getId()));
     }
 
     // ── ADMIN: master data reload ─────────────────────────────

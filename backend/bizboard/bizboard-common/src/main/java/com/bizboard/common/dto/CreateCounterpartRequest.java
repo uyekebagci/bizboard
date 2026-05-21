@@ -4,8 +4,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class CreateCounterpartRequest {
+
+    /**
+     * v1.6.23.20 (Security WP / arch-rules §1.1): counterpart tenant binding.
+     * UPDATE'lerde verilmezse mevcut değer korunur (immutable tercih edilebilir).
+     */
+    @JsonProperty("business_id")
+    private UUID businessId;
 
     @NotBlank
     private String name;

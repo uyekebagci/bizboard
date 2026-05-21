@@ -39,37 +39,62 @@ public class PosDeviceController {
     public ResponseEntity<List<PosDeviceDto>> list(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(name = "include_inactive", defaultValue = "false") boolean includeInactive) {
-        return ResponseEntity.ok(service.list(includeInactive));
+        return ResponseEntity.ok(service.list(includeInactive, principal.getId()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PosDeviceDto> get(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.get(id));
+    public ResponseEntity<?> get(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id) {
+        try {
+            return ResponseEntity.ok(service.get(id, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping
-    public ResponseEntity<PosDeviceDto> create(
+    public ResponseEntity<?> create(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreatePosDeviceRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(service.create(req, principal.getId()));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(service.create(req, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of("error", "Access denied"));
+        }
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<PosDeviceDto> update(
+    public ResponseEntity<?> update(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id,
             @Valid @RequestBody UpdatePosDeviceRequest req) {
-        return ResponseEntity.ok(service.update(id, req, principal.getId()));
+        try {
+            return ResponseEntity.ok(service.update(id, req, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+        }
     }
 
     /** Soft delete (is_active=false). Tx referansları korunur. */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<?> delete(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id) {
-        service.delete(id, principal.getId());
-        return ResponseEntity.noContent().build();
+        try {
+            service.delete(id, principal.getId());
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+        }
     }
 
     /**
@@ -77,23 +102,33 @@ public class PosDeviceController {
      * Detay sayfası "Tüm İşlemler" listesini doldurur.
      */
     @GetMapping("/{id}/transactions")
-    public ResponseEntity<List<com.bizboard.common.dto.TransactionDto>> deviceTransactions(
+    public ResponseEntity<?> deviceTransactions(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id) {
-        return ResponseEntity.ok(service.getDeviceTransactions(id));
+        try {
+            return ResponseEntity.ok(service.getDeviceTransactions(id, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+        }
     }
 
     /**
      * v1.6.21 (WP-4): POS analytics — gün-gün çekim/komisyon/net/settled count.
-     *
-     * <p>{@code GET /pos-devices/analytics?from=2026-05-01&to=2026-05-20&deviceId=...}</p>
+     * v1.6.23.20: deviceId verilirse tenant guard; verilmezse actor'ın
+     * erişebildiği TÜM device'ların analytics'i (servis tarafında filtreli).
      */
     @GetMapping("/analytics")
-    public ResponseEntity<PosAnalyticsDto> analytics(
+    public ResponseEntity<?> analytics(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(name = "deviceId", required = false) UUID deviceId) {
-        return ResponseEntity.ok(analyticsService.analytics(from, to, deviceId));
+        try {
+            return ResponseEntity.ok(analyticsService.analytics(from, to, deviceId, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+        }
     }
 }

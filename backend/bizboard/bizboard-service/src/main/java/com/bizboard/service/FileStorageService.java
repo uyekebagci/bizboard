@@ -208,6 +208,12 @@ public class FileStorageService {
         } else {
             files = fileUploadRepository.findByEntityTypeAndEntityIdAndAdminOnlyFalseOrderByCreatedAtDesc(entityType, entityId);
         }
+        // v1.6.23.20 (Security WP / arch-rules §1.3): per-file canRead — non-business
+        // entityType (transaction/debt/note/...) için cross-tenant fiş leakage'ı
+        // önler. canRead non-business non-uploader için zaten false döner.
+        if (!isAdmin) {
+            files = files.stream().filter(f -> canRead(userId, false, f)).toList();
+        }
         return files.stream().map(this::toDto).toList();
     }
 

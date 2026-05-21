@@ -98,15 +98,22 @@ public class PosService {
     }
 
     /**
-     * v1.6.23.9 (TODO ddda6029): Bekleyen (settled olmamış) POS tx'ler.
-     * deviceId verilirse o cihazın, verilmezse tüm cihazların.
+     * v1.6.23.9 (TODO ddda6029) + v1.6.23.20 (Security WP / arch-rules §1.3.B):
+     * Bekleyen (settled olmamış) POS tx'ler. Actor'ın erişebildiği tenant'lara
+     * filtrelidir; deviceId verilirse o cihaz erişilebilir bir tenant'ta
+     * olmalı, yoksa boş döner.
      */
     @Transactional(readOnly = true)
-    public List<com.bizboard.common.dto.TransactionDto> getUnsettledTransactions(UUID deviceId) {
+    public List<com.bizboard.common.dto.TransactionDto> getUnsettledTransactions(UUID deviceId, UUID actorUserId) {
+        List<UUID> businessIds = accessibleBusinessIds(actorUserId);
+        if (businessIds.isEmpty()) return List.of();
         List<Transaction> txs = deviceId != null
                 ? transactionRepository.findUnsettledPosTransactionsByDevice(deviceId)
                 : transactionRepository.findUnsettledPosTransactions();
-        return txs.stream().map(DtoMapper::toTransactionDto).toList();
+        return txs.stream()
+                .filter(t -> t.getBusiness() != null && businessIds.contains(t.getBusiness().getId()))
+                .map(DtoMapper::toTransactionDto)
+                .toList();
     }
 
     /**

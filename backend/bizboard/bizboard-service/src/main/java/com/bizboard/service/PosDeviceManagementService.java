@@ -4,9 +4,11 @@ import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.CreatePosDeviceRequest;
 import com.bizboard.common.dto.PosDeviceDto;
 import com.bizboard.common.dto.UpdatePosDeviceRequest;
+import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Counterpart;
 import com.bizboard.common.entity.PosDevice;
 import com.bizboard.common.entity.User;
+import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CounterpartRepository;
 import com.bizboard.repository.PosDeviceRepository;
 import com.bizboard.repository.UserRepository;
@@ -31,37 +33,60 @@ public class PosDeviceManagementService {
     private final PosDeviceRepository repository;
     private final CounterpartRepository counterpartRepository;
     private final UserRepository userRepository;
+    private final BusinessRepository businessRepository;
+    private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
     // v1.6.23.13 (TODO 5cee5f99): device detay tx listing için
     private final com.bizboard.repository.TransactionRepository transactionRepository;
 
     /**
-     * v1.6.23.13: POS device'a ait tüm POS tx'leri (en yeni önce).
+     * v1.6.23.13 / v1.6.23.20: POS device'a ait tüm POS tx'leri (en yeni önce).
+     * Cross-tenant erişim engellenir.
      */
     @Transactional(readOnly = true)
-    public List<com.bizboard.common.dto.TransactionDto> getDeviceTransactions(UUID deviceId) {
+    public List<com.bizboard.common.dto.TransactionDto> getDeviceTransactions(UUID deviceId, UUID actorUserId) {
+        PosDevice d = repository.findById(deviceId)
+                .orElseThrow(() -> new IllegalArgumentException("POS cihazi bulunamadi: " + deviceId));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                d.getBusiness() != null ? d.getBusiness().getId() : null);
         return transactionRepository.findByPosDeviceIdOrderByDateDesc(deviceId).stream()
                 .map(DtoMapper::toTransactionDto)
                 .toList();
     }
 
+    /**
+     * v1.6.23.20 (Security WP / arch-rules §1.3.B): list multi-tenant filter.
+     */
     @Transactional(readOnly = true)
-    public List<PosDeviceDto> list(boolean includeInactive) {
+    public List<PosDeviceDto> list(boolean includeInactive, UUID actorUserId) {
+        List<UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        if (allowed.isEmpty()) return List.of();
         List<PosDevice> all = includeInactive
-                ? repository.findAllByOrderByActiveDescNameAsc()
-                : repository.findByActiveTrueOrderByNameAsc();
+                ? repository.findByBusinessIdInOrderByActiveDescNameAsc(allowed)
+                : repository.findByActiveTrueAndBusinessIdInOrderByNameAsc(allowed);
         return all.stream().map(PosDeviceManagementService::toDto).toList();
     }
 
     @Transactional(readOnly = true)
-    public PosDeviceDto get(UUID id) {
-        return toDto(repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("POS cihazi bulunamadi: " + id)));
+    public PosDeviceDto get(UUID id, UUID actorUserId) {
+        PosDevice d = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("POS cihazi bulunamadi: " + id));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                d.getBusiness() != null ? d.getBusiness().getId() : null);
+        return toDto(d);
     }
 
     @Transactional
     public PosDeviceDto create(CreatePosDeviceRequest req, UUID actorUserId) {
         User actor = lookupActor(actorUserId);
+
+        if (req.getBusinessId() == null) {
+            throw new IllegalArgumentException("business_id zorunlu");
+        }
+        Business business = businessRepository.findById(req.getBusinessId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "business_id bulunamadi: " + req.getBusinessId()));
+        accessGuard.assertCanAccessBusiness(actorUserId, business.getId());
 
         Counterpart owner = null;
         if (req.getOwnerCounterpartId() != null) {
@@ -71,6 +96,7 @@ public class PosDeviceManagementService {
         }
 
         PosDevice d = PosDevice.builder()
+                .business(business)
                 .name(req.getName().trim())
                 .ownerCounterpart(owner)
                 .bankName(blankToNull(req.getBankName()))
@@ -100,6 +126,8 @@ public class PosDeviceManagementService {
     public PosDeviceDto update(UUID id, UpdatePosDeviceRequest req, UUID actorUserId) {
         PosDevice d = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("POS cihazi bulunamadi: " + id));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                d.getBusiness() != null ? d.getBusiness().getId() : null);
         User actor = lookupActor(actorUserId);
         Map<String, Object> changes = new HashMap<>();
 
@@ -159,6 +187,8 @@ public class PosDeviceManagementService {
     public void delete(UUID id, UUID actorUserId) {
         PosDevice d = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("POS cihazi bulunamadi: " + id));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                d.getBusiness() != null ? d.getBusiness().getId() : null);
         User actor = lookupActor(actorUserId);
 
         d.setActive(false);
@@ -188,6 +218,8 @@ public class PosDeviceManagementService {
     public static PosDeviceDto toDto(PosDevice d) {
         return PosDeviceDto.builder()
                 .id(d.getId())
+                .businessId(d.getBusiness() != null ? d.getBusiness().getId() : null)
+                .businessName(d.getBusiness() != null ? d.getBusiness().getName() : null)
                 .name(d.getName())
                 .ownerCounterpartId(d.getOwnerCounterpart() != null ? d.getOwnerCounterpart().getId() : null)
                 .ownerCounterpartName(d.getOwnerCounterpart() != null ? d.getOwnerCounterpart().getName() : null)

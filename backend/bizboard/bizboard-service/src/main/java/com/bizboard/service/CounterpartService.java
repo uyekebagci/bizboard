@@ -3,10 +3,12 @@ package com.bizboard.service;
 import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.CounterpartDto;
 import com.bizboard.common.dto.CreateCounterpartRequest;
+import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Counterpart;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.CounterpartRole;
 import com.bizboard.common.util.TaxIdValidator;
+import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CounterpartRepository;
 import com.bizboard.repository.DebtRepository;
 import com.bizboard.repository.UserRepository;
@@ -39,28 +41,28 @@ public class CounterpartService {
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
     private final DebtRepository debtRepository;
-
-    @Transactional(readOnly = true)
-    public List<CounterpartDto> list(String role) {
-        return list(role, null);
-    }
+    private final BusinessRepository businessRepository;
+    private final BusinessAccessGuard accessGuard;
 
     /**
-     * v1.6.20 (WP-3): role + kind kombinasyon filtresi.
-     * role: CUSTOMER/SUPPLIER/BOTH/OTHER; kind: PERSON/FIRM. Boş → tümü.
+     * v1.6.23.20 (Security WP / arch-rules §1.3.B): tenant-aware list.
      */
     @Transactional(readOnly = true)
-    public List<CounterpartDto> list(String role, String kind) {
+    public List<CounterpartDto> list(String role, String kind, UUID actorUserId) {
+        List<UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        if (allowed.isEmpty()) return List.of();
+
         java.util.stream.Stream<Counterpart> base;
         if (role != null && !role.isBlank()) {
-            base = repository.findByRoleOrderByNameAsc(parseRole(role)).stream();
+            base = repository.findByBusinessIdInAndRoleOrderByNameAsc(allowed, parseRole(role)).stream();
         } else if (kind != null && !kind.isBlank()) {
             com.bizboard.common.enums.CounterpartKind k =
                     com.bizboard.common.enums.CounterpartKind.valueOf(
                             kind.trim().toUpperCase(java.util.Locale.ENGLISH));
-            return repository.findByKindOrderByNameAsc(k).stream().map(this::toDto).toList();
+            return repository.findByBusinessIdInAndKindOrderByNameAsc(allowed, k).stream()
+                    .map(this::toDto).toList();
         } else {
-            base = repository.findAllByOrderByNameAsc().stream();
+            base = repository.findByBusinessIdInOrderByNameAsc(allowed).stream();
         }
         if (kind != null && !kind.isBlank()) {
             com.bizboard.common.enums.CounterpartKind k =
@@ -71,22 +73,36 @@ public class CounterpartService {
         return base.map(this::toDto).toList();
     }
 
-    /** v1.6.20 (WP-3): Alt firmalar (parent_id == :id). */
+    /** v1.6.20 (WP-3) + v1.6.23.20: Alt firmalar — tenant filtreli. */
     @Transactional(readOnly = true)
-    public List<CounterpartDto> children(UUID parentId) {
-        return repository.findByParentIdOrderByNameAsc(parentId).stream()
+    public List<CounterpartDto> children(UUID parentId, UUID actorUserId) {
+        List<UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        if (allowed.isEmpty()) return List.of();
+        return repository.findByBusinessIdInAndParentIdOrderByNameAsc(allowed, parentId).stream()
                 .map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
-    public CounterpartDto get(UUID id) {
-        return toDto(repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi")));
+    public CounterpartDto get(UUID id, UUID actorUserId) {
+        Counterpart c = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                c.getBusiness() != null ? c.getBusiness().getId() : null);
+        return toDto(c);
     }
 
     @Transactional
     public CounterpartDto create(CreateCounterpartRequest req, UUID actorUserId) {
         validateTaxId(req.getTaxId());
+        // v1.6.23.20: tenant binding zorunlu — actor erişim kontrolü.
+        if (req.getBusinessId() == null) {
+            throw new IllegalArgumentException("business_id zorunlu");
+        }
+        Business business = businessRepository.findById(req.getBusinessId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "business_id bulunamadi: " + req.getBusinessId()));
+        accessGuard.assertCanAccessBusiness(actorUserId, business.getId());
+
         if (req.getTaxId() != null && !req.getTaxId().isBlank()) {
             repository.findByTaxId(req.getTaxId()).ifPresent(existing -> {
                 throw new IllegalArgumentException("Bu vergi numarasi zaten kayitli: " + existing.getName());
@@ -94,6 +110,7 @@ public class CounterpartService {
         }
 
         Counterpart c = Counterpart.builder()
+                .business(business)
                 .name(req.getName())
                 .taxId(blankToNull(req.getTaxId()))
                 .taxOffice(blankToNull(req.getTaxOffice()))
@@ -129,6 +146,9 @@ public class CounterpartService {
     public CounterpartDto update(UUID id, CreateCounterpartRequest req, UUID actorUserId) {
         Counterpart c = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi"));
+        // v1.6.23.20: cross-tenant update engeli.
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                c.getBusiness() != null ? c.getBusiness().getId() : null);
 
         Map<String, Object> changes = new HashMap<>();
 
@@ -210,6 +230,9 @@ public class CounterpartService {
     public void delete(UUID id, UUID actorUserId) {
         Counterpart c = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi"));
+        // v1.6.23.20: cross-tenant delete engeli.
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                c.getBusiness() != null ? c.getBusiness().getId() : null);
         String name = c.getName();
 
         // v1.5.1: bağlı borç varsa Postgres FK 500 yerine temiz 400 dön.
@@ -263,6 +286,8 @@ public class CounterpartService {
     public CounterpartDto toDto(Counterpart c) {
         return CounterpartDto.builder()
                 .id(c.getId())
+                .businessId(c.getBusiness() != null ? c.getBusiness().getId() : null)
+                .businessName(c.getBusiness() != null ? c.getBusiness().getName() : null)
                 .name(c.getName())
                 .taxId(c.getTaxId())
                 .taxOffice(c.getTaxOffice())

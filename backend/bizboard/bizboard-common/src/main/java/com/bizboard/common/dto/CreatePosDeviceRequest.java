@@ -2,6 +2,7 @@ package com.bizboard.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -13,6 +14,13 @@ import java.util.UUID;
  */
 @Data
 public class CreatePosDeviceRequest {
+
+    /**
+     * v1.6.23.20 (Security WP / arch-rules §1.1): tenant binding zorunlu.
+     */
+    @NotNull
+    @JsonProperty("business_id")
+    private UUID businessId;
 
     @NotBlank
     @Size(max = 120)

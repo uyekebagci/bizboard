@@ -14,6 +14,13 @@ public class CounterpartDto {
 
     private UUID id;
 
+    /** v1.6.23.20 (Security WP / arch-rules §1.1): tenant binding. */
+    @JsonProperty("business_id")
+    private UUID businessId;
+
+    @JsonProperty("business_name")
+    private String businessName;
+
     private String name;
 
     @JsonProperty("tax_id")

@@ -26,6 +26,7 @@ public class PhoneDeviceService {
     private final CounterpartRepository counterpartRepository;
     private final AuditLogService auditLogService;
     private final UserRepository userRepository;
+    private final BusinessAccessGuard accessGuard;
 
     @Transactional(readOnly = true)
     public List<PhoneBrandDto> listBrands(boolean includeInactive) {
@@ -54,29 +55,54 @@ public class PhoneDeviceService {
         return rows.stream().map(this::toModelDto).toList();
     }
 
+    /**
+     * v1.6.23.20 (Security WP TODO 15b1dd12): list multi-tenant filter.
+     *
+     * <p>businessId param verilirse o işletmeye actor erişebiliyor mu kontrol
+     * edilir. Verilmezse actor'ın erişebildiği TÜM işletmelerin telefonları
+     * döner — cross-tenant LEAK kapalıdır.</p>
+     */
     @Transactional(readOnly = true)
-    public List<PhoneDeviceDto> listDevices(UUID businessId, boolean includeInactive) {
-        List<PhoneDevice> rows;
+    public List<PhoneDeviceDto> listDevices(UUID businessId, boolean includeInactive, UUID actorUserId) {
+        List<UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        if (allowed.isEmpty()) return List.of();
+
+        List<UUID> effective;
         if (businessId != null) {
-            rows = includeInactive
-                    ? deviceRepository.findByBusinessIdOrderByDeviceNumberAsc(businessId)
-                    : deviceRepository.findByBusinessIdAndActiveTrueOrderByDeviceNumberAsc(businessId);
+            // Explicit business — actor erişebiliyor mu?
+            if (!allowed.contains(businessId)) return List.of();
+            effective = List.of(businessId);
         } else {
-            rows = deviceRepository.findAll();
+            effective = allowed;
         }
+
+        List<PhoneDevice> rows = includeInactive
+                ? deviceRepository.findByBusinessIdInOrderByDeviceNumberAsc(effective)
+                : deviceRepository.findByBusinessIdInAndActiveTrueOrderByDeviceNumberAsc(effective);
         return rows.stream().map(this::toDeviceDto).toList();
     }
 
+    /**
+     * v1.6.23.20 (Security WP TODO 15b1dd12): counterpart-bazlı listede de
+     * sadece erişebildiği tenant'ların telefonları döner.
+     */
     @Transactional(readOnly = true)
-    public List<PhoneDeviceDto> listByCounterpart(UUID counterpartId) {
+    public List<PhoneDeviceDto> listByCounterpart(UUID counterpartId, UUID actorUserId) {
+        List<UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        if (allowed.isEmpty()) return List.of();
         return deviceRepository.findByAssignedCounterpartIdOrderByDeviceNumberAsc(counterpartId)
-                .stream().map(this::toDeviceDto).toList();
+                .stream()
+                .filter(d -> d.getBusiness() != null && allowed.contains(d.getBusiness().getId()))
+                .map(this::toDeviceDto)
+                .toList();
     }
 
     @Transactional
     public PhoneDeviceDto create(CreatePhoneDeviceRequest req, UUID actorUserId) {
         Business business = businessRepository.findById(req.getBusinessId())
                 .orElseThrow(() -> new IllegalArgumentException("Business bulunamadi"));
+        // v1.6.23.20 (Security WP TODO 15b1dd12): cross-tenant create engeli.
+        accessGuard.assertCanAccessBusiness(actorUserId, business.getId());
 
         validateBrandModel(req.getBrandId(), req.getModelId(), req.getCustomModel());
 
@@ -138,6 +164,9 @@ public class PhoneDeviceService {
     public PhoneDeviceDto update(UUID id, UpdatePhoneDeviceRequest req, UUID actorUserId) {
         PhoneDevice device = deviceRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Phone device bulunamadi"));
+        // v1.6.23.20 (Security WP TODO 15b1dd12): cross-tenant update engeli.
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                device.getBusiness() != null ? device.getBusiness().getId() : null);
 
         if (req.getPhoneNumber() != null) device.setPhoneNumber(req.getPhoneNumber());
         if (req.getNotes() != null) device.setNotes(req.getNotes());
@@ -187,6 +216,8 @@ public class PhoneDeviceService {
     public void softDelete(UUID id, UUID actorUserId) {
         PhoneDevice device = deviceRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Phone device bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                device.getBusiness() != null ? device.getBusiness().getId() : null);
         device.setActive(false);
         deviceRepository.save(device);
         recordAudit("PHONE_DEVICE_DEACTIVATED", actorUserId, device,
@@ -199,6 +230,8 @@ public class PhoneDeviceService {
     public PhoneDeviceDto addBank(UUID deviceId, PhoneDeviceBankDto req, UUID actorUserId) {
         PhoneDevice device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("Phone device bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                device.getBusiness() != null ? device.getBusiness().getId() : null);
         if (req.getBankName() == null || req.getBankName().isBlank()) {
             throw new IllegalArgumentException("bank_name zorunlu");
         }
@@ -228,6 +261,8 @@ public class PhoneDeviceService {
     public PhoneDeviceDto removeBank(UUID deviceId, String bankName, UUID actorUserId) {
         PhoneDevice device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("Phone device bulunamadi"));
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                device.getBusiness() != null ? device.getBusiness().getId() : null);
         device.getBanks().removeIf(b -> b.getBankName().equalsIgnoreCase(bankName));
         device = deviceRepository.save(device);
         recordAudit("PHONE_BANK_REMOVED", actorUserId, device,
