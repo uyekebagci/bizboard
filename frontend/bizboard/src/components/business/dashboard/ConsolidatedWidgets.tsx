@@ -8,12 +8,14 @@
  */
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   TrendingUp, TrendingDown, Wallet, CreditCard, Banknote, Building2,
   HandCoins, AlertCircle, CalendarClock, Bell, Lock, ChevronRight,
 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
+import { WidgetDetailModal } from "./WidgetDetailModal";
 
 interface Props {
   data: ConsolidatedDashboard;
@@ -79,8 +81,17 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   // v1.6.23.9 (TODO 8c7ffaac): bekleyen POS tahsilatı (settle olunca eklenecek).
   const pendingPos = c.pending_pos_receivables ?? 0;
   const expectedNet = c.expected_net ?? c.net;
+  // v1.6.23.15 (TODO d0ccb7f0): widget tıklanabilir → detay modal
+  const [showDetail, setShowDetail] = useState(false);
   return (
-    <section className="card p-5 bg-gradient-to-br from-brand-700 to-brand-900 text-white">
+    <>
+    <section
+      onClick={() => setShowDetail(true)}
+      className="card p-5 bg-gradient-to-br from-brand-700 to-brand-900 text-white cursor-pointer hover:ring-1 hover:ring-brand-400 transition-all"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowDetail(true); } }}
+    >
       <p className="text-brand-200 text-xs uppercase tracking-wider mb-1">Konsolide Net</p>
       <p className="text-4xl font-bold">{formatCurrency(c.net, "TRY")}</p>
 
@@ -120,6 +131,56 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
         </div>
       )}
     </section>
+    <WidgetDetailModal
+      open={showDetail}
+      onClose={() => setShowDetail(false)}
+      title="Konsolide Pozisyon — Detay"
+      subtitle="DGR'nin tüm finansal pozisyonu"
+      size="md"
+    >
+      <div className="space-y-3 text-sm text-surface-200">
+        <DetailRow label="Toplam Nakit (kasa + cebde)" value={c.total_cash} tone="pos" />
+        <DetailRow label="Banka Bakiyeleri (CHECKING+SAVINGS)" value={c.total_bank_balance ?? 0} tone="neutral" />
+        <DetailRow label="Bekleyen POS Tahsilatı (settle bekliyor)" value={pendingPos} tone={pendingPos > 0 ? "warn" : "neutral"} />
+        <DetailRow label="Alacaklar (DGR'ye gelecek)" value={c.receivables} tone="pos" />
+        <DetailRow label="Verecekler (DGR'den gidecek)" value={-Math.abs(c.payables)} tone="neg" />
+        <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" />
+        <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" />
+        <div className="pt-2 border-t border-surface-700">
+          <DetailRow label="Şimdiki Net" value={c.net} tone={sign === "pos" ? "pos" : sign === "neg" ? "neg" : "neutral"} bold />
+          {pendingPos > 0 && (
+            <DetailRow label="Beklenen Net (settle sonrası)" value={expectedNet} tone="pos" bold />
+          )}
+        </div>
+        <p className="text-[11px] text-surface-400 pt-2">
+          Formül: total_cash + bank_balance + receivables − payables − cc − loan
+        </p>
+      </div>
+    </WidgetDetailModal>
+    </>
+  );
+}
+
+function DetailRow({
+  label, value, tone, bold,
+}: {
+  label: string; value: number;
+  tone: "pos" | "neg" | "warn" | "neutral";
+  bold?: boolean;
+}) {
+  const colorClass = {
+    pos: "text-emerald-300",
+    neg: "text-red-300",
+    warn: "text-amber-300",
+    neutral: "text-white",
+  }[tone];
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-surface-300 text-xs">{label}</span>
+      <span className={cn("font-mono", bold && "font-bold text-base", !bold && "text-sm", colorClass)}>
+        {formatCurrency(value, "TRY")}
+      </span>
+    </div>
   );
 }
 
@@ -142,10 +203,22 @@ function PositionStat({ label, value, tone }: { label: string; value: number; to
 
 function TodayClosingCard({ d, onCloseDay }: { d: ConsolidatedDashboard; onCloseDay?: () => void }) {
   const t = d.today_closing;
+  // v1.6.23.15 (TODO d0ccb7f0): tıklanabilir → detay modal
+  const [showDetail, setShowDetail] = useState(false);
   return (
-    <section className={cn(
-      "card p-4 border",
-      t.closed ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5",
+    <>
+    <section
+      onClick={(e) => {
+        // "Günü Kapat" butonuna tıklanmışsa modal açma
+        const target = e.target as HTMLElement;
+        if (target.closest("button")) return;
+        setShowDetail(true);
+      }}
+      className={cn(
+      "card p-4 border cursor-pointer hover:ring-1 transition-all",
+      t.closed
+        ? "border-emerald-500/20 bg-emerald-500/5 hover:ring-emerald-500/40"
+        : "border-amber-500/30 bg-amber-500/5 hover:ring-amber-500/40",
     )}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
@@ -190,6 +263,45 @@ function TodayClosingCard({ d, onCloseDay }: { d: ConsolidatedDashboard; onClose
         </div>
       )}
     </section>
+    {/* v1.6.23.15 (TODO d0ccb7f0): Bugünün kasa detayı modal */}
+    <WidgetDetailModal
+      open={showDetail}
+      onClose={() => setShowDetail(false)}
+      title="Bugünün Kasa Durumu — Detay"
+      subtitle={t.closed ? "Kapanmış (final)" : "Açık (gün içi)"}
+      size="md"
+    >
+      <div className="space-y-3 text-sm text-surface-200">
+        <DetailRow label="Açılış Bakiyesi" value={t.opening_balance} tone="neutral" />
+        <DetailRow label="Bugün Gelen (NAKIT in)" value={t.incoming} tone="pos" />
+        <DetailRow label="Bugün Giden (NAKIT out)" value={-Math.abs(t.outgoing)} tone="neg" />
+        <div className="pt-2 border-t border-surface-700">
+          <DetailRow
+            label="Hesaplanan Kapanış"
+            value={t.computed_closing}
+            tone="neutral"
+            bold
+          />
+          {t.actual_balance != null && (
+            <>
+              <DetailRow label="Fiziksel Sayım" value={t.actual_balance} tone="neutral" bold />
+              {t.difference != null && t.difference !== 0 && (
+                <DetailRow
+                  label="Fark (sayım − hesap)"
+                  value={t.difference}
+                  tone={t.difference < 0 ? "neg" : "pos"}
+                />
+              )}
+            </>
+          )}
+        </div>
+        <p className="text-[11px] text-surface-400 pt-2">
+          Formül: opening_balance + NAKIT income − NAKIT expense = computed_closing.
+          Fiziksel sayım girilince fark hesaplanır.
+        </p>
+      </div>
+    </WidgetDetailModal>
+    </>
   );
 }
 

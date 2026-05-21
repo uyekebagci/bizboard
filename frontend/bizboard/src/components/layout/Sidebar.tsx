@@ -23,8 +23,9 @@ import {
   LayoutDashboard, Building2, Plus, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
-  Search, X, Smartphone,
+  Search, X, Smartphone, ChevronDown, ChevronRight, Pin, PinOff,
 } from "lucide-react";
+import { useBusinesses } from "@/hooks/useBusinesses";
 import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -210,6 +211,12 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
                 ))}
               </ul>
             )}
+
+            {/* v1.6.23.15 (TODO 815006ad): İşletmeler collapsible + pin */}
+            <BusinessesSection
+              currentPath={pathname || ""}
+              onItemClick={() => onMobileOpenChange(false)}
+            />
           </nav>
         </div>
       </aside>
@@ -248,5 +255,143 @@ function SidebarItem({
         </span>
       )}
     </Link>
+  );
+}
+
+// v1.6.23.15 (TODO 815006ad): Sidebar'da işletmeler collapsible bölümü + pin.
+// Pin durumu localStorage'da tutulur (backend persistence ileride eklenebilir).
+
+const PIN_STORAGE_KEY = "bb_pinned_businesses_v1";
+
+function loadPins(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(PIN_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePins(pins: Record<string, number>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(pins));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+function BusinessesSection({
+  currentPath,
+  onItemClick,
+}: {
+  currentPath: string;
+  onItemClick: () => void;
+}) {
+  const { businesses } = useBusinesses();
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("bb_sidebar_biz_open") !== "false";
+  });
+  const [pins, setPins] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    setPins(loadPins());
+  }, []);
+
+  function toggleOpen() {
+    const next = !open;
+    setOpen(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bb_sidebar_biz_open", next ? "true" : "false");
+    }
+  }
+
+  function togglePin(id: string) {
+    setPins((prev) => {
+      const next = { ...prev };
+      if (next[id]) {
+        delete next[id];
+      } else {
+        next[id] = Date.now();
+      }
+      savePins(next);
+      return next;
+    });
+  }
+
+  const sorted = useMemo(() => {
+    const collator = new Intl.Collator("tr", { sensitivity: "base" });
+    const items = [...(businesses || [])];
+    items.sort((a, b) => {
+      const ap = pins[a.id];
+      const bp = pins[b.id];
+      if (ap && !bp) return -1;
+      if (!ap && bp) return 1;
+      if (ap && bp) return ap - bp; // ilk pinlenen üstte
+      return collator.compare(a.name, b.name);
+    });
+    return items;
+  }, [businesses, pins]);
+
+  if (!businesses || businesses.length === 0) return null;
+
+  return (
+    <div className="mt-4 pt-3 border-t border-surface-700">
+      <button
+        type="button"
+        onClick={toggleOpen}
+        className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] uppercase tracking-wider text-surface-400 hover:text-white"
+        aria-expanded={open}
+      >
+        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        <span className="flex-1 text-left">İşletmeler</span>
+        <span className="text-surface-500 normal-case tracking-normal text-[10px]">
+          {sorted.length}
+        </span>
+      </button>
+      {open && (
+        <ul className="space-y-0.5 mt-1">
+          {sorted.map((b) => {
+            const active = currentPath === `/business/${b.id}`;
+            const pinned = !!pins[b.id];
+            return (
+              <li key={b.id} className="group relative">
+                <Link
+                  href={`/business/${b.id}`}
+                  onClick={onItemClick}
+                  className={cn(
+                    "relative flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors",
+                    active
+                      ? "bg-brand-700/30 text-white"
+                      : "text-surface-300 hover:bg-surface-800 hover:text-white",
+                    pinned && "border-l-2 border-brand-500 -ml-[2px] pl-[10px]"
+                  )}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <Building2 size={14} className={active ? "text-brand-300" : "text-surface-400"} />
+                  <span className="flex-1 truncate text-[13px]">{b.name}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(b.id); }}
+                  className={cn(
+                    "absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded transition-opacity",
+                    pinned
+                      ? "opacity-100 text-brand-400 hover:text-brand-300"
+                      : "opacity-0 group-hover:opacity-100 text-surface-400 hover:text-white"
+                  )}
+                  aria-label={pinned ? "Unpin" : "Pin"}
+                  title={pinned ? "Sabitlemeyi kaldır" : "Sabitle (üste taşı)"}
+                >
+                  {pinned ? <Pin size={12} /> : <PinOff size={12} />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
