@@ -98,6 +98,16 @@ public class ConsolidatedDashboardService {
                 .findByDirectionAndSettledFalseOrderByDueDateAsc(DebtDirection.RECEIVABLE);
         BigDecimal totalReceivables = sumDebt(receivableDebts);
 
+        // ── PENDING POS RECEIVABLES (v1.6.23.9 TODO 8c7ffaac) ────────
+        // Settled olmamış POS tx'lerinin net toplamı. Net'e DAHIL DEĞİL —
+        // settled olunca bank_balance'a yansıyacak (çift sayım önlemi).
+        BigDecimal pendingPosReceivables = computePendingPosReceivables();
+        BigDecimal netCurrent = totalCash
+                .add(totalBankBalance)
+                .add(totalReceivables)
+                .subtract(totalPayables);
+        BigDecimal expectedNet = netCurrent.add(pendingPosReceivables);
+
         // ── CONSOLIDATED POSITION ────────────────────────────────────
         // KK / loan rezerve — WP-5 öncesi 0.
         // v1.6.23.7: net hesabı artık total_cash + total_bank_balance dahil.
@@ -109,10 +119,9 @@ public class ConsolidatedDashboardService {
                         .loanPrincipal(BigDecimal.ZERO)
                         .receivables(totalReceivables)
                         .payables(totalPayables)
-                        .net(totalCash
-                                .add(totalBankBalance)
-                                .add(totalReceivables)
-                                .subtract(totalPayables))
+                        .net(netCurrent)
+                        .pendingPosReceivables(pendingPosReceivables)
+                        .expectedNet(expectedNet)
                         .build();
 
         // ── TODAY CLOSING ────────────────────────────────────────────
@@ -318,5 +327,25 @@ public class ConsolidatedDashboardService {
                 .map(Transaction::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * v1.6.23.9 (TODO 8c7ffaac): Bekleyen (settled olmamış) POS tx'lerinin
+     * net toplam'ı. Hesap: SUM(amount × (1 − applied_pos_rate/100)).
+     * applied_pos_rate yoksa pos_rate fallback.
+     */
+    private BigDecimal computePendingPosReceivables() {
+        List<Transaction> unsettled = transactionRepository.findUnsettledPosTransactions();
+        BigDecimal total = BigDecimal.ZERO;
+        for (Transaction t : unsettled) {
+            if (t.getAmount() == null) continue;
+            BigDecimal rate = t.getAppliedPosRate() != null
+                    ? t.getAppliedPosRate()
+                    : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
+            BigDecimal commission = t.getAmount().multiply(rate)
+                    .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            total = total.add(t.getAmount().subtract(commission));
+        }
+        return total;
     }
 }

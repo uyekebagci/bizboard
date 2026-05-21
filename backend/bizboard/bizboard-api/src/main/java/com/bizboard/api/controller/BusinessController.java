@@ -7,6 +7,7 @@ import com.bizboard.common.dto.CreateBusinessRequest;
 import com.bizboard.common.dto.CreateTransactionRequest;
 import com.bizboard.common.dto.DeleteTransactionRequest;
 import com.bizboard.common.dto.PeriodSummaryDto;
+import com.bizboard.common.dto.PosSettleRequest;
 import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.common.dto.UpdateTransactionRequest;
 import com.bizboard.security.UserPrincipal;
@@ -135,6 +136,56 @@ public class BusinessController {
             @AuthenticationPrincipal UserPrincipal principal) {
         transactionService.deleteTransaction(txId, principal.getId(), request.getReason());
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * v1.6.23.9 (TODO 6ee7a9f1): POS tx "hesaba düştü" onayı.
+     *
+     * <p>Body: {@code { bank_account_id, settled_at? }}. Validation servis tarafında
+     * (POS olmalı, henüz settled olmamalı, bank aktif CHECKING/SAVINGS olmalı).</p>
+     *
+     * <p>Effect: tx.pos_settled=true + bank_account_id + settled_at;
+     * bank.current_balance += net.</p>
+     */
+    @PatchMapping("/{id}/transactions/{txId}/settle")
+    public ResponseEntity<?> settlePosTransaction(
+            @PathVariable UUID id,
+            @PathVariable UUID txId,
+            @Valid @RequestBody PosSettleRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        try {
+            return ResponseEntity.ok(transactionService.settlePosTransaction(
+                    txId, principal.getId(), request.getBankAccountId(), request.getSettledAt()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * v1.6.23.9 (TODO 6ee7a9f1): POS settle iptali (admin-only).
+     * Bank balance'tan net düşülür, tx pos_settled=false set edilir.
+     */
+    @PatchMapping("/{id}/transactions/{txId}/unsettle")
+    public ResponseEntity<?> unsettlePosTransaction(
+            @PathVariable UUID id,
+            @PathVariable UUID txId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        try {
+            return ResponseEntity.ok(transactionService.unsettlePosTransaction(txId, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}/categories")

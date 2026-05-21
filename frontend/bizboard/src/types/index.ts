@@ -161,6 +161,11 @@ export interface Transaction {
   pos_device_name?: string | null;
   /** v1.6.21 (WP-4): POS çekim banka hesabına düştü mü (null=nakit). */
   pos_settled?: boolean | null;
+  /** v1.6.23.9: POS settle zaman damgası (pos_settled=true iken). */
+  settled_at?: string | null;
+  /** v1.6.23.9: settle sonrası hangi banka. */
+  settled_bank_account_id?: string | null;
+  settled_bank_account_name?: string | null;
   /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived komisyon. NAKIT/HESAPDAN'da null. */
   pos_commission?: number | null;
   /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived net (= amount − pos_commission). */
@@ -317,11 +322,17 @@ export interface ConsolidatedDashboard {
   business_id: string;
   consolidated: {
     total_cash: number;
+    /** v1.6.23.7: CHECKING+SAVINGS toplam (kasa-dışı). */
+    total_bank_balance?: number;
     credit_card_debt: number;
     loan_principal: number;
     receivables: number;
     payables: number;
     net: number;
+    /** v1.6.23.9 (TODO 8c7ffaac): bekleyen POS tahsilatları net toplam. */
+    pending_pos_receivables?: number;
+    /** v1.6.23.9: net + pending_pos_receivables. */
+    expected_net?: number;
   };
   today_closing: {
     opening_balance: number;

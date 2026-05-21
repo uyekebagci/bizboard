@@ -60,6 +60,20 @@ public class TransactionDto {
     private Boolean posSettled;
 
     /**
+     * v1.6.23.9 (TODO 6ee7a9f1): POS tx hesaba düştüğünde damga.
+     * pos_settled=true iken doldurulur.
+     */
+    @JsonProperty("settled_at")
+    private LocalDateTime settledAt;
+
+    /** v1.6.23.9: settle sonrası hangi banka hesabına düştü (null=henüz settle olmadı). */
+    @JsonProperty("settled_bank_account_id")
+    private UUID settledBankAccountId;
+
+    @JsonProperty("settled_bank_account_name")
+    private String settledBankAccountName;
+
+    /**
      * v1.6.23.8 (WP 3cdf2a4f / TODO ad8afc6f): POS tx için derived komisyon.
      * Formül: {@code amount × applied_pos_rate / 100} (applied_pos_rate yoksa
      * pos_rate fallback). NAKIT/HESAPDAN için null. Tx list'lerde net göstermek

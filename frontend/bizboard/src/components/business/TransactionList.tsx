@@ -599,12 +599,13 @@ export function TransactionDetailModal({
                         )}
                       </p>
                     )}
-                    {/* v1.6.21 (WP-4): POS settled toggle (admin & herkes) */}
+                    {/* v1.6.23.9 (TODO 658c6f63): POS settle button + bank modal */}
                     {(transaction.payment_method || "NAKIT") === "POS" && (
                       <PosSettledToggle
                         transactionId={transaction.id}
                         businessId={transaction.business_id}
                         initial={transaction.pos_settled ?? false}
+                        settledBankName={transaction.settled_bank_account_name}
                       />
                     )}
                   </div>
@@ -816,48 +817,177 @@ function DeleteTransactionModal({
   );
 }
 
-// ─── v1.6.21 (WP-4): POS Settled Toggle ────────────────────────────────
+// ─── v1.6.23.9 (TODO 658c6f63): POS Settle Button + Modal ────────────────────
+// Önceki sürüm (v1.6.21): pos_settled boolean'ı düz PUT ile toggle ediyordu —
+// hangi banka hesabına düştüğü bilgisi yoktu, bank balance güncellenmiyordu.
+// Yeni akış: PATCH /transactions/{id}/settle endpoint'i, bank_account_id zorunlu.
 function PosSettledToggle({
   transactionId,
   businessId,
   initial,
+  settledBankName,
 }: {
   transactionId: string;
   businessId: string;
   initial: boolean;
+  settledBankName?: string | null;
 }) {
   const [settled, setSettled] = useState<boolean>(initial);
-  const [saving, setSaving] = useState(false);
+  const [bankName, setBankName] = useState<string | null>(settledBankName || null);
+  const [showModal, setShowModal] = useState(false);
 
-  async function toggle() {
-    const next = !settled;
-    setSaving(true);
+  if (settled) {
+    return (
+      <span
+        className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+        title={bankName ? `Hesaba dustu: ${bankName}` : "Hesaba dustu"}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+        Hesaba düştü{bankName ? ` · ${bankName}` : ""}
+      </span>
+    );
+  }
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setShowModal(true)}
+        className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium border bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25 transition-colors"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+        Hesaba düştü olarak işaretle
+      </button>
+      {showModal && (
+        <SettleModal
+          transactionId={transactionId}
+          businessId={businessId}
+          onClose={() => setShowModal(false)}
+          onSuccess={(bankNameResult) => {
+            setSettled(true);
+            setBankName(bankNameResult);
+            setShowModal(false);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function SettleModal({
+  transactionId,
+  businessId,
+  onClose,
+  onSuccess,
+}: {
+  transactionId: string;
+  businessId: string;
+  onClose: () => void;
+  onSuccess: (bankName: string) => void;
+}) {
+  type BankRow = { id: string; name: string; type: string; bank_name?: string | null };
+  const [banks, setBanks] = useState<BankRow[]>([]);
+  const [selectedBank, setSelectedBank] = useState<string>("");
+  const [settledAt, setSettledAt] = useState<string>(new Date().toISOString().slice(0, 16));
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<BankRow[]>("/bank-accounts")
+      .then((rows) => {
+        const eligible = rows.filter((b) => b.type === "CHECKING" || b.type === "SAVINGS");
+        setBanks(eligible);
+        if (eligible.length === 1) setSelectedBank(eligible[0].id);
+      })
+      .catch(() => setError("Banka hesapları yüklenemedi"));
+  }, []);
+
+  async function submit() {
+    if (!selectedBank) {
+      setError("Banka hesabı seç");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
     try {
-      await api.put(`/businesses/${businessId}/transactions/${transactionId}`, {
-        pos_settled: next,
-      });
-      setSettled(next);
-    } catch {
-      // Sessiz fail — toggle değiştirilmez
+      await api.patch(
+        `/businesses/${businessId}/transactions/${transactionId}/settle`,
+        {
+          bank_account_id: selectedBank,
+          settled_at: settledAt.length > 0 ? `${settledAt}:00` : undefined,
+        }
+      );
+      const bank = banks.find((b) => b.id === selectedBank);
+      onSuccess(bank?.name || "");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "İşlem başarısız");
     } finally {
-      setSaving(false);
+      setSubmitting(false);
     }
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={saving}
-      className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border transition-colors ${
-        settled
-          ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-          : "bg-amber-500/15 text-amber-300 border-amber-500/30"
-      } ${saving ? "opacity-60" : "hover:opacity-80"}`}
-      title={settled ? "Hesaba dustu" : "Hesaba dusmedi (tikla)"}
-    >
-      <span className={`w-1.5 h-1.5 rounded-full ${settled ? "bg-emerald-300" : "bg-amber-300"}`} />
-      {settled ? "Hesaba dustu" : "Bekleniyor"}
-    </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-surface-800 rounded-2xl shadow-xl border border-surface-600 w-full max-w-md">
+        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+          <h3 className="text-base font-semibold text-white">POS işlemi hesaba düştü</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-surface-700">
+            <X size={16} className="text-surface-400" />
+          </button>
+        </div>
+        <div className="p-4 space-y-3">
+          {error && (
+            <div className="p-2 text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg">
+              {error}
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-surface-300 mb-1 block">Banka hesabı</label>
+            <select
+              value={selectedBank}
+              onChange={(e) => setSelectedBank(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+            >
+              <option value="">— seç —</option>
+              {banks.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                  {b.bank_name ? ` (${b.bank_name})` : ""}
+                </option>
+              ))}
+            </select>
+            {banks.length === 0 && (
+              <p className="text-[10px] text-amber-300 mt-1">Aktif CHECKING/SAVINGS hesabı yok.</p>
+            )}
+          </div>
+          <div>
+            <label className="text-xs text-surface-300 mb-1 block">Düşme tarihi</label>
+            <input
+              type="datetime-local"
+              value={settledAt}
+              onChange={(e) => setSettledAt(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+            />
+          </div>
+        </div>
+        <div className="p-4 border-t border-surface-700 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            className="px-4 py-2 rounded-lg text-sm bg-surface-700 text-surface-300 hover:bg-surface-600 disabled:opacity-60"
+          >
+            İptal
+          </button>
+          <button
+            onClick={submit}
+            disabled={submitting || !selectedBank}
+            className="px-4 py-2 rounded-lg text-sm bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {submitting ? "Kaydediliyor…" : "Onayla"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

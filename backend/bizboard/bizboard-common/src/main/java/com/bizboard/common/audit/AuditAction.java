@@ -73,4 +73,10 @@ public final class AuditAction {
     public static final String HIGHLIGHT_POS_RATE_OVERRIDE = "POS_RATE_OVERRIDE";
     // v1.6.23.4 (BUG-2 fix): backdate kapanış için highlight (UI rozet için)
     public static final String HIGHLIGHT_BACKDATED_CLOSING = "BACKDATED_CLOSING";
+
+    // ── v1.6.23.9 (TODO 6ee7a9f1): POS settle akışı ───────────────────────
+    public static final String POS_SETTLED                 = "POS_SETTLED";
+    public static final String POS_UNSETTLED               = "POS_UNSETTLED";
+    public static final String HIGHLIGHT_POS_SETTLED       = "POS_SETTLED";
+    public static final String HIGHLIGHT_POS_UNSETTLED     = "POS_UNSETTLED";
 }

@@ -54,6 +54,9 @@ export function ConsolidatedWidgets({ data, onCloseDay }: Props) {
 function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   const c = d.consolidated;
   const positive = c.net >= 0;
+  // v1.6.23.9 (TODO 8c7ffaac): bekleyen POS tahsilatı (settle olunca eklenecek).
+  const pendingPos = c.pending_pos_receivables ?? 0;
+  const expectedNet = c.expected_net ?? c.net;
   return (
     <section className="card p-5 bg-gradient-to-br from-brand-700 to-brand-900 text-white">
       <p className="text-brand-200 text-xs uppercase tracking-wider mb-1">Konsolide Net</p>
@@ -71,6 +74,28 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
         {positive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
         {positive ? "Net pozitif" : "Net negatif"}
       </div>
+
+      {/* v1.6.23.9 (TODO 8c7ffaac): Bekleyen POS tahsilatı satırı */}
+      {pendingPos > 0 && (
+        <div className="mt-3 pt-3 border-t border-brand-600/50 grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <p className="text-amber-200 text-[10px] uppercase tracking-wider">
+              Bekleyen POS tahsilatı
+            </p>
+            <p className="text-amber-200 font-bold mt-0.5">
+              +{formatCurrency(pendingPos, "TRY")}
+            </p>
+            <p className="text-amber-200/70 text-[10px] mt-0.5">Settle olunca eklenecek</p>
+          </div>
+          <div>
+            <p className="text-brand-200 text-[10px] uppercase tracking-wider">
+              Beklenen Net
+            </p>
+            <p className="text-white font-bold mt-0.5">{formatCurrency(expectedNet, "TRY")}</p>
+            <p className="text-brand-200/70 text-[10px] mt-0.5">Tüm settle sonrası</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

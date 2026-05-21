@@ -98,6 +98,18 @@ public class PosService {
     }
 
     /**
+     * v1.6.23.9 (TODO ddda6029): Bekleyen (settled olmamış) POS tx'ler.
+     * deviceId verilirse o cihazın, verilmezse tüm cihazların.
+     */
+    @Transactional(readOnly = true)
+    public List<com.bizboard.common.dto.TransactionDto> getUnsettledTransactions(UUID deviceId) {
+        List<Transaction> txs = deviceId != null
+                ? transactionRepository.findUnsettledPosTransactionsByDevice(deviceId)
+                : transactionRepository.findUnsettledPosTransactions();
+        return txs.stream().map(DtoMapper::toTransactionDto).toList();
+    }
+
+    /**
      * v1.6.23.7: Son N gün için tüm POS tx'leri toparlayan helper.
      * `/pos/transactions/daily?days=N` parametresi için kullanılır.
      */

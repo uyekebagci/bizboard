@@ -103,6 +103,22 @@ public class ConsolidatedDashboardDto {
         private BigDecimal payables;
         /** İşaretli sonuç: total_cash + total_bank_balance − cc − loan + receivables − payables. */
         private BigDecimal net;
+
+        /**
+         * v1.6.23.9 (TODO 8c7ffaac): Bekleyen POS tahsilatları toplam net.
+         * {@code SUM(amount × (1 − applied_pos_rate/100))} WHERE payment_method=POS
+         * AND pos_settled=false. Net'e DAHIL DEĞİL — settled olunca bank_balance'a
+         * yansıyacak (çift sayım önlemi). Magnitude (>= 0).
+         */
+        @JsonProperty("pending_pos_receivables")
+        private BigDecimal pendingPosReceivables;
+
+        /**
+         * v1.6.23.9: Beklenen net (settled sonrası): {@code net + pending_pos_receivables}.
+         * Kullanıcıya "bekleyen tahsilatlar düşünce net X olacak" view.
+         */
+        @JsonProperty("expected_net")
+        private BigDecimal expectedNet;
     }
 
     @Data @Builder

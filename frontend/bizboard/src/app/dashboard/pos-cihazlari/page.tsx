@@ -156,6 +156,10 @@ export default function PosCihazlariPage() {
         />
       )}
 
+      {/* v1.6.23.9 (TODO ddda6029): Bekleyen POS tahsilatları + toplu settle */}
+      <PendingSettlementsCard />
+
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={28} className="animate-spin text-indigo-400" />
@@ -422,5 +426,279 @@ function PosTrendChart({
         <span>{series.length > 0 ? new Date(series[series.length - 1].date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : ""}</span>
       </div>
     </section>
+  );
+}
+
+
+// ─── v1.6.23.9 (TODO ddda6029): Bekleyen POS tahsilatları + toplu settle ──
+type UnsettledTx = {
+  id: string;
+  amount: number;
+  pos_net?: number | null;
+  pos_commission?: number | null;
+  applied_pos_rate?: number | null;
+  pos_rate?: number | null;
+  pos_device_name?: string | null;
+  business_id: string;
+  date: string;
+  description?: string | null;
+};
+type BankRow = { id: string; name: string; type: string; bank_name?: string | null };
+
+function PendingSettlementsCard() {
+  const [items, setItems] = useState<UnsettledTx[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkModal, setShowBulkModal] = useState(false);
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      const data = await api.get<UnsettledTx[]>("/pos/unsettled");
+      setItems(data || []);
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="card p-4">
+        <div className="flex items-center gap-2 text-sm text-surface-400">
+          <Loader2 size={14} className="animate-spin" />
+          Bekleyen tahsilatlar yükleniyor…
+        </div>
+      </section>
+    );
+  }
+  if (items.length === 0) return null; // hiç bekleyen yoksa widget gizli
+
+  const totalNet = items.reduce((a, t) => a + (t.pos_net ?? 0), 0);
+  const selectedItems = items.filter((t) => selectedIds.has(t.id));
+  const selectedNetTotal = selectedItems.reduce((a, t) => a + (t.pos_net ?? 0), 0);
+
+  function toggleSelect(id: string) {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  }
+  function toggleAll() {
+    if (selectedIds.size === items.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(items.map((t) => t.id)));
+  }
+
+  return (
+    <section className="card overflow-hidden border-amber-500/30">
+      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between bg-amber-500/5">
+        <div className="flex items-center gap-2">
+          <Receipt size={14} className="text-amber-400" />
+          <h2 className="text-sm font-semibold text-white">Bekleyen POS Tahsilatları</h2>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            {items.length} işlem · {formatCurrency(totalNet, "TRY")} net
+          </span>
+        </div>
+        {selectedIds.size > 0 && (
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium"
+          >
+            Seçilenleri hesaba düştü işaretle ({selectedIds.size})
+          </button>
+        )}
+      </div>
+      <div className="px-4 py-2 border-b border-surface-700 flex items-center gap-2 text-[11px] text-surface-400">
+        <input
+          type="checkbox"
+          checked={selectedIds.size === items.length}
+          onChange={toggleAll}
+          className="cursor-pointer"
+        />
+        <span>Hepsini seç</span>
+        {selectedIds.size > 0 && (
+          <span className="ml-auto text-amber-300">
+            Seçili net: {formatCurrency(selectedNetTotal, "TRY")}
+          </span>
+        )}
+      </div>
+      <div className="divide-y divide-surface-700 max-h-96 overflow-y-auto">
+        {items.map((t) => {
+          const checked = selectedIds.has(t.id);
+          return (
+            <div
+              key={t.id}
+              className={cn(
+                "px-4 py-2.5 flex items-center gap-3",
+                checked && "bg-amber-500/10"
+              )}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggleSelect(t.id)}
+                className="cursor-pointer"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white truncate">
+                  {t.description || "POS çekim"}
+                  {t.pos_device_name && (
+                    <span className="ml-2 text-surface-400 text-xs">· {t.pos_device_name}</span>
+                  )}
+                </p>
+                <p className="text-[11px] text-surface-400">
+                  {new Date(t.date).toLocaleDateString("tr-TR", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-sm font-semibold text-emerald-300">
+                  +{formatCurrency(t.pos_net ?? t.amount, "TRY")}
+                </p>
+                <p className="text-[10px] text-surface-400">
+                  brüt {formatCurrency(t.amount, "TRY")}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {showBulkModal && (
+        <BulkSettleModal
+          txIds={Array.from(selectedIds)}
+          totalNet={selectedNetTotal}
+          onClose={() => setShowBulkModal(false)}
+          onSuccess={() => {
+            setShowBulkModal(false);
+            setSelectedIds(new Set());
+            refresh();
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function BulkSettleModal({
+  txIds,
+  totalNet,
+  onClose,
+  onSuccess,
+}: {
+  txIds: string[];
+  totalNet: number;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [banks, setBanks] = useState<BankRow[]>([]);
+  const [selectedBank, setSelectedBank] = useState<string>("");
+  const [settledAt, setSettledAt] = useState<string>(
+    new Date().toISOString().slice(0, 16)
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<BankRow[]>("/bank-accounts")
+      .then((rows) => {
+        const eligible = rows.filter((b) => b.type === "CHECKING" || b.type === "SAVINGS");
+        setBanks(eligible);
+        if (eligible.length === 1) setSelectedBank(eligible[0].id);
+      })
+      .catch(() => setError("Banka hesapları yüklenemedi"));
+  }, []);
+
+  async function submit() {
+    if (!selectedBank) {
+      setError("Banka hesabı seç");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await api.post("/pos/bulk-settle", {
+        transaction_ids: txIds,
+        bank_account_id: selectedBank,
+        settled_at: settledAt.length > 0 ? `${settledAt}:00` : undefined,
+      });
+      onSuccess();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "İşlem başarısız");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-surface-800 rounded-2xl shadow-xl border border-surface-600 w-full max-w-md">
+        <div className="p-4 border-b border-surface-700">
+          <h3 className="text-base font-semibold text-white">
+            Toplu Settle ({txIds.length} işlem · {formatCurrency(totalNet, "TRY")} net)
+          </h3>
+          <p className="text-xs text-surface-400 mt-1">
+            Tüm seçili işlemler aynı banka hesabına aynı zamanda işaretlenecek.
+          </p>
+        </div>
+        <div className="p-4 space-y-3">
+          {error && (
+            <div className="p-2 text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg">
+              {error}
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-surface-300 mb-1 block">Banka hesabı</label>
+            <select
+              value={selectedBank}
+              onChange={(e) => setSelectedBank(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+            >
+              <option value="">— seç —</option>
+              {banks.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                  {b.bank_name ? ` (${b.bank_name})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-surface-300 mb-1 block">Düşme tarihi</label>
+            <input
+              type="datetime-local"
+              value={settledAt}
+              onChange={(e) => setSettledAt(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+            />
+          </div>
+        </div>
+        <div className="p-4 border-t border-surface-700 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            className="px-4 py-2 rounded-lg text-sm bg-surface-700 text-surface-300 hover:bg-surface-600 disabled:opacity-60"
+          >
+            İptal
+          </button>
+          <button
+            onClick={submit}
+            disabled={submitting || !selectedBank}
+            className="px-4 py-2 rounded-lg text-sm bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {submitting ? "Kaydediliyor…" : "Onayla"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

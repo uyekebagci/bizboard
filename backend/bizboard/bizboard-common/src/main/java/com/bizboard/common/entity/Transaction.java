@@ -86,10 +86,20 @@ public class Transaction {
      * {@code paymentMethod=HESAPDAN} iken zorunlu, diğer payment_method'larda null.
      * Tx kaydedildiğinde ilgili bank_account.current_balance bu tx'in
      * direction'ına göre güncellenir (income → +, expense → -).
+     *
+     * <p>v1.6.23.9: POS tx'in settle olunca bank_account FK buraya yazılır
+     * (hangi banka hesabına düştüğünü iz bırakır).</p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bank_account_id")
     private BankAccount bankAccount;
+
+    /**
+     * v1.6.23.9 (TODO 6ee7a9f1): POS tx'in hesaba düştüğü zaman damgası.
+     * {@code pos_settled=true} iken doldurulur; aksi halde null.
+     */
+    @Column(name = "settled_at")
+    private LocalDateTime settledAt;
 
     /**
      * v1.6.3: POS işlemi için banka komisyon oranı (yüzde). Yalnız

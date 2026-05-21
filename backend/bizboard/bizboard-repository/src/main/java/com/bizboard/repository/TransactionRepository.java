@@ -73,6 +73,19 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
 
+    // v1.6.23.9 (TODO 8c7ffaac): Settled olmamış POS tx'ler.
+    // pos_settled NULL veya FALSE olanlar dahil; TRUE değil.
+    @Query("SELECT t FROM Transaction t WHERE t.paymentMethod = 'POS' " +
+            "AND (t.posSettled IS NULL OR t.posSettled = false) " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findUnsettledPosTransactions();
+
+    @Query("SELECT t FROM Transaction t WHERE t.paymentMethod = 'POS' " +
+            "AND (t.posSettled IS NULL OR t.posSettled = false) " +
+            "AND t.posDevice.id = :deviceId " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findUnsettledPosTransactionsByDevice(@Param("deviceId") UUID deviceId);
+
     /**
      * v1.6.19 (WP-2): Bir takvim günündeki tüm transaction'lar (tek-tenant
      * cash closing hesabı için — business filtresi yok).
