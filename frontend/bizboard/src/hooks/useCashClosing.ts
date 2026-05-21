@@ -3,17 +3,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
+import { useAppStore } from "@/lib/store";
 import type { CashClosing, CashClosingPreview, PagedResponse, CashClosingReason } from "@/types";
 
 /**
  * v1.6.19 (WP-2): Bugünün kapanış preview'i + dünün kapanışı (Dünden Kalan Eksik
  * widget için) + manuel kapama + admin reopen + arşiv listesi.
  *
+ * <p>v1.6.23.13 (TODO 24990efa): Global refreshKey dependency eklendi —
+ * herhangi bir sayfadan triggerRefresh() (örn. tx ekledikten sonra) çağrılırsa
+ * preview/today/yesterday otomatik re-fetch eder. Önceden tx ekledikten sonra
+ * "Bugünün Kasa Durumu" widget stale kalıyordu.</p>
+ *
  * Kullanım örnekleri:
  *   const { preview, yesterday, refresh } = useCashClosing();          // dashboard widget
  *   const { closings, list } = useCashClosing();                       // /kapanislar sayfası
  */
 export function useCashClosing() {
+  const refreshKey = useAppStore((s) => s.refreshKey);
   const [preview, setPreview] = useState<CashClosingPreview | null>(null);
   const [today, setToday] = useState<CashClosing | null>(null);
   const [yesterday, setYesterday] = useState<CashClosing | null>(null);
@@ -87,7 +94,8 @@ export function useCashClosing() {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    // refreshKey global trigger ile bağlı (tx ekleme/silme/edit/POS settle vs.)
+  }, [refresh, refreshKey]);
 
   return {
     preview, today, yesterday,

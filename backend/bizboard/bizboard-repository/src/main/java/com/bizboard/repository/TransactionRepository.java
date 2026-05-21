@@ -80,6 +80,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             "ORDER BY t.date DESC, t.createdAt DESC")
     List<Transaction> findUnsettledPosTransactions();
 
+    // v1.6.23.13 (TODO 5cee5f99): POS device detay sayfası — cihaza ait tüm tx'ler.
+    @Query("SELECT t FROM Transaction t WHERE t.paymentMethod = 'POS' " +
+            "AND t.posDevice.id = :deviceId " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findByPosDeviceIdOrderByDateDesc(@Param("deviceId") UUID deviceId);
+
     @Query("SELECT t FROM Transaction t WHERE t.paymentMethod = 'POS' " +
             "AND (t.posSettled IS NULL OR t.posSettled = false) " +
             "AND t.posDevice.id = :deviceId " +

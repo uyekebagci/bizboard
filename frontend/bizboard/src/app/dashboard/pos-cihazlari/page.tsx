@@ -20,6 +20,7 @@ import {
   Building2,
   Plus,
   Settings,
+  ChevronRight,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -155,6 +156,10 @@ export default function PosCihazlariPage() {
           onDeviceChange={setSelectedDevice}
         />
       )}
+
+      {/* v1.6.23.13 (TODO 06ae8217): POS cihazları (kayıtlı) listesi —
+          önceki sürümde sayfada hiç gösterilmiyordu. */}
+      <RegisteredDevicesCard devices={devices} />
 
       {/* v1.6.23.9 (TODO ddda6029): Bekleyen POS tahsilatları + toplu settle */}
       <PendingSettlementsCard />
@@ -710,5 +715,56 @@ function BulkSettleModal({
         </div>
       </div>
     </div>
+  );
+}
+
+// v1.6.23.13 (TODO 06ae8217 + 5cee5f99): Kayıtlı POS cihazları listesi.
+// Her satır tıklanabilir → /pos-cihazlari/{id} detay sayfası.
+function RegisteredDevicesCard({ devices }: { devices: PosDeviceListItem[] }) {
+  if (!devices || devices.length === 0) return null;
+  const active = devices.filter((d) => d.is_active);
+  const inactive = devices.filter((d) => !d.is_active);
+  return (
+    <section className="card overflow-hidden">
+      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CreditCard size={14} className="text-indigo-300" />
+          <h2 className="text-sm font-semibold text-white">Kayıtlı POS Cihazları</h2>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+            {active.length} aktif{inactive.length > 0 ? ` · ${inactive.length} pasif` : ""}
+          </span>
+        </div>
+      </div>
+      <div className="divide-y divide-surface-700">
+        {devices.map((d) => (
+          <Link
+            key={d.id}
+            href={`/dashboard/pos-cihazlari/${d.id}`}
+            className={cn(
+              "px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-surface-700/50 transition-colors",
+              !d.is_active && "opacity-60"
+            )}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-white truncate">
+                {d.name}
+                {!d.is_active && (
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-surface-700 text-surface-400">
+                    pasif
+                  </span>
+                )}
+              </p>
+              <p className="text-[11px] text-surface-400">
+                {d.owner_counterpart_name || "—"}
+                {d.bank_name && ` · ${d.bank_name}`}
+                {d.default_rate != null && ` · varsayılan %${d.default_rate}`}
+                {d.last_used_rate != null && ` · son %${d.last_used_rate}`}
+              </p>
+            </div>
+            <ChevronRight size={14} className="text-surface-400 shrink-0" />
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }

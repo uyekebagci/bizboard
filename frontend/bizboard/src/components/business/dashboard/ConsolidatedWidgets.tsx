@@ -18,9 +18,25 @@ import type { ConsolidatedDashboard } from "@/types";
 interface Props {
   data: ConsolidatedDashboard;
   onCloseDay?: () => void;
+  /**
+   * v1.6.23.13 (TODO 0adbee2a): "Son İşlemler" slot — Bugünün Kasa Durumu
+   * widget'ının hemen altına yerleştirilir. /business/[id]/page.tsx
+   * TransactionList'i prop olarak geçer.
+   */
+  recentTransactionsSlot?: React.ReactNode;
 }
 
-export function ConsolidatedWidgets({ data, onCloseDay }: Props) {
+export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot }: Props) {
+  // v1.6.23.13 (TODO 3e55858e): Layout reorg.
+  //
+  // Yeni sıra:
+  //   1. ConsolidatedPositionCard (DGR konsolide net)
+  //   2. TodayClosingCard + NetPositionCard (yan yana)
+  //   3. [Son İşlemler slot] — kasa durumunun hemen altında
+  //   4. Alacaklar + Verecekler (yan yana)
+  //   5. Hesaptan Harcama (bugün)
+  //   6. Çek + Hatırlatma (yan yana)
+  //   7. EN ALT: Banka Hesapları + POS Cihazları (yan yana, compact)
   return (
     <div className="space-y-4">
       <ConsolidatedPositionCard d={data} />
@@ -30,9 +46,8 @@ export function ConsolidatedWidgets({ data, onCloseDay }: Props) {
         <NetPositionCard d={data} />
       </div>
 
-      <PosDevicesCard d={data} />
-
-      <BankAccountsCard d={data} />
+      {/* v1.6.23.13: Son İşlemler — kasa durumu altında (TODO 0adbee2a). */}
+      {recentTransactionsSlot}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <PayablesCard d={data} />
@@ -45,6 +60,12 @@ export function ConsolidatedWidgets({ data, onCloseDay }: Props) {
         <UpcomingChequesCard d={data} />
         <UpcomingRemindersCard d={data} />
       </div>
+
+      {/* v1.6.23.13: EN ALT — banka hesapları + POS cihazları (yan yana, compact). */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <BankAccountsCard d={data} compact />
+        <PosDevicesCard d={data} compact />
+      </div>
     </div>
   );
 }
@@ -53,7 +74,8 @@ export function ConsolidatedWidgets({ data, onCloseDay }: Props) {
 
 function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   const c = d.consolidated;
-  const positive = c.net >= 0;
+  // v1.6.23.13 (TODO bb3fceb5): net=0 nötr, 0'ı yeşil sayma.
+  const sign: "pos" | "neg" | "zero" = c.net > 0 ? "pos" : c.net < 0 ? "neg" : "zero";
   // v1.6.23.9 (TODO 8c7ffaac): bekleyen POS tahsilatı (settle olunca eklenecek).
   const pendingPos = c.pending_pos_receivables ?? 0;
   const expectedNet = c.expected_net ?? c.net;
@@ -71,8 +93,9 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
       </div>
 
       <div className="mt-3 flex items-center gap-1.5 text-xs text-brand-200">
-        {positive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-        {positive ? "Net pozitif" : "Net negatif"}
+        {sign === "pos" && <><TrendingUp size={12} /> Net pozitif</>}
+        {sign === "neg" && <><TrendingDown size={12} /> Net negatif</>}
+        {sign === "zero" && <>— Net sıfır</>}
       </div>
 
       {/* v1.6.23.9 (TODO 8c7ffaac): Bekleyen POS tahsilatı satırı */}
@@ -154,12 +177,17 @@ function TodayClosingCard({ d, onCloseDay }: { d: ConsolidatedDashboard; onClose
       </div>
 
       {!t.closed && onCloseDay && (
-        <button
-          onClick={onCloseDay}
-          className="mt-3 w-full px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
-        >
-          Günü Kapat
-        </button>
+        // v1.6.23.13 (TODO ca443172): yanlış basılma riskini azaltmak için
+        // küçük + secondary stil — modal zaten confirm görevi görüyor.
+        <div className="mt-3 flex justify-end">
+          <button
+            onClick={onCloseDay}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors"
+            title="Günü kapat — fiziksel sayım modal'ı açılır"
+          >
+            Günü Kapat
+          </button>
+        </div>
       )}
     </section>
   );
@@ -167,7 +195,7 @@ function TodayClosingCard({ d, onCloseDay }: { d: ConsolidatedDashboard; onClose
 
 // ───────────────────────── 3. POS CİHAZLARI ─────────────────────────
 
-function PosDevicesCard({ d }: { d: ConsolidatedDashboard }) {
+function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: boolean }) {
   const devs = d.pos_devices;
   if (devs.length === 0) {
     return (
@@ -230,7 +258,7 @@ function PosDevicesCard({ d }: { d: ConsolidatedDashboard }) {
 
 // ───────────────────────── 4. PARA BULUNAN HESAPLAR ─────────────────────────
 
-function BankAccountsCard({ d }: { d: ConsolidatedDashboard }) {
+function BankAccountsCard({ d, compact }: { d: ConsolidatedDashboard; compact?: boolean }) {
   const accounts = d.bank_accounts;
   if (accounts.length === 0) {
     return (
@@ -396,15 +424,30 @@ function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
 
 function NetPositionCard({ d }: { d: ConsolidatedDashboard }) {
   const n = d.net_position;
-  const pos = n.net_positive;
+  // v1.6.23.13 (TODO bb3fceb5): net=0 default (nötr) — net>0 yeşil, net<0 kırmızı.
+  // Önceki davranış net>=0 → her zaman yeşil (sıfırda da yeşildi).
+  const sign: "pos" | "neg" | "zero" = n.net > 0 ? "pos" : n.net < 0 ? "neg" : "zero";
+  const cardClasses: Record<typeof sign, string> = {
+    pos:  "border-emerald-500/30 bg-emerald-500/5",
+    neg:  "border-red-500/30 bg-red-500/5",
+    zero: "border-surface-600/40 bg-surface-700/30",
+  };
+  const valueClasses: Record<typeof sign, string> = {
+    pos:  "text-emerald-300",
+    neg:  "text-red-300",
+    zero: "text-surface-200",
+  };
+  const labels: Record<typeof sign, string> = {
+    pos:  "Net Alacaklı",
+    neg:  "Net Borçlu",
+    zero: "Net Sıfır",
+  };
+  const Icon = sign === "pos" ? TrendingUp : sign === "neg" ? TrendingDown : HandCoins;
   return (
-    <section className={cn(
-      "card p-4 border",
-      pos ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5",
-    )}>
-      <SectionTitle icon={pos ? TrendingUp : TrendingDown} label="Net Pozisyon" />
-      <p className={cn("mt-2 text-2xl font-bold", pos ? "text-emerald-300" : "text-red-300")}>
-        {pos ? "Net Alacaklı" : "Net Borçlu"}: {formatCurrency(Math.abs(n.net), "TRY")}
+    <section className={cn("card p-4 border", cardClasses[sign])}>
+      <SectionTitle icon={Icon} label="Net Pozisyon" />
+      <p className={cn("mt-2 text-2xl font-bold", valueClasses[sign])}>
+        {labels[sign]}{sign !== "zero" ? `: ${formatCurrency(Math.abs(n.net), "TRY")}` : ""}
       </p>
       <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
         <Stat label="Alacaklar" value={n.receivables} tone="positive" />

@@ -73,6 +73,17 @@ public class PosDeviceController {
     }
 
     /**
+     * v1.6.23.13 (TODO 5cee5f99): POS device detayında tüm tx'leri listele.
+     * Detay sayfası "Tüm İşlemler" listesini doldurur.
+     */
+    @GetMapping("/{id}/transactions")
+    public ResponseEntity<List<com.bizboard.common.dto.TransactionDto>> deviceTransactions(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(service.getDeviceTransactions(id));
+    }
+
+    /**
      * v1.6.21 (WP-4): POS analytics — gün-gün çekim/komisyon/net/settled count.
      *
      * <p>{@code GET /pos-devices/analytics?from=2026-05-01&to=2026-05-20&deviceId=...}</p>

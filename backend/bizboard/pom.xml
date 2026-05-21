@@ -13,7 +13,7 @@
 
     <groupId>com.bizboard</groupId>
     <artifactId>bizboard-parent</artifactId>
-    <version>1.6.23.12</version>
+    <version>1.6.23.13</version>
     <packaging>pom</packaging>
     <name>BizBoard Parent</name>
 

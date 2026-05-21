@@ -32,6 +32,18 @@ public class PosDeviceManagementService {
     private final CounterpartRepository counterpartRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    // v1.6.23.13 (TODO 5cee5f99): device detay tx listing için
+    private final com.bizboard.repository.TransactionRepository transactionRepository;
+
+    /**
+     * v1.6.23.13: POS device'a ait tüm POS tx'leri (en yeni önce).
+     */
+    @Transactional(readOnly = true)
+    public List<com.bizboard.common.dto.TransactionDto> getDeviceTransactions(UUID deviceId) {
+        return transactionRepository.findByPosDeviceIdOrderByDateDesc(deviceId).stream()
+                .map(DtoMapper::toTransactionDto)
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public List<PosDeviceDto> list(boolean includeInactive) {
