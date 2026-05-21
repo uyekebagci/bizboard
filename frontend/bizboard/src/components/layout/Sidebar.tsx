@@ -23,7 +23,7 @@ import {
   LayoutDashboard, Building2, Plus, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
-  Search, X, Smartphone, ChevronDown, ChevronRight, Pin, PinOff,
+  Search, X, Smartphone, ChevronDown, ChevronRight, Pin,
 } from "lucide-react";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import type { LucideIcon } from "lucide-react";
@@ -81,10 +81,47 @@ interface Props {
   onMobileOpenChange: (open: boolean) => void;
 }
 
+// v1.6.23.18: shortcut pin localStorage key (BusinessesSection key'inden ayrı).
+const SHORTCUT_PIN_KEY = "bb_pinned_sidebar_v1";
+
+function loadShortcutPins(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(SHORTCUT_PIN_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+function saveShortcutPins(pins: Record<string, number>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(SHORTCUT_PIN_KEY, JSON.stringify(pins));
+  } catch {
+    /* quota */
+  }
+}
+
 export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
   const profile = useAppStore((s) => s.profile);
   const pathname = usePathname();
   const [query, setQuery] = useState("");
+  // v1.6.23.18: tüm sidebar kısayolları için pin (BusinessesSection ile aynı pattern).
+  const [shortcutPins, setShortcutPins] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    setShortcutPins(loadShortcutPins());
+  }, []);
+
+  function toggleShortcutPin(href: string) {
+    setShortcutPins((prev) => {
+      const next = { ...prev };
+      if (next[href]) delete next[href];
+      else next[href] = Date.now();
+      saveShortcutPins(next);
+      return next;
+    });
+  }
 
   // Cmd/Ctrl+B → mobile overlay aç/kapat (desktop'ta sidebar zaten sabit, no-op).
   useEffect(() => {
@@ -103,16 +140,23 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
 
   const visible = useMemo(() => {
     const role = profile?.role;
-    const items = ALL_LINKS.filter((l) => !l.adminOnly || role === "admin");
+    let items = ALL_LINKS.filter((l) => !l.adminOnly || role === "admin");
 
-    // Alfabetik (TR locale)
+    // v1.6.23.18: pinli üstte (ilk pinlenen önce), kalanı alfabetik (TR locale)
     const collator = new Intl.Collator("tr", { sensitivity: "base" });
-    items.sort((a, b) => collator.compare(a.label, b.label));
+    items.sort((a, b) => {
+      const ap = shortcutPins[a.href];
+      const bp = shortcutPins[b.href];
+      if (ap && !bp) return -1;
+      if (!ap && bp) return 1;
+      if (ap && bp) return ap - bp;
+      return collator.compare(a.label, b.label);
+    });
 
     if (!query.trim()) return items;
     const q = query.trim().toLocaleLowerCase("tr");
     return items.filter((l) => l.label.toLocaleLowerCase("tr").includes(q));
-  }, [profile?.role, query]);
+  }, [profile?.role, query, shortcutPins]);
 
   const showSearch = visible.length >= SEARCH_THRESHOLD || query !== "";
   const versionLabel = process.env.NEXT_PUBLIC_APP_VERSION
@@ -214,6 +258,8 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
                       <SidebarItem
                         item={item}
                         active={pathname === item.href}
+                        pinned={!!shortcutPins[item.href]}
+                        onTogglePin={() => toggleShortcutPin(item.href)}
                         onClick={() => onMobileOpenChange(false)}
                       />
                     </li>
@@ -229,36 +275,55 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
 }
 
 function SidebarItem({
-  item, active, onClick,
+  item, active, pinned, onTogglePin, onClick,
 }: {
   item: SidebarLink;
   active: boolean;
+  /** v1.6.23.18: pin state — pinli ise dolu Pin ikon, kalanı outline. */
+  pinned?: boolean;
+  onTogglePin?: () => void;
   onClick?: () => void;
 }) {
   const Icon = item.icon;
   return (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      className={cn(
-        "relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
-        active
-          ? "bg-brand-700/30 text-white"
-          : "text-surface-300 hover:bg-surface-800 hover:text-white",
+    <div className="relative flex items-stretch">
+      <Link
+        href={item.href}
+        onClick={onClick}
+        className={cn(
+          "flex items-center gap-2.5 px-3 py-2 rounded-l-lg text-sm transition-colors flex-1 min-w-0",
+          active
+            ? "bg-brand-700/30 text-white"
+            : "text-surface-300 hover:bg-surface-800 hover:text-white",
+          pinned && "border-l-2 border-brand-500 -ml-[2px] pl-[10px]"
+        )}
+        aria-current={active ? "page" : undefined}
+      >
+        <Icon size={16} className={active ? "text-brand-300" : "text-surface-400"} />
+        <span className="flex-1 truncate">{item.label}</span>
+        {item.count != null && item.count > 0 && (
+          <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
+            {item.count > 99 ? "99+" : item.count}
+          </span>
+        )}
+      </Link>
+      {onTogglePin && (
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTogglePin(); }}
+          className={cn(
+            "shrink-0 px-2 rounded-r-lg flex items-center justify-center transition-colors",
+            pinned
+              ? "text-brand-400 hover:text-brand-300 hover:bg-surface-700"
+              : "text-surface-500 hover:text-white hover:bg-surface-700"
+          )}
+          aria-label={pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
+          title={pinned ? "Sabitlemeyi kaldır" : "Sabitle (üste taşı)"}
+        >
+          {pinned ? <Pin size={12} fill="currentColor" /> : <Pin size={12} />}
+        </button>
       )}
-      aria-current={active ? "page" : undefined}
-    >
-      {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-brand-500" aria-hidden />
-      )}
-      <Icon size={16} className={active ? "text-brand-300" : "text-surface-400"} />
-      <span className="flex-1 truncate">{item.label}</span>
-      {item.count != null && item.count > 0 && (
-        <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
-          {item.count > 99 ? "99+" : item.count}
-        </span>
-      )}
-    </Link>
+    </div>
   );
 }
 
@@ -397,6 +462,17 @@ function BusinessesSection({
               </li>
             );
           })}
+          {/* v1.6.23.18: İşletmeler dropdown sonuna sabit "İşletme Ekle" kısayolu. */}
+          <li className="mt-1 pt-1 border-t border-surface-700/50">
+            <Link
+              href="/dashboard/add"
+              onClick={onItemClick}
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm text-brand-300 hover:bg-brand-700/20 hover:text-brand-200 transition-colors"
+            >
+              <Plus size={14} />
+              <span className="flex-1 truncate text-[13px]">Yeni İşletme</span>
+            </Link>
+          </li>
         </ul>
       )}
     </div>
