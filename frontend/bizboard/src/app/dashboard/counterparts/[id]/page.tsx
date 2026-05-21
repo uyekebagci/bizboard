@@ -10,7 +10,9 @@ import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
-import type { Counterpart, CounterpartStatement, CounterpartRole } from "@/types";
+import type { Counterpart, CounterpartStatement, CounterpartRole, PhoneDevice } from "@/types";
+import { Smartphone, Plus } from "lucide-react";
+import Link from "next/link";
 
 const ROLE_LABEL: Record<CounterpartRole, string> = {
   CUSTOMER: "Musteri",
@@ -284,6 +286,9 @@ export default function CounterpartDetailPage() {
         </section>
       )}
 
+      {/* v1.6.23.12 (WP 3c8401f6): Atanmış Telefonlar bölümü */}
+      <CounterpartPhonesSection counterpartId={id} />
+
       {/* Statement */}
       <section className="card overflow-hidden">
         <div className="p-4 border-b border-surface-700 flex flex-col sm:flex-row gap-3 sm:items-end sm:justify-between print:hidden">
@@ -416,5 +421,91 @@ function SummaryCell({
         {formatCurrency(value)}
       </p>
     </div>
+  );
+}
+
+// v1.6.23.12 (WP 3c8401f6 / TODO ec23755c): Counterpart detayında atanmış telefonlar bölümü.
+function CounterpartPhonesSection({ counterpartId }: { counterpartId: string }) {
+  const [phones, setPhones] = useState<PhoneDevice[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      const data = await api.get<PhoneDevice[]>(`/counterparts/${counterpartId}/phones`);
+      setPhones(data || []);
+    } catch {
+      setPhones([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [counterpartId]);
+
+  async function removePhone(phoneId: string) {
+    if (!confirm("Bu telefonu kaldırmak (atamayı kaldır) istiyor musun?")) return;
+    try {
+      await api.patch(`/phone-devices/${phoneId}`, { clear_assigned_counterpart: true });
+      refresh();
+    } catch {
+      // silent
+    }
+  }
+
+  return (
+    <section className="card overflow-hidden">
+      <div className="p-4 border-b border-surface-700 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Smartphone size={16} className="text-cyan-300" />
+          <h2 className="text-lg font-semibold text-white">Atanmış Telefonlar</h2>
+          <span className="text-xs text-surface-400">({phones.length})</span>
+        </div>
+        <Link
+          href="/dashboard/telefonlar"
+          className="text-xs px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white flex items-center gap-1"
+        >
+          <Plus size={12} /> Yeni Telefon
+        </Link>
+      </div>
+      {loading ? (
+        <p className="px-4 py-4 text-xs text-surface-400">Yükleniyor…</p>
+      ) : phones.length === 0 ? (
+        <p className="px-4 py-4 text-xs text-surface-500">Atanmış telefon yok.</p>
+      ) : (
+        <div className="divide-y divide-surface-700">
+          {phones.map((p) => (
+            <div key={p.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-white">
+                  <span className="text-surface-400 mr-2">#{p.device_number}</span>
+                  {p.display_label}
+                  {p.phone_number && (
+                    <span className="ml-2 font-mono text-surface-300">· {p.phone_number}</span>
+                  )}
+                </p>
+                {(p.banks || []).length > 0 && (
+                  <p className="text-[11px] text-emerald-300 mt-0.5">
+                    {p.banks.map((b) => b.bank_name).join(", ")}
+                  </p>
+                )}
+                {p.notes && (
+                  <p className="text-[11px] text-surface-400 mt-0.5">{p.notes}</p>
+                )}
+              </div>
+              <button
+                onClick={() => removePhone(p.id)}
+                className="text-[11px] text-surface-400 hover:text-red-300 underline-offset-2 hover:underline"
+              >
+                Atamayı kaldır
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

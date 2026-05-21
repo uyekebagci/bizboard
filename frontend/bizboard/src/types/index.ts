@@ -938,3 +938,49 @@ export interface CounterpartStatement {
 
 // v1.6.2: BusinessTypeDefaultCost interface'i kaldırıldı — backend master
 // tablosu silindiği için kullanım yok.
+
+// ---- v1.6.23.12 (WP 3c8401f6): Phone tracking ----
+export interface PhoneBrand {
+  id: string;
+  name: string;
+  slug?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  model_count?: number;
+}
+
+export interface PhoneModel {
+  id: string;
+  brand_id: string;
+  brand_name: string;
+  name: string;
+  release_year?: number | null;
+  is_active: boolean;
+}
+
+export interface PhoneDeviceBank {
+  bank_name: string;
+  app_username?: string | null;
+  notes?: string | null;
+}
+
+export interface PhoneDevice {
+  id: string;
+  business_id: string;
+  business_name: string;
+  device_number: number;
+  phone_number?: string | null;
+  assigned_counterpart_id?: string | null;
+  assigned_counterpart_name?: string | null;
+  brand_id?: string | null;
+  brand_name?: string | null;
+  model_id?: string | null;
+  model_name?: string | null;
+  custom_model?: string | null;
+  display_label: string;
+  notes?: string | null;
+  is_active: boolean;
+  banks: PhoneDeviceBank[];
+  created_at?: string | null;
+  updated_at?: string | null;
+}

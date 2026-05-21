@@ -1,0 +1,1975 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-21",
+  "notes": "Türkiye'de yaygın markalar + son 5-6 yıl popüler modeller. Eksikler için PR aç.",
+  "brands": [
+    {
+      "name": "Samsung",
+      "slug": "samsung",
+      "sort_order": 10,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Galaxy S20",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy S20+",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy S20 Ultra",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy S20 FE",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy S21",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy S21+",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy S21 Ultra",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy S21 FE",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy S22",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy S22+",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy S22 Ultra",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy S23",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy S23+",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy S23 Ultra",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy S23 FE",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy S24",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy S24+",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy S24 Ultra",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy S24 FE",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy S25",
+          "release_year": 2025
+        },
+        {
+          "name": "Galaxy S25+",
+          "release_year": 2025
+        },
+        {
+          "name": "Galaxy S25 Ultra",
+          "release_year": 2025
+        },
+        {
+          "name": "Galaxy Note 20",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy Note 20 Ultra",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy Z Flip",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy Z Flip 3",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy Z Flip 4",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy Z Flip 5",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy Z Flip 6",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy Z Fold 2",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy Z Fold 3",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy Z Fold 4",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy Z Fold 5",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy Z Fold 6",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy A12",
+          "release_year": 2020
+        },
+        {
+          "name": "Galaxy A22",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy A32",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy A52",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy A52s",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy A72",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy A13",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy A23",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy A33",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy A53",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy A73",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy A14",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy A24",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy A34",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy A54",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy A15",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy A25",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy A35",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy A55",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy A16",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy A26",
+          "release_year": 2025
+        },
+        {
+          "name": "Galaxy A36",
+          "release_year": 2025
+        },
+        {
+          "name": "Galaxy A56",
+          "release_year": 2025
+        },
+        {
+          "name": "Galaxy M12",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy M22",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy M32",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy M52",
+          "release_year": 2021
+        },
+        {
+          "name": "Galaxy M13",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy M23",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy M33",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy M53",
+          "release_year": 2022
+        },
+        {
+          "name": "Galaxy M14",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy M34",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy M54",
+          "release_year": 2023
+        },
+        {
+          "name": "Galaxy M15",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy M35",
+          "release_year": 2024
+        },
+        {
+          "name": "Galaxy M55",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Apple",
+      "slug": "apple",
+      "sort_order": 20,
+      "is_active": true,
+      "models": [
+        {
+          "name": "iPhone 11",
+          "release_year": 2019
+        },
+        {
+          "name": "iPhone 11 Pro",
+          "release_year": 2019
+        },
+        {
+          "name": "iPhone 11 Pro Max",
+          "release_year": 2019
+        },
+        {
+          "name": "iPhone SE (2nd gen)",
+          "release_year": 2020
+        },
+        {
+          "name": "iPhone 12 mini",
+          "release_year": 2020
+        },
+        {
+          "name": "iPhone 12",
+          "release_year": 2020
+        },
+        {
+          "name": "iPhone 12 Pro",
+          "release_year": 2020
+        },
+        {
+          "name": "iPhone 12 Pro Max",
+          "release_year": 2020
+        },
+        {
+          "name": "iPhone 13 mini",
+          "release_year": 2021
+        },
+        {
+          "name": "iPhone 13",
+          "release_year": 2021
+        },
+        {
+          "name": "iPhone 13 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "iPhone 13 Pro Max",
+          "release_year": 2021
+        },
+        {
+          "name": "iPhone SE (3rd gen)",
+          "release_year": 2022
+        },
+        {
+          "name": "iPhone 14",
+          "release_year": 2022
+        },
+        {
+          "name": "iPhone 14 Plus",
+          "release_year": 2022
+        },
+        {
+          "name": "iPhone 14 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "iPhone 14 Pro Max",
+          "release_year": 2022
+        },
+        {
+          "name": "iPhone 15",
+          "release_year": 2023
+        },
+        {
+          "name": "iPhone 15 Plus",
+          "release_year": 2023
+        },
+        {
+          "name": "iPhone 15 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "iPhone 15 Pro Max",
+          "release_year": 2023
+        },
+        {
+          "name": "iPhone 16",
+          "release_year": 2024
+        },
+        {
+          "name": "iPhone 16 Plus",
+          "release_year": 2024
+        },
+        {
+          "name": "iPhone 16 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "iPhone 16 Pro Max",
+          "release_year": 2024
+        },
+        {
+          "name": "iPhone 16e",
+          "release_year": 2025
+        }
+      ]
+    },
+    {
+      "name": "Xiaomi",
+      "slug": "xiaomi",
+      "sort_order": 30,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Mi 10",
+          "release_year": 2020
+        },
+        {
+          "name": "Mi 10 Pro",
+          "release_year": 2020
+        },
+        {
+          "name": "Mi 10T",
+          "release_year": 2020
+        },
+        {
+          "name": "Mi 10T Pro",
+          "release_year": 2020
+        },
+        {
+          "name": "Mi 11",
+          "release_year": 2021
+        },
+        {
+          "name": "Mi 11 Lite",
+          "release_year": 2021
+        },
+        {
+          "name": "Mi 11 Ultra",
+          "release_year": 2021
+        },
+        {
+          "name": "Xiaomi 12",
+          "release_year": 2022
+        },
+        {
+          "name": "Xiaomi 12 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Xiaomi 12T",
+          "release_year": 2022
+        },
+        {
+          "name": "Xiaomi 12T Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Xiaomi 13",
+          "release_year": 2023
+        },
+        {
+          "name": "Xiaomi 13 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Xiaomi 13T",
+          "release_year": 2023
+        },
+        {
+          "name": "Xiaomi 13T Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Xiaomi 14",
+          "release_year": 2024
+        },
+        {
+          "name": "Xiaomi 14 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Xiaomi 14 Ultra",
+          "release_year": 2024
+        },
+        {
+          "name": "Xiaomi 14T",
+          "release_year": 2024
+        },
+        {
+          "name": "Xiaomi 14T Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Xiaomi 15",
+          "release_year": 2025
+        },
+        {
+          "name": "Xiaomi 15 Pro",
+          "release_year": 2025
+        },
+        {
+          "name": "Xiaomi 15 Ultra",
+          "release_year": 2025
+        },
+        {
+          "name": "Redmi Note 8",
+          "release_year": 2019
+        },
+        {
+          "name": "Redmi Note 8 Pro",
+          "release_year": 2019
+        },
+        {
+          "name": "Redmi Note 9",
+          "release_year": 2020
+        },
+        {
+          "name": "Redmi Note 9 Pro",
+          "release_year": 2020
+        },
+        {
+          "name": "Redmi Note 9S",
+          "release_year": 2020
+        },
+        {
+          "name": "Redmi Note 10",
+          "release_year": 2021
+        },
+        {
+          "name": "Redmi Note 10 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "Redmi Note 10S",
+          "release_year": 2021
+        },
+        {
+          "name": "Redmi Note 11",
+          "release_year": 2022
+        },
+        {
+          "name": "Redmi Note 11 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Redmi Note 11S",
+          "release_year": 2022
+        },
+        {
+          "name": "Redmi Note 12",
+          "release_year": 2023
+        },
+        {
+          "name": "Redmi Note 12 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Redmi Note 12 Pro+",
+          "release_year": 2023
+        },
+        {
+          "name": "Redmi Note 13",
+          "release_year": 2024
+        },
+        {
+          "name": "Redmi Note 13 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Redmi Note 13 Pro+",
+          "release_year": 2024
+        },
+        {
+          "name": "Redmi Note 14",
+          "release_year": 2024
+        },
+        {
+          "name": "Redmi Note 14 Pro",
+          "release_year": 2025
+        },
+        {
+          "name": "Redmi Note 14 Pro+",
+          "release_year": 2025
+        },
+        {
+          "name": "Poco X3",
+          "release_year": 2020
+        },
+        {
+          "name": "Poco X3 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "Poco X4",
+          "release_year": 2022
+        },
+        {
+          "name": "Poco X4 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Poco X5",
+          "release_year": 2023
+        },
+        {
+          "name": "Poco X5 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Poco X6",
+          "release_year": 2024
+        },
+        {
+          "name": "Poco X6 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Poco X7",
+          "release_year": 2025
+        },
+        {
+          "name": "Poco F3",
+          "release_year": 2021
+        },
+        {
+          "name": "Poco F4",
+          "release_year": 2022
+        },
+        {
+          "name": "Poco F5",
+          "release_year": 2023
+        },
+        {
+          "name": "Poco F6",
+          "release_year": 2024
+        },
+        {
+          "name": "Poco M3",
+          "release_year": 2020
+        },
+        {
+          "name": "Poco M4",
+          "release_year": 2021
+        },
+        {
+          "name": "Poco M4 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Poco M5",
+          "release_year": 2022
+        },
+        {
+          "name": "Poco M6",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Huawei",
+      "slug": "huawei",
+      "sort_order": 40,
+      "is_active": true,
+      "models": [
+        {
+          "name": "P30",
+          "release_year": 2019
+        },
+        {
+          "name": "P30 Pro",
+          "release_year": 2019
+        },
+        {
+          "name": "P30 Lite",
+          "release_year": 2019
+        },
+        {
+          "name": "P40",
+          "release_year": 2020
+        },
+        {
+          "name": "P40 Pro",
+          "release_year": 2020
+        },
+        {
+          "name": "P40 Lite",
+          "release_year": 2020
+        },
+        {
+          "name": "P50",
+          "release_year": 2021
+        },
+        {
+          "name": "P50 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "P60",
+          "release_year": 2023
+        },
+        {
+          "name": "P60 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Pura 70",
+          "release_year": 2024
+        },
+        {
+          "name": "Pura 70 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Pura 70 Ultra",
+          "release_year": 2024
+        },
+        {
+          "name": "Mate 30",
+          "release_year": 2019
+        },
+        {
+          "name": "Mate 30 Pro",
+          "release_year": 2019
+        },
+        {
+          "name": "Mate 40",
+          "release_year": 2020
+        },
+        {
+          "name": "Mate 40 Pro",
+          "release_year": 2020
+        },
+        {
+          "name": "Mate 50",
+          "release_year": 2022
+        },
+        {
+          "name": "Mate 50 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Mate 60",
+          "release_year": 2023
+        },
+        {
+          "name": "Mate 60 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Mate XT",
+          "release_year": 2024
+        },
+        {
+          "name": "Mate 70",
+          "release_year": 2024
+        },
+        {
+          "name": "Mate 70 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Nova 9",
+          "release_year": 2021
+        },
+        {
+          "name": "Nova 10",
+          "release_year": 2022
+        },
+        {
+          "name": "Nova 11",
+          "release_year": 2023
+        },
+        {
+          "name": "Nova 12",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Honor",
+      "slug": "honor",
+      "sort_order": 50,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Honor 50",
+          "release_year": 2021
+        },
+        {
+          "name": "Honor 50 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "Honor 70",
+          "release_year": 2022
+        },
+        {
+          "name": "Honor 70 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Honor 90",
+          "release_year": 2023
+        },
+        {
+          "name": "Honor 90 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Honor 100",
+          "release_year": 2024
+        },
+        {
+          "name": "Honor 100 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Honor 200",
+          "release_year": 2024
+        },
+        {
+          "name": "Honor 200 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Magic 4",
+          "release_year": 2022
+        },
+        {
+          "name": "Magic 4 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Magic 5",
+          "release_year": 2023
+        },
+        {
+          "name": "Magic 5 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Magic 6",
+          "release_year": 2024
+        },
+        {
+          "name": "Magic 6 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Honor X7",
+          "release_year": 2022
+        },
+        {
+          "name": "Honor X8",
+          "release_year": 2022
+        },
+        {
+          "name": "Honor X9",
+          "release_year": 2023
+        },
+        {
+          "name": "Honor X7a",
+          "release_year": 2023
+        },
+        {
+          "name": "Honor X8a",
+          "release_year": 2023
+        },
+        {
+          "name": "Honor X9a",
+          "release_year": 2023
+        },
+        {
+          "name": "Honor X7b",
+          "release_year": 2024
+        },
+        {
+          "name": "Honor X8b",
+          "release_year": 2024
+        },
+        {
+          "name": "Honor X9b",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Oppo",
+      "slug": "oppo",
+      "sort_order": 60,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Reno 4",
+          "release_year": 2020
+        },
+        {
+          "name": "Reno 5",
+          "release_year": 2021
+        },
+        {
+          "name": "Reno 6",
+          "release_year": 2021
+        },
+        {
+          "name": "Reno 7",
+          "release_year": 2022
+        },
+        {
+          "name": "Reno 8",
+          "release_year": 2022
+        },
+        {
+          "name": "Reno 9",
+          "release_year": 2023
+        },
+        {
+          "name": "Reno 10",
+          "release_year": 2023
+        },
+        {
+          "name": "Reno 10 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Reno 11",
+          "release_year": 2024
+        },
+        {
+          "name": "Reno 11 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Reno 12",
+          "release_year": 2024
+        },
+        {
+          "name": "Reno 12 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Find X3",
+          "release_year": 2021
+        },
+        {
+          "name": "Find X3 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "Find X5",
+          "release_year": 2022
+        },
+        {
+          "name": "Find X5 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Find X6",
+          "release_year": 2023
+        },
+        {
+          "name": "Find X6 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Find X7",
+          "release_year": 2024
+        },
+        {
+          "name": "Find X7 Ultra",
+          "release_year": 2024
+        },
+        {
+          "name": "A54",
+          "release_year": 2021
+        },
+        {
+          "name": "A74",
+          "release_year": 2021
+        },
+        {
+          "name": "A94",
+          "release_year": 2021
+        },
+        {
+          "name": "A57",
+          "release_year": 2022
+        },
+        {
+          "name": "A77",
+          "release_year": 2022
+        },
+        {
+          "name": "A96",
+          "release_year": 2022
+        },
+        {
+          "name": "A58",
+          "release_year": 2023
+        },
+        {
+          "name": "A78",
+          "release_year": 2023
+        },
+        {
+          "name": "A98",
+          "release_year": 2023
+        },
+        {
+          "name": "A60",
+          "release_year": 2024
+        },
+        {
+          "name": "A80",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Vivo",
+      "slug": "vivo",
+      "sort_order": 70,
+      "is_active": true,
+      "models": [
+        {
+          "name": "V21",
+          "release_year": 2021
+        },
+        {
+          "name": "V23",
+          "release_year": 2022
+        },
+        {
+          "name": "V25",
+          "release_year": 2022
+        },
+        {
+          "name": "V27",
+          "release_year": 2023
+        },
+        {
+          "name": "V27 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "V29",
+          "release_year": 2023
+        },
+        {
+          "name": "V29 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "V30",
+          "release_year": 2024
+        },
+        {
+          "name": "V30 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "V40",
+          "release_year": 2024
+        },
+        {
+          "name": "V40 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "X80",
+          "release_year": 2022
+        },
+        {
+          "name": "X80 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "X90",
+          "release_year": 2023
+        },
+        {
+          "name": "X90 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "X100",
+          "release_year": 2024
+        },
+        {
+          "name": "X100 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "X100 Ultra",
+          "release_year": 2024
+        },
+        {
+          "name": "Y20",
+          "release_year": 2020
+        },
+        {
+          "name": "Y21",
+          "release_year": 2021
+        },
+        {
+          "name": "Y22",
+          "release_year": 2022
+        },
+        {
+          "name": "Y33s",
+          "release_year": 2021
+        },
+        {
+          "name": "Y52",
+          "release_year": 2021
+        },
+        {
+          "name": "Y53s",
+          "release_year": 2022
+        },
+        {
+          "name": "Y72",
+          "release_year": 2021
+        },
+        {
+          "name": "Y76",
+          "release_year": 2022
+        },
+        {
+          "name": "Y77",
+          "release_year": 2022
+        },
+        {
+          "name": "Y36",
+          "release_year": 2023
+        },
+        {
+          "name": "Y100",
+          "release_year": 2023
+        }
+      ]
+    },
+    {
+      "name": "Realme",
+      "slug": "realme",
+      "sort_order": 80,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Realme 8",
+          "release_year": 2021
+        },
+        {
+          "name": "Realme 8 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "Realme 9",
+          "release_year": 2022
+        },
+        {
+          "name": "Realme 9 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Realme 9 Pro+",
+          "release_year": 2022
+        },
+        {
+          "name": "Realme 10",
+          "release_year": 2022
+        },
+        {
+          "name": "Realme 10 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Realme 11",
+          "release_year": 2023
+        },
+        {
+          "name": "Realme 11 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Realme 11 Pro+",
+          "release_year": 2023
+        },
+        {
+          "name": "Realme 12",
+          "release_year": 2024
+        },
+        {
+          "name": "Realme 12 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Realme 12 Pro+",
+          "release_year": 2024
+        },
+        {
+          "name": "Realme 13",
+          "release_year": 2024
+        },
+        {
+          "name": "Realme 13 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "GT 2",
+          "release_year": 2022
+        },
+        {
+          "name": "GT 2 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "GT 3",
+          "release_year": 2023
+        },
+        {
+          "name": "GT 5",
+          "release_year": 2023
+        },
+        {
+          "name": "GT 5 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "GT 6",
+          "release_year": 2024
+        },
+        {
+          "name": "GT 6T",
+          "release_year": 2024
+        },
+        {
+          "name": "Narzo 50",
+          "release_year": 2022
+        },
+        {
+          "name": "Narzo 60",
+          "release_year": 2023
+        },
+        {
+          "name": "Narzo 70",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "OnePlus",
+      "slug": "oneplus",
+      "sort_order": 90,
+      "is_active": true,
+      "models": [
+        {
+          "name": "OnePlus 8",
+          "release_year": 2020
+        },
+        {
+          "name": "OnePlus 8 Pro",
+          "release_year": 2020
+        },
+        {
+          "name": "OnePlus 8T",
+          "release_year": 2020
+        },
+        {
+          "name": "OnePlus 9",
+          "release_year": 2021
+        },
+        {
+          "name": "OnePlus 9 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "OnePlus 10 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "OnePlus 10T",
+          "release_year": 2022
+        },
+        {
+          "name": "OnePlus 11",
+          "release_year": 2023
+        },
+        {
+          "name": "OnePlus 11R",
+          "release_year": 2023
+        },
+        {
+          "name": "OnePlus 12",
+          "release_year": 2024
+        },
+        {
+          "name": "OnePlus 12R",
+          "release_year": 2024
+        },
+        {
+          "name": "OnePlus 13",
+          "release_year": 2025
+        },
+        {
+          "name": "Nord",
+          "release_year": 2020
+        },
+        {
+          "name": "Nord 2",
+          "release_year": 2021
+        },
+        {
+          "name": "Nord CE",
+          "release_year": 2021
+        },
+        {
+          "name": "Nord 2T",
+          "release_year": 2022
+        },
+        {
+          "name": "Nord CE 2",
+          "release_year": 2022
+        },
+        {
+          "name": "Nord N20",
+          "release_year": 2022
+        },
+        {
+          "name": "Nord 3",
+          "release_year": 2023
+        },
+        {
+          "name": "Nord CE 3",
+          "release_year": 2023
+        },
+        {
+          "name": "Nord 4",
+          "release_year": 2024
+        },
+        {
+          "name": "Nord CE 4",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Google",
+      "slug": "google",
+      "sort_order": 100,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Pixel 5",
+          "release_year": 2020
+        },
+        {
+          "name": "Pixel 5a",
+          "release_year": 2021
+        },
+        {
+          "name": "Pixel 6",
+          "release_year": 2021
+        },
+        {
+          "name": "Pixel 6 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "Pixel 6a",
+          "release_year": 2022
+        },
+        {
+          "name": "Pixel 7",
+          "release_year": 2022
+        },
+        {
+          "name": "Pixel 7 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "Pixel 7a",
+          "release_year": 2023
+        },
+        {
+          "name": "Pixel 8",
+          "release_year": 2023
+        },
+        {
+          "name": "Pixel 8 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "Pixel 8a",
+          "release_year": 2024
+        },
+        {
+          "name": "Pixel 9",
+          "release_year": 2024
+        },
+        {
+          "name": "Pixel 9 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Pixel 9 Pro XL",
+          "release_year": 2024
+        },
+        {
+          "name": "Pixel Fold",
+          "release_year": 2023
+        },
+        {
+          "name": "Pixel 9 Pro Fold",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Nokia",
+      "slug": "nokia",
+      "sort_order": 110,
+      "is_active": true,
+      "models": [
+        {
+          "name": "G10",
+          "release_year": 2021
+        },
+        {
+          "name": "G20",
+          "release_year": 2021
+        },
+        {
+          "name": "G50",
+          "release_year": 2021
+        },
+        {
+          "name": "G11",
+          "release_year": 2022
+        },
+        {
+          "name": "G21",
+          "release_year": 2022
+        },
+        {
+          "name": "G60",
+          "release_year": 2022
+        },
+        {
+          "name": "G22",
+          "release_year": 2023
+        },
+        {
+          "name": "G42",
+          "release_year": 2023
+        },
+        {
+          "name": "G310",
+          "release_year": 2024
+        },
+        {
+          "name": "X10",
+          "release_year": 2021
+        },
+        {
+          "name": "X20",
+          "release_year": 2021
+        },
+        {
+          "name": "X30",
+          "release_year": 2022
+        },
+        {
+          "name": "XR21",
+          "release_year": 2023
+        },
+        {
+          "name": "C20",
+          "release_year": 2021
+        },
+        {
+          "name": "C30",
+          "release_year": 2021
+        },
+        {
+          "name": "C12",
+          "release_year": 2023
+        },
+        {
+          "name": "C32",
+          "release_year": 2023
+        }
+      ]
+    },
+    {
+      "name": "Nothing",
+      "slug": "nothing",
+      "sort_order": 120,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Phone (1)",
+          "release_year": 2022
+        },
+        {
+          "name": "Phone (2)",
+          "release_year": 2023
+        },
+        {
+          "name": "Phone (2a)",
+          "release_year": 2024
+        },
+        {
+          "name": "Phone (3a)",
+          "release_year": 2025
+        },
+        {
+          "name": "Phone (3a) Pro",
+          "release_year": 2025
+        }
+      ]
+    },
+    {
+      "name": "Sony",
+      "slug": "sony",
+      "sort_order": 130,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Xperia 1 II",
+          "release_year": 2020
+        },
+        {
+          "name": "Xperia 5 II",
+          "release_year": 2020
+        },
+        {
+          "name": "Xperia 10 II",
+          "release_year": 2020
+        },
+        {
+          "name": "Xperia 1 III",
+          "release_year": 2021
+        },
+        {
+          "name": "Xperia 5 III",
+          "release_year": 2021
+        },
+        {
+          "name": "Xperia 10 III",
+          "release_year": 2021
+        },
+        {
+          "name": "Xperia 1 IV",
+          "release_year": 2022
+        },
+        {
+          "name": "Xperia 5 IV",
+          "release_year": 2022
+        },
+        {
+          "name": "Xperia 10 IV",
+          "release_year": 2022
+        },
+        {
+          "name": "Xperia 1 V",
+          "release_year": 2023
+        },
+        {
+          "name": "Xperia 5 V",
+          "release_year": 2023
+        },
+        {
+          "name": "Xperia 10 V",
+          "release_year": 2023
+        },
+        {
+          "name": "Xperia 1 VI",
+          "release_year": 2024
+        },
+        {
+          "name": "Xperia 10 VI",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "ASUS",
+      "slug": "asus",
+      "sort_order": 140,
+      "is_active": true,
+      "models": [
+        {
+          "name": "ROG Phone 5",
+          "release_year": 2021
+        },
+        {
+          "name": "ROG Phone 5s",
+          "release_year": 2021
+        },
+        {
+          "name": "ROG Phone 6",
+          "release_year": 2022
+        },
+        {
+          "name": "ROG Phone 6 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "ROG Phone 7",
+          "release_year": 2023
+        },
+        {
+          "name": "ROG Phone 7 Ultimate",
+          "release_year": 2023
+        },
+        {
+          "name": "ROG Phone 8",
+          "release_year": 2024
+        },
+        {
+          "name": "ROG Phone 8 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "ROG Phone 9",
+          "release_year": 2024
+        },
+        {
+          "name": "ROG Phone 9 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Zenfone 8",
+          "release_year": 2021
+        },
+        {
+          "name": "Zenfone 9",
+          "release_year": 2022
+        },
+        {
+          "name": "Zenfone 10",
+          "release_year": 2023
+        },
+        {
+          "name": "Zenfone 11",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Tecno",
+      "slug": "tecno",
+      "sort_order": 150,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Camon 17",
+          "release_year": 2021
+        },
+        {
+          "name": "Camon 18",
+          "release_year": 2021
+        },
+        {
+          "name": "Camon 19",
+          "release_year": 2022
+        },
+        {
+          "name": "Camon 20",
+          "release_year": 2023
+        },
+        {
+          "name": "Camon 30",
+          "release_year": 2024
+        },
+        {
+          "name": "Spark 7",
+          "release_year": 2021
+        },
+        {
+          "name": "Spark 8",
+          "release_year": 2022
+        },
+        {
+          "name": "Spark 9",
+          "release_year": 2022
+        },
+        {
+          "name": "Spark 10",
+          "release_year": 2023
+        },
+        {
+          "name": "Spark 20",
+          "release_year": 2024
+        },
+        {
+          "name": "Phantom X",
+          "release_year": 2021
+        },
+        {
+          "name": "Phantom X2",
+          "release_year": 2023
+        },
+        {
+          "name": "Phantom V Fold",
+          "release_year": 2023
+        },
+        {
+          "name": "Phantom V Flip",
+          "release_year": 2023
+        },
+        {
+          "name": "Pova 5",
+          "release_year": 2023
+        },
+        {
+          "name": "Pova 6",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Infinix",
+      "slug": "infinix",
+      "sort_order": 160,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Hot 10",
+          "release_year": 2020
+        },
+        {
+          "name": "Hot 11",
+          "release_year": 2021
+        },
+        {
+          "name": "Hot 12",
+          "release_year": 2022
+        },
+        {
+          "name": "Hot 20",
+          "release_year": 2023
+        },
+        {
+          "name": "Hot 30",
+          "release_year": 2023
+        },
+        {
+          "name": "Hot 40",
+          "release_year": 2024
+        },
+        {
+          "name": "Note 10",
+          "release_year": 2021
+        },
+        {
+          "name": "Note 11",
+          "release_year": 2022
+        },
+        {
+          "name": "Note 12",
+          "release_year": 2023
+        },
+        {
+          "name": "Note 30",
+          "release_year": 2023
+        },
+        {
+          "name": "Note 40",
+          "release_year": 2024
+        },
+        {
+          "name": "Zero 8",
+          "release_year": 2020
+        },
+        {
+          "name": "Zero X",
+          "release_year": 2021
+        },
+        {
+          "name": "Zero Ultra",
+          "release_year": 2022
+        },
+        {
+          "name": "Zero 30",
+          "release_year": 2023
+        },
+        {
+          "name": "GT 10 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "GT 20 Pro",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Reeder",
+      "slug": "reeder",
+      "sort_order": 200,
+      "is_active": true,
+      "models": [
+        {
+          "name": "P13 Blue",
+          "release_year": 2020
+        },
+        {
+          "name": "P13 Blue Max",
+          "release_year": 2021
+        },
+        {
+          "name": "P13 Blue Max Plus",
+          "release_year": 2022
+        },
+        {
+          "name": "S19 Max Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "S19 Max Plus",
+          "release_year": 2022
+        },
+        {
+          "name": "M10 Plus",
+          "release_year": 2021
+        },
+        {
+          "name": "M15 Plus",
+          "release_year": 2022
+        },
+        {
+          "name": "P13X",
+          "release_year": 2023
+        },
+        {
+          "name": "S19 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "P14 Max",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "General Mobile",
+      "slug": "general-mobile",
+      "sort_order": 210,
+      "is_active": true,
+      "models": [
+        {
+          "name": "GM 21",
+          "release_year": 2021
+        },
+        {
+          "name": "GM 21 Plus",
+          "release_year": 2021
+        },
+        {
+          "name": "GM 21 Pro",
+          "release_year": 2021
+        },
+        {
+          "name": "GM 22",
+          "release_year": 2022
+        },
+        {
+          "name": "GM 22 Plus",
+          "release_year": 2022
+        },
+        {
+          "name": "GM 22 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "GM 23",
+          "release_year": 2023
+        },
+        {
+          "name": "GM 23 Pro",
+          "release_year": 2023
+        },
+        {
+          "name": "GM 24",
+          "release_year": 2024
+        },
+        {
+          "name": "GM 24 Pro",
+          "release_year": 2024
+        },
+        {
+          "name": "Discovery 2",
+          "release_year": 2022
+        },
+        {
+          "name": "Discovery 2 Pro",
+          "release_year": 2023
+        }
+      ]
+    },
+    {
+      "name": "Casper",
+      "slug": "casper",
+      "sort_order": 220,
+      "is_active": true,
+      "models": [
+        {
+          "name": "VIA P3",
+          "release_year": 2020
+        },
+        {
+          "name": "VIA E30",
+          "release_year": 2021
+        },
+        {
+          "name": "VIA G5",
+          "release_year": 2021
+        },
+        {
+          "name": "VIA A4 Pro",
+          "release_year": 2022
+        },
+        {
+          "name": "VIA E40",
+          "release_year": 2022
+        },
+        {
+          "name": "VIA M40",
+          "release_year": 2023
+        },
+        {
+          "name": "VIA X40",
+          "release_year": 2023
+        },
+        {
+          "name": "VIA F40",
+          "release_year": 2024
+        }
+      ]
+    },
+    {
+      "name": "Vestel",
+      "slug": "vestel",
+      "sort_order": 230,
+      "is_active": true,
+      "models": [
+        {
+          "name": "Venus V7",
+          "release_year": 2020
+        },
+        {
+          "name": "Venus E5",
+          "release_year": 2021
+        },
+        {
+          "name": "Venus Z40",
+          "release_year": 2022
+        },
+        {
+          "name": "Venus E6",
+          "release_year": 2023
+        },
+        {
+          "name": "Venus Z50",
+          "release_year": 2024
+        }
+      ]
+    }
+  ]
+}

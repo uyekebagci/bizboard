@@ -23,7 +23,7 @@ import {
   LayoutDashboard, Building2, Plus, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
-  Search, X,
+  Search, X, Smartphone,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -57,6 +57,8 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote },
   { href: "/dashboard/pos-cihazlari",    label: "POS",           icon: CreditCard },
   { href: "/dashboard/profile",          label: "Profil",        icon: User },
+  // v1.6.23.12 (WP 3c8401f6): Telefon takibi (DGR'nin fiziki telefonları)
+  { href: "/dashboard/telefonlar",       label: "Telefonlar",    icon: Smartphone },
   { href: "/dashboard/reports",          label: "Raporlar",      icon: BarChart3 },
   { href: "/dashboard/change-password",  label: "Sifre Degistir", icon: ShieldCheck },
   // Admin

@@ -271,9 +271,22 @@ export default function CounterpartsPage() {
           initial={emptyForm()}
           onClose={() => setShowCreate(false)}
           onSubmit={async (f) => {
-            await api.post("/counterparts", toPayload(f));
+            // v1.6.23.12 (WP 3c8401f6 / TODO d72cfde9):
+            // Counterpart yaratıldıktan sonra opsiyonel "telefon ekle" prompt.
+            const created = await api.post<{ id: string; name: string }>(
+              "/counterparts",
+              toPayload(f),
+            );
             setShowCreate(false);
             fetchList();
+            if (typeof window !== "undefined" && created?.id) {
+              const wantsPhone = window.confirm(
+                `"${created.name}" firmasi olusturuldu.\n\nBu firmaya telefon eklemek ister misin?`,
+              );
+              if (wantsPhone) {
+                window.location.href = `/dashboard/telefonlar?counterpart_id=${created.id}`;
+              }
+            }
           }}
         />
       )}
