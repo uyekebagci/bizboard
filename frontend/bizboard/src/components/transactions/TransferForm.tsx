@@ -5,9 +5,13 @@
  * AddTransactionModal'ın 3. sekmesinden ve Son İşlemler widget'ından
  * (⇄ shortcut) tetiklenir.
  *
- * <p>Backend: {@code POST /transfers}. business_id JWT'den çözülür.
- * Eligible bank accounts (CHECKING/SAVINGS/CASH_HOLDER) listede;
- * MAIN_CASH ve SUB_CASH dışta.</p>
+ * <p>v1.7.x (Transfer UX): Hedef hesap artık manuel input. Backend
+ * external mode'da yalnız OUT tx oluşturur (kaynak bakiye düşer; paired
+ * IN yok). Gelir/gider raporlarına yansımaz (kind=TRANSFER filter).</p>
+ *
+ * <p>Backend: {@code POST /transfers} body {to_external_name, ...}.
+ * business_id JWT'den çözülür. Eligible kaynak hesaplar
+ * (CHECKING/SAVINGS/CASH_HOLDER) listede; MAIN_CASH ve SUB_CASH dışta.</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -34,7 +38,8 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
   const [accounts, setAccounts] = useState<BankAccountListItem[]>([]);
   const [loadingAccs, setLoadingAccs] = useState(true);
   const [fromId, setFromId] = useState<string>(preselectedFromId ?? "");
-  const [toId, setToId] = useState<string>("");
+  // v1.7.x (Transfer UX): hedef = serbest metin (kişi adı / IBAN / banka)
+  const [toExternalName, setToExternalName] = useState<string>("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [description, setDescription] = useState("");
@@ -62,10 +67,6 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
   );
 
   const fromAcc = useMemo(() => eligible.find((a) => a.id === fromId) || null, [eligible, fromId]);
-  const toAcc = useMemo(() => eligible.find((a) => a.id === toId) || null, [eligible, toId]);
-
-  // Currency uyumu önizleme
-  const currencyMismatch = !!(fromAcc && toAcc && fromAcc.currency !== toAcc.currency);
 
   // Bakiye uyarı önizleme
   const parsedAmount = useMemo(() => parseMoneyInput(amount), [amount]);
@@ -75,18 +76,15 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
     e.preventDefault();
     setError(null);
     setWarning(null);
-    if (!fromId || !toId) { setError("Kaynak ve hedef hesap seç"); return; }
-    if (fromId === toId) { setError("Kaynak ve hedef aynı olamaz"); return; }
-    if (currencyMismatch) {
-      setError("Farklı currency transferi v1.7'de desteklenmiyor");
-      return;
-    }
+    if (!fromId) { setError("Kaynak hesabı seç"); return; }
+    const trimmedTarget = toExternalName.trim();
+    if (!trimmedTarget) { setError("Hedef alıcı bilgisini gir"); return; }
     if (!parsedAmount || parsedAmount <= 0) { setError("Tutar pozitif olmalı"); return; }
     setSubmitting(true);
     try {
       const dto = await api.post<TransferDto>("/transfers", {
         from_bank_account_id: fromId,
-        to_bank_account_id: toId,
+        to_external_name: trimmedTarget,
         amount: parsedAmount,
         date,
         description: description.trim() || null,
@@ -96,7 +94,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
       onSuccess?.(dto);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Transfer olusturulamadi");
-      logger.error("api", "transfer create failed", { fromId, toId, parsedAmount }, err);
+      logger.error("api", "transfer create failed", { fromId, target: trimmedTarget, parsedAmount }, err);
     } finally {
       setSubmitting(false);
     }
@@ -113,12 +111,12 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
 
   return (
     <form onSubmit={handleSubmit} className={cn("space-y-4", compact && "space-y-3")}>
-      {/* Info satırı — transfer semantiği */}
+      {/* Info satırı — transfer semantiği (v1.7.x: external-only) */}
       <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs flex items-start gap-2">
         <ArrowLeftRight size={12} className="mt-0.5 shrink-0" />
         <span>
-          Banka hesapları arası taşıma. <strong>Paired tx</strong> oluşur (OUT + IN);
-          gelir/gider raporlarına yansımaz, hesap detay listesinde görünür.
+          Hesabınızdan <strong>dış hedefe</strong> çıkış. Kaynak hesap bakiyesi düşer;
+          gelir/gider raporlarına yansımaz (sadece bakiye hareketi).
         </span>
       </div>
 
@@ -135,7 +133,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
             className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
           >
             <option value="">Hesap seç</option>
-            {eligible.filter((a) => a.id !== toId).map(renderOption)}
+            {eligible.map(renderOption)}
           </select>
         )}
         {fromAcc && (
@@ -150,30 +148,24 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         <ArrowRight size={16} className="text-surface-500" />
       </div>
 
-      {/* To */}
+      {/* To — v1.7.x: serbest metin */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Hedef Hesap *</label>
-        {loadingAccs ? (
-          <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
-        ) : (
-          <select
-            value={toId}
-            onChange={(e) => setToId(e.target.value)}
-            required
-            className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
-          >
-            <option value="">Hesap seç</option>
-            {eligible.filter((a) => a.id !== fromId).map(renderOption)}
-          </select>
-        )}
+        <label className="block text-sm font-medium text-surface-200 mb-1.5">
+          Hedef (Alıcı) *
+        </label>
+        <input
+          type="text"
+          value={toExternalName}
+          onChange={(e) => setToExternalName(e.target.value)}
+          placeholder="Kişi adı, IBAN veya banka hesabı"
+          required
+          maxLength={200}
+          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        />
+        <p className="mt-1 text-[10px] text-surface-400">
+          Sistem dışı hedef — yalnız bakiye hareketi olarak kaydedilir.
+        </p>
       </div>
-
-      {currencyMismatch && (
-        <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
-          <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-          <span>Farklı currency: <strong>{fromAcc?.currency}</strong> → <strong>{toAcc?.currency}</strong>. v1.7'de desteklenmiyor.</span>
-        </div>
-      )}
 
       {/* Amount */}
       <div>
@@ -192,7 +184,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
             {fromAcc?.currency || "TRY"}
           </span>
         </div>
-        {balanceWarn && !currencyMismatch && (
+        {balanceWarn && (
           <p className="mt-1 text-[11px] text-amber-300 flex items-center gap-1">
             <AlertTriangle size={10} />
             Bakiye yetersiz; transfer yine yapılır, kaynak hesap negatife düşer.
@@ -248,7 +240,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         )}
         <button
           type="submit"
-          disabled={submitting || currencyMismatch}
+          disabled={submitting}
           className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}

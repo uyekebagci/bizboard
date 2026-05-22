@@ -64,11 +64,22 @@ public class TransferService {
 
     @Transactional
     public TransferDto create(CreateTransferRequest req, UUID actorUserId) {
-        if (req.getFromBankAccountId().equals(req.getToBankAccountId())) {
-            throw new IllegalArgumentException("Kaynak ve hedef aynı hesap olamaz");
-        }
         if (req.getAmount() == null || req.getAmount().signum() <= 0) {
             throw new IllegalArgumentException("amount pozitif olmali");
+        }
+        // v1.7.x (Transfer UX): External mode — to_external_name dolu,
+        // to_bank_account_id null. Sadece OUT tx (rapor dışı), kaynak bakiyesi düşer.
+        String externalName = req.getToExternalName() != null ? req.getToExternalName().trim() : null;
+        boolean external = externalName != null && !externalName.isBlank();
+        if (external) {
+            return createExternal(req, actorUserId, externalName);
+        }
+        if (req.getToBankAccountId() == null) {
+            throw new IllegalArgumentException(
+                    "Hedef hesap zorunlu (kayıtlı hesap için to_bank_account_id, dış hedef için to_external_name)");
+        }
+        if (req.getFromBankAccountId().equals(req.getToBankAccountId())) {
+            throw new IllegalArgumentException("Kaynak ve hedef aynı hesap olamaz");
         }
         BankAccount from = bankAccountRepository.findById(req.getFromBankAccountId())
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -270,6 +281,106 @@ public class TransferService {
                         + " " + amount,
                 Map.of("pairId", pairId, "amount", amount));
         log.info("[transfer] deleted pair={} amount={}", pairId, amount);
+    }
+
+    // ─────────────────────── external (v1.7.x Transfer UX) ───────────────────────
+
+    /**
+     * Dış hedefe transfer — yalnız OUT tx oluşur. Kaynak bakiyesi düşer,
+     * paired IN yok. Raporlar kind!=NORMAL filter ile bunu zaten dışlar.
+     */
+    private TransferDto createExternal(CreateTransferRequest req, UUID actorUserId, String externalName) {
+        BankAccount from = bankAccountRepository.findById(req.getFromBankAccountId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Kaynak hesap bulunamadi: " + req.getFromBankAccountId()));
+        if (INELIGIBLE_TYPES.contains(from.getType())) {
+            throw new IllegalArgumentException(
+                    "Kaynak hesap tipi transfer'e uygun degil: " + from.getType()
+                            + " (MAIN_CASH ve SUB_CASH transfer yapamaz)");
+        }
+        if (from.getBusiness() == null) {
+            throw new IllegalArgumentException("Kaynak hesap business'a bağlı değil");
+        }
+        UUID businessId = from.getBusiness().getId();
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        if (!from.isActive()) {
+            throw new IllegalArgumentException("Pasif hesaptan transfer yapilamaz");
+        }
+
+        Business business = from.getBusiness();
+        User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+        String currency = java.util.Optional.ofNullable(from.getCurrency()).orElse("TRY");
+        BigDecimal amount = req.getAmount();
+        String userDescription = req.getDescription();
+        // Description: "Transfer → <name>" prefix + user description (varsa).
+        String description = "Transfer → " + externalName
+                + (userDescription != null && !userDescription.isBlank()
+                        ? " · " + userDescription : "");
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("external_target", externalName);
+        metadata.put("transfer_mode", "external");
+
+        // Tek OUT tx — pair_id NULL (paired değil)
+        Transaction outTx = Transaction.builder()
+                .business(business)
+                .direction(TransactionDirection.EXPENSE)
+                .kind(TransactionKind.TRANSFER)
+                .transferPairId(null)
+                .amount(amount)
+                .currency(currency)
+                .description(description)
+                .date(req.getDate())
+                .paymentMethod("HESAPDAN")
+                .bankAccount(from)
+                .metadata(metadata)
+                .createdBy(actor)
+                .build();
+        outTx = transactionRepository.save(outTx);
+
+        // Bakiye düşür
+        BigDecimal fromBal = from.getCurrentBalance() != null
+                ? from.getCurrentBalance() : BigDecimal.ZERO;
+        String lowBalanceWarning = null;
+        if (fromBal.compareTo(amount) < 0) {
+            lowBalanceWarning = "Kaynak hesap bakiyesi yetersiz (mevcut: "
+                    + fromBal.toPlainString() + " " + currency
+                    + "); transfer yine de oluşturuldu — bakiye negatife düşecek.";
+            log.warn("[transfer-ext] low balance: from={} balance={} amount={}",
+                    from.getName(), fromBal, amount);
+        }
+        from.setCurrentBalance(fromBal.subtract(amount));
+        bankAccountRepository.save(from);
+
+        auditLogService.recordEntityAction(
+                "TRANSFER_CREATE_EXTERNAL",
+                actorUserId, actor != null ? actor.getUsername() : null,
+                "TRANSFER", outTx.getId(),
+                "Dis transfer: " + from.getName() + " -> " + externalName
+                        + " " + amount + " " + currency,
+                Map.of(
+                        "fromBankAccountId", from.getId(),
+                        "externalTarget", externalName,
+                        "amount", amount,
+                        "lowBalanceWarning", lowBalanceWarning != null));
+        log.info("[transfer-ext] {} -> {} {} {} (txId={})",
+                from.getName(), externalName, amount, currency, outTx.getId());
+
+        return TransferDto.builder()
+                .transferPairId(null) // external'da pair yok
+                .businessId(businessId)
+                .amount(amount)
+                .currency(currency)
+                .date(req.getDate())
+                .description(description)
+                .outTx(DtoMapper.toTransactionDto(outTx))
+                .inTx(null)
+                .fromBankAccountId(from.getId())
+                .fromBankAccountName(from.getName())
+                .toBankAccountId(null)
+                .toBankAccountName(externalName)
+                .lowBalanceWarning(lowBalanceWarning)
+                .build();
     }
 
     // ─────────────────────── helpers ───────────────────────
