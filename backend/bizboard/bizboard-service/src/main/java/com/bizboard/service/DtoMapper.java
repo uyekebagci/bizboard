@@ -77,6 +77,9 @@ public final class DtoMapper {
                 .businessId(t.getBusiness().getId())
                 .categoryId(t.getCategory() != null ? t.getCategory().getId() : null)
                 .direction(t.getDirection().name().toLowerCase(java.util.Locale.ENGLISH))
+                // v1.7.0-beta (Bankalar WP): kind + transfer_pair_id
+                .kind(t.getKind() != null ? t.getKind().name() : "NORMAL")
+                .transferPairId(t.getTransferPairId())
                 .amount(t.getAmount())
                 .currency(t.getCurrency())
                 .description(t.getDescription())

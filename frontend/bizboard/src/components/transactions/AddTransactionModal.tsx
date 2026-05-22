@@ -2,17 +2,21 @@
 
 /**
  * v1.6.23.26 (UI Fix WP TODO 06c8f232): "+ Yeni İşlem" modal'ı.
+ * v1.7.0-beta (Bankalar WP TODO 2a4198b2): 3'lü toggle — Gelir / Gider / Transfer.
  *
  * <p>Önceden Son İşlemler widget'ındaki buton {@code /dashboard/add-transaction}
  * sayfasına navigate ediyordu. Artık aynı sayfa içinde modal açılır; submit
- * sonrası modal kapanır + parent callback ile cache invalidate edilir
- * (refreshConsolidated + refreshClosing + triggerRefresh).</p>
+ * sonrası modal kapanır + parent callback ile cache invalidate edilir.</p>
  */
 
-import { useEffect } from "react";
-import { X, Receipt } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Receipt, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 import type { PaymentMethod } from "@/types";
+import { cn } from "@/lib/utils";
 import { AddTransactionForm } from "./AddTransactionForm";
+import { TransferForm } from "./TransferForm";
+
+type Tab = "income" | "expense" | "transfer";
 
 interface Props {
   open: boolean;
@@ -21,6 +25,10 @@ interface Props {
   /** Payment method shortcut — POS butonu öneri kullanıyor. */
   preselectedPaymentMethod?: PaymentMethod | null;
   preselectedType?: "income" | "expense" | null;
+  /** v1.7.0-beta: Transfer kısayolu — direkt Transfer tab'iyle aç. */
+  initialTab?: Tab;
+  /** v1.7.0-beta: Transfer tab'inde kaynak hesap önceden seçili. */
+  preselectedTransferFromId?: string;
   onClose: () => void;
   /** Submit success → parent: cache invalidate çağrılarını burada yap. */
   onSuccess?: () => void;
@@ -28,8 +36,17 @@ interface Props {
 
 export function AddTransactionModal({
   open, businessId, preselectedPaymentMethod = null, preselectedType = null,
-  onClose, onSuccess,
+  initialTab, preselectedTransferFromId, onClose, onSuccess,
 }: Props) {
+  const [tab, setTab] = useState<Tab>(
+    initialTab ?? (preselectedType ?? "expense"),
+  );
+
+  // open değişince tab'ı reset (yeniden açıldığında initialTab'a düşsün)
+  useEffect(() => {
+    if (open) setTab(initialTab ?? (preselectedType ?? "expense"));
+  }, [open, initialTab, preselectedType]);
+
   // Esc → close
   useEffect(() => {
     if (!open) return;
@@ -41,6 +58,8 @@ export function AddTransactionModal({
   }, [open, onClose]);
 
   if (!open) return null;
+
+  const isTransfer = tab === "transfer";
 
   return (
     <div
@@ -66,20 +85,89 @@ export function AddTransactionModal({
             <X size={16} />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 p-4">
-          <AddTransactionForm
-            compact
-            preselectedBusinessId={businessId}
-            preselectedPaymentMethod={preselectedPaymentMethod}
-            preselectedType={preselectedType}
-            onCancel={onClose}
-            onSuccess={() => {
-              onSuccess?.();
-              onClose();
-            }}
+
+        {/* v1.7.0-beta: 3'lü toggle */}
+        <div className="px-4 py-2 border-b border-surface-700 shrink-0 grid grid-cols-3 gap-2">
+          <TabBtn
+            active={tab === "income"}
+            onClick={() => setTab("income")}
+            tone="emerald"
+            icon={<ArrowDownLeft size={14} />}
+            label="Gelir"
           />
+          <TabBtn
+            active={tab === "expense"}
+            onClick={() => setTab("expense")}
+            tone="red"
+            icon={<ArrowUpRight size={14} />}
+            label="Gider"
+          />
+          <TabBtn
+            active={tab === "transfer"}
+            onClick={() => setTab("transfer")}
+            tone="blue"
+            icon={<ArrowLeftRight size={14} />}
+            label="Transfer"
+          />
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-4">
+          {isTransfer ? (
+            <TransferForm
+              compact
+              preselectedFromId={preselectedTransferFromId}
+              onCancel={onClose}
+              onSuccess={() => {
+                onSuccess?.();
+                onClose();
+              }}
+            />
+          ) : (
+            <AddTransactionForm
+              compact
+              preselectedBusinessId={businessId}
+              preselectedPaymentMethod={preselectedPaymentMethod}
+              preselectedType={tab}
+              onCancel={onClose}
+              onSuccess={() => {
+                onSuccess?.();
+                onClose();
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function TabBtn({
+  active, onClick, tone, icon, label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  tone: "emerald" | "red" | "blue";
+  icon: React.ReactNode;
+  label: string;
+}) {
+  const activeCls = {
+    emerald: "bg-emerald-500/15 border-emerald-500/50 text-emerald-300",
+    red:     "bg-red-500/15 border-red-500/50 text-red-300",
+    blue:    "bg-blue-500/15 border-blue-500/50 text-blue-300",
+  }[tone];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "py-2 rounded-xl font-medium text-sm border-2 transition-colors inline-flex items-center justify-center gap-1.5",
+        active
+          ? activeCls
+          : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

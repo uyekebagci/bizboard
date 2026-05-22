@@ -119,6 +119,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("deviceId") UUID deviceId,
             @Param("date") LocalDate date);
 
+    // ── v1.7.0-beta (Bankalar WP TODO abb90050): Transfer pair queries ──
+
+    /** Transfer pair'in iki tarafını döner (boyut = 2 olmalı, deviation log'lanmalı). */
+    List<Transaction> findByTransferPairIdOrderByDirectionAsc(java.util.UUID transferPairId);
+
+    /**
+     * v1.7.0-beta (Bankalar WP TODO 0aa4c6d1): NAKIT akış hesabında transfer
+     * tx'lerini dışla — TransactionService.closing'de + sum hesaplarında.
+     * Kullanım: stream().filter(t → t.kind == NORMAL) yerine query-level filter.
+     */
     /**
      * v1.6.23.21 (Security WP / arch-rules §1.3.A): business-scoped gün+pm+dir.
      * ConsolidatedDashboard "Hesaptan Harcama" widget'ı için.

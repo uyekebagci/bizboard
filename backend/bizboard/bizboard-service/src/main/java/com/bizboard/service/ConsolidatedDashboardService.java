@@ -200,9 +200,13 @@ public class ConsolidatedDashboardService {
 
         // ── CASH OUTFLOWS (bugün, NAKIT, EXPENSE) ────────────────────
         // v1.6.23.21: business-scoped.
+        // v1.7.0-beta (TODO d0567538): TRANSFER tx dışla (hesaplar arası taşıma).
         List<Transaction> outflowsToday = transactionRepository
                 .findByBusinessIdAndDateAndPaymentMethodAndDirection(
-                        businessId, today, "NAKIT", TransactionDirection.EXPENSE);
+                        businessId, today, "NAKIT", TransactionDirection.EXPENSE)
+                .stream()
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .toList();
         List<ConsolidatedDashboardDto.TxRow> outflowRows = outflowsToday.stream()
                 .map(this::toTxRow)
                 .toList();
@@ -343,11 +347,12 @@ public class ConsolidatedDashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** v1.6.23.21: business-scoped. */
+    /** v1.6.23.21 + v1.7.0-beta (TODO d0567538): TRANSFER tx dışla. */
     private BigDecimal sumByDirection(UUID businessId, LocalDate date, String pm, TransactionDirection dir) {
         return transactionRepository
                 .findByBusinessIdAndDateAndPaymentMethodAndDirection(businessId, date, pm, dir)
                 .stream()
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
                 .map(Transaction::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

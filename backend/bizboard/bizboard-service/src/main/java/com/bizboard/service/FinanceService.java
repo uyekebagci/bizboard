@@ -271,7 +271,9 @@ public class FinanceService {
     private List<FinanceOverviewDto.CategoryData> buildCategoryBreakdown(
             List<Transaction> transactions, TransactionDirection direction) {
 
+        // v1.7.0-beta (Bankalar WP TODO d0567538): TRANSFER tx dışla.
         List<Transaction> filtered = transactions.stream()
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
                 .filter(t -> t.getDirection() == direction)
                 .toList();
 
@@ -358,6 +360,8 @@ public class FinanceService {
             List<Transaction> transactions, TransactionDirection direction, int limit) {
 
         return transactions.stream()
+                // v1.7.0-beta (TODO d0567538): TRANSFER tx dışla
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
                 .filter(t -> t.getDirection() == direction)
                 .sorted((a, b) -> b.getAmount().compareTo(a.getAmount()))
                 .limit(limit)
@@ -417,7 +421,10 @@ public class FinanceService {
     private BigDecimal sumByDirection(List<Transaction> transactions, TransactionDirection dir) {
         // v1.6.23.8 (TODO ad8afc6f): POS tx için net (= amount − commission) kullan.
         // "Net kar" hesabı fiilen banka hesabına düşen tutarı yansıtmalı.
+        // v1.7.0-beta (Bankalar WP TODO d0567538): TRANSFER tx dışla — gelir/gider
+        // değil, hesaplar arası taşıma.
         return transactions.stream()
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
                 .filter(t -> t.getDirection() == dir)
                 .map(SummaryService::effectiveAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

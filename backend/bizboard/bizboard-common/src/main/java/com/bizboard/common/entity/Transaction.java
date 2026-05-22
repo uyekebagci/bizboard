@@ -40,6 +40,24 @@ public class Transaction {
     @Column(nullable = false)
     private TransactionDirection direction;
 
+    /**
+     * v1.7.0-beta (Bankalar WP TODO 0aa4c6d1): Tx tip ekseni —
+     * NORMAL (gelir/gider) veya TRANSFER (paired tx, transfer_pair_id ile).
+     * DB equivalence constraint: TRANSFER ⟺ transferPairId NOT NULL.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    @org.hibernate.annotations.ColumnDefault("'NORMAL'")
+    @Builder.Default
+    private com.bizboard.common.enums.TransactionKind kind = com.bizboard.common.enums.TransactionKind.NORMAL;
+
+    /**
+     * v1.7.0-beta: Paired tx UUID — TRANSFER_OUT ve TRANSFER_IN aynı
+     * pair_id'yi paylaşır. NORMAL tx için NULL.
+     */
+    @Column(name = "transfer_pair_id")
+    private java.util.UUID transferPairId;
+
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 

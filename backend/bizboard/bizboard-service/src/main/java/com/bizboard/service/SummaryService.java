@@ -316,7 +316,9 @@ public class SummaryService {
     }
 
     private BigDecimal sumByDirection(List<Transaction> transactions, TransactionDirection dir) {
+        // v1.7.0-beta (Bankalar WP TODO d0567538): TRANSFER tx dışla.
         return transactions.stream()
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
                 .filter(t -> t.getDirection() == dir)
                 .map(SummaryService::effectiveAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

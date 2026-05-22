@@ -24,6 +24,20 @@ public class TransactionDto {
     private UUID categoryId;
 
     private String direction;
+
+    /**
+     * v1.7.0-beta (Bankalar WP TODO 0aa4c6d1): "NORMAL" | "TRANSFER".
+     * UI badge + tx listesi'nde transfer'leri ayırt etmek için.
+     */
+    private String kind;
+
+    /**
+     * v1.7.0-beta: Transfer pair UUID (kind=TRANSFER ise NOT NULL). UI tx
+     * satırına tıklayınca TransferDetailModal'i bu ile açar.
+     */
+    @JsonProperty("transfer_pair_id")
+    private UUID transferPairId;
+
     private BigDecimal amount;
     private String currency;
     private String description;

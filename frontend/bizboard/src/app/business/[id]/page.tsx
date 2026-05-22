@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon } from "lucide-react";
+import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon, ArrowLeftRight } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { ConsolidatedWidgets } from "@/components/business/dashboard/ConsolidatedWidgets";
 import { CarryOverBanner } from "@/components/closing/CarryOverBanner";
@@ -237,13 +237,24 @@ function RecentTransactionsSection({
   // v1.6.23.26 (UI Fix WP TODO 06c8f232): "+ Yeni İşlem" + POS shortcut artık
   // modal açıyor (sayfa değişimi yok). Modal kapanınca onChange ile cache
   // invalidate edilir.
-  const [showAddModal, setShowAddModal] = useState<null | "ALL" | "POS">(null);
+  // v1.7.0-beta (Bankalar WP TODO c382d6e5): ⇄ Transfer kısayolu — '+ Gelir'
+  // pattern'ine birebir uyumlu küçük chip; modal Transfer tab'iyle açılır.
+  const [showAddModal, setShowAddModal] = useState<null | "ALL" | "POS" | "TRANSFER">(null);
 
   return (
     <section className="card overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-white">Son İşlemler</h2>
         <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowAddModal("TRANSFER")}
+            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md text-blue-200 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30"
+            title="Hesaplar arası transfer"
+          >
+            <ArrowLeftRight size={11} />
+            Transfer
+          </button>
           <button
             type="button"
             onClick={() => setShowAddModal("POS")}
@@ -269,6 +280,7 @@ function RecentTransactionsSection({
         businessId={businessId}
         preselectedPaymentMethod={showAddModal === "POS" ? "POS" : null}
         preselectedType={showAddModal === "POS" ? "income" : null}
+        initialTab={showAddModal === "TRANSFER" ? "transfer" : undefined}
         onClose={() => setShowAddModal(null)}
         onSuccess={onChange}
       />

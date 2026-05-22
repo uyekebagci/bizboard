@@ -114,6 +114,8 @@ public class ClosingCalculator {
 
     /**
      * v1.6.23.21: business-scoped NAKIT akışı.
+     * v1.7.0-beta (Bankalar WP TODO d0567538): TRANSFER tx'leri dışla
+     * (kasaya gerçek gelir/gider değil — hesaplar arası taşıma).
      */
     @Transactional(readOnly = true)
     public BigDecimal sumCashFlowForDate(UUID businessId, LocalDate date) {
@@ -122,6 +124,8 @@ public class ClosingCalculator {
         BigDecimal expense = BigDecimal.ZERO;
         for (Transaction t : txs) {
             if (t.getBusiness() == null || !businessId.equals(t.getBusiness().getId())) continue;
+            // v1.7.0-beta: TRANSFER tx'leri kasa akışına girmez.
+            if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) continue;
             if (!"NAKIT".equalsIgnoreCase(Objects.requireNonNullElse(t.getPaymentMethod(), "NAKIT"))) {
                 continue;
             }
@@ -142,6 +146,7 @@ public class ClosingCalculator {
         BigDecimal income = BigDecimal.ZERO;
         BigDecimal expense = BigDecimal.ZERO;
         for (Transaction t : txs) {
+            if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) continue;
             if (!"NAKIT".equalsIgnoreCase(Objects.requireNonNullElse(t.getPaymentMethod(), "NAKIT"))) {
                 continue;
             }

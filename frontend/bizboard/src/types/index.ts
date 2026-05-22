@@ -138,11 +138,18 @@ export interface Category {
 /** v1.6.3+: ödeme yöntemi — POS veya NAKIT (default NAKIT). */
 export type PaymentMethod = "POS" | "NAKIT";
 
+/** v1.7.0-beta (Bankalar WP): tx tip ekseni. */
+export type TransactionKind = "NORMAL" | "TRANSFER";
+
 export interface Transaction {
   id: string;
   business_id: string;
   category_id: string | null;
   direction: TransactionDirection;
+  /** v1.7.0-beta: NORMAL veya TRANSFER. UI badge + delete guard için. */
+  kind?: TransactionKind;
+  /** v1.7.0-beta: kind=TRANSFER ise pair UUID; UI TransferDetailModal tetikleyici. */
+  transfer_pair_id?: string | null;
   amount: number;
   currency: string;
   description: string | null;
@@ -1052,4 +1059,31 @@ export interface PhoneDevice {
   banks: PhoneDeviceBank[];
   created_at?: string | null;
   updated_at?: string | null;
+}
+
+// ─────────── v1.7.0-beta Transfer (Bankalar WP) ───────────
+
+export interface CreateTransferRequest {
+  from_bank_account_id: string;
+  to_bank_account_id: string;
+  amount: number;
+  date: string;
+  description?: string;
+}
+
+export interface TransferDto {
+  transfer_pair_id: string;
+  business_id: string;
+  amount: number;
+  currency: string;
+  date: string;
+  description: string | null;
+  out_tx: Transaction;
+  in_tx: Transaction;
+  from_bank_account_id: string;
+  from_bank_account_name: string;
+  to_bank_account_id: string;
+  to_bank_account_name: string;
+  /** Bakiye yetersiz uyarısı (200 + warning). Null = OK. */
+  low_balance_warning: string | null;
 }

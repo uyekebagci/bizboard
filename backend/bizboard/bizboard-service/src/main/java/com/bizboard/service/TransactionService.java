@@ -624,6 +624,15 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
 
+        // v1.7.0-beta (Bankalar WP TODO 3993f396): Transfer tx tek-yönlü silinemez.
+        // Pair'in iki tarafı atomic silinmeli — DELETE /transfers/{pair_id} kullan.
+        if (transaction.getTransferPairId() != null) {
+            throw new IllegalArgumentException(
+                    "Bu islem bir transferin parcasi. Tek tarafli silinemez — "
+                            + "DELETE /transfers/" + transaction.getTransferPairId()
+                            + " ile pair'in tamamini sil.");
+        }
+
         Business business = transaction.getBusiness();
 
         User deletedByUser = userRepository.findById(userId)
