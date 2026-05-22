@@ -23,7 +23,12 @@ import java.util.List;
 @Builder
 public class SubCashDetailDto {
 
-    /** Sub-cash bank_account info. */
+    /**
+     * Sub-cash bank_account info.
+     * v1.6.23.27: {@code @JsonProperty("sub_cash")} ile snake_case
+     * (frontend convention'ıyla uyumlu — diğer alanlar zaten snake_case).
+     */
+    @JsonProperty("sub_cash")
     private BankAccountDto subCash;
 
     /** Σ assigned BANK_ACCOUNT.current_balance (TODO d884a0ec formula). */
