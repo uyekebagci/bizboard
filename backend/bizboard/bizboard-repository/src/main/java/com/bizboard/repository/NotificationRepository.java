@@ -29,4 +29,9 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Modifying
     @Query("delete from Notification n where n.read = true and n.createdAt < :threshold")
     long deleteReadBefore(LocalDateTime threshold);
+
+    /** v1.7.x: kullanıcı silme öncesi FK temizleme. */
+    @Modifying
+    @Query("delete from Notification n where n.user.id = :userId")
+    int deleteByUserId(UUID userId);
 }

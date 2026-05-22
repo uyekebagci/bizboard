@@ -9,6 +9,7 @@ import com.bizboard.common.entity.User;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminUserService {
@@ -24,6 +26,9 @@ public class AdminUserService {
     private final BusinessRepository businessRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    // v1.7.x: user delete öncesi FK temizleme için
+    private final com.bizboard.repository.NotificationRepository notificationRepository;
+    private final com.bizboard.repository.RefreshTokenRepository refreshTokenRepository;
 
     @Transactional(readOnly = true)
     public List<UserDto> getAllUsers() {
@@ -172,6 +177,15 @@ public class AdminUserService {
 
         String username = user.getUsername();
         String role = user.getRole();
+
+        // v1.7.x: FK temizliği — notifications + refresh_tokens.
+        // Bu kayıtlar kullanıcıya bağlı; cascade yok, manuel delete gerekiyor.
+        // (audit_logs.user_id NULLABLE olduğu için orada cascade gerekmez.)
+        int notif = notificationRepository.deleteByUserId(userId);
+        int rt = refreshTokenRepository.deleteByUserId(userId);
+        if (notif > 0 || rt > 0) {
+            log.info("[user-delete] FK cleanup — notifications: {}, refresh_tokens: {}", notif, rt);
+        }
 
         userRepository.delete(user);
 

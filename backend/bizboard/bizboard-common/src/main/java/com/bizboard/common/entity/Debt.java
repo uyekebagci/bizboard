@@ -63,15 +63,20 @@ public class Debt {
      * v1.7.x WP fbb2ef55: ödeme yapıldıktan sonra kalan tutar.
      * remaining_amount = amount − Σ(debt_payments for this debt).
      * 0 ise PAID, amount'tan küçükse PARTIAL.
+     *
+     * <p>JPA tarafında nullable=true bırakıldı — Hibernate auto-DDL prod'da
+     * mevcut row'lara NOT NULL ekleyemediği için. Runtime'da SchemaMigrationRunner
+     * backfill + NOT NULL apply ediyor; bu nedenle servis kodu null beklemez
+     * (defansif: getRemainingAmount() null'sa amount fallback'i yapılıyor).</p>
      */
-    @Column(name = "remaining_amount", nullable = false, precision = 15, scale = 2)
+    @Column(name = "remaining_amount", precision = 15, scale = 2)
     private BigDecimal remainingAmount;
 
     /**
      * v1.7.x: OPEN | PARTIAL | PAID | CANCELLED.
      * Eski is_settled boolean'a paralel; PAID = is_settled.
      */
-    @Column(name = "status", nullable = false, length = 10)
+    @Column(name = "status", length = 10)
     @Builder.Default
     private String status = "OPEN";
 
