@@ -85,6 +85,17 @@ export function AddTransactionForm({
   const [posDevices, setPosDevices] = useState<PosDeviceListItem[]>([]);
   const [posDeviceId, setPosDeviceId] = useState<string>("");
 
+  // v1.7.x hotfix: compact (modal) modunda outer 3'lü toggle Gelir/Gider arası
+  // geçince form'un internal direction state'i de sync olmalı (initial useState
+  // değeri ikinci kez tetiklenmediği için manuel sync gerekiyor).
+  useEffect(() => {
+    if (preselectedType && preselectedType !== direction) {
+      setDirection(preselectedType);
+      setCategoryId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectedType]);
+
   useEffect(() => {
     api.get<Counterpart[]>("/counterparts")
       .then((r) => setCounterparts(r || []))
@@ -229,35 +240,40 @@ export function AddTransactionForm({
         </div>
       )}
 
-      {/* Direction Toggle */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => { setDirection("income"); setCategoryId(""); }}
-          className={cn(
-            "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
-            direction === "income"
-              ? "bg-green-500/15 border-green-500/50 text-green-300"
-              : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
-          )}
-        >
-          <ArrowDownLeft size={18} />
-          Gelir
-        </button>
-        <button
-          type="button"
-          onClick={() => { setDirection("expense"); setCategoryId(""); }}
-          className={cn(
-            "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
-            direction === "expense"
-              ? "bg-red-500/15 border-red-500/50 text-red-300"
-              : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
-          )}
-        >
-          <ArrowUpRight size={18} />
-          Gider
-        </button>
-      </div>
+      {/* Direction Toggle —
+          v1.7.x hotfix: compact (modal) modunda outer AddTransactionModal'ın
+          3'lü toggle'ı (Gelir/Gider/Transfer) direction'ı yönetir; iç toggle
+          duplicate olmasın diye sadece standalone page'de gösterilir. */}
+      {!compact && (
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => { setDirection("income"); setCategoryId(""); }}
+            className={cn(
+              "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+              direction === "income"
+                ? "bg-green-500/15 border-green-500/50 text-green-300"
+                : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+            )}
+          >
+            <ArrowDownLeft size={18} />
+            Gelir
+          </button>
+          <button
+            type="button"
+            onClick={() => { setDirection("expense"); setCategoryId(""); }}
+            className={cn(
+              "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+              direction === "expense"
+                ? "bg-red-500/15 border-red-500/50 text-red-300"
+                : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+            )}
+          >
+            <ArrowUpRight size={18} />
+            Gider
+          </button>
+        </div>
+      )}
 
       {/* Payment Method */}
       <div>
