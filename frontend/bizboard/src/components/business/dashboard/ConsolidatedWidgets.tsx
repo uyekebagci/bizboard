@@ -17,6 +17,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
 import { WidgetDetailModal } from "./WidgetDetailModal";
 import { BankAccountDetailContent } from "@/components/bank/BankAccountDetailContent";
+import { SubCashDetailContent } from "@/components/bank/SubCashDetailContent";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
 
 interface Props {
@@ -617,7 +618,12 @@ function BankAccountsCard({
       headerAction={headerAction}
     >
       {view === "DETAIL" && selectedAccount && (
-        <BankAccountDetailContent accountId={selectedAccount.id} />
+        // v1.6.23.28 (UI Fix WP TODO 635e1c91 tetikleyici fix): SUB_CASH için
+        // SubCashDetailContent (aggregate + atama yönetimi). Diğer tipler için
+        // BankAccountDetailContent (son tx + trend).
+        selectedAccount.type === "SUB_CASH"
+          ? <SubCashDetailContent subCashId={selectedAccount.id} onChange={onChange} />
+          : <BankAccountDetailContent accountId={selectedAccount.id} />
       )}
 
       {view === "CREATE_ANY" && (

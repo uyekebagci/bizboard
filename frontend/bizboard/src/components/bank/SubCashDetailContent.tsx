@@ -16,12 +16,14 @@
  * </ul>
  */
 
-import { useCallback, useEffect, useState } from "react";
-import { Loader2, AlertTriangle, TrendingUp, Receipt, Plus, X, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, AlertTriangle, TrendingUp, Receipt, Plus, X, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, cn, trNormalize } from "@/lib/utils";
 import type { SubCashDetail, SubCashEntityType } from "@/types";
+
+const PAGE_SIZE = 50;
 
 interface Props {
   subCashId: string;
@@ -255,6 +257,10 @@ interface EntityOption {
   type: SubCashEntityType;
   subtitle?: string;
   balance?: number;
+  /** v1.6.23.28: aktif/pasif filter için */
+  active: boolean;
+  /** v1.6.23.28: TR-normalized search haystack (precomputed). */
+  searchHaystack: string;
 }
 
 function AssignmentPicker({
@@ -265,9 +271,19 @@ function AssignmentPicker({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // v1.6.23.28 (UI Fix WP TODO 24310479): search + filter + pagination state
+  const [query, setQuery] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
+  const [page, setPage] = useState(0);
 
-  // Mevcut atamaları ID setine çevir — disable için
-  const assignedIds = new Set(existingAssignments.map((a) => `${a.entity_type}:${a.entity_id}`));
+  // Mevcut atamaları ID setine çevir — disable + sort için
+  const assignedIds = useMemo(
+    () => new Set(existingAssignments.map((a) => `${a.entity_type}:${a.entity_id}`)),
+    [existingAssignments],
+  );
+
+  // Tab/inactive değişince sayfayı sıfırla, query'i koru
+  useEffect(() => { setPage(0); }, [tab, showInactive, query]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -275,35 +291,53 @@ function AssignmentPicker({
     try {
       let result: EntityOption[] = [];
       if (tab === "BANK_ACCOUNT") {
+        // v1.6.23.28: backend zaten include_inactive=true ile pasifleri döner.
         const accounts = await api.get<Array<{
           id: string; name: string; type: string; bank_name: string | null;
-          business_id: string | null; current_balance: number;
-        }>>("/bank-accounts");
+          iban: string | null; business_id: string | null; current_balance: number;
+          is_active: boolean;
+        }>>(showInactive ? "/bank-accounts?include_inactive=true" : "/bank-accounts");
         result = (accounts || [])
           .filter((a) => a.business_id === businessId)
-          // MAIN_CASH ve SUB_CASH yasak (server reddediyor, UI da gösterme)
           .filter((a) => a.type !== "MAIN_CASH" && a.type !== "SUB_CASH")
-          .map((a) => ({
-            id: a.id,
-            name: a.name,
-            type: "BANK_ACCOUNT" as const,
-            subtitle: a.bank_name || a.type,
-            balance: a.current_balance,
-          }));
+          .map((a) => {
+            // IBAN son 4 hane
+            const ibanTail = a.iban && a.iban.length >= 4
+              ? a.iban.slice(-4) : "";
+            return {
+              id: a.id,
+              name: a.name,
+              type: "BANK_ACCOUNT" as const,
+              subtitle: a.bank_name || a.type,
+              balance: a.current_balance,
+              active: a.is_active,
+              searchHaystack: trNormalize(
+                `${a.name} ${a.bank_name ?? ""} ${a.iban ?? ""} ${ibanTail} ${a.type}`,
+              ),
+            };
+          });
       } else if (tab === "POS_DEVICE") {
         const devices = await api.get<Array<{
-          id: string; name: string; bank_name: string | null; business_id: string | null;
-        }>>("/pos-devices");
+          id: string; name: string; bank_name: string | null;
+          business_id: string | null; is_active: boolean;
+          owner_counterpart_name?: string | null;
+        }>>(showInactive ? "/pos-devices?include_inactive=true" : "/pos-devices");
         result = (devices || [])
           .filter((d) => d.business_id === businessId)
           .map((d) => ({
             id: d.id, name: d.name,
             type: "POS_DEVICE" as const,
             subtitle: d.bank_name || "POS",
+            active: d.is_active,
+            searchHaystack: trNormalize(
+              `${d.name} ${d.bank_name ?? ""} ${d.owner_counterpart_name ?? ""}`,
+            ),
           }));
       } else {
+        // COUNTERPART — pasiflik kavramı yok, hep aktif kabul
         const cps = await api.get<Array<{
           id: string; name: string; business_id: string | null; role?: string;
+          tax_id?: string | null; contact_phone?: string | null;
         }>>("/counterparts");
         result = (cps || [])
           .filter((c) => c.business_id === businessId)
@@ -311,6 +345,10 @@ function AssignmentPicker({
             id: c.id, name: c.name,
             type: "COUNTERPART" as const,
             subtitle: c.role || "—",
+            active: true,
+            searchHaystack: trNormalize(
+              `${c.name} ${c.tax_id ?? ""} ${c.contact_phone ?? ""} ${c.role ?? ""}`,
+            ),
           }));
       }
       setOptions(result);
@@ -319,9 +357,28 @@ function AssignmentPicker({
     } finally {
       setLoading(false);
     }
-  }, [tab, businessId]);
+  }, [tab, businessId, showInactive]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // v1.6.23.28: search + filter + sort (atanmamış üstte + ad ASC)
+  const filteredSorted = useMemo(() => {
+    const q = trNormalize(query.trim());
+    let list = options;
+    if (q) list = list.filter((o) => o.searchHaystack.includes(q));
+    // COUNTERPART için active filter no-op (her zaman true)
+    list = list.filter((o) => showInactive || o.active);
+    return [...list].sort((a, b) => {
+      const aAssigned = assignedIds.has(`${a.type}:${a.id}`);
+      const bAssigned = assignedIds.has(`${b.type}:${b.id}`);
+      if (aAssigned !== bAssigned) return aAssigned ? 1 : -1; // unassigned first
+      return a.name.localeCompare(b.name, "tr");
+    });
+  }, [options, query, showInactive, assignedIds]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const paged = filteredSorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   async function assignOne(opt: EntityOption) {
     setBusyId(opt.id);
@@ -340,6 +397,8 @@ function AssignmentPicker({
     }
   }
 
+  const hasInactiveChip = tab !== "COUNTERPART";
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -347,7 +406,7 @@ function AssignmentPicker({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col"
+        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700 shrink-0">
           <h3 className="text-sm font-semibold text-white">Atama Ekle</h3>
@@ -357,11 +416,11 @@ function AssignmentPicker({
         </div>
 
         {/* Tip tab'leri */}
-        <div className="px-4 py-2 border-b border-surface-700 flex gap-1.5">
+        <div className="px-4 py-2 border-b border-surface-700 flex gap-1.5 shrink-0">
           {(["BANK_ACCOUNT", "POS_DEVICE", "COUNTERPART"] as const).map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => { setTab(t); setQuery(""); }}
               className={cn(
                 "px-2.5 py-1 rounded-full text-[11px] font-medium border",
                 tab === t
@@ -374,7 +433,60 @@ function AssignmentPicker({
           ))}
         </div>
 
-        <p className="text-[10px] text-amber-300/80 px-4 py-2 border-b border-surface-700">
+        {/* Search + active chip — v1.6.23.28 (TODO 24310479) */}
+        <div className="px-4 py-2 border-b border-surface-700 shrink-0 space-y-2">
+          <div className="relative">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={
+                tab === "BANK_ACCOUNT" ? "Ad / banka / IBAN ara…" :
+                tab === "POS_DEVICE"   ? "Ad / banka / sahip ara…" :
+                                          "Ad / VKN / telefon ara…"
+              }
+              className="w-full pl-7 pr-7 py-1.5 text-xs bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-surface-700"
+                aria-label="Aramayı temizle"
+              >
+                <X size={10} className="text-surface-400" />
+              </button>
+            )}
+          </div>
+          {hasInactiveChip && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowInactive(false)}
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-medium border",
+                  !showInactive
+                    ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
+                    : "bg-surface-700 border-surface-600 text-surface-300",
+                )}
+              >
+                Aktif
+              </button>
+              <button
+                onClick={() => setShowInactive(true)}
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-medium border",
+                  showInactive
+                    ? "bg-surface-500 border-surface-400 text-white"
+                    : "bg-surface-700 border-surface-600 text-surface-300",
+                )}
+              >
+                Tümü
+              </button>
+            </div>
+          )}
+        </div>
+
+        <p className="text-[10px] text-amber-300/80 px-4 py-1.5 border-b border-surface-700 shrink-0">
           {tab === "BANK_ACCOUNT"
             ? "BANK_ACCOUNT katkı verir (current_balance). MAIN_CASH ve SUB_CASH atanamaz."
             : "POS_DEVICE / COUNTERPART aggregate'a 0 katkı verir (sadece tx grouping)."}
@@ -391,13 +503,15 @@ function AssignmentPicker({
             <div className="flex items-center justify-center py-8">
               <Loader2 size={20} className="animate-spin text-surface-400" />
             </div>
-          ) : options.length === 0 ? (
+          ) : paged.length === 0 ? (
             <p className="text-xs text-surface-500 text-center py-6">
-              Atanabilir entity yok.
+              {query
+                ? "Arama sonucu yok."
+                : "Atanabilir entity yok."}
             </p>
           ) : (
             <div className="space-y-1">
-              {options.map((o) => {
+              {paged.map((o) => {
                 const already = assignedIds.has(`${o.type}:${o.id}`);
                 return (
                   <button
@@ -410,10 +524,18 @@ function AssignmentPicker({
                       already
                         ? "border-surface-700 bg-surface-900 opacity-50 cursor-not-allowed"
                         : "border-surface-700 hover:border-brand-500/40 hover:bg-surface-700/40",
+                      !o.active && !already && "opacity-60",
                     )}
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{o.name}</p>
+                      <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
+                        {o.name}
+                        {!o.active && (
+                          <span className="text-[9px] px-1 py-0.5 rounded bg-surface-700 text-surface-400 border border-surface-600">
+                            pasif
+                          </span>
+                        )}
+                      </p>
                       <p className="text-[10px] text-surface-400">
                         {o.subtitle}
                         {already && " · zaten bu sub-cash'te"}
@@ -433,6 +555,38 @@ function AssignmentPicker({
             </div>
           )}
         </div>
+
+        {/* v1.6.23.28 (TODO 24310479): pagination footer */}
+        {!loading && filteredSorted.length > PAGE_SIZE && (
+          <div className="px-4 py-2 border-t border-surface-700 flex items-center justify-between shrink-0 text-[11px]">
+            <span className="text-surface-400">
+              {safePage * PAGE_SIZE + 1}–
+              {Math.min((safePage + 1) * PAGE_SIZE, filteredSorted.length)}
+              {" / "}{filteredSorted.length}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={safePage === 0}
+                className="p-1 rounded-md hover:bg-surface-700 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={12} className="text-surface-300" />
+              </button>
+              <span className="px-1.5 text-surface-300">
+                {safePage + 1} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={safePage >= totalPages - 1}
+                className="p-1 rounded-md hover:bg-surface-700 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={12} className="text-surface-300" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

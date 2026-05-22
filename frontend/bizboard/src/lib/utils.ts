@@ -6,6 +6,27 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
 
+/**
+ * v1.6.23.28 (UI Fix WP TODO 24310479): Türkçe-uyumlu arama normalizasyonu.
+ *
+ * <p>Lower-case TR locale (İ → i, I → ı) + Türkçe karakterler ASCII'ye
+ * fold edilir (ı/ç/ğ/ö/ş/ü → i/c/g/o/s/u). Hem haystack'i hem query'yi
+ * bu fonksiyondan geçirip substring eşleştir.</p>
+ *
+ * <p>Örnek: trNormalize("İstanbul Çiçek") → "istanbul cicek".</p>
+ */
+export function trNormalize(s: string | null | undefined): string {
+  if (s == null) return "";
+  return s
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ç/g, "c")
+    .replace(/ğ/g, "g")
+    .replace(/ö/g, "o")
+    .replace(/ş/g, "s")
+    .replace(/ü/g, "u");
+}
+
 // Format currency
 export function formatCurrency(
   amount: number,

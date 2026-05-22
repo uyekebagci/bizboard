@@ -357,7 +357,9 @@ export interface ConsolidatedDashboard {
   bank_accounts: Array<{
     id: string;
     name: string;
-    type: "CHECKING" | "SAVINGS" | "CASH" | "CASH_HOLDER";
+    // v1.6.23.25: Kasa hiyerarşisi enum'a MAIN_CASH + SUB_CASH eklendi.
+    // v1.6.23.27: SUB_CASH widget'ta tıklanınca SubCashDetailContent render edilir.
+    type: BankAccountType;
     bank_name: string | null;
     holder_name: string | null;
     balance: number;
