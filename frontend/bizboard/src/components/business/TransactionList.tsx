@@ -98,7 +98,17 @@ export function TransactionList({
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
-                  {tx.description || tx.category?.name || (isTransfer ? "Transfer" : "Islem")}
+                  {/* v1.7.x (POS Komisyon WP TODO e718df3d): POS satır title
+                      brief format = "{tutar} TL POS işlemi yapıldı". User
+                      description varsa suffix olarak eklenir. */}
+                  {isPos
+                    ? (
+                        <>
+                          {formatCurrency(tx.amount, currency)} POS işlemi yapıldı
+                          {tx.description ? ` · ${tx.description}` : ""}
+                        </>
+                      )
+                    : (tx.description || tx.category?.name || (isTransfer ? "Transfer" : "Islem"))}
                   {isTransfer && (
                     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40">
                       ⇄ {tx.direction === "expense" ? "OUT" : "IN"}
@@ -129,25 +139,20 @@ export function TransactionList({
 
               <span
                 className={cn(
-                  "text-sm font-semibold flex-shrink-0 text-right",
-                  isIncome ? "text-green-600" : "text-red-600"
+                  "text-sm font-bold flex-shrink-0 text-right",
+                  isPos ? "text-emerald-400"
+                        : isIncome ? "text-green-600" : "text-red-600"
                 )}
               >
-                {/* v1.7.x (POS Komisyon WP TODO e718df3d): POS row format
-                    "150K +3K" → büyük: gross, küçük: kâr (yeşil).
-                    Backward compat: pos_profit yoksa eski net-format. */}
-                {isIncome ? "+" : "-"}
-                {formatCurrency(tx.amount, currency)}
-                {isPos && tx.pos_profit != null && tx.pos_profit !== 0 && (
-                  <span className="block text-[10px] font-semibold text-emerald-400 mt-0.5">
-                    +kâr {formatCurrency(tx.pos_profit, currency)}
-                  </span>
-                )}
-                {isPos && tx.pos_profit == null && tx.pos_net != null && tx.pos_net !== tx.amount && (
-                  <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
-                    net {formatCurrency(tx.pos_net, currency)}
-                  </span>
-                )}
+                {/* v1.7.x (POS Komisyon WP TODO e718df3d): brief format —
+                    POS satırında sağda SADECE profit (yeşil bold). Gross
+                    title satırında "X TL POS işlemi yapıldı" olarak gözüküyor. */}
+                {isPos
+                  ? (tx.pos_profit != null
+                      ? `+${formatCurrency(tx.pos_profit, currency)}`
+                      // Backward compat (eski tx, profit yok): gross göster
+                      : `+${formatCurrency(tx.amount, currency)}`)
+                  : `${isIncome ? "+" : "-"}${formatCurrency(tx.amount, currency)}`}
               </span>
 
               {/* Delete button */}
@@ -453,11 +458,15 @@ export function TransactionDetailModal({
                         const profit = ourAmt - bankAmt;
                         const fmt = (n: number) =>
                           n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const fmtRate = (n: number) =>
+                          `%${n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                        // v1.7.x (POS Komisyon WP TODO 54f94805): brief spec breakdown
                         return (
                           <div className="mt-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-200 space-y-1">
-                            <div className="flex justify-between"><span>Banka komisyonu</span><span className="font-mono">{fmt(bankAmt)} ₺</span></div>
-                            <div className="flex justify-between"><span>Bizim komisyonumuz</span><span className="font-mono">{fmt(ourAmt)} ₺</span></div>
-                            <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-semibold text-emerald-300"><span>Kâr</span><span className="font-mono">{fmt(profit)} ₺</span></div>
+                            <div className="flex justify-between"><span>İşlem Tutarı:</span><span className="font-mono">₺{fmt(amt)}</span></div>
+                            <div className="flex justify-between"><span>Banka Komisyonu:</span><span className="font-mono">₺{fmt(bankAmt)} <span className="text-indigo-300/70">({fmtRate(bank)})</span></span></div>
+                            <div className="flex justify-between"><span>Bizim Komisyon:</span><span className="font-mono">₺{fmt(ourAmt)} <span className="text-indigo-300/70">({fmtRate(ours)})</span></span></div>
+                            <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-bold text-emerald-300"><span>Net Kâr (gelir):</span><span className="font-mono">₺{fmt(profit)}</span></div>
                           </div>
                         );
                       }

@@ -418,11 +418,27 @@ export function AddTransactionForm({
                 const profit = ourAmt - bankAmt;
                 const fmt = (n: number) =>
                   n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const fmtRate = (n: number) =>
+                  `%${n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                // v1.7.x (POS Komisyon WP TODO 54f94805): brief spec breakdown card
                 return (
                   <div className="mt-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-200 space-y-1">
-                    <div className="flex justify-between"><span>Banka komisyonu</span><span className="font-mono">{fmt(bankAmt)} ₺</span></div>
-                    <div className="flex justify-between"><span>Bizim komisyonumuz</span><span className="font-mono">{fmt(ourAmt)} ₺</span></div>
-                    <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-semibold text-emerald-300"><span>Kâr</span><span className="font-mono">{fmt(profit)} ₺</span></div>
+                    <div className="flex justify-between">
+                      <span>İşlem Tutarı:</span>
+                      <span className="font-mono">₺{fmt(amt)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Banka Komisyonu:</span>
+                      <span className="font-mono">₺{fmt(bankAmt)} <span className="text-indigo-300/70">({fmtRate(bank)})</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Bizim Komisyon:</span>
+                      <span className="font-mono">₺{fmt(ourAmt)} <span className="text-indigo-300/70">({fmtRate(ours)})</span></span>
+                    </div>
+                    <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-bold text-emerald-300">
+                      <span>Net Kâr (gelir):</span>
+                      <span className="font-mono">₺{fmt(profit)}</span>
+                    </div>
                   </div>
                 );
               }

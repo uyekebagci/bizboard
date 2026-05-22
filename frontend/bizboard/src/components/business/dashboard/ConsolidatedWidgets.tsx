@@ -110,10 +110,13 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
     >
       <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-2">Konsolide DGR</p>
 
-      {/* Net + Genel Kasa — yan yana iki primary metric */}
+      {/* Net + Genel Kasa — yan yana iki primary metric.
+          v1.7.x WP TODO b92d05fe: Konsolide Net = ekonomik gelir (POS profit
+          + non-POS gross − giderler). Genel Kasa = fiziksel para (bank+nakit).
+          Aynı sayı OLMAMASI normal. */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Net</p>
+          <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Konsolide Net</p>
           <p className="text-2xl font-bold truncate" title={formatCurrency(c.net, "TRY")}>
             {formatCurrency(c.net, "TRY")}
           </p>
@@ -168,13 +171,17 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
         <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" />
         <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" />
         <div className="pt-2 border-t border-surface-700">
-          <DetailRow label="Şimdiki Net" value={c.net} tone={sign === "pos" ? "pos" : sign === "neg" ? "neg" : "neutral"} bold />
+          <DetailRow label="Konsolide Net (ekonomik gelir)" value={c.net} tone={sign === "pos" ? "pos" : sign === "neg" ? "neg" : "neutral"} bold />
           {pendingPos > 0 && (
             <DetailRow label="Beklenen Net (settle sonrası)" value={expectedNet} tone="pos" bold />
           )}
         </div>
+        {/* v1.7.x WP 8b961444 TODO b92d05fe: yeni formül */}
         <p className="text-[11px] text-surface-400 pt-2">
-          Formül: total_cash + bank_balance + receivables − payables − cc − loan
+          <strong>Konsolide Net</strong> = Σ POS_profit + Σ non-POS gelir − Σ gider
+          (transfer 0). Alacak/verecek bu hesaba DAHİL DEĞİL; ayrı satırda
+          görünür. <strong>Genel Kasa</strong> = nakit + banka bakiyeleri
+          (fiziksel para). İki sayı farklıdır — POS'ta banka komisyonu kadar fark normal.
         </p>
       </div>
     </WidgetDetailModal>

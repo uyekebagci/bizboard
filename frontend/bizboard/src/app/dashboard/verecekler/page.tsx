@@ -1,12 +1,15 @@
 "use client";
 
 /**
- * v1.6.6: Alacaklar sayfası — counterpart bazlı açık (settled=false) RECEIVABLE özeti.
+ * v1.7.x (UI Fix WP 8b961444 TODO 1d5d526b): Verecekler sayfası —
+ * Alacaklar'ın muadili. PAYABLE direction'lı debt'leri counterpart bazlı
+ * agregate eder.
  *
- * Veri: GET /api/receivables (v1.6.5)
+ * <p>Veri: GET /debts (user-scoped) + client-side filtre direction=PAYABLE
+ * ve settled=false. Counterpart bazlı grupla; tutar DESC default sıralama.</p>
  *
- * Sütunlar: Kişi/Firma, Tutar (₺), Tip(ler), Vade.
- * Default sıralama: tutar DESC (backend zaten DESC döner; client ayrıca sort opsiyonu sağlar).
+ * <p>"+ Verecek Ekle" butonu CounterpartDebtModal'ı direction=PAYABLE
+ * ile açar.</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -19,27 +22,61 @@ import { api } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
-import type { ReceivableAggregate, ReceivableTypeBreakdown } from "@/types";
+import type { Debt } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
 
-export default function AlacaklarPage() {
+interface PayableAggregate {
+  counterpart_id: string | null;
+  counterpart_name: string;
+  total_amount: number;
+  currency: string;
+  last_due_date: string | null;
+  count: number;
+}
+
+export default function VereceklerPage() {
   const router = useRouter();
   const { refreshKey } = useAppStore();
-  const [rows, setRows] = useState<ReceivableAggregate[]>([]);
+  const [rows, setRows] = useState<PayableAggregate[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
-  // v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal
   const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await api.get<ReceivableAggregate[]>("/receivables").catch(() => []);
-        setRows(data || []);
+        const debts = (await api.get<Debt[]>("/debts").catch(() => [])) || [];
+        // Sadece açık PAYABLE
+        const open = debts.filter((d) => d.direction === "PAYABLE" && !d.is_settled);
+        // counterpart bazlı grupla
+        const grouped = new Map<string, PayableAggregate>();
+        for (const d of open) {
+          const key = d.counterpart_id || `name:${(d.counterparty ?? "").toLowerCase()}`;
+          const existing = grouped.get(key);
+          if (existing) {
+            existing.total_amount += d.amount;
+            existing.count += 1;
+            if (d.due_date) {
+              if (!existing.last_due_date || d.due_date > existing.last_due_date) {
+                existing.last_due_date = d.due_date;
+              }
+            }
+          } else {
+            grouped.set(key, {
+              counterpart_id: d.counterpart_id || null,
+              counterpart_name: d.counterparty || "Bilinmiyor",
+              total_amount: d.amount,
+              currency: d.currency || "TRY",
+              last_due_date: d.due_date,
+              count: 1,
+            });
+          }
+        }
+        setRows(Array.from(grouped.values()));
       } catch (err) {
-        logger.error("api", "Receivables fetch failed", undefined, err);
+        logger.error("api", "Payables fetch failed", undefined, err);
       } finally {
         setLoading(false);
       }
@@ -77,42 +114,42 @@ export default function AlacaklarPage() {
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
         <div className="flex items-center gap-2 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-            <HandCoins size={20} className="text-amber-300" />
+          <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center">
+            <HandCoins size={20} className="text-red-300" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Alacaklar</h1>
+            <h1 className="text-xl font-bold text-white">Verecekler</h1>
             <p className="text-xs text-surface-400">
-              Acik (tahsil edilmemis) alacaklarin kisi bazli ozeti
+              Açık (ödenmemiş) verecekler — kişi/firma bazlı özet
             </p>
           </div>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
         >
           <Plus size={16} />
-          Alacak Ekle
+          Verecek Ekle
         </button>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-amber-400" />
+          <Loader2 size={28} className="animate-spin text-red-400" />
         </div>
       ) : rows.length === 0 ? (
         <div className="card p-8 text-center">
           <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Acik alacaginiz yok</p>
+          <p className="text-surface-300 font-medium">Açık verecek yok</p>
           <p className="text-surface-400 text-sm mt-1">
-            Yukaridaki &quot;+ Alacak Ekle&quot; butonu ile yeni bir alacak kaydi olusturabilirsiniz.
+            Yukarıdaki &quot;+ Verecek Ekle&quot; butonu ile yeni bir verecek kaydı oluşturabilirsin.
           </p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
           >
             <Plus size={16} />
-            Alacak Ekle
+            Verecek Ekle
           </button>
         </div>
       ) : (
@@ -120,37 +157,35 @@ export default function AlacaklarPage() {
           {/* Totals */}
           <section className="grid grid-cols-2 gap-3">
             <div className="card p-4">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
-              <p className="mt-1 text-2xl font-bold text-amber-300">
+              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Verecek</p>
+              <p className="mt-1 text-2xl font-bold text-red-300">
                 {formatCurrency(total, "TRY")}
               </p>
             </div>
             <div className="card p-4">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>
-              <p className="mt-1 text-2xl font-bold text-white">
-                {totalCount}
-              </p>
+              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Açık Kayıt</p>
+              <p className="mt-1 text-2xl font-bold text-white">{totalCount}</p>
               <p className="text-[11px] text-surface-400 mt-0.5">
-                {rows.length} farkli kisi/firma
+                {rows.length} farklı kişi/firma
               </p>
             </div>
           </section>
 
           {/* Sort chips */}
           <section className="flex items-center justify-between gap-2">
-            <span className="text-xs text-surface-400">Sirala:</span>
+            <span className="text-xs text-surface-400">Sırala:</span>
             <div className="flex gap-2">
               {([
-                { v: "amount_desc", label: "Tutar (cok→az)" },
-                { v: "due_asc", label: "Vade (yakin→uzak)" },
-                { v: "name_asc", label: "Isim (A-Z)" },
+                { v: "amount_desc", label: "Tutar (çok→az)" },
+                { v: "due_asc", label: "Vade (yakın→uzak)" },
+                { v: "name_asc", label: "İsim (A-Z)" },
               ] as { v: SortMode; label: string }[]).map((opt) => (
                 <button
                   key={opt.v}
                   onClick={() => setSortMode(opt.v)}
                   className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                     sortMode === opt.v
-                      ? "bg-amber-500/20 border-amber-400 text-amber-200"
+                      ? "bg-red-500/20 border-red-400 text-red-200"
                       : "bg-surface-700 border-surface-600 text-surface-300"
                   }`}
                 >
@@ -171,11 +206,6 @@ export default function AlacaklarPage() {
                     <p className="font-medium text-white truncate">
                       {r.counterpart_name || "Bilinmiyor"}
                     </p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {r.receivable_types.map((b, i) => (
-                        <TypeBadge key={`${b.type}-${i}`} breakdown={b} currency={r.currency} />
-                      ))}
-                    </div>
                     {r.last_due_date && (
                       <p className="mt-1.5 text-[11px] text-surface-400 flex items-center gap-1">
                         <CalendarClock size={11} />
@@ -186,12 +216,10 @@ export default function AlacaklarPage() {
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-base font-semibold text-amber-300">
+                    <p className="text-base font-semibold text-red-300">
                       {formatCurrency(r.total_amount, r.currency)}
                     </p>
-                    <p className="text-[11px] text-surface-400">
-                      {r.count} kayit
-                    </p>
+                    <p className="text-[11px] text-surface-400">{r.count} kayıt</p>
                   </div>
                 </div>
               );
@@ -207,50 +235,13 @@ export default function AlacaklarPage() {
         </>
       )}
 
-      {/* v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal */}
+      {/* v1.7.x (UI Fix WP TODO 1d5d526b): + Verecek Ekle modal */}
       {showAddModal && (
         <CounterpartDebtModal
-          direction="RECEIVABLE"
+          direction="PAYABLE"
           onClose={() => setShowAddModal(false)}
         />
       )}
     </div>
-  );
-}
-
-function TypeBadge({
-  breakdown,
-  currency,
-}: {
-  breakdown: ReceivableTypeBreakdown;
-  currency: string;
-}) {
-  const labelMap: Record<string, string> = {
-    SENET: "Senet",
-    CEK: "Cek",
-    ALTIN: "Altin",
-    NAKIT: "Nakit",
-    DIGER: breakdown.label || "Diger",
-    UNSPECIFIED: "Belirtilmemis",
-  };
-  const colorMap: Record<string, string> = {
-    SENET: "bg-purple-500/15 text-purple-300 border-purple-500/30",
-    CEK: "bg-blue-500/15 text-blue-300 border-blue-500/30",
-    ALTIN: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
-    NAKIT: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    DIGER: "bg-pink-500/15 text-pink-300 border-pink-500/30",
-    UNSPECIFIED: "bg-surface-600 text-surface-300 border-surface-500",
-  };
-  const cls = colorMap[breakdown.type] || colorMap.UNSPECIFIED;
-  const label = labelMap[breakdown.type] || breakdown.type;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${cls}`}
-      title={`${label}: ${formatCurrency(breakdown.amount, currency)} (${breakdown.count} kayit)`}
-    >
-      <span>{label}</span>
-      <span className="opacity-70">·</span>
-      <span>{formatCurrency(breakdown.amount, currency)}</span>
-    </span>
   );
 }

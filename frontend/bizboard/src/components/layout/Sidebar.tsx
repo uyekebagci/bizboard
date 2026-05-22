@@ -47,6 +47,8 @@ interface SidebarLink {
 const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard",                  label: "Ana Sayfa",     icon: LayoutDashboard },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins },
+  // v1.7.x (UI Fix WP TODO 1d5d526b): Verecekler sayfası — PAYABLE muadili.
+  { href: "/dashboard/verecekler",       label: "Verecekler",    icon: HandCoins },
   // v1.6.23.22 (UI Fix WP TODO cb3fa697): Banka Hesapları herkese görünür
   // (tenant izolasyonu backend'de) — eski "Admin: Hesap Havuzu" buraya taşındı.
   { href: "/dashboard/hesaplar",         label: "Banka Hesaplari", icon: Wallet },

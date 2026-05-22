@@ -114,15 +114,31 @@ public class ConsolidatedDashboardService {
         // settled olunca bank_balance'a yansıyacak (çift sayım önlemi).
         // v1.6.23.21: business-scoped.
         BigDecimal pendingPosReceivables = computePendingPosReceivables(businessId);
-        BigDecimal netCurrent = totalCash
-                .add(totalBankBalance)
-                .add(totalReceivables)
-                .subtract(totalPayables);
+
+        // ── KONSOLİDE NET (v1.7.x WP 8b961444 TODO b92d05fe) ─────────
+        // YENİ FORMÜL (A yaklaşımı — locked):
+        //   NET = SUM(income_contribution) + opening_balance
+        //   income_contribution =
+        //     POS gelir → (amount × our_rate − amount × bank_rate) / 100   (= profit)
+        //     non-POS gelir (kind=NORMAL) → amount
+        //     gider (kind=NORMAL) → −amount
+        //     transfer (kind=TRANSFER) → 0
+        //     else → 0
+        //
+        // Alacak/verecek bu formüle DAHİL DEĞİL — widget'ta ayrı satır.
+        // GENEL KASA (= total_cash + total_bank_balance) ile karıştırılmamalı:
+        //   - GENEL KASA: fiziksel para, aggregator parası dahil (DOĞRU, dokunma).
+        //   - KONSOLİDE NET: ekonomik gelir, POS'ta profit, non-POS'ta gross.
+        //
+        // TODO: business.opening_balance kolonu eklenince oradan okunacak;
+        // şimdilik 0 (test senaryolarına uygun).
+        BigDecimal openingBalance = BigDecimal.ZERO;
+        BigDecimal netCurrent = computeKonsolideNet(businessId).add(openingBalance);
         BigDecimal expectedNet = netCurrent.add(pendingPosReceivables);
 
         // ── CONSOLIDATED POSITION ────────────────────────────────────
         // KK / loan rezerve — WP-5 öncesi 0.
-        // v1.6.23.7: net hesabı artık total_cash + total_bank_balance dahil.
+        // v1.7.x: net artık formula bazlı (yukarıdaki net hesabı).
         ConsolidatedDashboardDto.ConsolidatedPosition consolidated =
                 ConsolidatedDashboardDto.ConsolidatedPosition.builder()
                         .totalCash(totalCash)
@@ -268,6 +284,59 @@ public class ConsolidatedDashboardService {
     }
 
     // ───────────────────────── helpers ─────────────────────────
+
+    /**
+     * v1.7.x WP 8b961444 TODO b92d05fe: Konsolide NET formülü.
+     *
+     * <p>İşletmenin tüm zaman tx'leri üzerinden income_contribution toplamı.
+     * POS gelir → profit (our − bank); non-POS gelir → amount; gider → −amount;
+     * transfer → 0.</p>
+     *
+     * <p>Alacak/verecek DAHİL DEĞİL — UI'da ayrı widget olarak gösterilir.</p>
+     */
+    private BigDecimal computeKonsolideNet(UUID businessId) {
+        List<Transaction> all = transactionRepository
+                .findByBusinessIdOrderByDateDesc(businessId);
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Transaction t : all) {
+            sum = sum.add(incomeContribution(t));
+        }
+        return sum;
+    }
+
+    /**
+     * v1.7.x TODO b92d05fe income_contribution CASE statement Java karşılığı.
+     * SummaryService.effectiveAmount yalnız income tarafı için döndürür;
+     * burada expense ve transfer dahil tüm tx tipleri için contribution.
+     */
+    private static BigDecimal incomeContribution(Transaction t) {
+        if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
+        // Transfer (kind=TRANSFER) → 0 (paired veya external fark etmez)
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+            return BigDecimal.ZERO;
+        }
+        String pm = t.getPaymentMethod();
+        boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
+        if (isPos && t.getDirection() == TransactionDirection.INCOME) {
+            BigDecimal bankRate = t.getAppliedPosRate() != null
+                    ? t.getAppliedPosRate()
+                    : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
+            BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
+                    ? t.getAppliedOurCommissionRate()
+                    : bankRate; // backfill: profit=0
+            BigDecimal diffRate = ourRate.subtract(bankRate);
+            if (diffRate.signum() == 0) return BigDecimal.ZERO;
+            return t.getAmount().multiply(diffRate)
+                    .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        }
+        if (t.getDirection() == TransactionDirection.INCOME) {
+            return t.getAmount();
+        }
+        if (t.getDirection() == TransactionDirection.EXPENSE) {
+            return t.getAmount().negate();
+        }
+        return BigDecimal.ZERO;
+    }
 
     private ConsolidatedDashboardDto.BankAccountSummary toBankSummary(BankAccount b) {
         return ConsolidatedDashboardDto.BankAccountSummary.builder()

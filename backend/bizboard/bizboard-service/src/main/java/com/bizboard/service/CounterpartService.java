@@ -109,9 +109,23 @@ public class CounterpartService {
             });
         }
 
+        // v1.7.x (UI Fix WP TODO 0b78f4eb): kind opsiyonel — PERSON veya FIRM.
+        com.bizboard.common.enums.CounterpartKind kind =
+                com.bizboard.common.enums.CounterpartKind.FIRM;
+        if (req.getKind() != null && !req.getKind().isBlank()) {
+            try {
+                kind = com.bizboard.common.enums.CounterpartKind.valueOf(
+                        req.getKind().trim().toUpperCase(java.util.Locale.ENGLISH));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(
+                        "kind 'PERSON' veya 'FIRM' olmalı, gelen: " + req.getKind());
+            }
+        }
+
         Counterpart c = Counterpart.builder()
                 .business(business)
                 .name(req.getName())
+                .kind(kind)
                 .taxId(blankToNull(req.getTaxId()))
                 .taxOffice(blankToNull(req.getTaxOffice()))
                 .role(parseRole(req.getRole()))

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, X, ExternalLink } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, X, ExternalLink, CreditCard } from "lucide-react";
 import { formatCurrency, formatRelativeDate, cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -134,6 +134,8 @@ function TransactionRow({
   onClick?: () => void;
 }) {
   const isIncome = tx.direction === "income";
+  // v1.7.x (POS Komisyon WP TODO e718df3d): POS satırı özel format
+  const isPos = (tx.payment_method || "").toUpperCase().startsWith("POS");
 
   return (
     <div
@@ -143,10 +145,12 @@ function TransactionRow({
       <div
         className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-          isIncome ? "bg-green-50" : "bg-red-50"
+          isPos ? "bg-indigo-500/15" : isIncome ? "bg-green-50" : "bg-red-50"
         )}
       >
-        {isIncome ? (
+        {isPos ? (
+          <CreditCard size={18} className="text-indigo-300" />
+        ) : isIncome ? (
           <ArrowDownLeft size={18} className="text-green-600" />
         ) : (
           <ArrowUpRight size={18} className="text-red-600" />
@@ -155,7 +159,9 @@ function TransactionRow({
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">
-          {tx.description || tx.category?.name || "Islem"}
+          {isPos
+            ? <>{formatCurrency(tx.amount, tx.currency)} POS işlemi yapıldı{tx.description ? ` · ${tx.description}` : ""}</>
+            : (tx.description || tx.category?.name || "Islem")}
         </p>
         <p className="text-xs text-surface-400 mt-0.5">
           {tx.business_name && <span>{tx.business_name} · </span>}
@@ -169,12 +175,13 @@ function TransactionRow({
 
       <span
         className={cn(
-          "text-sm font-semibold flex-shrink-0",
-          isIncome ? "text-green-600" : "text-red-600"
+          "text-sm font-bold flex-shrink-0",
+          isPos ? "text-emerald-400" : isIncome ? "text-green-600" : "text-red-600"
         )}
       >
-        {isIncome ? "+" : "-"}
-        {formatCurrency(tx.amount, tx.currency)}
+        {isPos
+          ? `+${formatCurrency(tx.pos_profit ?? tx.amount, tx.currency)}`
+          : `${isIncome ? "+" : "-"}${formatCurrency(tx.amount, tx.currency)}`}
       </span>
     </div>
   );

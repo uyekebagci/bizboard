@@ -29,6 +29,12 @@ public class CreateCounterpartRequest {
     /** CUSTOMER / SUPPLIER / BOTH / OTHER. Verilmezse OTHER. */
     private String role;
 
+    /**
+     * v1.7.x (UI Fix WP TODO 0b78f4eb): Varlık tipi — PERSON veya FIRM.
+     * Verilmezse mevcut default (entity = FIRM) korunur.
+     */
+    private String kind;
+
     @JsonProperty("contact_name")
     private String contactName;
 
