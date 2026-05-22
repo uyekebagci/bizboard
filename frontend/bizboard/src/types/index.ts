@@ -136,7 +136,7 @@ export interface Category {
 }
 
 /** v1.6.3+: ödeme yöntemi — POS veya NAKIT (default NAKIT). */
-export type PaymentMethod = "POS" | "NAKIT";
+export type PaymentMethod = "POS" | "NAKIT" | "HESAPDAN";
 
 /** v1.7.0-beta (Bankalar WP): tx tip ekseni. */
 export type TransactionKind = "NORMAL" | "TRANSFER";
@@ -1033,6 +1033,131 @@ export interface CounterpartStatement {
   total_payable: number;
   entry_count: number;
   entries: CounterpartStatementEntry[];
+}
+
+// ──────────────────────────────────────────────────────────────────
+// v1.7.x WP fbb2ef55: Cari hesap & ödeme akışı
+// ──────────────────────────────────────────────────────────────────
+
+export type PaymentDirection = "RECEIVED" | "PAID";
+export type PaymentMethodKind = "NAKIT" | "HESAPDAN" | "CHEQUE" | "PROMISSORY_NOTE";
+export type InstrumentType = "CHEQUE" | "PROMISSORY_NOTE";
+export type InstrumentDirection = "INCOMING" | "OUTGOING";
+export type InstrumentStatus = "PORTFOLIO" | "CLEARED" | "BOUNCED" | "CANCELLED";
+export type DebtStatus = "OPEN" | "PARTIAL" | "PAID" | "CANCELLED";
+
+export interface PaymentInstrumentDto {
+  id: string;
+  business_id: string;
+  counterpart_id: string;
+  counterpart_name: string | null;
+  instrument_type: InstrumentType;
+  direction: InstrumentDirection;
+  amount: number;
+  currency: string;
+  issue_date: string;
+  due_date: string;
+  cheque_number?: string | null;
+  drawer_bank?: string | null;
+  drawer_branch?: string | null;
+  note_serial?: string | null;
+  status: InstrumentStatus;
+  cleared_at?: string | null;
+  cleared_bank_account_id?: string | null;
+  cleared_bank_account_name?: string | null;
+  bounced_at?: string | null;
+  description?: string | null;
+  created_at: string;
+}
+
+export interface PaymentAllocation {
+  debt_id: string;
+  amount: number;
+}
+
+export interface CreatePaymentRequest {
+  payment_direction: PaymentDirection;
+  payment_method: PaymentMethodKind;
+  amount: number;
+  payment_date: string;
+  bank_account_id?: string | null;
+  cheque_details?: {
+    cheque_number: string;
+    drawer_bank: string;
+    drawer_branch?: string | null;
+    due_date: string;
+  };
+  note_details?: {
+    note_serial: string;
+    due_date: string;
+  };
+  allocations?: PaymentAllocation[];
+  description?: string | null;
+}
+
+export interface PaymentResponse {
+  payment_id: string;
+  linked_transaction_id?: string | null;
+  linked_instrument_id?: string | null;
+  debts_updated: Array<{
+    debt_id: string;
+    remaining_after: number;
+    status: DebtStatus;
+  }>;
+  overpayment_created?: { debt_id: string; amount: number } | null;
+}
+
+export interface AccountStatement {
+  counterpart: {
+    id: string;
+    name: string;
+    kind?: string | null;
+    role?: string | null;
+    tax_id?: string | null;
+  };
+  current_balance: number;
+  balance_breakdown: {
+    open_receivables_total: number;
+    open_payables_total: number;
+    portfolio_cheques_incoming: number;
+    portfolio_cheques_outgoing: number;
+    portfolio_notes_incoming: number;
+    portfolio_notes_outgoing: number;
+    net_realized: number;
+    net_with_portfolio: number;
+  };
+  open_debts: Array<{
+    id: string;
+    direction: "RECEIVABLE" | "PAYABLE";
+    original_amount: number;
+    remaining_amount: number;
+    status: DebtStatus;
+    due_date?: string | null;
+    description?: string | null;
+    created_at: string;
+  }>;
+  payment_history: Array<{
+    id: string;
+    payment_direction: PaymentDirection;
+    payment_method: PaymentMethodKind;
+    amount: number;
+    payment_date: string;
+    linked_transaction_id?: string | null;
+    linked_instrument_id?: string | null;
+    debt_id?: string | null;
+    description?: string | null;
+    created_at: string;
+  }>;
+  instruments_portfolio: PaymentInstrumentDto[];
+  transactions: Transaction[];
+  running_balance_history: Array<{
+    date: string;
+    type: "DEBT_CREATED" | "PAYMENT" | "INSTRUMENT_CLEARED" | "INSTRUMENT_BOUNCED" | "TRANSACTION";
+    amount: number;
+    balance_after: number;
+    reference_id: string;
+    description: string;
+  }>;
 }
 
 // v1.6.2: BusinessTypeDefaultCost interface'i kaldırıldı — backend master

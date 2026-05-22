@@ -50,6 +50,33 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
     List<Debt> findByBusinessIdAndDirectionAndSettledFalseOrderByDueDateAsc(
             UUID businessId, com.bizboard.common.enums.DebtDirection direction);
 
+    /**
+     * v1.7.x WP fbb2ef55: bir counterpart'ın açık (OPEN/PARTIAL) borçları
+     * FIFO sırasıyla (due_date ASC NULLS LAST → created_at ASC).
+     */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id = :businessId " +
+            "  AND d.counterpartRef.id = :counterpartId " +
+            "  AND d.direction = :direction " +
+            "  AND d.status IN ('OPEN','PARTIAL') " +
+            "ORDER BY d.dueDate ASC NULLS LAST, d.createdAt ASC")
+    List<Debt> findOpenByCounterpartFifo(
+            @org.springframework.data.repository.query.Param("businessId") UUID businessId,
+            @org.springframework.data.repository.query.Param("counterpartId") UUID counterpartId,
+            @org.springframework.data.repository.query.Param("direction")
+                    com.bizboard.common.enums.DebtDirection direction);
+
+    /** v1.7.x: counterpart'ın tüm borçları (statu fark etmez), tarih sırasıyla. */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id = :businessId " +
+            "  AND d.counterpartRef.id = :counterpartId " +
+            "ORDER BY d.createdAt ASC")
+    List<Debt> findByBusinessAndCounterpartAll(
+            @org.springframework.data.repository.query.Param("businessId") UUID businessId,
+            @org.springframework.data.repository.query.Param("counterpartId") UUID counterpartId);
+
     /** v1.6.20: önümüzdeki N gün vadeli açık çekler (chequeDueDate dolu, settled=false). */
     @org.springframework.data.jpa.repository.Query(
             "SELECT d FROM Debt d " +

@@ -36,6 +36,8 @@ public class ConsolidatedDashboardService {
     private final DebtRepository debtRepository;
     private final CashClosingRepository cashClosingRepository;
     private final ClosingCalculator closingCalculator;
+    // v1.7.x WP fbb2ef55: portföy çek/senet
+    private final com.bizboard.repository.PaymentInstrumentRepository paymentInstrumentRepository;
 
     @Transactional(readOnly = true)
     public ConsolidatedDashboardDto getConsolidated(UUID userId, UUID businessId) {
@@ -280,6 +282,47 @@ public class ConsolidatedDashboardService {
                 .upcomingCheques(chequeRows)
                 .upcomingReminders(reminderRows)
                 .netPosition(netPosition)
+                .portfolioInstruments(buildPortfolioInstruments(businessId, today))
+                .build();
+    }
+
+    /**
+     * v1.7.x WP fbb2ef55 / TODO 40fd733f: Çek + senet portföy özet (PORTFOLIO statu).
+     */
+    private ConsolidatedDashboardDto.PortfolioInstruments buildPortfolioInstruments(
+            UUID businessId, LocalDate today) {
+        List<com.bizboard.common.entity.PaymentInstrument> instruments =
+                paymentInstrumentRepository.findByBusinessIdAndStatusOrderByDueDateAsc(
+                        businessId, "PORTFOLIO");
+        BigDecimal chIn = BigDecimal.ZERO, chOut = BigDecimal.ZERO;
+        BigDecimal noIn = BigDecimal.ZERO, noOut = BigDecimal.ZERO;
+        LocalDate cutoff = today.plusDays(30);
+        List<ConsolidatedDashboardDto.PortfolioInstrumentRow> upcoming = new ArrayList<>();
+        for (com.bizboard.common.entity.PaymentInstrument pi : instruments) {
+            boolean isCheque = "CHEQUE".equals(pi.getInstrumentType());
+            boolean isIn = "INCOMING".equals(pi.getDirection());
+            if (isCheque && isIn) chIn = chIn.add(pi.getAmount());
+            else if (isCheque) chOut = chOut.add(pi.getAmount());
+            else if (isIn) noIn = noIn.add(pi.getAmount());
+            else noOut = noOut.add(pi.getAmount());
+            if (pi.getDueDate() != null && !pi.getDueDate().isAfter(cutoff)) {
+                upcoming.add(ConsolidatedDashboardDto.PortfolioInstrumentRow.builder()
+                        .id(pi.getId())
+                        .instrumentType(pi.getInstrumentType())
+                        .direction(pi.getDirection())
+                        .amount(pi.getAmount())
+                        .dueDate(pi.getDueDate())
+                        .counterpartName(pi.getCounterpart() != null
+                                ? pi.getCounterpart().getName() : null)
+                        .build());
+            }
+        }
+        return ConsolidatedDashboardDto.PortfolioInstruments.builder()
+                .chequesIncomingTotal(chIn)
+                .chequesOutgoingTotal(chOut)
+                .notesIncomingTotal(noIn)
+                .notesOutgoingTotal(noOut)
+                .upcoming30Days(upcoming)
                 .build();
     }
 

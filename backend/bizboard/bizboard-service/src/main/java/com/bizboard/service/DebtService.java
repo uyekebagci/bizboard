@@ -152,6 +152,9 @@ public class DebtService {
                 .counterparty(counterpartyName)
                 .counterpartRef(counterpart)
                 .amount(request.getAmount())
+                // v1.7.x WP fbb2ef55: yeni debt → remaining=amount, status=OPEN
+                .remainingAmount(request.getAmount())
+                .status("OPEN")
                 .currency(request.getCurrency() != null ? request.getCurrency() : business.getCurrency())
                 .instrumentType(request.getInstrumentType())
                 .receivableType(receivableType)

@@ -60,6 +60,10 @@ public class ConsolidatedDashboardDto {
     @JsonProperty("net_position")
     private NetPosition netPosition;
 
+    // ─── v1.7.x WP fbb2ef55: Çek/Senet Portföy ────────────────────────────
+    @JsonProperty("portfolio_instruments")
+    private PortfolioInstruments portfolioInstruments;
+
     // ═══════════════════════════ İÇ TİPLER ═══════════════════════════════
 
     @Data @Builder
@@ -226,5 +230,25 @@ public class ConsolidatedDashboardDto {
         private BigDecimal payables;
         private BigDecimal net;            // receivables - payables
         @JsonProperty("net_positive")     private boolean netPositive;
+    }
+
+    /** v1.7.x WP fbb2ef55: PORTFOLIO statu'sundaki çek+senet özet ve upcoming list. */
+    @Data @Builder
+    public static class PortfolioInstruments {
+        @JsonProperty("cheques_incoming_total") private BigDecimal chequesIncomingTotal;
+        @JsonProperty("cheques_outgoing_total") private BigDecimal chequesOutgoingTotal;
+        @JsonProperty("notes_incoming_total")   private BigDecimal notesIncomingTotal;
+        @JsonProperty("notes_outgoing_total")   private BigDecimal notesOutgoingTotal;
+        @JsonProperty("upcoming_30_days") private List<PortfolioInstrumentRow> upcoming30Days;
+    }
+
+    @Data @Builder
+    public static class PortfolioInstrumentRow {
+        private UUID id;
+        @JsonProperty("instrument_type") private String instrumentType; // CHEQUE | PROMISSORY_NOTE
+        private String direction;                                       // INCOMING | OUTGOING
+        private BigDecimal amount;
+        @JsonProperty("due_date") private LocalDate dueDate;
+        @JsonProperty("counterpart_name") private String counterpartName;
     }
 }

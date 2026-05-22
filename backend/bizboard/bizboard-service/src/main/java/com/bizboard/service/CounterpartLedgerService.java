@@ -51,11 +51,13 @@ public class CounterpartLedgerService {
 
         BigDecimal balance = BigDecimal.ZERO;
         for (Debt d : debtRepository.findByCounterpartRefIdOrderByCreatedAtAsc(counterpartId)) {
+            // v1.7.x WP fbb2ef55: remaining_amount kullan (kısmi ödenmiş borçlar için).
             if (d.isSettled()) continue;
+            BigDecimal rem = d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount();
             if (d.getDirection() == DebtDirection.RECEIVABLE) {
-                balance = balance.add(d.getAmount());
+                balance = balance.add(rem);
             } else {
-                balance = balance.subtract(d.getAmount());
+                balance = balance.subtract(rem);
             }
         }
         c.setCurrentBalance(balance);
