@@ -40,26 +40,34 @@ interface Props {
   direction: Direction;
   /** Önceden seçili işletme (örn. business detay sayfasından açıldıysa). */
   preselectedBusinessId?: string;
+  /** v1.7.x: Counterpart detay sayfasından açıldıysa — counterpart + kind + business
+   *  otomatik pre-fill (counterpart picker locked). */
+  preselectedCounterpart?: Counterpart;
   onClose: () => void;
   onSuccess?: (debtId: string) => void;
 }
 
 export function CounterpartDebtModal({
-  direction, preselectedBusinessId, onClose, onSuccess,
+  direction, preselectedBusinessId, preselectedCounterpart, onClose, onSuccess,
 }: Props) {
   const { triggerRefresh } = useAppStore();
   const isReceivable = direction === "RECEIVABLE";
   const label = isReceivable ? "Alacak" : "Verecek";
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [businessId, setBusinessId] = useState<string>(preselectedBusinessId ?? "");
+  const [businessId, setBusinessId] = useState<string>(
+    preselectedCounterpart?.business_id ?? preselectedBusinessId ?? "");
   const [loadingBiz, setLoadingBiz] = useState(true);
 
   const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
   const [loadingCps, setLoadingCps] = useState(false);
 
-  const [kind, setKind] = useState<Kind>("FIRM");
-  const [counterpartId, setCounterpartId] = useState<string>("");
+  const [kind, setKind] = useState<Kind>(
+    (preselectedCounterpart?.kind as Kind | undefined) ?? "FIRM");
+  const [counterpartId, setCounterpartId] = useState<string>(
+    preselectedCounterpart?.id ?? "");
+  // Counterpart locked mod: detay sayfasından açıldı → picker değişmesin.
+  const counterpartLocked = !!preselectedCounterpart;
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [description, setDescription] = useState("");
@@ -128,7 +136,10 @@ export function CounterpartDebtModal({
       setError("Tutar pozitif olmalı");
       return;
     }
-    const cp = counterparts.find((c) => c.id === counterpartId);
+    // v1.7.x: locked mode'da counterpart prop'tan; aksi takdirde dropdown listesinden.
+    const cp = preselectedCounterpart && preselectedCounterpart.id === counterpartId
+        ? preselectedCounterpart
+        : counterparts.find((c) => c.id === counterpartId);
     if (!cp) { setError("Karşı taraf bulunamadı"); return; }
 
     setSubmitting(true);
@@ -212,7 +223,8 @@ export function CounterpartDebtModal({
             </div>
           )}
 
-          {/* Firma/Kişi radio */}
+          {/* Firma/Kişi radio — counterpart locked ise gizli (zaten belli) */}
+          {!counterpartLocked && (
           <div>
             <label className="block text-xs font-medium text-surface-200 mb-1.5">Karşı Taraf Tipi *</label>
             <div className="grid grid-cols-2 gap-2">
@@ -244,13 +256,18 @@ export function CounterpartDebtModal({
               </button>
             </div>
           </div>
+          )}
 
-          {/* Karşı Taraf dropdown */}
+          {/* Karşı Taraf — locked mode: read-only label; aksi takdirde dropdown */}
           <div>
             <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Karşı Taraf ({kind === "FIRM" ? "Firma" : "Kişi"}) *
+              Karşı Taraf{!counterpartLocked && ` (${kind === "FIRM" ? "Firma" : "Kişi"})`} *
             </label>
-            {loadingCps ? (
+            {counterpartLocked && preselectedCounterpart ? (
+              <div className="px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-700/40 text-sm text-surface-200">
+                {preselectedCounterpart.name}
+              </div>
+            ) : loadingCps ? (
               <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
             ) : (
               <select
@@ -269,7 +286,7 @@ export function CounterpartDebtModal({
                 )}
               </select>
             )}
-            {!businessId && (
+            {!counterpartLocked && !businessId && (
               <p className="mt-1 text-[10px] text-surface-400">Önce işletme seçin</p>
             )}
           </div>

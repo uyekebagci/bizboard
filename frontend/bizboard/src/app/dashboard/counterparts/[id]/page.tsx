@@ -119,8 +119,11 @@ export default function CounterpartDetailPage() {
     <div className="space-y-5 pb-24">
       {/* ── Header ─────────────────────────────────────────────── */}
       <section className="flex items-center gap-3">
-        <button onClick={() => router.push("/dashboard/counterparts")}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600">
+        {/* v1.7.x: router.back() ile geçmişe geri dön — kullanıcı /alacaklar
+            veya /verecekler'den geldiyse o sayfaya döner. Fallback: counterparts. */}
+        <button onClick={() => router.back()}
+          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600"
+          title="Geri">
           <ChevronLeft size={20} className="text-white" />
         </button>
         <div className="flex-1 min-w-0">
@@ -168,10 +171,6 @@ export default function CounterpartDetailPage() {
             <button onClick={() => setDebtModal("RECEIVABLE")}
               className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold inline-flex items-center gap-1.5">
               <Plus size={14} /> Alacak
-            </button>
-            <button onClick={() => setDebtModal("PAYABLE")}
-              className="px-3 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-semibold inline-flex items-center gap-1.5 border border-surface-600">
-              <Plus size={14} /> Verecek
             </button>
           </div>
         </div>
@@ -426,6 +425,7 @@ export default function CounterpartDetailPage() {
         <CounterpartDebtModal
           direction={debtModal}
           preselectedBusinessId={cp.business_id || undefined}
+          preselectedCounterpart={cp}
           onClose={() => setDebtModal(null)}
         />
       )}
