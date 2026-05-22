@@ -22,7 +22,7 @@ import { api } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
-import type { Debt } from "@/types";
+import type { Debt, Counterpart } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
@@ -47,10 +47,19 @@ export default function VereceklerPage() {
   useEffect(() => {
     async function load() {
       try {
-        const debts = (await api.get<Debt[]>("/debts").catch(() => [])) || [];
-        // Sadece açık PAYABLE
-        const open = debts.filter((d) => d.direction === "PAYABLE" && !d.is_settled);
-        // counterpart bazlı grupla
+        // v1.7.x net-balance: PAYABLE debt'leri counterpart bazlı grupla,
+        // sonra counterpart entity'sinin current_balance'ı ile NET'le.
+        // current_balance < 0 ise (= net borçluyuz) bu counterpart'ı göster,
+        // abs(balance) tutar olarak. RECEIVABLE varsa zaten karşılıklı düşülmüş olur.
+        const [debts, allCps] = await Promise.all([
+          api.get<Debt[]>("/debts").catch(() => [] as Debt[]),
+          api.get<Counterpart[]>("/counterparts").catch(() => [] as Counterpart[]),
+        ]);
+        const balanceById = new Map<string, number>();
+        for (const c of (allCps || [])) balanceById.set(c.id, c.current_balance ?? 0);
+
+        // PAYABLE'i grupla — last_due_date / count bilgisi için
+        const open = (debts || []).filter((d) => d.direction === "PAYABLE" && !d.is_settled);
         const grouped = new Map<string, PayableAggregate>();
         for (const d of open) {
           const key = d.counterpart_id || `name:${(d.counterparty ?? "").toLowerCase()}`;
@@ -74,7 +83,21 @@ export default function VereceklerPage() {
             });
           }
         }
-        setRows(Array.from(grouped.values()));
+
+        // Net override: current_balance < 0 → abs olarak göster, > 0 → bu counterpart aslında
+        // alacaklı tarafa düştü, Verecekler'den gizle.
+        const netted: PayableAggregate[] = [];
+        for (const r of grouped.values()) {
+          const balance = r.counterpart_id ? balanceById.get(r.counterpart_id) : null;
+          if (balance != null && balance < 0) {
+            netted.push({ ...r, total_amount: Math.abs(balance) });
+          } else if (balance == null) {
+            // counterpart_id yok (legacy free-text). Gross olarak göster.
+            netted.push(r);
+          }
+          // balance >= 0 ise: net borç kalmadı → gizle
+        }
+        setRows(netted);
       } catch (err) {
         logger.error("api", "Payables fetch failed", undefined, err);
       } finally {

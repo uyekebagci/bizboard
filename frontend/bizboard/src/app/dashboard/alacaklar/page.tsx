@@ -19,7 +19,7 @@ import { api } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
-import type { ReceivableAggregate, ReceivableTypeBreakdown } from "@/types";
+import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
@@ -36,8 +36,27 @@ export default function AlacaklarPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await api.get<ReceivableAggregate[]>("/receivables").catch(() => []);
-        setRows(data || []);
+        // v1.7.x net-balance fix:
+        // /receivables gross RECEIVABLE breakdown verir; ama counterpart'ta
+        // karşı PAYABLE varsa karşılıklı net'leme gerekli. Counterpart entity'sinin
+        // current_balance'ı zaten net (R − P) tutuyor; onu otoritatif kabul edip
+        // total_amount'u override ediyoruz. Net <= 0 olan counterpart'lar burada
+        // gözükmez (artık Verecekler tarafında).
+        const [recv, allCps] = await Promise.all([
+          api.get<ReceivableAggregate[]>("/receivables").catch(() => [] as ReceivableAggregate[]),
+          api.get<Counterpart[]>("/counterparts").catch(() => [] as Counterpart[]),
+        ]);
+        const balanceById = new Map<string, number>();
+        for (const c of (allCps || [])) balanceById.set(c.id, c.current_balance ?? 0);
+
+        const netted: ReceivableAggregate[] = [];
+        for (const r of (recv || [])) {
+          const net = r.counterpart_id ? (balanceById.get(r.counterpart_id) ?? r.total_amount) : r.total_amount;
+          if (net > 0) {
+            netted.push({ ...r, total_amount: net });
+          }
+        }
+        setRows(netted);
       } catch (err) {
         logger.error("api", "Receivables fetch failed", undefined, err);
       } finally {
