@@ -38,16 +38,20 @@ interface Props {
 }
 
 export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, onChange }: Props) {
-  // v1.6.23.24 (UI Fix WP): Layout reorg.
+  // v1.6.23.29 (UI Fix WP): Layout reorg.
   //
-  // Yeni sıra (user spec):
+  // Yeni sıra:
   //   Row 1: [Konsolide DGR (Net + Genel Kasa) | Bugünün Kasa Durumu]    50/50
   //   Row 2: [Son İşlemler + Yeni İşlem (vurgulu) | Hesaptan Harcama]    50/50
-  //   Row 3: Diğer widget'lar — Alacaklar/Verecekler + Çek/Hatırlatma
+  //   Row 3: [Alt Kasalar (Sub-Cash aggregator) | Çek + Hatırlatma]      50/50
   //   Row 4 (en altta): [Para Bulunan Hesaplar | POS Cihazları]          50/50
   //
-  // Kaldırılan: NetPositionCard (kapsam ConsolidatedPositionCard tarafından
-  // zaten karşılanıyor).
+  // v1.6.23.29 kaldırılanlar:
+  //   - PayablesCard (Verecekler): Konsolide DGR widget'ında zaten sub-stat
+  //     olarak gösteriliyor.
+  //   - ReceivablesSummaryCard (Alacaklar): aynı, Konsolide DGR'da var.
+  //   - UpcomingChequesCard + UpcomingRemindersCard ayrı satır → Row 3 col 2'de
+  //     birleşik panel.
   return (
     <div className="space-y-4">
       {/* Row 1 */}
@@ -62,14 +66,13 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
         <CashOutflowsTodayCard d={data} />
       </div>
 
-      {/* Row 3 — diğer widget'lar (alacak/verecek + çek/hatırlatma) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <PayablesCard d={data} />
-        <ReceivablesSummaryCard d={data} />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <UpcomingChequesCard d={data} />
-        <UpcomingRemindersCard d={data} />
+      {/* Row 3 — Alt Kasalar + Çek/Hatırlatma combined */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+        <SubCashesCard d={data} onChange={onChange} />
+        <div className="space-y-3">
+          <UpcomingChequesCard d={data} />
+          <UpcomingRemindersCard d={data} />
+        </div>
       </div>
 
       {/* Row 4 — en altta */}
@@ -710,6 +713,198 @@ function TypeBadge({ type }: { type: string }) {
       <Icon size={10} />
       {m.label}
     </span>
+  );
+}
+
+// ───────────────────────── 4b. ALT KASALAR (SUB-CASH) ─────────────────────────
+
+/**
+ * v1.6.23.29 (UI Fix WP): Alt Kasalar widget'ı.
+ *
+ * <p>Konsolide panoda SUB_CASH listesi — her satır: ad + aggregate balance.
+ * Tıklayınca BankAccountsCard'ın modal flow'una atlar (yeni modal-in-modal
+ * değil; aynı modal'da DETAIL view → SubCashDetailContent). "+ Yeni Kasa"
+ * tetikleyicisi widget üzerinde direkt CREATE_SUB_CASH view'ını açar.</p>
+ *
+ * <p>Boş state: "Henüz alt kasa yok" + "+ Kasa Oluştur" CTA.</p>
+ */
+function SubCashesCard({
+  d, onChange,
+}: { d: ConsolidatedDashboard; onChange?: () => void }) {
+  const subCashes = d.bank_accounts.filter((a) => a.type === "SUB_CASH");
+  const total = subCashes.reduce((s, a) => s + (a.balance || 0), 0);
+
+  type View = "LIST" | "DETAIL" | "CREATE";
+  const [showModal, setShowModal] = useState(false);
+  const [view, setView] = useState<View>("LIST");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const businessId = d.business_id;
+
+  function reset() {
+    setShowModal(false);
+    setView("LIST");
+    setSelectedId(null);
+  }
+
+  const headerAction =
+    view === "LIST" ? (
+      <button
+        type="button"
+        onClick={() => setView("CREATE")}
+        className="text-[11px] px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center gap-1"
+      >
+        <Banknote size={11} />
+        + Kasa Oluştur
+      </button>
+    ) : (
+      <button
+        type="button"
+        onClick={() => { setView("LIST"); setSelectedId(null); }}
+        className="text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-200 flex items-center gap-1"
+      >
+        ← Liste
+      </button>
+    );
+
+  const modalTitle =
+    view === "DETAIL" && selectedId
+      ? subCashes.find((s) => s.id === selectedId)?.name || "Alt Kasa"
+      : view === "CREATE" ? "Yeni Alt Kasa" : "Alt Kasalar — Detay";
+
+  return (
+    <>
+    <section
+      onClick={() => setShowModal(true)}
+      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-emerald-500/40 transition-all"
+    >
+      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
+        <SectionTitle icon={Banknote} label="Alt Kasalar" inline />
+        {subCashes.length > 0 && (
+          <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            {subCashes.length}
+          </span>
+        )}
+      </div>
+      {subCashes.length === 0 ? (
+        <div className="px-4 py-6 text-center">
+          <Banknote size={20} className="mx-auto text-surface-500 mb-1.5" />
+          <p className="text-xs text-surface-400">Henüz alt kasa yok</p>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowModal(true); setView("CREATE"); }}
+            className="mt-2 text-[11px] font-semibold px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center gap-1"
+          >
+            <Banknote size={11} />
+            + İlk Kasayı Oluştur
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="divide-y divide-surface-700">
+            {subCashes.map((s) => (
+              <div key={s.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-white truncate">{s.name}</p>
+                <p className="text-sm font-semibold text-emerald-300 shrink-0">
+                  {formatCurrency(s.balance, s.currency || "TRY")}
+                </p>
+              </div>
+            ))}
+          </div>
+          <Footer
+            left={`${subCashes.length} alt kasa`}
+            right={
+              <span>
+                Σ aggregate{" "}
+                <span className="text-emerald-300">{formatCurrency(total, "TRY")}</span>
+              </span>
+            }
+          />
+        </>
+      )}
+    </section>
+
+    <WidgetDetailModal
+      open={showModal}
+      onClose={reset}
+      title={modalTitle}
+      subtitle={
+        view === "LIST"
+          ? `${subCashes.length} alt kasa · Σ aggregate ${formatCurrency(total, "TRY")}`
+          : view === "DETAIL" && selectedId
+          ? subCashes.find((s) => s.id === selectedId)?.bank_name || "SUB_CASH"
+          : "Yeni alt kasa (manuel CRUD)"
+      }
+      size="lg"
+      headerAction={headerAction}
+    >
+      {view === "DETAIL" && selectedId && (
+        <SubCashDetailContent subCashId={selectedId} onChange={onChange} />
+      )}
+
+      {view === "CREATE" && (
+        <BankAccountCreateForm
+          mode="SUB_CASH"
+          preselectedBusinessId={businessId}
+          businesses={businessId ? [{ id: businessId, name: "" }] : []}
+          onCancel={() => setView("LIST")}
+          onCreated={() => { setView("LIST"); onChange?.(); }}
+        />
+      )}
+
+      {view === "LIST" && (
+        subCashes.length === 0 ? (
+          <div className="py-6 text-center">
+            <Banknote size={24} className="mx-auto text-surface-500 mb-2" />
+            <p className="text-sm text-surface-400 mb-3">
+              Henüz alt kasa yok. Banka hesaplarını gruplamak için alt kasa oluştur.
+            </p>
+            <button
+              type="button"
+              onClick={() => setView("CREATE")}
+              className="text-xs font-semibold px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center gap-1"
+            >
+              <Banknote size={12} />
+              + Kasa Oluştur
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="text-xs text-surface-400 mb-3">
+              Her alt kasaya tıklayarak detayını + atanan entity'leri burada görebilirsin.
+              Aggregate = atanan BANK_ACCOUNT'ların toplam bakiyesi.
+            </p>
+            <div className="space-y-2">
+              {subCashes.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => { setSelectedId(s.id); setView("DETAIL"); }}
+                  className="w-full text-left block p-3 rounded-lg border border-surface-700 hover:border-emerald-500/40 hover:bg-surface-700/40 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{s.name}</p>
+                      <p className="text-[11px] text-surface-400">
+                        Alt Kasa · {s.currency}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-emerald-300 shrink-0">
+                      {formatCurrency(s.balance, s.currency || "TRY")}
+                    </p>
+                    <ChevronRight size={14} className="text-surface-400" />
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 pt-3 border-t border-surface-700 flex items-center justify-between text-sm">
+              <span className="text-surface-300">Toplam aggregate</span>
+              <span className="font-bold text-emerald-300">{formatCurrency(total, "TRY")}</span>
+            </div>
+          </>
+        )
+      )}
+    </WidgetDetailModal>
+    </>
   );
 }
 
