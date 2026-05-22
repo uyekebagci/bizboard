@@ -14,7 +14,15 @@
  * - "1.6.3-0" → "1.6.3"  (0 hotfix = baseline, asla gösterilmez)
  *
  * Diğer pre-release formatları olduğu gibi gösterilir (örn. "1.7.0-rc.1").
+ *
+ * v1.7.x BETA: UI'da semantic versiyon yerine sabit "BETA v1.0" gösterilir
+ * (italic + sarı). Beta süresince hardcoded; prod release ile birlikte
+ * BETA_LABEL kaldırılıp formatVersion'a geri dönülecek.
  */
+
+/** v1.7.x BETA: Beta süresince UI'da gösterilen sabit sürüm etiketi. */
+export const BETA_LABEL = "BETA v1.0";
+
 export function formatVersion(raw: string | undefined | null): string {
   if (!raw) return "?";
   const m = raw.match(/^(\d+\.\d+\.\d+)-(\d+)$/);

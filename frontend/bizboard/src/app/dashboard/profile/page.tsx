@@ -9,7 +9,7 @@ import { useAppStore } from "@/lib/store";
 import { logout } from "@/lib/api/client";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
-import { formatVersion } from "@/lib/version";
+import { BETA_LABEL } from "@/lib/version";
 
 /**
  * Mobile bottom-nav "Profil" sayfasi — kullanici bilgileri + parola degisikligi
@@ -123,8 +123,9 @@ export default function ProfilePage() {
         </button>
       </section>
 
+      {/* v1.7.x BETA: sabit etiket; beta sonrası formatVersion'a geri dönülecek. */}
       <p className="text-center text-[10px] text-surface-500">
-        CATI v{formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}
+        CATI <span className="italic text-yellow-400 font-mono">{BETA_LABEL}</span>
       </p>
     </div>
   );

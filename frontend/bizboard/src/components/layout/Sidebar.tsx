@@ -29,7 +29,7 @@ import { useBusinesses } from "@/hooks/useBusinesses";
 import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { formatVersion } from "@/lib/version";
+import { BETA_LABEL } from "@/lib/version";
 
 interface SidebarLink {
   href: string;
@@ -161,9 +161,9 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
   }, [profile?.role, query, shortcutPins]);
 
   const showSearch = visible.length >= SEARCH_THRESHOLD || query !== "";
-  const versionLabel = process.env.NEXT_PUBLIC_APP_VERSION
-    ? `v${formatVersion(process.env.NEXT_PUBLIC_APP_VERSION)}`
-    : null;
+  // v1.7.x BETA: semantic versiyon yerine sabit etiket. Beta sonrası
+  // formatVersion(process.env.NEXT_PUBLIC_APP_VERSION) geri açılacak.
+  const versionLabel = BETA_LABEL;
 
   return (
     <>
@@ -204,8 +204,8 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
                 <span className="font-bold text-lg text-white leading-none">CATI</span>
                 {versionLabel && (
                   <span
-                    className="mt-0.5 text-[10px] text-surface-400 font-mono leading-none tracking-tight"
-                    title="Sürüm"
+                    className="mt-0.5 text-[10px] italic text-yellow-400 font-mono leading-none tracking-tight"
+                    title="Beta sürümü"
                   >
                     {versionLabel}
                   </span>
