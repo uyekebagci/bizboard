@@ -13,20 +13,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, CalendarClock, Check, AlertTriangle, FileText,
+  ArrowLeft, Loader2, CalendarClock, Check, AlertTriangle, FileText, Plus,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
+import { useAppStore } from "@/lib/store";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { Debt } from "@/types";
+import { ChequeAddModal } from "@/components/cheques/ChequeAddModal";
 
 export default function ChequesPage() {
   const router = useRouter();
+  const { refreshKey } = useAppStore();
   const [list, setList] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   async function refresh(targetDays: number) {
     setLoading(true);
@@ -44,7 +48,7 @@ export default function ChequesPage() {
     }
   }
 
-  useEffect(() => { void refresh(days); }, [days]);
+  useEffect(() => { void refresh(days); }, [days, refreshKey]);
 
   async function handleSettle(d: Debt) {
     setBusyId(d.id);
@@ -71,7 +75,7 @@ export default function ChequesPage() {
         >
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
             <FileText size={20} className="text-purple-300" />
           </div>
@@ -80,6 +84,13 @@ export default function ChequesPage() {
             <p className="text-xs text-surface-400">Yaklaşan vadeler (açık çekler)</p>
           </div>
         </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold"
+        >
+          <Plus size={16} />
+          Çek Ekle
+        </button>
       </div>
 
       {/* Stats */}
@@ -135,6 +146,13 @@ export default function ChequesPage() {
           <p className="text-surface-300 font-medium">
             {days} gün içinde vadeli çek yok
           </p>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold"
+          >
+            <Plus size={16} />
+            Çek Ekle
+          </button>
         </div>
       ) : (
         <section className="card divide-y divide-surface-700">
@@ -194,6 +212,13 @@ export default function ChequesPage() {
             );
           })}
         </section>
+      )}
+
+      {/* v1.7.x: + Çek Ekle modal */}
+      {showAddModal && (
+        <ChequeAddModal
+          onClose={() => setShowAddModal(false)}
+        />
       )}
     </div>
   );
