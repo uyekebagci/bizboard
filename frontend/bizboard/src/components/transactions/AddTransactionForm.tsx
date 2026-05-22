@@ -96,6 +96,16 @@ export function AddTransactionForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preselectedType]);
 
+  // v1.7.x: Gider seçilince POS opsiyonu mantıksız → otomatik NAKIT'a çek.
+  useEffect(() => {
+    if (direction === "expense" && paymentMethod === "POS") {
+      setPaymentMethod("NAKIT");
+      setPosRate("");
+      setOurCommissionRate("");
+      setPosDeviceId("");
+    }
+  }, [direction, paymentMethod]);
+
   useEffect(() => {
     api.get<Counterpart[]>("/counterparts")
       .then((r) => setCounterparts(r || []))
@@ -275,12 +285,18 @@ export function AddTransactionForm({
         </div>
       )}
 
-      {/* Payment Method */}
+      {/* Payment Method —
+          v1.7.x: POS yalnız Gelir yönünde anlamlıdır (komisyon = tahsilat
+          kesintisi; gider akışında karşılığı yok). Gider seçiliyken POS
+          butonu gizlenir, paymentMethod otomatik NAKIT'a çekilir. */}
       <div>
         <label className="block text-sm font-medium text-surface-200 mb-1.5">
           Odeme Yontemi *
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className={cn(
+          "grid gap-3",
+          direction === "income" ? "grid-cols-2" : "grid-cols-1",
+        )}>
           <button
             type="button"
             onClick={() => { setPaymentMethod("NAKIT"); setPosRate(""); setOurCommissionRate(""); }}
@@ -294,14 +310,11 @@ export function AddTransactionForm({
             <Banknote size={16} />
             Nakit
           </button>
+          {direction === "income" && (
           <button
             type="button"
             onClick={() => {
               setPaymentMethod("POS");
-              if (direction !== "income") {
-                setDirection("income");
-                setCategoryId("");
-              }
             }}
             className={cn(
               "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
@@ -313,6 +326,7 @@ export function AddTransactionForm({
             <CreditCard size={16} />
             POS
           </button>
+          )}
         </div>
         {paymentMethod === "POS" && (
           <>
