@@ -2,7 +2,6 @@ package com.bizboard.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -23,11 +22,10 @@ public class ChangePasswordRequest {
     private String currentPassword;
 
     /**
-     * Yeni şifre. Minimum 8 karakter — politika ileride sertleştirilecek
-     * (özel karakter, sayı, üst-alt harf zorunlu) v1.3.0'da.
+     * Yeni şifre — v1.7.x: kısıtlama kaldırıldı (kullanıcı talebi).
+     * Yalnız boş olmaması yeterli.
      */
     @NotBlank
-    @Size(min = 8, max = 128)
     @JsonProperty("new_password")
     private String newPassword;
 }

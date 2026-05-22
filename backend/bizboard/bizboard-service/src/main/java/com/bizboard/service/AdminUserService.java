@@ -52,10 +52,8 @@ public class AdminUserService {
                 .accessibleBusinesses(businessIdsStr)
                 .onboardingCompleted(true)
                 .active(true)
-                // Admin oluşturduğu yeni kullanıcı → ilk login'de parola değiştirmek zorunda.
-                // Admin'i kendisi oluşturursak da true; ama prod'da yeni admin
-                // create-user'dan değil, seed-data'dan geliyor.
-                .mustChangePassword(true)
+                // v1.7.x: zorunlu şifre değişikliği kaldırıldı (kullanıcı talebi).
+                .mustChangePassword(false)
                 .build();
 
         user = userRepository.save(user);

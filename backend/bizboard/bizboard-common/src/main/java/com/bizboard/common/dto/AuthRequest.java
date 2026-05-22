@@ -10,7 +10,8 @@ public class AuthRequest {
     @NotBlank
     private String username;
 
+    // v1.7.x: şifre kısıtlamaları kaldırıldı (kullanıcı talebi).
+    // Yalnız boş olmaması yeterli; min/max yok.
     @NotBlank
-    @Size(min = 6)
     private String password;
 }

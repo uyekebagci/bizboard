@@ -102,10 +102,11 @@ public class AuthService {
                 "Login successful for " + user.getUsername(),
                 Map.of("role", user.getRole() != null ? user.getRole() : "viewer"));
 
+        // v1.7.x: zorunlu şifre değişikliği akışı kaldırıldı; her zaman false.
         AuthResponse body = AuthResponse.builder()
                 .token(accessToken)
                 .expiresInSeconds(jwtUtil.getExpirationSeconds())
-                .forcePasswordChange(user.isMustChangePassword())
+                .forcePasswordChange(false)
                 .build();
 
         return new LoginResult(body, refresh);

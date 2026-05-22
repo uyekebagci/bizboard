@@ -52,12 +52,8 @@ function LoginForm() {
       );
       setToken(res.token, res.expiresInSeconds);
       setSessionFlag();
-      // İlk girişte parola değişikliği zorunlu ise direkt o ekrana yönlendir.
-      if (res.forcePasswordChange) {
-        router.push("/dashboard/change-password");
-      } else {
-        router.push(redirect);
-      }
+      // v1.7.x: zorunlu şifre değişikliği akışı kaldırıldı.
+      router.push(redirect);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         switch (err.code) {
