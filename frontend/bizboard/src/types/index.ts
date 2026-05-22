@@ -571,6 +571,9 @@ export interface Debt {
   business_name: string;
   direction: DebtDirection;
   counterparty: string;
+  /** v1.5.1+: normalize edilmiş Counterpart FK; legacy free-text 'counterparty' yine doldurulur. */
+  counterpart_id?: string | null;
+  counterpart_name?: string | null;
   amount: number;
   currency: string;
   instrument_type: string;
@@ -982,6 +985,8 @@ export type CounterpartKind = "PERSON" | "FIRM";
 
 export interface Counterpart {
   id: string;
+  /** v1.6.23.20 (Security WP): tenant binding. */
+  business_id?: string | null;
   name: string;
   tax_id: string | null;
   tax_office: string | null;
