@@ -27,6 +27,10 @@ public class UpdatePosDeviceRequest {
     @JsonProperty("default_rate")
     private BigDecimal defaultRate;
 
+    /** v1.7.x (POS Komisyon WP TODO 1bb4529a): Bizim oran default — partial update. */
+    @JsonProperty("our_commission_rate")
+    private BigDecimal ourCommissionRate;
+
     @JsonProperty("is_active")
     private Boolean active;
 

@@ -284,25 +284,37 @@ public class ConsolidatedDashboardService {
     private ConsolidatedDashboardDto.PosDeviceToday buildPosDeviceToday(PosDevice d, LocalDate date) {
         List<Transaction> txs = transactionRepository.findByPosDeviceIdAndDate(d.getId(), date);
         BigDecimal gross = BigDecimal.ZERO;
-        BigDecimal commission = BigDecimal.ZERO;
+        BigDecimal bankCommission = BigDecimal.ZERO;
+        // v1.7.x (POS Komisyon WP TODO 8a7a8416): bizim komisyon + kâr toplamı.
+        BigDecimal ourCommission = BigDecimal.ZERO;
         int unsettled = 0;
         for (Transaction t : txs) {
             if (t.getAmount() == null) continue;
             gross = gross.add(t.getAmount());
-            BigDecimal rate = t.getAppliedPosRate() != null
+            BigDecimal bankRate = t.getAppliedPosRate() != null
                     ? t.getAppliedPosRate()
                     : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
-            BigDecimal c = t.getAmount().multiply(rate)
+            BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
+                    ? t.getAppliedOurCommissionRate()
+                    : bankRate; // backfill safety: profit=0
+            BigDecimal bankAmt = t.getAmount().multiply(bankRate)
                     .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-            commission = commission.add(c);
+            BigDecimal ourAmt = t.getAmount().multiply(ourRate)
+                    .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            bankCommission = bankCommission.add(bankAmt);
+            ourCommission = ourCommission.add(ourAmt);
             if (Boolean.FALSE.equals(t.getPosSettled())) unsettled++;
         }
+        BigDecimal profit = ourCommission.subtract(bankCommission);
         return ConsolidatedDashboardDto.PosDeviceToday.builder()
                 .deviceId(d.getId())
                 .deviceName(d.getName())
                 .todayGross(gross)
-                .todayCommission(commission)
-                .todayNet(gross.subtract(commission))
+                .todayCommission(bankCommission) // legacy alias
+                .todayBankCommission(bankCommission)
+                .todayOurCommission(ourCommission)
+                .todayProfit(profit)
+                .todayNet(gross.subtract(bankCommission))
                 .unsettledCount(unsettled)
                 .txCount(txs.size())
                 .build();

@@ -74,7 +74,10 @@ export function AddTransactionForm({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     preselectedPaymentMethod || "NAKIT",
   );
+  // v1.7.x (POS Komisyon WP TODO 54f94805): pos_rate = BANKA oranı;
+  // our_commission_rate = BİZİM müşteriden aldığımız oran.
   const [posRate, setPosRate] = useState("");
+  const [ourCommissionRate, setOurCommissionRate] = useState("");
 
   const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
   const [targetCounterpartId, setTargetCounterpartId] = useState<string>("");
@@ -99,9 +102,15 @@ export function AddTransactionForm({
     if (!devId) return;
     const dev = posDevices.find((p) => p.id === devId);
     if (!dev) return;
-    const rate = dev.last_used_rate ?? dev.default_rate;
-    if (rate != null) {
-      setPosRate(String(rate));
+    // v1.7.x (POS Komisyon WP TODO 54f94805): cihaz seçilince hem banka oranı
+    // hem bizim oran auto-fill (boşsa). Manuel override için zaten dolu olanı
+    // tekrar yazma.
+    const bankRate = dev.last_used_rate ?? dev.default_rate;
+    if (bankRate != null) {
+      setPosRate(String(bankRate));
+    }
+    if (dev.our_commission_rate != null) {
+      setOurCommissionRate(String(dev.our_commission_rate));
     }
   }
 
@@ -156,6 +165,19 @@ export function AddTransactionForm({
         paymentMethod === "POS" && posRate.trim() !== ""
           ? Number(posRate.replace(",", "."))
           : null;
+      // v1.7.x (POS Komisyon WP TODO 54f94805): bizim oran POS için zorunlu.
+      const ourRateValue =
+        paymentMethod === "POS" && ourCommissionRate.trim() !== ""
+          ? Number(ourCommissionRate.replace(",", "."))
+          : null;
+
+      // Client-side validation: our >= bank (server da aynı kontrolü yapar)
+      if (paymentMethod === "POS" && ourRateValue != null && posRateValue != null
+          && ourRateValue < posRateValue) {
+        setError("Bizim komisyonumuz banka komisyonundan düşük olamaz");
+        setIsSubmitting(false);
+        return;
+      }
 
       const tx = await api.post<{ id: string }>(`/businesses/${businessId}/transactions`, {
         direction,
@@ -166,6 +188,7 @@ export function AddTransactionForm({
         tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         payment_method: paymentMethod,
         pos_rate: posRateValue,
+        our_commission_rate: ourRateValue,
         target_counterpart_id: targetCounterpartId || null,
         pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
       });
@@ -244,7 +267,7 @@ export function AddTransactionForm({
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => { setPaymentMethod("NAKIT"); setPosRate(""); }}
+            onClick={() => { setPaymentMethod("NAKIT"); setPosRate(""); setOurCommissionRate(""); }}
             className={cn(
               "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               paymentMethod === "NAKIT"
@@ -288,35 +311,93 @@ export function AddTransactionForm({
                   className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="">Cihaz secin (opsiyonel)</option>
-                  {posDevices.map((dev) => (
-                    <option key={dev.id} value={dev.id}>
-                      {dev.name}
-                      {dev.bank_name ? ` — ${dev.bank_name}` : ""}
-                      {dev.last_used_rate != null ? ` (%${dev.last_used_rate})` : dev.default_rate != null ? ` (%${dev.default_rate})` : ""}
-                    </option>
-                  ))}
+                  {posDevices.map((dev) => {
+                    const bank = dev.last_used_rate ?? dev.default_rate;
+                    const ours = dev.our_commission_rate;
+                    const rateLabel =
+                      bank != null && ours != null ? ` (banka %${bank} / biz %${ours})`
+                      : bank != null ? ` (%${bank})`
+                      : "";
+                    return (
+                      <option key={dev.id} value={dev.id}>
+                        {dev.name}
+                        {dev.bank_name ? ` — ${dev.bank_name}` : ""}
+                        {rateLabel}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )}
-            <div className="mt-3">
-              <label className="block text-xs font-medium text-surface-300 mb-1.5">
-                POS Komisyon Orani (%)
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={posRate}
-                  onChange={(e) => {
-                    const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
-                    setPosRate(cleaned);
-                  }}
-                  placeholder="orn. 1.95"
-                  className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">%</span>
+            {/* v1.7.x (POS Komisyon WP TODO 54f94805): iki oran input */}
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-surface-300 mb-1.5">
+                  Banka Komisyonu (%)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={posRate}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
+                      setPosRate(cleaned);
+                    }}
+                    placeholder="orn. 1.95"
+                    className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">%</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-300 mb-1.5">
+                  Bizim Komisyonumuz (%)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={ourCommissionRate}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
+                      setOurCommissionRate(cleaned);
+                    }}
+                    placeholder="orn. 5.50"
+                    className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">%</span>
+                </div>
               </div>
             </div>
+            {/* v1.7.x (POS Komisyon WP TODO 54f94805): inline validation + breakdown */}
+            {(() => {
+              const bank = posRate.trim() !== "" ? Number(posRate.replace(",", ".")) : NaN;
+              const ours = ourCommissionRate.trim() !== "" ? Number(ourCommissionRate.replace(",", ".")) : NaN;
+              const amt = parseMoneyInput(amount);
+              if (!isNaN(bank) && !isNaN(ours) && ours < bank) {
+                return (
+                  <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                    Bizim komisyonumuz banka komisyonundan düşük olamaz.
+                  </div>
+                );
+              }
+              if (!isNaN(bank) && !isNaN(ours) && amt > 0) {
+                const bankAmt = (amt * bank) / 100;
+                const ourAmt = (amt * ours) / 100;
+                const profit = ourAmt - bankAmt;
+                const fmt = (n: number) =>
+                  n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return (
+                  <div className="mt-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-200 space-y-1">
+                    <div className="flex justify-between"><span>Banka komisyonu</span><span className="font-mono">{fmt(bankAmt)} ₺</span></div>
+                    <div className="flex justify-between"><span>Bizim komisyonumuz</span><span className="font-mono">{fmt(ourAmt)} ₺</span></div>
+                    <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-semibold text-emerald-300"><span>Kâr</span><span className="font-mono">{fmt(profit)} ₺</span></div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </>
         )}
       </div>

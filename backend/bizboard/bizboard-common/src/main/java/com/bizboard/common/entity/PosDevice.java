@@ -67,6 +67,16 @@ public class PosDevice {
     @Column(name = "last_used_rate", precision = 5, scale = 2)
     private BigDecimal lastUsedRate;
 
+    /**
+     * v1.7.x (POS Komisyon WP TODO 1bb4529a): Cihazın "bizim oran" defaultu —
+     * yeni POS tx girilirken pre-fill. {@code defaultRate} semantik olarak
+     * BANKA oranı; bu alan DGR'nin müşteriden aldığı oran.
+     *
+     * <p>Validation: {@code our_commission_rate >= default_rate} (banka oranı).</p>
+     */
+    @Column(name = "our_commission_rate", precision = 5, scale = 2)
+    private BigDecimal ourCommissionRate;
+
     @Column(name = "is_active", nullable = false)
     @ColumnDefault("true")
     @Builder.Default

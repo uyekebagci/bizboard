@@ -139,7 +139,14 @@ public class ConsolidatedDashboardDto {
         @JsonProperty("device_id")        private UUID deviceId;
         @JsonProperty("device_name")      private String deviceName;
         @JsonProperty("today_gross")      private BigDecimal todayGross;
+        /** Legacy: banka komisyonu toplamı (= today_bank_commission). */
         @JsonProperty("today_commission") private BigDecimal todayCommission;
+        /** v1.7.x (POS Komisyon WP): banka komisyon toplamı. */
+        @JsonProperty("today_bank_commission") private BigDecimal todayBankCommission;
+        /** v1.7.x (POS Komisyon WP): bizim komisyon toplamı (müşteriden alınan). */
+        @JsonProperty("today_our_commission")  private BigDecimal todayOurCommission;
+        /** v1.7.x (POS Komisyon WP): kâr = our − bank. */
+        @JsonProperty("today_profit")     private BigDecimal todayProfit;
         @JsonProperty("today_net")        private BigDecimal todayNet;
         @JsonProperty("unsettled_count")  private int unsettledCount;
         @JsonProperty("tx_count")         private int txCount;

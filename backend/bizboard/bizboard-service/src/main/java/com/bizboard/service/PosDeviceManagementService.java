@@ -95,12 +95,20 @@ public class PosDeviceManagementService {
                             "Sahip firma bulunamadi: " + req.getOwnerCounterpartId()));
         }
 
+        // v1.7.x (POS Komisyon WP TODO fc3ed50f): device default rate'lerinde
+        // de our >= bank validasyonu (constant aynı mesaj).
+        if (req.getOurCommissionRate() != null && req.getDefaultRate() != null
+                && req.getOurCommissionRate().compareTo(req.getDefaultRate()) < 0) {
+            throw new IllegalArgumentException(TransactionService.MSG_OUR_LT_BANK);
+        }
+
         PosDevice d = PosDevice.builder()
                 .business(business)
                 .name(req.getName().trim())
                 .ownerCounterpart(owner)
                 .bankName(blankToNull(req.getBankName()))
                 .defaultRate(req.getDefaultRate())
+                .ourCommissionRate(req.getOurCommissionRate())
                 .active(true)
                 .notes(blankToNull(req.getNotes()))
                 .build();
@@ -160,6 +168,19 @@ public class PosDeviceManagementService {
                     "from", d.getDefaultRate() != null ? d.getDefaultRate().toPlainString() : "null",
                     "to", req.getDefaultRate().toPlainString()));
             d.setDefaultRate(req.getDefaultRate());
+        }
+        // v1.7.x (POS Komisyon WP TODO 1bb4529a): bizim oran partial update.
+        if (req.getOurCommissionRate() != null
+                && !Objects.equals(req.getOurCommissionRate(), d.getOurCommissionRate())) {
+            changes.put("ourCommissionRate", Map.of(
+                    "from", d.getOurCommissionRate() != null ? d.getOurCommissionRate().toPlainString() : "null",
+                    "to", req.getOurCommissionRate().toPlainString()));
+            d.setOurCommissionRate(req.getOurCommissionRate());
+        }
+        // Validation: our >= bank (eşit OK)
+        if (d.getOurCommissionRate() != null && d.getDefaultRate() != null
+                && d.getOurCommissionRate().compareTo(d.getDefaultRate()) < 0) {
+            throw new IllegalArgumentException(TransactionService.MSG_OUR_LT_BANK);
         }
         if (req.getActive() != null && req.getActive() != d.isActive()) {
             changes.put("active", Map.of("from", d.isActive(), "to", req.getActive()));
@@ -226,6 +247,7 @@ public class PosDeviceManagementService {
                 .bankName(d.getBankName())
                 .defaultRate(d.getDefaultRate())
                 .lastUsedRate(d.getLastUsedRate())
+                .ourCommissionRate(d.getOurCommissionRate())
                 .active(d.isActive())
                 .notes(d.getNotes())
                 .createdAt(d.getCreatedAt())

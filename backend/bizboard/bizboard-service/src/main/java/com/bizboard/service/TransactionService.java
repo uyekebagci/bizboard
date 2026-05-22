@@ -174,13 +174,19 @@ public class TransactionService {
         }
         com.bizboard.common.entity.PosDevice posDevice = null;
         java.math.BigDecimal appliedRate = null;
+        // v1.7.x (POS Komisyon WP TODO fc3ed50f): bizim oran snapshot
+        java.math.BigDecimal appliedOurRate = null;
         if ("POS".equals(pm) && request.getPosDeviceId() != null) {
             posDevice = posDeviceRepository.findById(request.getPosDeviceId()).orElse(null);
             if (posDevice != null) {
-                // Snapshot: cihazın o anki rate'ini sabitle.
+                // Snapshot: cihazın o anki rate'ini sabitle (banka oranı).
                 appliedRate = posRate != null ? posRate
                         : (posDevice.getDefaultRate() != null ? posDevice.getDefaultRate()
                             : posDevice.getLastUsedRate());
+                // v1.7.x: bizim oran — request'ten gelirse o, yoksa device default.
+                appliedOurRate = request.getOurCommissionRate() != null
+                        ? request.getOurCommissionRate()
+                        : posDevice.getOurCommissionRate();
                 // Cihazın "lastUsedRate"ini de güncelle.
                 if (posRate != null) {
                     posDevice.setLastUsedRate(posRate);
@@ -189,6 +195,11 @@ public class TransactionService {
             }
         } else if ("POS".equals(pm)) {
             appliedRate = posRate;
+            appliedOurRate = request.getOurCommissionRate();
+        }
+        // v1.7.x (TODO fc3ed50f): POS tx için her iki oran zorunlu + our >= bank.
+        if ("POS".equals(pm)) {
+            validatePosCommissionRates(appliedOurRate, appliedRate);
         }
 
         // v1.6.23.5 (BUG-V3 fix): POS tx için pos_settled default=false (NULL değil).
@@ -211,6 +222,7 @@ public class TransactionService {
                 .targetCounterpart(targetCounterpart)
                 .posDevice(posDevice)
                 .appliedPosRate(appliedRate)
+                .appliedOurCommissionRate(appliedOurRate)
                 .posSettled(posSettledDefault)
                 .bankAccount(bankAccount)
                 .backdated(backdated)
@@ -369,10 +381,9 @@ public class TransactionService {
                         "from", transaction.getPosRate() != null ? transaction.getPosRate() : 0,
                         "to", request.getPosRate()));
                 transaction.setPosRate(request.getPosRate());
-                // v1.7.0-beta+ (Bankalar WP TODO 317415bb): applied_pos_rate
-                // snapshot da sync edilmeli — DtoMapper net/commission'ı
-                // applied_pos_rate'ten türetir; aksi takdirde UI'da stale değer.
-                // Kullanıcı bu tx için oranı override ediyor → snapshot YENİ oran.
+                // v1.7.0-beta+ / v1.7.x (TODO 317415bb + 6ffe0665):
+                // applied_pos_rate snapshot da sync — DtoMapper bank_commission
+                // hesabı applied_pos_rate'ten türer.
                 java.math.BigDecimal oldApplied = transaction.getAppliedPosRate();
                 if (!java.util.Objects.equals(oldApplied, request.getPosRate())) {
                     changes.put("appliedPosRate", Map.of(
@@ -382,11 +393,31 @@ public class TransactionService {
                 }
             }
         }
-        // PM POS'tan başkasına geçerse applied_pos_rate da temizle (defensive).
+        // v1.7.x (POS Komisyon WP TODO 6ffe0665): bizim oran update.
+        if (request.getOurCommissionRate() != null && "POS".equals(transaction.getPaymentMethod())) {
+            if (!java.util.Objects.equals(
+                    transaction.getAppliedOurCommissionRate(), request.getOurCommissionRate())) {
+                changes.put("appliedOurCommissionRate", Map.of(
+                        "from", transaction.getAppliedOurCommissionRate() != null
+                                ? transaction.getAppliedOurCommissionRate() : 0,
+                        "to", request.getOurCommissionRate()));
+                transaction.setAppliedOurCommissionRate(request.getOurCommissionRate());
+            }
+        }
+        // PM POS'tan başkasına geçerse her iki oran da temizle (defensive).
         if (transaction.getPaymentMethod() != null
-                && !"POS".equals(transaction.getPaymentMethod())
-                && transaction.getAppliedPosRate() != null) {
-            transaction.setAppliedPosRate(null);
+                && !"POS".equals(transaction.getPaymentMethod())) {
+            if (transaction.getAppliedPosRate() != null) transaction.setAppliedPosRate(null);
+            if (transaction.getAppliedOurCommissionRate() != null) {
+                transaction.setAppliedOurCommissionRate(null);
+            }
+        }
+        // v1.7.x (TODO fc3ed50f): POS tx için her iki oran zorunlu + our >= bank.
+        // Validation update'in en sonunda — diğer field değişiklikleri ile karışmasın.
+        if ("POS".equals(transaction.getPaymentMethod())) {
+            validatePosCommissionRates(
+                    transaction.getAppliedOurCommissionRate(),
+                    transaction.getAppliedPosRate());
         }
         // v1.6.21 (WP-4) / v1.6.23.11 fix:
         // pos_settled artık YALNIZ dedicated endpoint'ler (PATCH /settle, /unsettle)
@@ -811,6 +842,32 @@ public class TransactionService {
         if ("POS".equals(upper)) return "POS";
         if ("HESAPDAN".equals(upper)) return "HESAPDAN";
         return "NAKIT";
+    }
+
+    /**
+     * v1.7.x (POS Komisyon WP TODO fc3ed50f): "our >= bank" validation.
+     * Hata mesajı BİREBİR — user spec'i: değiştirme.
+     */
+    static final String MSG_OUR_LT_BANK =
+            "Bizim komisyonumuz banka komisyonundan düşük olamaz";
+
+    /**
+     * v1.7.x (TODO fc3ed50f): POS tx için her iki oran zorunlu + our >= bank.
+     * Hata fırlatır (IllegalArgumentException → 400).
+     */
+    static void validatePosCommissionRates(java.math.BigDecimal ourRate,
+                                            java.math.BigDecimal bankRate) {
+        if (ourRate == null) {
+            throw new IllegalArgumentException(
+                    "POS işlem için bizim komisyon oranı (our_commission_rate) zorunlu");
+        }
+        if (bankRate == null) {
+            throw new IllegalArgumentException(
+                    "POS işlem için banka komisyon oranı (pos_rate) zorunlu");
+        }
+        if (ourRate.compareTo(bankRate) < 0) {
+            throw new IllegalArgumentException(MSG_OUR_LT_BANK);
+        }
     }
 
 }

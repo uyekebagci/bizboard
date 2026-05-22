@@ -61,15 +61,32 @@ public final class DtoMapper {
     public static TransactionDto toTransactionDto(Transaction t) {
         // v1.6.23.8 (WP 3cdf2a4f / TODO ad8afc6f): POS tx için derived
         // commission + net (UI'da gross yerine net gösterilmek istenirse).
+        // v1.7.x (POS Komisyon WP TODO 3a4867b6): yeni 2 oran modeli.
+        //   bank_commission_amount = amount × applied_pos_rate / 100
+        //   our_commission_amount  = amount × applied_our_commission_rate / 100
+        //   pos_profit             = our_commission − bank_commission
+        //   pos_commission (legacy)  = bank_commission_amount (banka oranı)
+        //   pos_net (legacy)         = amount − bank_commission_amount (settlement değer)
         java.math.BigDecimal posCommission = null;
         java.math.BigDecimal posNet = null;
+        java.math.BigDecimal ourCommissionAmount = null;
+        java.math.BigDecimal bankCommissionAmount = null;
+        java.math.BigDecimal posProfit = null;
         if ("POS".equalsIgnoreCase(t.getPaymentMethod()) && t.getAmount() != null) {
-            java.math.BigDecimal rate = t.getAppliedPosRate() != null
+            java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
                     ? t.getAppliedPosRate()
                     : (t.getPosRate() != null ? t.getPosRate() : java.math.BigDecimal.ZERO);
-            posCommission = t.getAmount().multiply(rate)
+            java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
+                    ? t.getAppliedOurCommissionRate()
+                    : bankRate; // backfill safety: our=bank → profit=0
+            bankCommissionAmount = t.getAmount().multiply(bankRate)
                     .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-            posNet = t.getAmount().subtract(posCommission);
+            ourCommissionAmount = t.getAmount().multiply(ourRate)
+                    .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            posProfit = ourCommissionAmount.subtract(bankCommissionAmount);
+            // Legacy alanlar — backward compat
+            posCommission = bankCommissionAmount;
+            posNet = t.getAmount().subtract(bankCommissionAmount);
         }
 
         return TransactionDto.builder()
@@ -90,6 +107,11 @@ public final class DtoMapper {
                 .posRate(t.getPosRate())
                 // v1.6.21 (WP-4) + v1.6.20 (WP-3) extras
                 .appliedPosRate(t.getAppliedPosRate())
+                // v1.7.x (POS Komisyon WP): bizim oran + derived breakdown
+                .appliedOurCommissionRate(t.getAppliedOurCommissionRate())
+                .ourCommissionAmount(ourCommissionAmount)
+                .bankCommissionAmount(bankCommissionAmount)
+                .posProfit(posProfit)
                 .posDeviceId(t.getPosDevice() != null ? t.getPosDevice().getId() : null)
                 .posDeviceName(t.getPosDevice() != null ? t.getPosDevice().getName() : null)
                 .posSettled(t.getPosSettled())

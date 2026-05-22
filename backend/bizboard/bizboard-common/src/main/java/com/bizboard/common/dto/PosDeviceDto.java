@@ -41,6 +41,13 @@ public class PosDeviceDto {
     @JsonProperty("last_used_rate")
     private BigDecimal lastUsedRate;
 
+    /**
+     * v1.7.x (POS Komisyon WP TODO 1bb4529a): cihazın "bizim oran" defaultu.
+     * Yeni POS tx girilirken pre-fill (default_rate=banka, our_commission_rate=bizim).
+     */
+    @JsonProperty("our_commission_rate")
+    private BigDecimal ourCommissionRate;
+
     @JsonProperty("is_active")
     private boolean active;
 

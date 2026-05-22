@@ -325,31 +325,49 @@ public class SummaryService {
     }
 
     /**
-     * v1.6.23.8 (TODO ad8afc6f): POS tx için net (= amount − commission) kullan.
-     * "Net kar" hesabı kullanıcının fiilen elde ettiği parayı yansıtmalı; bankanın
-     * aldığı komisyon income'a dahil edilmemeli. NAKIT/HESAPDAN: amount direkt.
+     * v1.6.23.8 (TODO ad8afc6f): Income raporlarında "fiilen elde edilen para".
+     * v1.7.x (POS Komisyon WP TODO 550a3f71): POS dilimi = PROFIT (our − bank).
+     *
+     * <ul>
+     *   <li>NAKIT / HESAPDAN: {@code amount} direkt (gross)</li>
+     *   <li>POS (yeni model, our_rate + bank_rate snapshot var):
+     *       {@code profit = amount × (our_rate − bank_rate) / 100}</li>
+     *   <li>POS (backfilled — our=bank): profit=0. Eski POS tx'lerin income
+     *       katkısı 0 (kasıtlı clean break, release notes).</li>
+     * </ul>
      */
     static BigDecimal effectiveAmount(Transaction t) {
         if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
         if (!"POS".equalsIgnoreCase(t.getPaymentMethod())) return t.getAmount();
-        java.math.BigDecimal rate = t.getAppliedPosRate() != null
+        java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
                 ? t.getAppliedPosRate()
                 : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
-        if (rate.signum() == 0) return t.getAmount();
-        BigDecimal commission = t.getAmount().multiply(rate)
+        java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
+                ? t.getAppliedOurCommissionRate()
+                : bankRate; // backfill fallback → profit=0
+        java.math.BigDecimal diffRate = ourRate.subtract(bankRate);
+        if (diffRate.signum() == 0) return BigDecimal.ZERO; // backfilled veya gerçek 0-profit
+        return t.getAmount().multiply(diffRate)
                 .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-        return t.getAmount().subtract(commission);
     }
 
     private Map<String, Map<String, BigDecimal>> buildCategoryBreakdown(List<Transaction> transactions) {
+        // v1.7.x (POS Komisyon WP TODO c0998274): POS tx kategori dağılımına
+        // GROSS değil PROFIT katar — pie dilimleri "Gelir Dağılımı" semantiği
+        // ile uyumlu (= total_income definition: Σ non-POS gross + Σ POS profit).
         Map<String, Map<String, BigDecimal>> breakdown = new HashMap<>();
 
         for (Transaction t : transactions) {
             String catName = t.getCategory() != null ? t.getCategory().getName() : "Kategorisiz";
             String dirKey = t.getDirection() == TransactionDirection.INCOME ? "income" : "expense";
 
+            BigDecimal value = effectiveAmount(t);
+            // Gider tarafı POS değilse normal akış (effectiveAmount=amount).
+            // POS gider yok (POS sadece gelir) ama defansif: signum=0 ise hiç ekleme.
+            if (value == null || value.signum() == 0) continue;
+
             breakdown.computeIfAbsent(catName, k -> new HashMap<>());
-            breakdown.get(catName).merge(dirKey, t.getAmount(), BigDecimal::add);
+            breakdown.get(catName).merge(dirKey, value, BigDecimal::add);
         }
 
         return breakdown;

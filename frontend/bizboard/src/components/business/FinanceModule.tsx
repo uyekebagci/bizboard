@@ -218,9 +218,16 @@ export function FinanceModule({ businessId, currency }: Props) {
       )}
 
       {/* ─── Kategori Kırılımı ───────────────────────────────── */}
+      {/* v1.7.x (POS Komisyon WP TODO c0998274): backend artık POS kategorilerini
+          profit olarak verir; UI buna göre hint gösterir. */}
       {categories.length > 0 && (
         <div className="card p-4">
-          <h4 className="text-xs font-semibold text-surface-300 mb-3">Kategori Kirilimi</h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xs font-semibold text-surface-300">Kategori Kirilimi</h4>
+            <span className="text-[9px] text-surface-400" title="POS kategorileri için kâr (= bizim komisyon − banka komisyon) baz alınır.">
+              POS = kâr
+            </span>
+          </div>
           <div className="space-y-2">
             {categories.slice(0, 6).map((cat) => {
               const catTotal = cat.income + cat.expense;

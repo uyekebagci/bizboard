@@ -147,9 +147,12 @@ export default function PosDeviceManagementPage() {
                   {d.bank_name && <> · {d.bank_name}</>}
                 </p>
                 <p className="text-[11px] text-surface-300 mt-0.5">
-                  Default: <span className="text-white">%{d.default_rate ?? "—"}</span>
+                  Banka: <span className="text-white">%{d.default_rate ?? "—"}</span>
+                  {d.our_commission_rate != null && (
+                    <> · Biz: <span className="text-white">%{d.our_commission_rate}</span></>
+                  )}
                   {d.last_used_rate != null && (
-                    <> · Son kullanim: <span className="text-white">%{d.last_used_rate}</span></>
+                    <> · Son: <span className="text-white">%{d.last_used_rate}</span></>
                   )}
                 </p>
               </div>
@@ -217,6 +220,10 @@ function PosDeviceFormModal({
   const [defaultRate, setDefaultRate] = useState(
     device?.default_rate != null ? String(device.default_rate) : "",
   );
+  // v1.7.x (POS Komisyon WP TODO 1bb4529a): cihaz default BİZİM komisyon oranımız.
+  const [ourCommissionRate, setOurCommissionRate] = useState(
+    device?.our_commission_rate != null ? String(device.our_commission_rate) : "",
+  );
   const [active, setActive] = useState(device?.is_active ?? true);
   const [notes, setNotes] = useState(device?.notes ?? "");
   const [saving, setSaving] = useState(false);
@@ -226,13 +233,21 @@ function PosDeviceFormModal({
     e.preventDefault();
     setError(null);
     if (!name.trim()) { setError("İsim zorunlu"); return; }
+    // v1.7.x: client-side validation our >= bank
+    const bankVal = defaultRate.trim() === "" ? null : Number(defaultRate.replace(",", "."));
+    const ourVal = ourCommissionRate.trim() === "" ? null : Number(ourCommissionRate.replace(",", "."));
+    if (bankVal != null && ourVal != null && ourVal < bankVal) {
+      setError("Bizim komisyonumuz banka komisyonundan düşük olamaz");
+      return;
+    }
     setSaving(true);
     try {
       const body = {
         name: name.trim(),
         owner_counterpart_id: ownerId || null,
         bank_name: bankName.trim() || null,
-        default_rate: defaultRate.trim() === "" ? null : Number(defaultRate.replace(",", ".")),
+        default_rate: bankVal,
+        our_commission_rate: ourVal,
         notes: notes.trim() || null,
       };
       if (isEdit && device) {
@@ -307,17 +322,51 @@ function PosDeviceFormModal({
             />
           </div>
 
-          <div>
-            <label className="label">Default Oran (%)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={defaultRate}
-              onChange={(e) => setDefaultRate(e.target.value.replace(/[^0-9.,]/g, ""))}
-              className="input"
-              placeholder="orn. 1.95"
-            />
+          {/* v1.7.x (POS Komisyon WP TODO 1bb4529a): iki oran */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="label">Banka Komisyonu (%)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={defaultRate}
+                onChange={(e) => setDefaultRate(e.target.value.replace(/[^0-9.,]/g, ""))}
+                className="input"
+                placeholder="orn. 1.95"
+              />
+            </div>
+            <div>
+              <label className="label">Bizim Komisyonumuz (%)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={ourCommissionRate}
+                onChange={(e) => setOurCommissionRate(e.target.value.replace(/[^0-9.,]/g, ""))}
+                className="input"
+                placeholder="orn. 5.50"
+              />
+            </div>
           </div>
+          {(() => {
+            const bank = defaultRate.trim() !== "" ? Number(defaultRate.replace(",", ".")) : NaN;
+            const ours = ourCommissionRate.trim() !== "" ? Number(ourCommissionRate.replace(",", ".")) : NaN;
+            if (!isNaN(bank) && !isNaN(ours) && ours < bank) {
+              return (
+                <p className="text-[11px] text-red-300 -mt-1">
+                  Bizim komisyonumuz banka komisyonundan düşük olamaz.
+                </p>
+              );
+            }
+            if (!isNaN(bank) && !isNaN(ours)) {
+              const diff = ours - bank;
+              return (
+                <p className="text-[11px] text-emerald-300 -mt-1">
+                  Bu cihaz default kâr marjı: <strong>%{diff.toFixed(2)}</strong>
+                </p>
+              );
+            }
+            return null;
+          })()}
 
           {isEdit && (
             <label className="flex items-center gap-2 text-sm text-surface-200">

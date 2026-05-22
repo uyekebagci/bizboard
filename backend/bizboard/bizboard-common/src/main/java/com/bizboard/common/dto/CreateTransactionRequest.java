@@ -44,11 +44,20 @@ public class CreateTransactionRequest {
     private String paymentMethod;
 
     /**
-     * v1.6.3: POS işlemi için banka komisyon oranı (yüzde).
+     * v1.6.3 / v1.7.x: BANKA komisyon oranı (yüzde).
      * paymentMethod=POS olduğunda anlamlı; NAKIT için yoksayılır.
+     * v1.7.x'te bu alan artık banka oranıdır (yeni model 2 oranlı).
      */
     @JsonProperty("pos_rate")
     private BigDecimal posRate;
+
+    /**
+     * v1.7.x (POS Komisyon WP TODO fc3ed50f): Bizim komisyon oranımız (yüzde).
+     * paymentMethod=POS için ZORUNLU (servis tarafında validation: NOT NULL
+     * + our_commission_rate &gt;= pos_rate, eşit OK).
+     */
+    @JsonProperty("our_commission_rate")
+    private BigDecimal ourCommissionRate;
 
     /**
      * v1.6.20 (WP-3): Karşı taraf id (counterpart). Tek-tenant DGR modunda

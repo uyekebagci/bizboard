@@ -161,8 +161,16 @@ export interface Transaction {
   payment_method?: PaymentMethod;
   /** v1.6.3+: POS komisyon oranı (yüzde). Sadece payment_method=POS iken kullanılır. */
   pos_rate?: number | null;
-  /** v1.6.21 (WP-4): tx oluşturulduğu anki POS oranı snapshot. */
+  /** v1.6.21 (WP-4): tx oluşturulduğu anki POS oranı snapshot (BANKA oranı). */
   applied_pos_rate?: number | null;
+  /** v1.7.x (POS Komisyon WP): tx oluşturulduğu anki BİZİM komisyon oranımız snapshot. */
+  applied_our_commission_rate?: number | null;
+  /** v1.7.x (POS Komisyon WP): derived — amount × applied_our_commission_rate / 100. */
+  our_commission_amount?: number | null;
+  /** v1.7.x (POS Komisyon WP): derived — amount × applied_pos_rate / 100. */
+  bank_commission_amount?: number | null;
+  /** v1.7.x (POS Komisyon WP): derived — our_commission_amount − bank_commission_amount. */
+  pos_profit?: number | null;
   /** v1.6.21 (WP-4): hangi POS cihazında çekildi. */
   pos_device_id?: string | null;
   pos_device_name?: string | null;
@@ -173,9 +181,9 @@ export interface Transaction {
   /** v1.6.23.9: settle sonrası hangi banka. */
   settled_bank_account_id?: string | null;
   settled_bank_account_name?: string | null;
-  /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived komisyon. NAKIT/HESAPDAN'da null. */
+  /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived komisyon (legacy = bank_commission_amount). */
   pos_commission?: number | null;
-  /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived net (= amount − pos_commission). */
+  /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived net (= amount − bank_commission). */
   pos_net?: number | null;
   /** v1.6.20 (WP-3): karşı taraf. */
   target_counterpart_id?: string | null;
@@ -356,7 +364,14 @@ export interface ConsolidatedDashboard {
     device_id: string;
     device_name: string;
     today_gross: number;
+    /** Legacy alias of today_bank_commission. */
     today_commission: number;
+    /** v1.7.x (POS Komisyon WP): banka komisyon toplamı. */
+    today_bank_commission?: number;
+    /** v1.7.x (POS Komisyon WP): bizim komisyon toplamı. */
+    today_our_commission?: number;
+    /** v1.7.x (POS Komisyon WP): kâr = our − bank. */
+    today_profit?: number;
     today_net: number;
     unsettled_count: number;
     tx_count: number;
@@ -507,8 +522,11 @@ export interface PosDeviceListItem {
   owner_counterpart_id: string | null;
   owner_counterpart_name: string | null;
   bank_name: string | null;
+  /** Default BANKA komisyon oranı (cihaz default). */
   default_rate: number | null;
   last_used_rate: number | null;
+  /** v1.7.x (POS Komisyon WP): cihaz default BİZİM komisyon oranımız. */
+  our_commission_rate?: number | null;
   is_active: boolean;
   notes: string | null;
 }

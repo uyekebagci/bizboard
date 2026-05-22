@@ -62,6 +62,34 @@ public class TransactionDto {
     @JsonProperty("applied_pos_rate")
     private BigDecimal appliedPosRate;
 
+    /**
+     * v1.7.x (POS Komisyon WP TODO 79b2feca): bizim komisyon oranımız snapshot.
+     * {@code applied_pos_rate} BANKA oranı; bu alan DGR'nin müşteriden aldığı oran.
+     */
+    @JsonProperty("applied_our_commission_rate")
+    private BigDecimal appliedOurCommissionRate;
+
+    /**
+     * v1.7.x: Derived (UI breakdown'u için).
+     * {@code amount × applied_our_commission_rate / 100}.
+     */
+    @JsonProperty("our_commission_amount")
+    private BigDecimal ourCommissionAmount;
+
+    /**
+     * v1.7.x: Derived. {@code amount × applied_pos_rate / 100} (banka oranı).
+     * Settlement'ta {@code bank.balance += amount − bank_commission_amount}.
+     */
+    @JsonProperty("bank_commission_amount")
+    private BigDecimal bankCommissionAmount;
+
+    /**
+     * v1.7.x: Derived DGR profit'i — {@code our_commission_amount − bank_commission_amount}.
+     * Income raporlarında POS dilimi olarak BU değer toplanır (gross değil).
+     */
+    @JsonProperty("pos_profit")
+    private BigDecimal posProfit;
+
     /** v1.6.21 (WP-4): hangi POS cihazında çekildi. */
     @JsonProperty("pos_device_id")
     private UUID posDeviceId;

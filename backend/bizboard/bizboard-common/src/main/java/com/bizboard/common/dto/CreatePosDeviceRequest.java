@@ -34,9 +34,16 @@ public class CreatePosDeviceRequest {
     @Size(max = 120)
     private String bankName;
 
-    /** Default komisyon oranı yüzde. */
+    /** Default komisyon oranı yüzde (BANKA oranı). */
     @JsonProperty("default_rate")
     private BigDecimal defaultRate;
+
+    /**
+     * v1.7.x (POS Komisyon WP TODO 1bb4529a): Bizim komisyon oranı default —
+     * yeni POS tx pre-fill. Validation: {@code our_commission_rate >= default_rate}.
+     */
+    @JsonProperty("our_commission_rate")
+    private BigDecimal ourCommissionRate;
 
     private String notes;
 }

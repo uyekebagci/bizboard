@@ -347,6 +347,8 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
   }
   const totalGross = devs.reduce((a, x) => a + x.today_gross, 0);
   const totalNet = devs.reduce((a, x) => a + x.today_net, 0);
+  // v1.7.x (POS Komisyon WP TODO 8a7a8416): toplam kâr = Σ today_profit.
+  const totalProfit = devs.reduce((a, x) => a + (x.today_profit ?? 0), 0);
   const unsettled = devs.reduce((a, x) => a + x.unsettled_count, 0);
   const totalTx = devs.reduce((a, x) => a + x.tx_count, 0);
 
@@ -378,9 +380,16 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
             <div className="text-right shrink-0">
               <p className="text-sm font-semibold text-white">{formatCurrency(dev.today_gross, "TRY")}</p>
               <p className="text-[10px]">
-                <span className="text-red-300">-{formatCurrency(dev.today_commission, "TRY")}</span>
-                {" · "}
-                <span className="text-emerald-300">{formatCurrency(dev.today_net, "TRY")}</span>
+                {/* v1.7.x (POS Komisyon WP TODO 8a7a8416): kâr ön plana */}
+                {dev.today_profit != null ? (
+                  <span className="text-emerald-300 font-semibold">+kâr {formatCurrency(dev.today_profit, "TRY")}</span>
+                ) : (
+                  <>
+                    <span className="text-red-300">-{formatCurrency(dev.today_commission, "TRY")}</span>
+                    {" · "}
+                    <span className="text-emerald-300">{formatCurrency(dev.today_net, "TRY")}</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -391,8 +400,17 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
         right={
           <span>
             Brüt {formatCurrency(totalGross, "TRY")}
-            {" · Net "}
-            <span className="text-emerald-300">{formatCurrency(totalNet, "TRY")}</span>
+            {" · "}
+            {/* v1.7.x (POS Komisyon WP TODO 8a7a8416): footer'da toplam kâr */}
+            {totalProfit !== 0 ? (
+              <>
+                Kâr <span className="text-emerald-300 font-semibold">{formatCurrency(totalProfit, "TRY")}</span>
+              </>
+            ) : (
+              <>
+                Net <span className="text-emerald-300">{formatCurrency(totalNet, "TRY")}</span>
+              </>
+            )}
           </span>
         }
       />

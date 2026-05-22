@@ -169,6 +169,20 @@ public class Transaction {
     private java.math.BigDecimal appliedPosRate;
 
     /**
+     * v1.7.x (POS Komisyon WP TODO 79b2feca): Bizim komisyon oranımız snapshot.
+     * {@code applied_pos_rate} semantik olarak BANKA oranıdır. Bu kolon
+     * bizim DGR olarak müşteriden aldığımız oran.
+     *
+     * <p>Profit hesabı:
+     * {@code profit = amount × (our_rate − bank_rate) / 100}.</p>
+     *
+     * <p>DB CHECK: NULL-tolerant; ikisi de set ise our &gt;= bank.
+     * Servis: POS tx için zorunlu (validation 400).</p>
+     */
+    @Column(name = "applied_our_commission_rate", precision = 5, scale = 2)
+    private java.math.BigDecimal appliedOurCommissionRate;
+
+    /**
      * v1.6.18 (WP-1): POS cihazı FK. {@code paymentMethod=POS} olan tx'ler bu
      * alanı doldurur — hangi cihazda çekildi raporlama için.
      */

@@ -33,9 +33,16 @@ public class UpdateTransactionRequest {
     @JsonProperty("payment_method")
     private String paymentMethod;
 
-    /** v1.6.3: POS komisyon oranı (opsiyonel update). */
+    /** v1.6.3 / v1.7.x: BANKA komisyon oranı (opsiyonel update). */
     @JsonProperty("pos_rate")
     private BigDecimal posRate;
+
+    /**
+     * v1.7.x (POS Komisyon WP TODO 6ffe0665): Bizim komisyon oranımız update.
+     * Verilirse our_commission_rate &gt;= pos_rate validation çalışır.
+     */
+    @JsonProperty("our_commission_rate")
+    private BigDecimal ourCommissionRate;
 
     /**
      * v1.6.21 (WP-4): POS çekiminin banka hesabına düşüp düşmediği.
