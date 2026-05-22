@@ -285,6 +285,20 @@ public class TransactionService {
         final TransactionDirection oldDirection = transaction.getDirection();
         final com.bizboard.common.entity.BankAccount oldBank = transaction.getBankAccount();
 
+        // v1.7.0-beta+ (Bankalar WP TODO 317415bb): POS settled tx için
+        // eski net'i yakala — pos_rate veya amount değişirse bank balance
+        // delta'sını hesaplamak için gerek.
+        final boolean wasPosSettled = "POS".equals(oldPm)
+                && Boolean.TRUE.equals(transaction.getPosSettled());
+        final java.math.BigDecimal oldAppliedRate = transaction.getAppliedPosRate() != null
+                ? transaction.getAppliedPosRate()
+                : (transaction.getPosRate() != null
+                        ? transaction.getPosRate() : java.math.BigDecimal.ZERO);
+        final java.math.BigDecimal oldPosNet = wasPosSettled
+                ? oldAmount.subtract(oldAmount.multiply(oldAppliedRate)
+                        .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP))
+                : null;
+
         // ── Eski değerleri yakala (diff için) ───────────────────────────
         Map<String, Object> changes = new HashMap<>();
 
@@ -355,7 +369,24 @@ public class TransactionService {
                         "from", transaction.getPosRate() != null ? transaction.getPosRate() : 0,
                         "to", request.getPosRate()));
                 transaction.setPosRate(request.getPosRate());
+                // v1.7.0-beta+ (Bankalar WP TODO 317415bb): applied_pos_rate
+                // snapshot da sync edilmeli — DtoMapper net/commission'ı
+                // applied_pos_rate'ten türetir; aksi takdirde UI'da stale değer.
+                // Kullanıcı bu tx için oranı override ediyor → snapshot YENİ oran.
+                java.math.BigDecimal oldApplied = transaction.getAppliedPosRate();
+                if (!java.util.Objects.equals(oldApplied, request.getPosRate())) {
+                    changes.put("appliedPosRate", Map.of(
+                            "from", oldApplied != null ? oldApplied : 0,
+                            "to", request.getPosRate()));
+                    transaction.setAppliedPosRate(request.getPosRate());
+                }
             }
+        }
+        // PM POS'tan başkasına geçerse applied_pos_rate da temizle (defensive).
+        if (transaction.getPaymentMethod() != null
+                && !"POS".equals(transaction.getPaymentMethod())
+                && transaction.getAppliedPosRate() != null) {
+            transaction.setAppliedPosRate(null);
         }
         // v1.6.21 (WP-4) / v1.6.23.11 fix:
         // pos_settled artık YALNIZ dedicated endpoint'ler (PATCH /settle, /unsettle)
@@ -389,8 +420,16 @@ public class TransactionService {
             throw new IllegalArgumentException(
                     "HESAPDAN payment_method icin bank_account_id zorunlu");
         }
-        // pm HESAPDAN'dan baska bir seye geciyorsa bank_account temizle
-        if (!"HESAPDAN".equals(newPm) && transaction.getBankAccount() != null) {
+        // v1.7.0-beta+ (Bankalar WP TODO 317415bb): bank_account temizleme
+        // kuralı sıkılaştırıldı. Eskiden: newPm != HESAPDAN ise her durumda
+        // temizleniyordu — POS SETTLED tx'in bank linkini de uçuruyordu, böylece
+        // pos_rate update'te net delta reconcile çalışamıyordu.
+        //
+        // Yeni kural: yalnız HESAPDAN'dan başka bir pm'e GEÇİŞTE temizle.
+        // POS settled tx'in bank_account'u settle endpoint'i tarafından set
+        // edilir; user update'te bunu kaybetmemeli.
+        if ("HESAPDAN".equals(oldPm) && !"HESAPDAN".equals(newPm)
+                && transaction.getBankAccount() != null) {
             transaction.setBankAccount(null);
         }
 
@@ -425,6 +464,41 @@ public class TransactionService {
                             ? java.math.BigDecimal.ZERO
                             : finalBank.getCurrentBalance()).add(delta));
             bankAccountRepository.save(finalBank);
+        }
+
+        // v1.7.0-beta+ (Bankalar WP TODO 317415bb): POS settled tx için
+        // net delta bank balance reconcile.
+        // Tx settle anında bank.balance += oldNet idi (settlePosTransaction).
+        // Şimdi rate veya amount değişti → newNet hesaplanmalı + delta uygulanmalı.
+        // Önkoşul: wasPosSettled (eski state) ve hâlâ pos_settled=true + bank var.
+        if (wasPosSettled
+                && "POS".equals(transaction.getPaymentMethod())
+                && Boolean.TRUE.equals(transaction.getPosSettled())
+                && transaction.getBankAccount() != null) {
+            java.math.BigDecimal newAmount = transaction.getAmount();
+            java.math.BigDecimal newRate = transaction.getAppliedPosRate() != null
+                    ? transaction.getAppliedPosRate()
+                    : (transaction.getPosRate() != null
+                            ? transaction.getPosRate() : java.math.BigDecimal.ZERO);
+            java.math.BigDecimal newNet = newAmount.subtract(
+                    newAmount.multiply(newRate)
+                            .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP));
+            java.math.BigDecimal netDelta = newNet.subtract(oldPosNet);
+            if (netDelta.signum() != 0) {
+                com.bizboard.common.entity.BankAccount settledBank = transaction.getBankAccount();
+                settledBank.setCurrentBalance(
+                        (settledBank.getCurrentBalance() == null
+                                ? java.math.BigDecimal.ZERO
+                                : settledBank.getCurrentBalance()).add(netDelta));
+                bankAccountRepository.save(settledBank);
+                changes.put("settledBankNetDelta", Map.of(
+                        "from", oldPosNet,
+                        "to", newNet,
+                        "delta", netDelta,
+                        "bank", settledBank.getName()));
+                log.info("[tx-update POS settled] tx={} oldNet={} newNet={} delta={} bank={}",
+                        transaction.getId(), oldPosNet, newNet, netDelta, settledBank.getName());
+            }
         }
 
         Map<String, Object> meta = new HashMap<>();
