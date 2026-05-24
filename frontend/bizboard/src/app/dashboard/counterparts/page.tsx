@@ -10,7 +10,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { isValidTaxId } from "@/lib/taxId";
 import { formatCurrency, cn } from "@/lib/utils";
-import type { Counterpart, CounterpartRole } from "@/types";
+import type { Counterpart, CounterpartRole, Business } from "@/types";
 
 // ── Role helpers ─────────────────────────────────────────
 const ROLES: { value: CounterpartRole; label: string; badge: string; icon: typeof CircleUserRound }[] = [
@@ -77,6 +77,21 @@ export default function CounterpartsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<Counterpart | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Counterpart | null>(null);
+
+  // v1.7.x bug-fix: counterpart create için business_id zorunlu (backend).
+  // Sayfa açılırken kullanıcının erişebildiği business'ları çek; tek varsa
+  // otomatik seç, çoksa modal'da dropdown göster.
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string>("");
+
+  useEffect(() => {
+    api.get<Business[]>("/businesses")
+      .then((r) => {
+        setBusinesses(r || []);
+        if ((r || []).length === 1) setSelectedBusinessId(r[0].id);
+      })
+      .catch(() => { /* silent */ });
+  }, []);
 
   async function fetchList() {
     setLoading(true);
@@ -269,13 +284,21 @@ export default function CounterpartsPage() {
         <CounterpartFormModal
           title="Yeni Karsi Firma"
           initial={emptyForm()}
+          businesses={businesses}
+          selectedBusinessId={selectedBusinessId}
+          onBusinessChange={setSelectedBusinessId}
+          requireBusiness
           onClose={() => setShowCreate(false)}
           onSubmit={async (f) => {
+            if (!selectedBusinessId) {
+              throw new ApiError(400, "BUSINESS-REQUIRED",
+                "Bu counterpart hangi işletmeye ait olacak? Lütfen seç.", undefined);
+            }
             // v1.6.23.12 (WP 3c8401f6 / TODO d72cfde9):
             // Counterpart yaratıldıktan sonra opsiyonel "telefon ekle" prompt.
             const created = await api.post<{ id: string; name: string }>(
               "/counterparts",
-              toPayload(f),
+              { ...toPayload(f), business_id: selectedBusinessId },
             );
             setShowCreate(false);
             fetchList();
@@ -362,9 +385,17 @@ interface FormModalProps {
   initial: FormState;
   onClose: () => void;
   onSubmit: (form: FormState) => Promise<void>;
+  /** v1.7.x: create için zorunlu, edit'te gizli */
+  businesses?: Business[];
+  selectedBusinessId?: string;
+  onBusinessChange?: (id: string) => void;
+  requireBusiness?: boolean;
 }
 
-function CounterpartFormModal({ title, initial, onClose, onSubmit }: FormModalProps) {
+function CounterpartFormModal({
+  title, initial, onClose, onSubmit,
+  businesses = [], selectedBusinessId = "", onBusinessChange, requireBusiness = false,
+}: FormModalProps) {
   const [form, setForm] = useState<FormState>(initial);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -379,6 +410,10 @@ function CounterpartFormModal({ title, initial, onClose, onSubmit }: FormModalPr
     }
     if (taxIdInvalid) {
       setError("Gecersiz VKN (10 hane) veya TCKN (11 hane).");
+      return;
+    }
+    if (requireBusiness && !selectedBusinessId) {
+      setError("İşletme seçin (hangi işletmenin counterpart'ı olacağını belirtin).");
       return;
     }
     setSubmitting(true);
@@ -413,6 +448,32 @@ function CounterpartFormModal({ title, initial, onClose, onSubmit }: FormModalPr
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
             {error}
+          </div>
+        )}
+
+        {/* v1.7.x bug-fix: business picker — create modunda zorunlu */}
+        {requireBusiness && (
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-surface-200 mb-1.5">İşletme *</label>
+            {businesses.length === 0 ? (
+              <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+            ) : businesses.length === 1 ? (
+              <div className="px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-700/40 text-sm text-surface-200">
+                {businesses[0].name}
+              </div>
+            ) : (
+              <select
+                required
+                value={selectedBusinessId}
+                onChange={(e) => onBusinessChange?.(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value="">Seçin</option>
+                {businesses.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            )}
           </div>
         )}
 
