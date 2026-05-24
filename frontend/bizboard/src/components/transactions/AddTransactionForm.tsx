@@ -25,6 +25,7 @@ import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart, PosDeviceListItem } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 export interface AddTransactionFormProps {
   /** İşletme önceden seçili — modal "/business/[id]" pano'sundan açılırken kullanılır. */
@@ -335,28 +336,29 @@ export function AddTransactionForm({
                 <label className="block text-xs font-medium text-surface-300 mb-1.5">
                   POS Cihazi
                 </label>
-                <select
+                <DarkSelect
                   value={posDeviceId}
-                  onChange={(e) => handlePosDeviceChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                >
-                  <option value="">Cihaz secin (opsiyonel)</option>
-                  {posDevices.map((dev) => {
+                  onChange={handlePosDeviceChange}
+                  placeholder="Cihaz seçin (opsiyonel)"
+                  searchable={posDevices.length > 6}
+                  options={posDevices.map((dev) => {
                     const bank = dev.last_used_rate ?? dev.default_rate;
                     const ours = dev.our_commission_rate;
                     const rateLabel =
-                      bank != null && ours != null ? ` (banka %${bank} / biz %${ours})`
-                      : bank != null ? ` (%${bank})`
+                      bank != null && ours != null ? `banka %${bank} / biz %${ours}`
+                      : bank != null ? `%${bank}`
                       : "";
-                    return (
-                      <option key={dev.id} value={dev.id}>
-                        {dev.name}
-                        {dev.bank_name ? ` — ${dev.bank_name}` : ""}
-                        {rateLabel}
-                      </option>
-                    );
+                    return {
+                      value: dev.id,
+                      label: `${dev.name}${dev.bank_name ? " — " + dev.bank_name : ""}`,
+                      meta: rateLabel,
+                    };
                   })}
-                </select>
+                  addOption={{
+                    label: "+ Yeni POS Cihazı Ekle",
+                    onClick: () => { window.location.href = "/dashboard/pos-cihazlari/yonetim"; },
+                  }}
+                />
               </div>
             )}
             {/* v1.7.x (POS Komisyon WP TODO 54f94805): iki oran input */}
@@ -472,15 +474,18 @@ export function AddTransactionForm({
           {isLoadingBiz ? (
             <div className="h-12 bg-surface-700 rounded-xl animate-pulse" />
           ) : (
-            <select
-              value={businessId}
-              onChange={(e) => { setBusinessId(e.target.value); setCategoryId(""); }}
+            <DarkSelect
               required
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
-            >
-              <option value="">Isletme secin</option>
-              {businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
+              value={businessId}
+              onChange={(v) => { setBusinessId(v); setCategoryId(""); }}
+              placeholder="İşletme seçin"
+              searchable={businesses.length > 6}
+              options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+              addOption={{
+                label: "+ Yeni İşletme Ekle",
+                onClick: () => { window.location.href = "/dashboard/businesses"; },
+              }}
+            />
           )}
         </div>
       )}
@@ -490,23 +495,26 @@ export function AddTransactionForm({
         <label className="block text-sm font-medium text-surface-200 mb-1.5">
           Karsi Taraf <span className="text-surface-400 font-normal text-xs">(opsiyonel)</span>
         </label>
-        <select
+        <DarkSelect
           value={targetCounterpartId}
-          onChange={(e) => setTargetCounterpartId(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
-        >
-          <option value="">Secim yapma</option>
-          <optgroup label="Firmalar">
-            {counterparts.filter((c) => (c.kind ?? "FIRM") === "FIRM").map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </optgroup>
-          <optgroup label="Kisiler">
-            {counterparts.filter((c) => c.kind === "PERSON").map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </optgroup>
-        </select>
+          onChange={setTargetCounterpartId}
+          placeholder="Seçim yapma"
+          searchable={counterparts.length > 6}
+          options={[
+            ...counterparts
+              .filter((c) => (c.kind ?? "FIRM") === "FIRM")
+              .sort((a, b) => a.name.localeCompare(b.name, "tr"))
+              .map((c) => ({ value: c.id, label: c.name, meta: "Firma" })),
+            ...counterparts
+              .filter((c) => c.kind === "PERSON")
+              .sort((a, b) => a.name.localeCompare(b.name, "tr"))
+              .map((c) => ({ value: c.id, label: c.name, meta: "Kişi" })),
+          ]}
+          addOption={{
+            label: "+ Yeni Karşı Taraf Ekle",
+            onClick: () => { window.location.href = "/dashboard/counterparts"; },
+          }}
+        />
       </div>
 
       {/* Category */}

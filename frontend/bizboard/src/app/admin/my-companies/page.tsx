@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import { getErrorMessage } from "@/lib/errors";
 import { isValidTaxId } from "@/lib/taxId";
 import type { MyCompany, CompanyType } from "@/types";
@@ -384,19 +385,11 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
           </Field>
 
           <Field label="Sirket tipi">
-            <select
+            <DarkSelect
               value={form.company_type}
-              onChange={(e) =>
-                setForm({ ...form, company_type: e.target.value as CompanyType })
-              }
-              className={inputClass}
-            >
-              {COMPANY_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm({ ...form, company_type: v as CompanyType })}
+              options={COMPANY_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+            />
           </Field>
 
           <Field label="VKN / TCKN">

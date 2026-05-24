@@ -21,6 +21,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import type { BankAccountListItem, TransferDto } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 interface Props {
   /** Modal compact mod (modal içinde render edilirken). */
@@ -126,15 +127,22 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         {loadingAccs ? (
           <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
         ) : (
-          <select
-            value={fromId}
-            onChange={(e) => setFromId(e.target.value)}
+          <DarkSelect
             required
-            className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
-          >
-            <option value="">Hesap seç</option>
-            {eligible.map(renderOption)}
-          </select>
+            value={fromId}
+            onChange={setFromId}
+            placeholder="Hesap seç"
+            searchable={eligible.length > 6}
+            options={eligible.map((a) => ({
+              value: a.id,
+              label: `${a.name} · ${a.bank_name || a.type}`,
+              meta: formatCurrency(a.current_balance ?? 0, a.currency || "TRY"),
+            }))}
+            addOption={{
+              label: "+ Yeni Banka Hesabı Ekle",
+              onClick: () => { window.location.href = "/dashboard/hesaplar"; },
+            }}
+          />
         )}
         {fromAcc && (
           <p className="mt-1 text-[10px] text-surface-400">

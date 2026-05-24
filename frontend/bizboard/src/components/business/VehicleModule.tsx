@@ -12,6 +12,7 @@ import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
 import type { Vehicle, VehicleSummary } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 function formatMoney(n: number) {
   return new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -647,9 +648,8 @@ function CreateVehicleModal({
                 <div><label className={labelCls}>Renk</label>
                   <input type="text" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Beyaz" className={inputCls} /></div>
                 <div><label className={labelCls}>Arac Tipi</label>
-                  <select value={vehicleType} onChange={(e) => setVehicleType(e.target.value)} className={inputCls}>
-                    {Object.entries(VEHICLE_TYPE_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                  </select></div>
+                  <DarkSelect value={vehicleType} onChange={setVehicleType}
+                    options={Object.entries(VEHICLE_TYPE_LABELS).map(([k, l]) => ({ value: k, label: l }))} /></div>
               </div>
               <div><label className={labelCls}>Notlar</label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ek bilgiler..." rows={2} className={inputCls + " resize-none"} /></div>
@@ -661,13 +661,11 @@ function CreateVehicleModal({
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className={labelCls}>Yakit Tipi</label>
-                  <select value={fuelType} onChange={(e) => setFuelType(e.target.value)} className={inputCls}>
-                    {Object.entries(FUEL_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                  </select></div>
+                  <DarkSelect value={fuelType} onChange={setFuelType}
+                    options={Object.entries(FUEL_LABELS).map(([k, l]) => ({ value: k, label: l }))} /></div>
                 <div><label className={labelCls}>Vites</label>
-                  <select value={transmission} onChange={(e) => setTransmission(e.target.value)} className={inputCls}>
-                    {Object.entries(TRANSMISSION_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                  </select></div>
+                  <DarkSelect value={transmission} onChange={setTransmission}
+                    options={Object.entries(TRANSMISSION_LABELS).map(([k, l]) => ({ value: k, label: l }))} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className={labelCls}>Motor Hacmi (cc)</label>
@@ -713,9 +711,8 @@ function CreateVehicleModal({
           {activeSection === "rental" && (
             <>
               <div><label className={labelCls}>Sahiplik Durumu</label>
-                <select value={ownershipType} onChange={(e) => setOwnershipType(e.target.value)} className={inputCls}>
-                  {Object.entries(OWNERSHIP_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                </select></div>
+                <DarkSelect value={ownershipType} onChange={setOwnershipType}
+                  options={Object.entries(OWNERSHIP_LABELS).map(([k, l]) => ({ value: k, label: l }))} /></div>
               {ownershipType !== "OWNED" && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
@@ -723,9 +720,8 @@ function CreateVehicleModal({
                       <input type="text" inputMode="numeric" value={rentalCost} onChange={(e) => setRentalCost(formatMoneyInput(e.target.value))}
                         placeholder="0" className={inputCls} /></div>
                     <div><label className={labelCls}>Kiralama Periyodu</label>
-                      <select value={rentalPeriod} onChange={(e) => setRentalPeriod(e.target.value)} className={inputCls}>
-                        {Object.entries(RENTAL_PERIOD_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                      </select></div>
+                      <DarkSelect value={rentalPeriod} onChange={setRentalPeriod}
+                        options={Object.entries(RENTAL_PERIOD_LABELS).map(([k, l]) => ({ value: k, label: l }))} /></div>
                   </div>
                   <div><label className={labelCls}>Kiralayan Firma / Kisi</label>
                     <input type="text" value={rentalCompany} onChange={(e) => setRentalCompany(e.target.value)}

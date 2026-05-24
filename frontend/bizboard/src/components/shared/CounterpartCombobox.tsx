@@ -5,6 +5,7 @@ import { ChevronDown, Plus, X, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { Counterpart, CounterpartRole } from "@/types";
 
 interface Props {
@@ -290,16 +291,16 @@ function InlineCreateModal({
           </div>
           <div>
             <label className="label">Rol</label>
-            <select
+            <DarkSelect
               value={role}
-              onChange={(e) => setRole(e.target.value as CounterpartRole)}
-              className="input"
-            >
-              <option value="CUSTOMER">Musteri</option>
-              <option value="SUPPLIER">Tedarikci</option>
-              <option value="BOTH">Her ikisi</option>
-              <option value="OTHER">Diger</option>
-            </select>
+              onChange={(v) => setRole(v as CounterpartRole)}
+              options={[
+                { value: "CUSTOMER", label: "Musteri" },
+                { value: "SUPPLIER", label: "Tedarikci" },
+                { value: "BOTH", label: "Her ikisi" },
+                { value: "OTHER", label: "Diger" },
+              ]}
+            />
             <p className="text-[10px] text-surface-400 mt-1">
               Vergi no, iletisim gibi ek detaylar Cari Hesap sayfasindan eklenebilir.
             </p>

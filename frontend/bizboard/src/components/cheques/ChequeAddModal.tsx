@@ -22,6 +22,7 @@ import { useAppStore } from "@/lib/store";
 import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import type { Business, Counterpart } from "@/types";
 import { CounterpartCreateModal } from "@/components/counterparts/CounterpartCreateModal";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 type Direction = "RECEIVABLE" | "PAYABLE";
 type Kind = "FIRM" | "PERSON";
@@ -218,15 +219,14 @@ export function ChequeAddModal({
               {loadingBiz ? (
                 <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
               ) : (
-                <select
+                <DarkSelect
                   required
                   value={businessId}
-                  onChange={(e) => { setBusinessId(e.target.value); setCounterpartId(""); }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
-                >
-                  <option value="">Seçin</option>
-                  {businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
+                  onChange={(v) => { setBusinessId(v); setCounterpartId(""); }}
+                  placeholder="İşletme seçin"
+                  searchable={businesses.length > 6}
+                  options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+                />
               )}
             </div>
           )}
@@ -270,19 +270,19 @@ export function ChequeAddModal({
             {loadingCps ? (
               <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
             ) : (
-              <select
+              <DarkSelect
                 required
                 value={counterpartId}
-                onChange={(e) => handleSelectCp(e.target.value)}
+                onChange={setCounterpartId}
                 disabled={!businessId}
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50"
-              >
-                <option value="">Seçin</option>
-                {sortedCps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                {businessId && (
-                  <option value="__new__">+ Yeni {kind === "FIRM" ? "Firma" : "Kişi"} Ekle</option>
-                )}
-              </select>
+                placeholder={kind === "FIRM" ? "Firma seçin" : "Kişi seçin"}
+                searchable={sortedCps.length > 6}
+                options={sortedCps.map((c) => ({ value: c.id, label: c.name }))}
+                addOption={businessId ? {
+                  label: `+ Yeni ${kind === "FIRM" ? "Firma" : "Kişi"} Ekle`,
+                  onClick: () => setShowCreateModal(true),
+                } : undefined}
+              />
             )}
             {!businessId && (
               <p className="mt-1 text-[10px] text-surface-400">Önce işletme seçin</p>

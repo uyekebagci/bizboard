@@ -11,6 +11,7 @@ import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import { TransferDetailModal } from "@/components/transactions/TransferDetailModal";
 import type { Transaction, Category, FileUploadInfo, PaymentMethod } from "@/types";
 
@@ -505,19 +506,15 @@ export function TransactionDetailModal({
               {categories.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-surface-200 mb-1">Kategori</label>
-                  <select
+                  <DarkSelect
                     value={editCategoryId}
-                    onChange={(e) => setEditCategoryId(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
-                               focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                  >
-                    <option value="">Kategorisiz</option>
-                    {categories
+                    onChange={setEditCategoryId}
+                    placeholder="Kategorisiz"
+                    searchable={categories.filter((c) => c.direction === editDirection).length > 6}
+                    options={categories
                       .filter((c) => c.direction === editDirection)
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                  </select>
+                      .map((c) => ({ value: c.id, label: c.name }))}
+                  />
                 </div>
               )}
 
@@ -1136,19 +1133,20 @@ function SettleModal({
           )}
           <div>
             <label className="text-xs text-surface-300 mb-1 block">Banka hesabı</label>
-            <select
+            <DarkSelect
               value={selectedBank}
-              onChange={(e) => setSelectedBank(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-            >
-              <option value="">— seç —</option>
-              {banks.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                  {b.bank_name ? ` (${b.bank_name})` : ""}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedBank}
+              placeholder="— seç —"
+              searchable={banks.length > 6}
+              options={banks.map((b) => ({
+                value: b.id,
+                label: b.name + (b.bank_name ? ` (${b.bank_name})` : ""),
+              }))}
+              addOption={{
+                label: "+ Yeni Banka Hesabı Ekle",
+                onClick: () => { window.location.href = "/dashboard/hesaplar"; },
+              }}
+            />
             {banks.length === 0 && (
               <p className="text-[10px] text-amber-300 mt-1">Aktif CHECKING/SAVINGS hesabı yok.</p>
             )}

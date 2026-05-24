@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { formatCurrency, cn } from "@/lib/utils";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
@@ -372,16 +373,15 @@ function PosTrendChart({
           </p>
         </div>
         {devices.length > 0 && (
-          <select
-            value={selectedDevice}
-            onChange={(e) => onDeviceChange(e.target.value)}
-            className="text-xs px-2 py-1.5 rounded-lg bg-surface-800 border border-surface-600 text-surface-200"
-          >
-            <option value="">Tüm cihazlar</option>
-            {devices.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
+          <div className="min-w-[160px]">
+            <DarkSelect
+              value={selectedDevice}
+              onChange={onDeviceChange}
+              placeholder="Tüm cihazlar"
+              searchable={devices.length > 6}
+              options={devices.map((d) => ({ value: d.id, label: d.name }))}
+            />
+          </div>
         )}
       </div>
 
@@ -673,19 +673,20 @@ function BulkSettleModal({
           )}
           <div>
             <label className="text-xs text-surface-300 mb-1 block">Banka hesabı</label>
-            <select
+            <DarkSelect
               value={selectedBank}
-              onChange={(e) => setSelectedBank(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-            >
-              <option value="">— seç —</option>
-              {banks.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                  {b.bank_name ? ` (${b.bank_name})` : ""}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedBank}
+              placeholder="— seç —"
+              searchable={banks.length > 6}
+              options={banks.map((b) => ({
+                value: b.id,
+                label: b.name + (b.bank_name ? ` (${b.bank_name})` : ""),
+              }))}
+              addOption={{
+                label: "+ Yeni Banka Hesabı Ekle",
+                onClick: () => { window.location.href = "/dashboard/hesaplar"; },
+              }}
+            />
           </div>
           <div>
             <label className="text-xs text-surface-300 mb-1 block">Düşme tarihi</label>

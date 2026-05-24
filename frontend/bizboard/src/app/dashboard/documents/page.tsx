@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { Business, FileUploadInfo } from "@/types";
 
 function formatSize(bytes: number) {
@@ -145,17 +146,15 @@ export default function DocumentsPage() {
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
         {/* Business filter */}
-        <select
-          value={filterBusiness}
-          onChange={(e) => setFilterBusiness(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-xs text-surface-200
-                     focus:outline-none focus:ring-2 focus:ring-brand-500"
-        >
-          <option value="">Tum Isletmeler</option>
-          {businesses.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
+        <div className="min-w-[180px]">
+          <DarkSelect
+            value={filterBusiness}
+            onChange={setFilterBusiness}
+            placeholder="Tüm İşletmeler"
+            searchable={businesses.length > 6}
+            options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+          />
+        </div>
 
         {/* Type filter */}
         <div className="flex rounded-xl border border-surface-600 overflow-hidden">

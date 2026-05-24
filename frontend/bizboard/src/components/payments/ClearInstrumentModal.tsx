@@ -12,6 +12,7 @@ import { X, Loader2, Check, AlertTriangle } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { BankAccountListItem, PaymentInstrumentDto } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 interface Props {
   instrument: PaymentInstrumentDto;
@@ -108,16 +109,22 @@ export function ClearInstrumentModal({ instrument, onClose, onSuccess }: Props) 
             <label className="block text-xs font-medium text-surface-200 mb-1.5">
               {isIncoming ? "Yatacak Hesap" : "Çıkacak Hesap"} *
             </label>
-            <select required value={bankAccountId}
-              onChange={(e) => setBankAccountId(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-              <option value="">Seçin</option>
-              {eligible.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} {b.bank_name ? `· ${b.bank_name}` : ""} · {formatCurrency(b.current_balance ?? 0, b.currency || "TRY")}
-                </option>
-              ))}
-            </select>
+            <DarkSelect
+              required
+              value={bankAccountId}
+              onChange={setBankAccountId}
+              placeholder="Hesap seçin"
+              searchable={eligible.length > 6}
+              options={eligible.map((b) => ({
+                value: b.id,
+                label: `${b.name}${b.bank_name ? " · " + b.bank_name : ""}`,
+                meta: formatCurrency(b.current_balance ?? 0, b.currency || "TRY"),
+              }))}
+              addOption={{
+                label: "+ Yeni Banka Hesabı Ekle",
+                onClick: () => { window.location.href = "/dashboard/hesaplar"; },
+              }}
+            />
           </div>
 
           <div>

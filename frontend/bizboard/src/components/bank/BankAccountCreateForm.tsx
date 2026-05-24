@@ -21,6 +21,7 @@ import { AlertTriangle, Loader2, Lock } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import type { BankAccountType } from "@/types";
 
@@ -126,15 +127,14 @@ export function BankAccountCreateForm({
       {!preselectedBusinessId && (
         <div>
           <label className="text-[11px] text-surface-400 uppercase mb-1 block">İşletme</label>
-          <select
-            value={businessId}
-            onChange={(e) => setBusinessId(e.target.value)}
-            className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+          <DarkSelect
             required
-          >
-            {bizOptions.length === 0 && <option value="">İşletme yok</option>}
-            {bizOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
+            value={businessId}
+            onChange={setBusinessId}
+            placeholder={bizOptions.length === 0 ? "İşletme yok" : "İşletme seçin"}
+            searchable={bizOptions.length > 6}
+            options={bizOptions.map((b) => ({ value: b.id, label: b.name }))}
+          />
         </div>
       )}
 
@@ -220,15 +220,18 @@ export function BankAccountCreateForm({
           <label className="text-[11px] text-surface-400 uppercase mb-1 block">
             Kişi (counterpart, PERSON)
           </label>
-          <select
-            value={holderPersonId}
-            onChange={(e) => setHolderPersonId(e.target.value)}
-            className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+          <DarkSelect
             required
-          >
-            {persons.length === 0 && <option value="">PERSON kayıt yok — önce ekle</option>}
-            {persons.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+            value={holderPersonId}
+            onChange={setHolderPersonId}
+            placeholder={persons.length === 0 ? "PERSON kayıt yok — önce ekle" : "Kişi seçin"}
+            searchable={persons.length > 6}
+            options={persons.map((p) => ({ value: p.id, label: p.name }))}
+            addOption={{
+              label: "+ Yeni Kişi Ekle",
+              onClick: () => { window.location.href = "/dashboard/counterparts"; },
+            }}
+          />
         </div>
       )}
 

@@ -13,6 +13,7 @@ import {
   type FileCategory,
 } from "@/lib/files";
 import type { Business, FileUploadInfo } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 interface FileUploadModalProps {
   preselectedBusinessId?: string;
@@ -158,19 +159,13 @@ export function FileUploadModal({
               {loadingBiz ? (
                 <div className="h-11 bg-surface-700 rounded-xl animate-pulse" />
               ) : (
-                <select
+                <DarkSelect
                   value={businessId}
-                  onChange={(e) => setBusinessId(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
-                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all text-sm"
-                >
-                  <option value="">Isletme secin</option>
-                  {businesses.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setBusinessId}
+                  placeholder="İşletme seçin"
+                  searchable={businesses.length > 6}
+                  options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+                />
               )}
             </div>
           )}
@@ -216,20 +211,12 @@ export function FileUploadModal({
             >
               Kategori *
             </label>
-            <select
+            <DarkSelect
               id="file-category"
               value={category}
-              onChange={(e) => setCategory(e.target.value as FileCategory)}
-              className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
-                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                         transition-all text-sm"
-            >
-              {FILE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {CATEGORY_LABELS[c]}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setCategory(v as FileCategory)}
+              options={FILE_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c] }))}
+            />
           </div>
 
           {/* Description */}

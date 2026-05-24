@@ -10,6 +10,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { FixedCost, FixedCostSummary, FileUploadInfo } from "@/types";
 
 function formatMoney(n: number) {
@@ -363,16 +364,15 @@ function CreateFixedCostModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-surface-200 mb-1.5">Tip</label>
-              <select
+              <DarkSelect
                 value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
-                           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-              >
-                <option value="RENT">Kira</option>
-                <option value="UTILITY">Fatura</option>
-                <option value="OTHER">Diger</option>
-              </select>
+                onChange={setType}
+                options={[
+                  { value: "RENT", label: "Kira" },
+                  { value: "UTILITY", label: "Fatura" },
+                  { value: "OTHER", label: "Diğer" },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-surface-200 mb-1.5">Tutar</label>

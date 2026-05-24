@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import type {
   AccountStatement, BankAccountListItem, CreatePaymentRequest, PaymentDirection,
   PaymentMethodKind, PaymentResponse,
@@ -313,16 +314,22 @@ export function PaymentModal({
               <label className="block text-xs font-medium text-surface-200 mb-1.5">
                 {isReceived ? "Yatan Hesap" : "Çıkan Hesap"} *
               </label>
-              <select required value={bankAccountId}
-                onChange={(e) => setBankAccountId(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="">Seçin</option>
-                {eligibleBankAccts.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} {b.bank_name ? `· ${b.bank_name}` : ""} · {formatCurrency(b.current_balance ?? 0, b.currency || "TRY")}
-                  </option>
-                ))}
-              </select>
+              <DarkSelect
+                required
+                value={bankAccountId}
+                onChange={setBankAccountId}
+                placeholder="Hesap seçin"
+                searchable={eligibleBankAccts.length > 6}
+                options={eligibleBankAccts.map((b) => ({
+                  value: b.id,
+                  label: `${b.name}${b.bank_name ? " · " + b.bank_name : ""}`,
+                  meta: formatCurrency(b.current_balance ?? 0, b.currency || "TRY"),
+                }))}
+                addOption={{
+                  label: "+ Yeni Banka Hesabı Ekle",
+                  onClick: () => { window.location.href = "/dashboard/hesaplar"; },
+                }}
+              />
             </div>
           )}
 

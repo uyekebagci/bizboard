@@ -23,6 +23,7 @@ import { useAppStore } from "@/lib/store";
 import type {
   PhoneDevice, PhoneBrand, PhoneModel, PhoneDeviceBank, Counterpart, Business,
 } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 export default function TelefonlarPage() {
   const router = useRouter();
@@ -131,24 +132,25 @@ export default function TelefonlarPage() {
             className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
           />
         </div>
-        <select
-          value={filterBrand}
-          onChange={(e) => setFilterBrand(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-        >
-          <option value="">— tüm markalar —</option>
-          {brands.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
-        <select
-          value={filterActive}
-          onChange={(e) => setFilterActive(e.target.value as "active" | "all")}
-          className="px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-        >
-          <option value="active">Yalnız aktif</option>
-          <option value="all">Tümü (pasif dahil)</option>
-        </select>
+        <div className="min-w-[160px]">
+          <DarkSelect
+            value={filterBrand}
+            onChange={setFilterBrand}
+            placeholder="— tüm markalar —"
+            searchable={brands.length > 6}
+            options={brands.map((b) => ({ value: b.id, label: b.name }))}
+          />
+        </div>
+        <div className="min-w-[180px]">
+          <DarkSelect
+            value={filterActive}
+            onChange={(v) => setFilterActive(v as "active" | "all")}
+            options={[
+              { value: "active", label: "Yalnız aktif" },
+              { value: "all", label: "Tümü (pasif dahil)" },
+            ]}
+          />
+        </div>
       </section>
 
       {/* Table */}
@@ -449,16 +451,13 @@ function PhoneDeviceModal({
           {mode === "create" && (
             <div>
               <label className="text-xs text-surface-300 mb-1 block">İşletme</label>
-              <select
+              <DarkSelect
                 value={businessId}
-                onChange={(e) => setBusinessId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-              >
-                <option value="">— seç —</option>
-                {businesses.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
+                onChange={setBusinessId}
+                placeholder="— seç —"
+                searchable={businesses.length > 6}
+                options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+              />
             </div>
           )}
 
@@ -467,32 +466,27 @@ function PhoneDeviceModal({
             <>
               <div>
                 <label className="text-xs text-surface-300 mb-1 block">Marka</label>
-                <select
+                <DarkSelect
                   value={brandId}
-                  onChange={(e) => { setBrandId(e.target.value); setModelId(""); }}
-                  className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-                >
-                  <option value="">— seç —</option>
-                  {brands.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => { setBrandId(v); setModelId(""); }}
+                  placeholder="— seç —"
+                  searchable={brands.length > 6}
+                  options={brands.map((b) => ({ value: b.id, label: b.name }))}
+                />
               </div>
               {brandId && (
                 <div>
                   <label className="text-xs text-surface-300 mb-1 block">Model</label>
-                  <select
+                  <DarkSelect
                     value={modelId}
-                    onChange={(e) => setModelId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-                  >
-                    <option value="">— seç —</option>
-                    {models.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}{m.release_year ? ` (${m.release_year})` : ""}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setModelId}
+                    placeholder="— seç —"
+                    searchable={models.length > 6}
+                    options={models.map((m) => ({
+                      value: m.id,
+                      label: `${m.name}${m.release_year ? " (" + m.release_year + ")" : ""}`,
+                    }))}
+                  />
                   <button
                     type="button"
                     onClick={() => { setUseCustom(true); setBrandId(""); setModelId(""); }}
@@ -549,16 +543,17 @@ function PhoneDeviceModal({
           {/* Counterpart */}
           <div>
             <label className="text-xs text-surface-300 mb-1 block">Atanan Firma / Kişi</label>
-            <select
+            <DarkSelect
               value={counterpartId}
-              onChange={(e) => setCounterpartId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
-            >
-              <option value="">— atanmamış (havuz) —</option>
-              {counterparts.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              onChange={setCounterpartId}
+              placeholder="— atanmamış (havuz) —"
+              searchable={counterparts.length > 6}
+              options={counterparts.map((c) => ({ value: c.id, label: c.name }))}
+              addOption={{
+                label: "+ Yeni Firma/Kişi Ekle",
+                onClick: () => { window.location.href = "/dashboard/counterparts"; },
+              }}
+            />
           </div>
 
           {/* Banks */}

@@ -36,6 +36,7 @@ import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { BusinessType, ModuleType } from "@/types";
 
 // ===== ICON MAPS =====
@@ -696,18 +697,16 @@ function StepBasicInfo({
       {/* Currency */}
       <div>
         <label className="label">Para Birimi</label>
-        <select
-          className="input"
+        <DarkSelect
           value={form.currency}
-          onChange={(e) =>
-            setForm((prev) => ({ ...prev, currency: e.target.value }))
-          }
-        >
-          <option value="TRY">Turk Lirasi (TRY)</option>
-          <option value="USD">ABD Dolari (USD)</option>
-          <option value="EUR">Euro (EUR)</option>
-          <option value="GBP">Ingiliz Sterlini (GBP)</option>
-        </select>
+          onChange={(v) => setForm((prev) => ({ ...prev, currency: v }))}
+          options={[
+            { value: "TRY", label: "Türk Lirası (TRY)" },
+            { value: "USD", label: "ABD Doları (USD)" },
+            { value: "EUR", label: "Euro (EUR)" },
+            { value: "GBP", label: "İngiliz Sterlini (GBP)" },
+          ]}
+        />
       </div>
 
       {/* Mockup Analysis Fields */}

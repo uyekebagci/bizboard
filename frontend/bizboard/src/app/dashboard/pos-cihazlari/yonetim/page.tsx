@@ -16,6 +16,7 @@ import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { PosDeviceListItem, Counterpart } from "@/types";
 
 export default function PosDeviceManagementPage() {
@@ -298,16 +299,17 @@ function PosDeviceFormModal({
 
           <div>
             <label className="label">Sahip Firma (Counterpart)</label>
-            <select
+            <DarkSelect
               value={ownerId}
-              onChange={(e) => setOwnerId(e.target.value)}
-              className="input"
-            >
-              <option value="">Seçim yapma</option>
-              {counterparts.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              onChange={setOwnerId}
+              placeholder="Seçim yapma"
+              searchable={counterparts.length > 6}
+              options={counterparts.map((c) => ({ value: c.id, label: c.name }))}
+              addOption={{
+                label: "+ Yeni Firma Ekle",
+                onClick: () => { window.location.href = "/dashboard/counterparts"; },
+              }}
+            />
           </div>
 
           <div>

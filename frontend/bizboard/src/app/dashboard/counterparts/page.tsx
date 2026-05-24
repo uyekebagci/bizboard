@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { isValidTaxId } from "@/lib/taxId";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { Counterpart, CounterpartRole, Business } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 // ── Role helpers ─────────────────────────────────────────
 const ROLES: { value: CounterpartRole; label: string; badge: string; icon: typeof CircleUserRound }[] = [
@@ -462,17 +463,14 @@ function CounterpartFormModal({
                 {businesses[0].name}
               </div>
             ) : (
-              <select
+              <DarkSelect
                 required
                 value={selectedBusinessId}
-                onChange={(e) => onBusinessChange?.(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
-              >
-                <option value="">Seçin</option>
-                {businesses.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
+                onChange={(v) => onBusinessChange?.(v)}
+                placeholder="İşletme seçin"
+                searchable={businesses.length > 6}
+                options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+              />
             )}
           </div>
         )}
@@ -488,17 +486,11 @@ function CounterpartFormModal({
           </Field>
 
           <Field label="Rol">
-            <select
+            <DarkSelect
               value={form.role}
-              onChange={(e) =>
-                setForm({ ...form, role: e.target.value as CounterpartRole })
-              }
-              className={inputClass}
-            >
-              {ROLES.map((r) => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setForm({ ...form, role: v as CounterpartRole })}
+              options={ROLES.map((r) => ({ value: r.value, label: r.label }))}
+            />
           </Field>
 
           <Field label="Odeme vadesi (gun)">
