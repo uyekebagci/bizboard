@@ -105,7 +105,7 @@ export default function TelefonlarPage() {
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-white">Telefonlar</h1>
               <p className="text-xs text-surface-400">
-                DGR'nin fiziki telefonları + atanmış firmalar + bankacılık apps
+                Fiziki telefonlar + atanmış firmalar + bankacılık uygulamaları
               </p>
             </div>
           </div>
