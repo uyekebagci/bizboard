@@ -493,6 +493,31 @@ export interface SubCashDetail {
   transactions: BankAccountTxRow[];
 }
 
+// v1.7.x WP 8b961444 TODO 474b775c: Sub-cash periyot geliri (multi-attribution)
+export interface SubCashIncomeSourceBreakdown {
+  source_type: SubCashEntityType;
+  source_id: string;
+  source_name: string;
+  tx_count: number;
+  income: number;
+}
+
+export interface SubCashIncomeMonthlyPoint {
+  month: string; // "YYYY-MM"
+  income: number;
+  tx_count: number;
+}
+
+export interface SubCashIncomeSummary {
+  sub_cash_id: string;
+  from_date: string;
+  to_date: string;
+  total_income: number;
+  tx_count: number;
+  breakdown_by_source: SubCashIncomeSourceBreakdown[];
+  by_month: SubCashIncomeMonthlyPoint[];
+}
+
 /**
  * v1.6.23.19 (UI Fix WP 8b961444): {@code GET /bank-accounts/{id}} aggregate.
  */

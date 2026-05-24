@@ -14,6 +14,7 @@ import {
   HandCoins, AlertCircle, CalendarClock, Bell, Lock, ChevronRight,
 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
+import { api } from "@/lib/api/client";
 import type { ConsolidatedDashboard } from "@/types";
 import { WidgetDetailModal } from "./WidgetDetailModal";
 import { BankAccountDetailContent } from "@/components/bank/BankAccountDetailContent";
@@ -765,6 +766,32 @@ function SubCashesCard({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const businessId = d.business_id;
 
+  // v1.7.x WP TODO 46aca4d0: her sub-cash için "Bu Ay Gelir" fetch et.
+  // Paralel — küçük dataset, runtime aggregation. (>10 sub-cash olunca batch
+  // endpoint'i ekleyebiliriz.)
+  const [incomeMap, setIncomeMap] = useState<Record<string, number>>({});
+  useEffect(() => {
+    let cancelled = false;
+    if (subCashes.length === 0) { setIncomeMap({}); return; }
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    Promise.all(
+      subCashes.map((s) =>
+        api.get<{ total_income: number }>(
+          `/bank-accounts/${s.id}/income-summary?from=${from}&to=${to}`,
+        )
+          .then((r) => [s.id, r?.total_income ?? 0] as const)
+          .catch(() => [s.id, 0] as const),
+      ),
+    ).then((entries) => {
+      if (!cancelled) setIncomeMap(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subCashes.map((s) => s.id).join(",")]);
+  const totalIncome = Object.values(incomeMap).reduce((a, v) => a + v, 0);
+
   function reset() {
     setShowModal(false);
     setView("LIST");
@@ -826,21 +853,41 @@ function SubCashesCard({
       ) : (
         <>
           <div className="divide-y divide-surface-700">
-            {subCashes.map((s) => (
-              <div key={s.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-white truncate">{s.name}</p>
-                <p className="text-sm font-semibold text-emerald-300 shrink-0">
-                  {formatCurrency(s.balance, s.currency || "TRY")}
-                </p>
-              </div>
-            ))}
+            {subCashes.map((s) => {
+              const inc = incomeMap[s.id];
+              return (
+                <div key={s.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-white truncate">{s.name}</p>
+                    {/* v1.7.x WP TODO 46aca4d0: Bu Ay Gelir alt satırı */}
+                    {inc != null && (
+                      <p className="text-[10px] text-surface-400 mt-0.5">
+                        Bu Ay Gelir:{" "}
+                        <span className={cn(
+                          "font-medium",
+                          inc > 0 ? "text-brand-300" : inc < 0 ? "text-red-300" : "text-surface-400",
+                        )}>
+                          {formatCurrency(inc, s.currency || "TRY")}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-emerald-300 shrink-0">
+                    {formatCurrency(s.balance, s.currency || "TRY")}
+                  </p>
+                </div>
+              );
+            })}
           </div>
           <Footer
             left={`${subCashes.length} alt kasa`}
             right={
               <span>
-                Σ aggregate{" "}
+                Bakiye{" "}
                 <span className="text-emerald-300">{formatCurrency(total, "TRY")}</span>
+                {" · "}
+                Gelir{" "}
+                <span className="text-brand-300">{formatCurrency(totalIncome, "TRY")}</span>
               </span>
             }
           />

@@ -284,4 +284,202 @@ public class SubCashService {
     // kullanılmıyorsa silinebilir (mevcut, ek olarak).
     @SuppressWarnings("unused")
     private void touchPageRequest() { PageRequest.of(0, 1); }
+
+    // ─────────────────────── INCOME (v1.7.x WP 8b961444 TODO 474b775c) ───────────────────────
+
+    /**
+     * Sub-cash periyot geliri — multi-attribution.
+     *
+     * <p>income_value formülü: POS gelir → profit (our − bank), non-POS gelir →
+     * amount, gider → −amount, transfer → 0. Bir tx, sub-cash'in 3 atama
+     * tipinden (counterpart / pos_device / bank_account) herhangi biriyle
+     * eşleşirse sayılır (OR — priority yok). Aynı sub-cash içinde tx 1 kez
+     * sayılır; AYRI sub-cash'ler arasında overlap normaldir (kasıtlı).</p>
+     */
+    @Transactional(readOnly = true)
+    public com.bizboard.common.dto.SubCashIncomeSummaryDto incomeForSubCash(
+            UUID subCashId, java.time.LocalDate from, java.time.LocalDate to, UUID actorUserId) {
+        BankAccount subCash = bankAccountRepository.findById(subCashId)
+                .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
+        UUID bizId = subCash.getBusiness() != null ? subCash.getBusiness().getId() : null;
+        accessGuard.assertCanAccessBusiness(actorUserId, bizId);
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate effFrom = from != null ? from : today.withDayOfMonth(1);
+        java.time.LocalDate effTo = to != null ? to
+                : today.withDayOfMonth(today.lengthOfMonth());
+
+        // assignment'larda entity_id'leri set olarak topla
+        Set<UUID> bankIds = new HashSet<>();
+        Set<UUID> posIds = new HashSet<>();
+        Set<UUID> cpIds = new HashSet<>();
+        List<SubCashAssignment> assignments = repository
+                .findBySubCashIdOrderByAssignedAtDesc(subCashId);
+        for (SubCashAssignment a : assignments) {
+            switch (a.getEntityType()) {
+                case BANK_ACCOUNT -> bankIds.add(a.getEntityId());
+                case POS_DEVICE -> posIds.add(a.getEntityId());
+                case COUNTERPART -> cpIds.add(a.getEntityId());
+            }
+        }
+        if (bizId == null || (bankIds.isEmpty() && posIds.isEmpty() && cpIds.isEmpty())) {
+            return com.bizboard.common.dto.SubCashIncomeSummaryDto.builder()
+                    .subCashId(subCashId)
+                    .fromDate(effFrom).toDate(effTo)
+                    .totalIncome(java.math.BigDecimal.ZERO)
+                    .txCount(0)
+                    .breakdownBySource(List.of())
+                    .byMonth(List.of())
+                    .build();
+        }
+
+        // Periyot içindeki tüm business tx'leri (kind != TRANSFER da contribute=0
+        // ama görsel olarak elenebilir — formülde 0 zaten).
+        List<Transaction> txs = transactionRepository
+                .findByBusinessIdAndDateBetween(bizId, effFrom, effTo);
+
+        // Source breakdown — aggregate maps
+        Map<UUID, java.math.BigDecimal[]> bankAgg = new HashMap<>(); // {sum, count}
+        Map<UUID, java.math.BigDecimal[]> posAgg = new HashMap<>();
+        Map<UUID, java.math.BigDecimal[]> cpAgg = new HashMap<>();
+        // Aylık breakdown
+        Map<String, java.math.BigDecimal[]> monthAgg = new TreeMap<>();
+
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        int matchedTxCount = 0;
+
+        for (Transaction t : txs) {
+            // Match çek
+            UUID matchBank = (t.getBankAccount() != null && bankIds.contains(t.getBankAccount().getId()))
+                    ? t.getBankAccount().getId() : null;
+            UUID matchPos = (t.getPosDevice() != null && posIds.contains(t.getPosDevice().getId()))
+                    ? t.getPosDevice().getId() : null;
+            UUID matchCp = (t.getTargetCounterpart() != null && cpIds.contains(t.getTargetCounterpart().getId()))
+                    ? t.getTargetCounterpart().getId() : null;
+            if (matchBank == null && matchPos == null && matchCp == null) continue;
+
+            java.math.BigDecimal contrib = incomeValue(t);
+            if (contrib.signum() == 0) {
+                // sayım için yine match'i atlayabiliriz; ama UI'da "0 katkı yapan tx"
+                // gözükmemesi mantıklı. Yine de tx_count artırmıyoruz.
+                // (Transfer ve same-rate POS tx için contribution=0)
+            }
+            total = total.add(contrib);
+            matchedTxCount++;
+
+            // Source breakdown — match'lenen her source için contrib ekle
+            // (multi-source match'te ufak nuance: aynı tx 2 source'a katkı yapar
+            // mı? Burada UI clarity için sadece "match tipini" kayda al,
+            // contrib'i her source'a ekle. Total'da double-count etmiyoruz —
+            // total = SUM(contrib) over unique txs.)
+            if (matchBank != null) {
+                java.math.BigDecimal[] v = bankAgg.computeIfAbsent(matchBank, k -> new java.math.BigDecimal[]{java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO});
+                v[0] = v[0].add(contrib);
+                v[1] = v[1].add(java.math.BigDecimal.ONE);
+            }
+            if (matchPos != null) {
+                java.math.BigDecimal[] v = posAgg.computeIfAbsent(matchPos, k -> new java.math.BigDecimal[]{java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO});
+                v[0] = v[0].add(contrib);
+                v[1] = v[1].add(java.math.BigDecimal.ONE);
+            }
+            if (matchCp != null) {
+                java.math.BigDecimal[] v = cpAgg.computeIfAbsent(matchCp, k -> new java.math.BigDecimal[]{java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO});
+                v[0] = v[0].add(contrib);
+                v[1] = v[1].add(java.math.BigDecimal.ONE);
+            }
+
+            // Monthly point
+            if (t.getDate() != null) {
+                String monthKey = String.format("%04d-%02d", t.getDate().getYear(), t.getDate().getMonthValue());
+                java.math.BigDecimal[] mv = monthAgg.computeIfAbsent(monthKey, k -> new java.math.BigDecimal[]{java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO});
+                mv[0] = mv[0].add(contrib);
+                mv[1] = mv[1].add(java.math.BigDecimal.ONE);
+            }
+        }
+
+        // Build breakdown DTO list — name resolution
+        List<com.bizboard.common.dto.SubCashIncomeSummaryDto.SourceBreakdown> sources = new ArrayList<>();
+        for (Map.Entry<UUID, java.math.BigDecimal[]> e : bankAgg.entrySet()) {
+            String name = bankAccountRepository.findById(e.getKey())
+                    .map(BankAccount::getName).orElse("Banka Hesabı");
+            sources.add(com.bizboard.common.dto.SubCashIncomeSummaryDto.SourceBreakdown.builder()
+                    .sourceType("BANK_ACCOUNT")
+                    .sourceId(e.getKey())
+                    .sourceName(name)
+                    .income(e.getValue()[0])
+                    .txCount(e.getValue()[1].intValue())
+                    .build());
+        }
+        for (Map.Entry<UUID, java.math.BigDecimal[]> e : posAgg.entrySet()) {
+            String name = posDeviceRepository.findById(e.getKey())
+                    .map(PosDevice::getName).orElse("POS Cihazı");
+            sources.add(com.bizboard.common.dto.SubCashIncomeSummaryDto.SourceBreakdown.builder()
+                    .sourceType("POS_DEVICE")
+                    .sourceId(e.getKey())
+                    .sourceName(name)
+                    .income(e.getValue()[0])
+                    .txCount(e.getValue()[1].intValue())
+                    .build());
+        }
+        for (Map.Entry<UUID, java.math.BigDecimal[]> e : cpAgg.entrySet()) {
+            String name = counterpartRepository.findById(e.getKey())
+                    .map(Counterpart::getName).orElse("Karşı Taraf");
+            sources.add(com.bizboard.common.dto.SubCashIncomeSummaryDto.SourceBreakdown.builder()
+                    .sourceType("COUNTERPART")
+                    .sourceId(e.getKey())
+                    .sourceName(name)
+                    .income(e.getValue()[0])
+                    .txCount(e.getValue()[1].intValue())
+                    .build());
+        }
+        sources.sort((a, b) -> b.getIncome().compareTo(a.getIncome()));
+
+        List<com.bizboard.common.dto.SubCashIncomeSummaryDto.MonthlyPoint> monthly = new ArrayList<>();
+        for (Map.Entry<String, java.math.BigDecimal[]> e : monthAgg.entrySet()) {
+            monthly.add(com.bizboard.common.dto.SubCashIncomeSummaryDto.MonthlyPoint.builder()
+                    .month(e.getKey())
+                    .income(e.getValue()[0])
+                    .txCount(e.getValue()[1].intValue())
+                    .build());
+        }
+
+        return com.bizboard.common.dto.SubCashIncomeSummaryDto.builder()
+                .subCashId(subCashId)
+                .fromDate(effFrom).toDate(effTo)
+                .totalIncome(total)
+                .txCount(matchedTxCount)
+                .breakdownBySource(sources)
+                .byMonth(monthly)
+                .build();
+    }
+
+    /**
+     * income_value per tx — KONSOLİDE NET formülüyle aynı.
+     */
+    private static java.math.BigDecimal incomeValue(Transaction t) {
+        if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+            return java.math.BigDecimal.ZERO;
+        }
+        String pm = t.getPaymentMethod();
+        boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
+        if (isPos && t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
+            java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
+                    ? t.getAppliedPosRate()
+                    : (t.getPosRate() != null ? t.getPosRate() : java.math.BigDecimal.ZERO);
+            java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
+                    ? t.getAppliedOurCommissionRate() : bankRate;
+            java.math.BigDecimal diff = ourRate.subtract(bankRate);
+            if (diff.signum() == 0) return java.math.BigDecimal.ZERO;
+            return t.getAmount().multiply(diff)
+                    .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        }
+        if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
+            return t.getAmount();
+        }
+        if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.EXPENSE) {
+            return t.getAmount().negate();
+        }
+        return java.math.BigDecimal.ZERO;
+    }
 }

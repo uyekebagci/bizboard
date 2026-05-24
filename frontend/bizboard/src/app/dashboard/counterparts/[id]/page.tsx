@@ -101,6 +101,33 @@ export default function CounterpartDetailPage() {
     }
   }
 
+  // v1.7.x WP TODO cecd961e: Bu Ay Gelir Özeti — client-side hesap
+  // (counterpart_id zaten transactions list'inde filtrelenmiş).
+  const thisMonthIncome = useMemo(() => {
+    if (!statement) return { total: 0, count: 0 };
+    const now = new Date();
+    const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    let total = 0;
+    let count = 0;
+    for (const t of statement.transactions) {
+      if (!t.date || !t.date.startsWith(yyyymm)) continue;
+      if (t.kind === "TRANSFER") continue;
+      const isPos = (t.payment_method || "").toUpperCase().startsWith("POS");
+      let contrib = 0;
+      if (isPos && t.direction === "income") {
+        const bank = t.applied_pos_rate ?? t.pos_rate ?? 0;
+        const ours = t.applied_our_commission_rate ?? bank;
+        contrib = (t.amount * (ours - bank)) / 100;
+      } else if (t.direction === "income") {
+        contrib = t.amount;
+      } else if (t.direction === "expense") {
+        contrib = -t.amount;
+      }
+      if (contrib !== 0) { total += contrib; count++; }
+    }
+    return { total, count };
+  }, [statement]);
+
   if (loading || !cp || !statement) {
     return (
       <div className="text-surface-400 text-sm py-8 flex items-center gap-2 justify-center">
@@ -176,8 +203,8 @@ export default function CounterpartDetailPage() {
         </div>
       </section>
 
-      {/* ── 4 Breakdown cards ─────────────────────────────────── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* ── 5 Breakdown cards (4 + Bu Ay Gelir) ─────────────── */}
+      <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <BreakdownCard label="Açık Alacaklar" value={bb.open_receivables_total}
           count={statement.open_debts.filter((d) => d.direction === "RECEIVABLE").length}
           tone="positive" icon={<TrendingUp size={14} />} />
@@ -189,6 +216,12 @@ export default function CounterpartDetailPage() {
             - bb.portfolio_cheques_outgoing - bb.portfolio_notes_outgoing}
           extra={`gel ${formatCurrency(bb.portfolio_cheques_incoming + bb.portfolio_notes_incoming, "TRY")} · gid ${formatCurrency(bb.portfolio_cheques_outgoing + bb.portfolio_notes_outgoing, "TRY")}`}
           tone="neutral" icon={<FileText size={14} />} />
+        {/* v1.7.x WP TODO cecd961e: Bu Ay Gelir (client-side) */}
+        <BreakdownCard label="Bu Ay Gelir" value={thisMonthIncome.total}
+          count={thisMonthIncome.count}
+          extra="POS profit + gross − gider"
+          tone={thisMonthIncome.total >= 0 ? "positive" : "negative"}
+          icon={<TrendingUp size={14} />} />
         <BreakdownCard label="Net Pozisyon"
           value={bb.net_with_portfolio} extra={`Realize: ${formatCurrency(bb.net_realized, "TRY")}`}
           tone={bb.net_with_portfolio > 0 ? "positive" : bb.net_with_portfolio < 0 ? "negative" : "neutral"}

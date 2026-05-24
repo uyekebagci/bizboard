@@ -17,11 +17,45 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, AlertTriangle, TrendingUp, Receipt, Plus, X, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, AlertTriangle, TrendingUp, Receipt, Plus, X, Trash2, Search, ChevronLeft, ChevronRight, BarChart3, CalendarRange } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn, trNormalize } from "@/lib/utils";
-import type { SubCashDetail, SubCashEntityType } from "@/types";
+import { DarkSelect } from "@/components/shared/DarkSelect";
+import type { SubCashDetail, SubCashEntityType, SubCashIncomeSummary } from "@/types";
+
+// Period preset → from/to (YYYY-MM-DD)
+type PeriodPreset = "THIS_MONTH" | "LAST_MONTH" | "THIS_YEAR" | "LAST_30D";
+
+function periodRange(preset: PeriodPreset): { from: string; to: string; label: string } {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth(); // 0-indexed
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  switch (preset) {
+    case "THIS_MONTH": {
+      const from = new Date(y, m, 1);
+      const to = new Date(y, m + 1, 0);
+      return { from: iso(from), to: iso(to), label: "Bu Ay" };
+    }
+    case "LAST_MONTH": {
+      const from = new Date(y, m - 1, 1);
+      const to = new Date(y, m, 0);
+      return { from: iso(from), to: iso(to), label: "Geçen Ay" };
+    }
+    case "THIS_YEAR": {
+      const from = new Date(y, 0, 1);
+      const to = new Date(y, 11, 31);
+      return { from: iso(from), to: iso(to), label: "Bu Yıl" };
+    }
+    case "LAST_30D": {
+      const to = new Date();
+      const from = new Date();
+      from.setDate(from.getDate() - 29);
+      return { from: iso(from), to: iso(to), label: "Son 30 Gün" };
+    }
+  }
+}
 
 const PAGE_SIZE = 50;
 
@@ -37,6 +71,11 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [showAssignPicker, setShowAssignPicker] = useState(false);
   const [busyAssignId, setBusyAssignId] = useState<string | null>(null);
+
+  // v1.7.x WP TODO f3b3cd2f + 7bebe2f8: Periyot geliri + breakdown
+  const [period, setPeriod] = useState<PeriodPreset>("THIS_MONTH");
+  const [income, setIncome] = useState<SubCashIncomeSummary | null>(null);
+  const [loadingIncome, setLoadingIncome] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -56,6 +95,20 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
   }, [subCashId]);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  // v1.7.x: periyot değişince income fetch
+  const periodRangeMemo = useMemo(() => periodRange(period), [period]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingIncome(true);
+    api.get<SubCashIncomeSummary>(
+      `/bank-accounts/${subCashId}/income-summary?from=${periodRangeMemo.from}&to=${periodRangeMemo.to}`,
+    )
+      .then((r) => { if (!cancelled) setIncome(r); })
+      .catch(() => { if (!cancelled) setIncome(null); })
+      .finally(() => { if (!cancelled) setLoadingIncome(false); });
+    return () => { cancelled = true; };
+  }, [subCashId, periodRangeMemo]);
 
   async function unassign(assignmentId: string) {
     setBusyAssignId(assignmentId);
@@ -92,27 +145,82 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* Balance kartı */}
-      <section>
-        <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider mb-2 flex items-center gap-1">
-          <TrendingUp size={12} /> Aggregate (kasa değeri)
-        </h4>
-        <div className="grid grid-cols-3 gap-2">
-          <Stat label="Sub-Cash" value={data.aggregate} accent="emerald" />
-          <Stat label="Ana Kasa" value={data.main_aggregate} />
-          <Stat label="Atanmamış" value={data.unassigned_aggregate} />
+      {/* Balance + Periyot Geliri (iki kart yan yana) */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* SOL: Mevcut Bakiye + INVARIANT */}
+        <div>
+          <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <TrendingUp size={12} /> Mevcut Bakiye <span className="text-surface-500 normal-case text-[10px]">(anlık)</span>
+          </h4>
+          <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
+            <p className="text-2xl font-bold text-emerald-300 truncate">
+              {formatCurrency(data.aggregate, "TRY")}
+            </p>
+            <p className="text-[10px] text-surface-400 mt-1">
+              Σ atanmış bank_account.current_balance
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Stat label="Ana Kasa" value={data.main_aggregate} />
+            <Stat label="Atanmamış" value={data.unassigned_aggregate} />
+          </div>
+          <p className={cn(
+            "mt-2 text-[10px] flex items-center gap-1",
+            invariantOk ? "text-surface-500" : "text-red-300",
+          )}>
+            INVARIANT: Σ(sub) + atanmamış = ana kasa →
+            {" "}{formatCurrency(data.aggregate, "TRY")} +{" "}
+            {formatCurrency(data.unassigned_aggregate, "TRY")} ={" "}
+            <strong>{formatCurrency(data.aggregate + data.unassigned_aggregate, "TRY")}</strong>
+            {" "}vs <strong>{formatCurrency(data.main_aggregate, "TRY")}</strong>
+            {invariantOk ? " ✓" : " ✗"}
+          </p>
         </div>
-        <p className={cn(
-          "mt-2 text-[10px] flex items-center gap-1",
-          invariantOk ? "text-surface-500" : "text-red-300",
-        )}>
-          INVARIANT: Σ(sub) + atanmamış = ana kasa →
-          {" "}{formatCurrency(data.aggregate, "TRY")} +{" "}
-          {formatCurrency(data.unassigned_aggregate, "TRY")} ={" "}
-          <strong>{formatCurrency(data.aggregate + data.unassigned_aggregate, "TRY")}</strong>
-          {" "}vs ana kasa <strong>{formatCurrency(data.main_aggregate, "TRY")}</strong>
-          {invariantOk ? " ✓" : " ✗ TUTMADI"}
-        </p>
+
+        {/* SAĞ: Periyot Geliri (v1.7.x WP TODO f3b3cd2f) */}
+        <div>
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider flex items-center gap-1">
+              <CalendarRange size={12} /> {periodRangeMemo.label} Gelir <span className="text-surface-500 normal-case text-[10px]">(periyot)</span>
+            </h4>
+            <div className="min-w-[120px]">
+              <DarkSelect
+                value={period}
+                onChange={(v) => setPeriod(v as PeriodPreset)}
+                options={[
+                  { value: "THIS_MONTH", label: "Bu Ay" },
+                  { value: "LAST_MONTH", label: "Geçen Ay" },
+                  { value: "THIS_YEAR", label: "Bu Yıl" },
+                  { value: "LAST_30D", label: "Son 30 Gün" },
+                ]}
+              />
+            </div>
+          </div>
+          <div className="rounded-xl bg-brand-500/10 border border-brand-500/30 p-4">
+            {loadingIncome ? (
+              <Loader2 size={24} className="animate-spin text-brand-300" />
+            ) : (
+              <>
+                <p className={cn(
+                  "text-2xl font-bold truncate",
+                  (income?.total_income ?? 0) >= 0 ? "text-brand-200" : "text-red-300",
+                )}>
+                  {formatCurrency(income?.total_income ?? 0, "TRY")}
+                </p>
+                <p className="text-[10px] text-surface-400 mt-1">
+                  {income?.tx_count ?? 0} işlem · {periodRangeMemo.from} → {periodRangeMemo.to}
+                </p>
+              </>
+            )}
+          </div>
+          <p className="mt-2 text-[10px] text-amber-300/80 flex items-start gap-1">
+            <AlertTriangle size={10} className="mt-0.5 shrink-0" />
+            <span>
+              Bakiye anlık, gelir periyot toplamıdır. Sub-cash'ler arası
+              gelir overlap olabilir (multi-attribution).
+            </span>
+          </p>
+        </div>
       </section>
 
       {/* Atanan entity'ler */}
@@ -169,6 +277,56 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
           </div>
         )}
       </section>
+
+      {/* v1.7.x WP TODO 7bebe2f8: Gelir Dağılımı (kaynak bazlı) */}
+      {income && income.breakdown_by_source.length > 0 && (
+        <section>
+          <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <BarChart3 size={12} /> Gelir Dağılımı — {periodRangeMemo.label}
+          </h4>
+          <div className="rounded-xl border border-surface-700 overflow-hidden">
+            <table className="w-full text-xs">
+              <thead className="bg-surface-800/60 text-surface-400 text-[10px] uppercase">
+                <tr>
+                  <th className="text-left px-3 py-2 font-medium">Kaynak</th>
+                  <th className="text-right px-3 py-2 font-medium">Tx</th>
+                  <th className="text-right px-3 py-2 font-medium">Gelir</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-700">
+                {income.breakdown_by_source.map((s) => {
+                  const href = s.source_type === "COUNTERPART"
+                    ? `/dashboard/counterparts/${s.source_id}`
+                    : s.source_type === "POS_DEVICE"
+                      ? `/dashboard/pos-cihazlari/${s.source_id}`
+                      : `/dashboard/hesaplar`;
+                  return (
+                    <tr
+                      key={`${s.source_type}-${s.source_id}`}
+                      className="hover:bg-surface-700/40 cursor-pointer transition-colors"
+                      onClick={() => { window.location.href = href; }}
+                    >
+                      <td className="px-3 py-2 text-surface-200">
+                        <span className="inline-flex items-center gap-1.5">
+                          <EntityTypeBadge type={s.source_type} />
+                          <span className="truncate">{s.source_name}</span>
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right text-surface-300">{s.tx_count}</td>
+                      <td className={cn(
+                        "px-3 py-2 text-right font-semibold whitespace-nowrap",
+                        s.income >= 0 ? "text-emerald-300" : "text-red-300",
+                      )}>
+                        {formatCurrency(s.income, "TRY")}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Tx kartı (COALESCE) */}
       <section>

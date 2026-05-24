@@ -40,6 +40,32 @@ public class SubCashController {
     private final PosDeviceRepository posDeviceRepository;
 
     /**
+     * v1.7.x WP 8b961444 TODO 474b775c: Sub-cash periyot geliri (multi-attribution).
+     *
+     * <p>Default periyot: bu ay (1. günden ay sonuna). Query: from, to.</p>
+     */
+    @GetMapping("/income-summary")
+    public ResponseEntity<?> incomeSummary(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID subCashId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+                    java.time.LocalDate from,
+            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+                    java.time.LocalDate to) {
+        try {
+            return ResponseEntity.ok(subCashService.incomeForSubCash(subCashId, from, to, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Sub-cash bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * v1.6.23.27 (TODO 85a7e425 + 31c441cb): Sub-cash detay aggregate.
      * Balance kartı + assignment listesi + tx listesi tek round-trip.
      */
