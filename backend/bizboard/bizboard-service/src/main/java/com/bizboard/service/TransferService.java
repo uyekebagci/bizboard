@@ -109,6 +109,18 @@ public class TransferService {
         UUID businessId = from.getBusiness().getId();
         accessGuard.assertCanAccessBusiness(actorUserId, businessId);
 
+        // v1.7.0.x: Aynı firma (MyCompany) kuralı — kaynak ve hedef hesap aynı
+        // firmamıza ait olmalı. Her ikisinin de firması varsa eşit olmalı; biri
+        // null diğeri set ise yasak. İkisi de null ise (henüz atama yapılmamış) izin.
+        UUID fromFirmId = from.getOwnerMyCompany() != null ? from.getOwnerMyCompany().getId() : null;
+        UUID toFirmId = to.getOwnerMyCompany() != null ? to.getOwnerMyCompany().getId() : null;
+        if (!java.util.Objects.equals(fromFirmId, toFirmId)) {
+            throw new IllegalArgumentException(
+                    "Farkli firma'ya transfer yasak: kaynak ve hedef hesap ayni Firmalarim'a ait olmali "
+                            + "(from firma=" + (fromFirmId != null ? fromFirmId : "yok")
+                            + ", to firma=" + (toFirmId != null ? toFirmId : "yok") + ")");
+        }
+
         // Aktiflik kontrolü
         if (!from.isActive() || !to.isActive()) {
             throw new IllegalArgumentException("Pasif hesaba transfer yapilamaz");

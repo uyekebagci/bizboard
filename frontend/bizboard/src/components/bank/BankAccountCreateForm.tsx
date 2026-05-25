@@ -23,7 +23,7 @@ import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { useBusinesses } from "@/hooks/useBusinesses";
-import type { BankAccountType } from "@/types";
+import type { BankAccountType, MyCompany } from "@/types";
 
 type CreatableType = Exclude<BankAccountType, "MAIN_CASH">;
 
@@ -64,8 +64,18 @@ export function BankAccountCreateForm({
   const [openingBalance, setOpeningBalance] = useState("");
   const [holderPersonId, setHolderPersonId] = useState("");
   const [persons, setPersons] = useState<{ id: string; name: string }[]>([]);
+  // v1.7.0.x: ownerMyCompany — banka hesabı kendi firmamıza bağlanabilir.
+  const [ownerMyCompanyId, setOwnerMyCompanyId] = useState("");
+  const [myCompanies, setMyCompanies] = useState<MyCompany[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Firmalarım listesi — tüm tipler için opsiyonel ek alan.
+  useEffect(() => {
+    api.get<MyCompany[]>("/firms")
+      .then((all) => setMyCompanies(all || []))
+      .catch(() => setMyCompanies([]));
+  }, []);
 
   useEffect(() => {
     if (type !== "CASH_HOLDER" || !businessId) {
@@ -103,6 +113,8 @@ export function BankAccountCreateForm({
       if (iban.trim()) body.iban = iban.trim().toUpperCase();
       if (openingBalance) body.opening_balance = Number(openingBalance);
       if (type === "CASH_HOLDER") body.holder_person_id = holderPersonId;
+      // v1.7.0.x: ownerMyCompany (opsiyonel) — null gönderilirse boş kalır.
+      body.owner_my_company_id = ownerMyCompanyId || null;
       await api.post("/bank-accounts", body);
       onCreated();
     } catch (err) {
@@ -234,6 +246,26 @@ export function BankAccountCreateForm({
           />
         </div>
       )}
+
+      {/* v1.7.0.x: Sahip Firma (Firmalarım) — opsiyonel her tip için */}
+      <div>
+        <label className="text-[11px] text-surface-400 uppercase mb-1 block">
+          Sahip Firma (Firmalarım, opsiyonel)
+        </label>
+        <DarkSelect
+          value={ownerMyCompanyId}
+          onChange={setOwnerMyCompanyId}
+          placeholder={myCompanies.length === 0 ? "Firma yok" : "Firma seçin (opsiyonel)"}
+          searchable={myCompanies.length > 6}
+          options={[
+            { value: "", label: "— (Firma yok)" },
+            ...myCompanies.map((c) => ({ value: c.id, label: c.legal_name })),
+          ]}
+        />
+        <p className="text-[10px] text-surface-500 mt-1">
+          POS işlemleri ve transfer akışında otomatik filtre için.
+        </p>
+      </div>
 
       {/* Açılış bakiyesi */}
       <div>

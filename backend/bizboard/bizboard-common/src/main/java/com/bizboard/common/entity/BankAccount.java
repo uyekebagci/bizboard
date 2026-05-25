@@ -73,6 +73,16 @@ public class BankAccount {
     @JoinColumn(name = "holder_person_id")
     private Counterpart holderPerson;
 
+    /**
+     * v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany).
+     * Opsiyonel — null ise henüz firma atanmamış. POS tx settlement'ında
+     * ve transfer akışında UI bu alanı kullanarak hesap dropdown'unu
+     * filtreler (POS device.ownerMyCompany ile eşleşen banka hesapları).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_my_company_id")
+    private MyCompany ownerMyCompany;
+
     /** Cached cari bakiye — application-level recompute. */
     @Column(name = "current_balance", nullable = false, precision = 19, scale = 2)
     @ColumnDefault("0")

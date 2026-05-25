@@ -56,6 +56,13 @@ public class CreateBankAccountRequest {
     @JsonProperty("holder_person_id")
     private UUID holderPersonId;
 
+    /**
+     * v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany).
+     * Opsiyonel — null gönderilebilir (sonradan atanır).
+     */
+    @JsonProperty("owner_my_company_id")
+    private UUID ownerMyCompanyId;
+
     /** İlk yükleme için başlangıç bakiyesi (opsiyonel; default 0). */
     @JsonProperty("opening_balance")
     private BigDecimal openingBalance;

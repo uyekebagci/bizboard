@@ -455,6 +455,9 @@ export interface BankAccountListItem {
   currency: string;
   holder_person_id: string | null;
   holder_person_name: string | null;
+  /** v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany). */
+  owner_my_company_id: string | null;
+  owner_my_company_name: string | null;
   current_balance: number;
   is_active: boolean;
   notes: string | null;

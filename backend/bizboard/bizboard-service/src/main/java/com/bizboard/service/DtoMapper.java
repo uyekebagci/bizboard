@@ -114,6 +114,10 @@ public final class DtoMapper {
                 .posProfit(posProfit)
                 .posDeviceId(t.getPosDevice() != null ? t.getPosDevice().getId() : null)
                 .posDeviceName(t.getPosDevice() != null ? t.getPosDevice().getName() : null)
+                // v1.7.0.x: POS device firma binding — frontend bulk-settle filter.
+                .posDeviceOwnerMyCompanyId(
+                        t.getPosDevice() != null && t.getPosDevice().getOwnerMyCompany() != null
+                                ? t.getPosDevice().getOwnerMyCompany().getId() : null)
                 .posSettled(t.getPosSettled())
                 .settledAt(t.getSettledAt())
                 .settledBankAccountId(t.getBankAccount() != null && Boolean.TRUE.equals(t.getPosSettled())

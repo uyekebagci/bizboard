@@ -346,6 +346,7 @@ export default function HesaplarPage() {
                         : a.bank_name || "—"}
                       {a.iban && <> · {a.iban}</>}
                       {a.business_name && <> · {a.business_name}</>}
+                      {a.owner_my_company_name && <> · 🏢 {a.owner_my_company_name}</>}
                     </p>
                   </div>
                 </div>

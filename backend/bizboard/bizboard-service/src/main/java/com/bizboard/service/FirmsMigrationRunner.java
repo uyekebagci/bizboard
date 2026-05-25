@@ -34,6 +34,7 @@ public class FirmsMigrationRunner implements ApplicationRunner {
             createAccessTable();
             addGroupIdColumn();
             addPosDeviceOwnerMyCompanyColumn();
+            addBankAccountOwnerMyCompanyColumn();
             log.info("[firms-migration] WP TODO ba04debb migration complete.");
         } catch (Exception e) {
             log.error("[firms-migration] FAILED:", e);
@@ -87,6 +88,24 @@ public class FirmsMigrationRunner implements ApplicationRunner {
             log.warn("[firms-migration] group_id FK apply failed: {}", e.getMessage());
         }
         jdbc.execute("CREATE INDEX IF NOT EXISTS idx_my_companies_group ON my_companies(group_id) WHERE group_id IS NOT NULL");
+    }
+
+    /**
+     * v1.7.0.x: bank_accounts.owner_my_company_id — banka hesabı kendi
+     * firmamıza bağlanabilir. Mevcut satırlar NULL kalır (manuel atama).
+     */
+    private void addBankAccountOwnerMyCompanyColumn() {
+        if (columnExists("bank_accounts", "owner_my_company_id")) return;
+        log.info("[firms-migration] Adding bank_accounts.owner_my_company_id...");
+        jdbc.execute("ALTER TABLE bank_accounts ADD COLUMN owner_my_company_id UUID");
+        try {
+            jdbc.execute("ALTER TABLE bank_accounts ADD CONSTRAINT bank_accounts_owner_my_company_fk " +
+                    "FOREIGN KEY (owner_my_company_id) REFERENCES my_companies(id) ON DELETE SET NULL");
+        } catch (Exception e) {
+            log.warn("[firms-migration] bank_accounts.owner_my_company_id FK failed: {}", e.getMessage());
+        }
+        jdbc.execute("CREATE INDEX IF NOT EXISTS idx_bank_accounts_owner_mc " +
+                "ON bank_accounts(owner_my_company_id) WHERE owner_my_company_id IS NOT NULL");
     }
 
     /** v1.7.x: pos_devices.owner_my_company_id — POS cihazı artık kendi firmamıza bağlanabilir. */

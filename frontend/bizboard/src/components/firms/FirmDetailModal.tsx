@@ -10,12 +10,13 @@
  * <p>Non-admin için modal her zaman read-only, tüm action butonları gizli.</p>
  */
 
-import { useEffect, useState } from "react";
-import { X, Pencil, Save, Trash2, ShieldCheck, Loader2, AlertTriangle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { X, Pencil, Save, Trash2, ShieldCheck, Loader2, AlertTriangle, Building2, CreditCard, Wallet } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
-import type { CompanyType, MyCompany, MyCompanyGroup } from "@/types";
+import type { BankAccountListItem, CompanyType, MyCompany, MyCompanyGroup, PosDeviceListItem } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { CreateGroupModal } from "./CreateGroupModal";
+import { formatCurrency } from "@/lib/utils";
 
 const COMPANY_TYPES: { value: CompanyType; label: string }[] = [
   { value: "AS", label: "Anonim Şirket" },
@@ -69,6 +70,29 @@ export function FirmDetailModal({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // v1.7.0.x: İlişkili veriler — bu firmaya bağlı banka hesapları + POS cihazları.
+  const [relatedBanks, setRelatedBanks] = useState<BankAccountListItem[]>([]);
+  const [relatedPosDevices, setRelatedPosDevices] = useState<PosDeviceListItem[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+
+  useEffect(() => {
+    setRelatedLoading(true);
+    Promise.all([
+      api.get<BankAccountListItem[]>("/bank-accounts").catch(() => [] as BankAccountListItem[]),
+      api.get<PosDeviceListItem[]>("/pos-devices").catch(() => [] as PosDeviceListItem[]),
+    ])
+      .then(([banks, devices]) => {
+        setRelatedBanks((banks || []).filter((b) => b.owner_my_company_id === firm.id));
+        setRelatedPosDevices((devices || []).filter((d) => d.owner_my_company_id === firm.id));
+      })
+      .finally(() => setRelatedLoading(false));
+  }, [firm.id]);
+
+  const totalBankBalance = useMemo(
+    () => relatedBanks.reduce((sum, b) => sum + (b.current_balance ?? 0), 0),
+    [relatedBanks],
+  );
 
   // firm prop değişince form'u resetle (refresh sonrası)
   useEffect(() => {
@@ -320,6 +344,91 @@ export function FirmDetailModal({
                 readOnly={isReadOnly} />
             </div>
           </div>
+
+          {/* v1.7.0.x: İlişkili veriler — yalnız read-only mode'da */}
+          {isReadOnly && (
+            <div className="border-t border-surface-700 pt-3 space-y-3">
+              <p className="text-[10px] uppercase text-surface-400 tracking-wider">İlişkili Veriler</p>
+
+              {relatedLoading ? (
+                <div className="flex items-center gap-2 text-sm text-surface-400">
+                  <Loader2 size={14} className="animate-spin" /> Yükleniyor…
+                </div>
+              ) : (
+                <>
+                  {/* Banka hesapları */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h4 className="text-xs font-semibold text-surface-200 inline-flex items-center gap-1.5">
+                        <Wallet size={12} className="text-emerald-400" />
+                        Banka Hesapları ({relatedBanks.length})
+                      </h4>
+                      {relatedBanks.length > 0 && (
+                        <span className="text-[11px] text-emerald-300 font-semibold">
+                          {formatCurrency(totalBankBalance, relatedBanks[0]?.currency || "TRY")}
+                        </span>
+                      )}
+                    </div>
+                    {relatedBanks.length === 0 ? (
+                      <p className="text-[11px] text-surface-500 italic">
+                        Bu firmaya bağlı banka hesabı yok. /dashboard/hesaplar'dan ekleyebilirsiniz.
+                      </p>
+                    ) : (
+                      <ul className="space-y-1 max-h-40 overflow-y-auto">
+                        {relatedBanks.map((b) => (
+                          <li key={b.id}
+                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-700/40 border border-surface-700 text-xs">
+                            <span className="truncate text-surface-200">
+                              {b.name}
+                              {b.bank_name && <span className="ml-1 text-surface-400">· {b.bank_name}</span>}
+                            </span>
+                            <span className="text-surface-300 font-medium shrink-0">
+                              {formatCurrency(b.current_balance ?? 0, b.currency || "TRY")}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* POS cihazları */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-surface-200 inline-flex items-center gap-1.5 mb-1.5">
+                      <CreditCard size={12} className="text-blue-400" />
+                      POS Cihazları ({relatedPosDevices.length})
+                    </h4>
+                    {relatedPosDevices.length === 0 ? (
+                      <p className="text-[11px] text-surface-500 italic">
+                        Bu firmaya bağlı POS cihazı yok.
+                      </p>
+                    ) : (
+                      <ul className="space-y-1 max-h-40 overflow-y-auto">
+                        {relatedPosDevices.map((d) => (
+                          <li key={d.id}
+                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-700/40 border border-surface-700 text-xs">
+                            <span className="truncate text-surface-200">
+                              {d.name}
+                              {d.bank_name && <span className="ml-1 text-surface-400">· {d.bank_name}</span>}
+                            </span>
+                            {!d.is_active && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-600/30 text-surface-400 shrink-0">
+                                Pasif
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] text-surface-500 leading-relaxed">
+                    <Building2 size={9} className="inline mr-1" />
+                    POS işlemleri bu firmanın banka hesaplarına yansıtılır; transfer'ler aynı firma içinde zorunludur.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}

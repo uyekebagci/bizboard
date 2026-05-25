@@ -64,6 +64,13 @@ public class BankAccountDto {
     @JsonProperty("holder_person_name")
     private String holderPersonName;
 
+    /** v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany). */
+    @JsonProperty("owner_my_company_id")
+    private UUID ownerMyCompanyId;
+
+    @JsonProperty("owner_my_company_name")
+    private String ownerMyCompanyName;
+
     @JsonProperty("current_balance")
     private BigDecimal currentBalance;
 

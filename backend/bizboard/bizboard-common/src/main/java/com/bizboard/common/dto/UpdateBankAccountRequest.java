@@ -23,4 +23,12 @@ public class UpdateBankAccountRequest {
     private String iban;
 
     private String notes;
+
+    /**
+     * v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany).
+     * Servis tarafında her zaman uygulanır — null gönderilirse mevcut firma
+     * bağlantısı temizlenir. Frontend her zaman bu alanı göndermeli.
+     */
+    @JsonProperty("owner_my_company_id")
+    private java.util.UUID ownerMyCompanyId;
 }

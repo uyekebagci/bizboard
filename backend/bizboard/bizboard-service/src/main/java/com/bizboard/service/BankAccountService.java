@@ -9,6 +9,7 @@ import com.bizboard.common.dto.UpdateBankAccountRequest;
 import com.bizboard.common.entity.BankAccount;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Counterpart;
+import com.bizboard.common.entity.MyCompany;
 import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.BankAccountType;
@@ -16,6 +17,7 @@ import com.bizboard.common.enums.TransactionDirection;
 import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CounterpartRepository;
+import com.bizboard.repository.MyCompanyRepository;
 import com.bizboard.repository.TransactionRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +57,8 @@ public class BankAccountService {
     private final TransactionRepository transactionRepository;
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
+    /** v1.7.0.x: banka hesabını kendi firmamıza (MyCompany) bağlamak için. */
+    private final MyCompanyRepository myCompanyRepository;
     // v1.6.23.27 (UI Fix WP TODO 63229465): SUB_CASH silinmeden önce
     // assignment'lar cascade kaldırılır (entity'ler Ana Kasa'ya iade).
     private final com.bizboard.repository.SubCashAssignmentRepository subCashAssignmentRepository;
@@ -172,6 +176,14 @@ public class BankAccountService {
         BigDecimal opening = req.getOpeningBalance() != null
                 ? req.getOpeningBalance() : BigDecimal.ZERO;
 
+        // v1.7.0.x: opsiyonel ownerMyCompany — null gönderilirse boş kalır.
+        MyCompany ownerMyCompany = null;
+        if (req.getOwnerMyCompanyId() != null) {
+            ownerMyCompany = myCompanyRepository.findById(req.getOwnerMyCompanyId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Sahip firma (my_company) bulunamadi: " + req.getOwnerMyCompanyId()));
+        }
+
         BankAccount entity = BankAccount.builder()
                 .business(business)
                 .name(req.getName().trim())
@@ -180,6 +192,7 @@ public class BankAccountService {
                 .iban(req.getIban())
                 .currency(req.getCurrency() != null ? req.getCurrency().trim() : "TRY")
                 .holderPerson(holder)
+                .ownerMyCompany(ownerMyCompany)
                 .currentBalance(opening)
                 .active(true)
                 .notes(req.getNotes())
@@ -249,6 +262,24 @@ public class BankAccountService {
         } else if (req.getBankName() != null || req.getIban() != null || req.getNotes() != null) {
             log.warn("[bank-account-update] MAIN_CASH id={} — yalniz name guncellenebilir, " +
                     "diger alanlar yoksayildi", a.getId());
+        }
+
+        // v1.7.0.x: owner_my_company_id — MAIN_CASH dahil her tip için
+        // her zaman uygulanır (frontend her zaman gönderir; null = temizle).
+        {
+            java.util.UUID oldMcId = a.getOwnerMyCompany() != null
+                    ? a.getOwnerMyCompany().getId() : null;
+            if (!java.util.Objects.equals(oldMcId, req.getOwnerMyCompanyId())) {
+                MyCompany mc = req.getOwnerMyCompanyId() != null
+                        ? myCompanyRepository.findById(req.getOwnerMyCompanyId())
+                              .orElseThrow(() -> new IllegalArgumentException(
+                                      "Sahip firma (my_company) bulunamadi: " + req.getOwnerMyCompanyId()))
+                        : null;
+                a.setOwnerMyCompany(mc);
+                changes.put("ownerMyCompanyId", Map.of(
+                        "from", oldMcId != null ? oldMcId.toString() : "null",
+                        "to", req.getOwnerMyCompanyId() != null ? req.getOwnerMyCompanyId().toString() : "null"));
+            }
         }
 
         if (changes.isEmpty()) {
@@ -479,6 +510,8 @@ public class BankAccountService {
                 .currency(b.getCurrency())
                 .holderPersonId(b.getHolderPerson() != null ? b.getHolderPerson().getId() : null)
                 .holderPersonName(b.getHolderPerson() != null ? b.getHolderPerson().getName() : null)
+                .ownerMyCompanyId(b.getOwnerMyCompany() != null ? b.getOwnerMyCompany().getId() : null)
+                .ownerMyCompanyName(b.getOwnerMyCompany() != null ? b.getOwnerMyCompany().getLegalName() : null)
                 .currentBalance(effectiveBalance)
                 .active(b.isActive())
                 .notes(b.getNotes())

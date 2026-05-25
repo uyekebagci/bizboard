@@ -444,11 +444,21 @@ type UnsettledTx = {
   applied_pos_rate?: number | null;
   pos_rate?: number | null;
   pos_device_name?: string | null;
+  /** v1.7.0.x: POS cihazının firması — bulk-settle bank filter için. */
+  pos_device_owner_my_company_id?: string | null;
   business_id: string;
   date: string;
   description?: string | null;
 };
-type BankRow = { id: string; name: string; type: string; bank_name?: string | null };
+type BankRow = {
+  id: string;
+  name: string;
+  type: string;
+  bank_name?: string | null;
+  /** v1.7.0.x: banka hesabının firması — filter için. */
+  owner_my_company_id?: string | null;
+  owner_my_company_name?: string | null;
+};
 
 function PendingSettlementsCard() {
   // v1.6.23.10: bulk-settle sonrası global refresh — dashboard'daki diğer
@@ -586,6 +596,7 @@ function PendingSettlementsCard() {
       {showBulkModal && (
         <BulkSettleModal
           txIds={Array.from(selectedIds)}
+          selectedTxs={selectedItems}
           totalNet={selectedNetTotal}
           onClose={() => setShowBulkModal(false)}
           onSuccess={() => {
@@ -604,11 +615,13 @@ function PendingSettlementsCard() {
 
 function BulkSettleModal({
   txIds,
+  selectedTxs,
   totalNet,
   onClose,
   onSuccess,
 }: {
   txIds: string[];
+  selectedTxs: UnsettledTx[];
   totalNet: number;
   onClose: () => void;
   onSuccess: () => void;
@@ -621,16 +634,41 @@ function BulkSettleModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // v1.7.0.x: seçili POS tx'lerin firma'ları — ortak ise bank filtreliyoruz.
+  // Tüm tx'ler aynı firmadan ise common, farklı ise null (hepsi gösterilir + uyarı).
+  const commonFirmId = (() => {
+    const ids = selectedTxs.map((t) => t.pos_device_owner_my_company_id || null);
+    const uniq = Array.from(new Set(ids));
+    if (uniq.length === 1) return uniq[0];
+    return null; // karışık veya hepsi null
+  })();
+  const mixedFirms = (() => {
+    const ids = selectedTxs
+      .map((t) => t.pos_device_owner_my_company_id)
+      .filter(Boolean);
+    return new Set(ids).size > 1;
+  })();
+
   useEffect(() => {
     api
       .get<BankRow[]>("/bank-accounts")
       .then((rows) => {
-        const eligible = rows.filter((b) => b.type === "CHECKING" || b.type === "SAVINGS");
+        let eligible = rows.filter((b) => b.type === "CHECKING" || b.type === "SAVINGS");
+        // v1.7.0.x: aynı firmadan POS tx'ler için sadece o firmanın banka
+        // hesaplarını göster. Karışıksa veya firma yoksa hepsi görünür.
+        if (commonFirmId) {
+          const firmFiltered = eligible.filter(
+            (b) => b.owner_my_company_id === commonFirmId,
+          );
+          // Hiç eşleşen yoksa boş dropdown'a düşmemek için tüm hesapları
+          // bırak (kullanıcı manuel seçebilsin).
+          if (firmFiltered.length > 0) eligible = firmFiltered;
+        }
         setBanks(eligible);
         if (eligible.length === 1) setSelectedBank(eligible[0].id);
       })
       .catch(() => setError("Banka hesapları yüklenemedi"));
-  }, []);
+  }, [commonFirmId]);
 
   async function submit() {
     if (!selectedBank) {
@@ -669,6 +707,11 @@ function BulkSettleModal({
           {error && (
             <div className="p-2 text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg">
               {error}
+            </div>
+          )}
+          {mixedFirms && (
+            <div className="p-2 text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+              ⚠ Seçili işlemler farklı firmalara ait POS cihazlarından — banka hesabı dropdown'unda hepsi gösteriliyor. Önerilen: aynı firma'nın işlemlerini ayrı ayrı settle et.
             </div>
           )}
           <div>

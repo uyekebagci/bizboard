@@ -97,6 +97,14 @@ public class TransactionDto {
     @JsonProperty("pos_device_name")
     private String posDeviceName;
 
+    /**
+     * v1.7.0.x: POS cihazının ait olduğu kendi firmamız (MyCompany).
+     * Frontend bulk-settle akışında banka hesabı dropdown'unu bu firmaya
+     * göre filtreler — POS işlemlerinin firmaya doğru yansıması için.
+     */
+    @JsonProperty("pos_device_owner_my_company_id")
+    private UUID posDeviceOwnerMyCompanyId;
+
     /** v1.6.21 (WP-4): POS çekim banka hesabına düştü mü (true/false/null). */
     @JsonProperty("pos_settled")
     private Boolean posSettled;

@@ -145,8 +145,13 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
           />
         )}
         {fromAcc && (
-          <p className="mt-1 text-[10px] text-surface-400">
-            Bakiye: {formatCurrency(fromAcc.current_balance ?? 0, fromAcc.currency || "TRY")}
+          <p className="mt-1 text-[10px] text-surface-400 flex items-center gap-2 flex-wrap">
+            <span>Bakiye: {formatCurrency(fromAcc.current_balance ?? 0, fromAcc.currency || "TRY")}</span>
+            {fromAcc.owner_my_company_name && (
+              <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
+                🏢 {fromAcc.owner_my_company_name}
+              </span>
+            )}
           </p>
         )}
       </div>
