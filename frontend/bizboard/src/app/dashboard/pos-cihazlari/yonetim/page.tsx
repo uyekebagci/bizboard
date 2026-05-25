@@ -17,7 +17,7 @@ import { useAppStore } from "@/lib/store";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
-import type { PosDeviceListItem, Counterpart } from "@/types";
+import type { PosDeviceListItem, MyCompany } from "@/types";
 
 export default function PosDeviceManagementPage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function PosDeviceManagementPage() {
   const isAdmin = profile?.role === "admin";
 
   const [devices, setDevices] = useState<PosDeviceListItem[]>([]);
-  const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
+  const [myCompanies, setMyCompanies] = useState<MyCompany[]>([]);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,8 +56,8 @@ export default function PosDeviceManagementPage() {
 
   useEffect(() => {
     void refresh();
-    api.get<Counterpart[]>("/counterparts?kind=FIRM")
-      .then((r) => setCounterparts(r || []))
+    api.get<MyCompany[]>("/firms")
+      .then((r) => setMyCompanies(r || []))
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [includeInactive]);
@@ -144,7 +144,7 @@ export default function PosDeviceManagementPage() {
                   )}
                 </div>
                 <p className="text-[11px] text-surface-400 truncate">
-                  {d.owner_counterpart_name || "Sahip yok"}
+                  {d.owner_my_company_name || d.owner_counterpart_name || "Sahip firma seçilmedi"}
                   {d.bank_name && <> · {d.bank_name}</>}
                 </p>
                 <p className="text-[11px] text-surface-300 mt-0.5">
@@ -180,7 +180,7 @@ export default function PosDeviceManagementPage() {
 
       {showCreate && (
         <PosDeviceFormModal
-          counterparts={counterparts}
+          myCompanies={myCompanies}
           onClose={() => setShowCreate(false)}
           onSaved={() => { setShowCreate(false); void refresh(); }}
         />
@@ -188,7 +188,7 @@ export default function PosDeviceManagementPage() {
       {editing && (
         <PosDeviceFormModal
           device={editing}
-          counterparts={counterparts}
+          myCompanies={myCompanies}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); void refresh(); }}
         />
@@ -207,16 +207,16 @@ export default function PosDeviceManagementPage() {
 // ───────────────────── Form modal ─────────────────────
 
 function PosDeviceFormModal({
-  device, counterparts, onClose, onSaved,
+  device, myCompanies, onClose, onSaved,
 }: {
   device?: PosDeviceListItem;
-  counterparts: Counterpart[];
+  myCompanies: MyCompany[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const isEdit = !!device;
   const [name, setName] = useState(device?.name ?? "");
-  const [ownerId, setOwnerId] = useState(device?.owner_counterpart_id ?? "");
+  const [ownerId, setOwnerId] = useState(device?.owner_my_company_id ?? "");
   const [bankName, setBankName] = useState(device?.bank_name ?? "");
   const [defaultRate, setDefaultRate] = useState(
     device?.default_rate != null ? String(device.default_rate) : "",
@@ -245,7 +245,8 @@ function PosDeviceFormModal({
     try {
       const body = {
         name: name.trim(),
-        owner_counterpart_id: ownerId || null,
+        owner_my_company_id: ownerId || null,
+        owner_counterpart_id: null, // v1.7.x: artık my_company kullanılıyor
         bank_name: bankName.trim() || null,
         default_rate: bankVal,
         our_commission_rate: ourVal,
@@ -298,17 +299,20 @@ function PosDeviceFormModal({
           </div>
 
           <div>
-            <label className="label">Sahip Firma (Counterpart)</label>
+            <label className="label">Sahip Firma (Firmalarım)</label>
             <DarkSelect
               value={ownerId}
               onChange={setOwnerId}
-              placeholder="Seçim yapma"
-              searchable={counterparts.length > 6}
-              options={counterparts.map((c) => ({ value: c.id, label: c.name }))}
-              addOption={{
-                label: "+ Yeni Firma Ekle",
-                onClick: () => { window.location.href = "/dashboard/counterparts"; },
-              }}
+              placeholder="Firma seçin"
+              searchable={myCompanies.length > 6}
+              options={[
+                { value: "", label: "— Seçim yapma" },
+                ...myCompanies.map((c) => ({
+                  value: c.id,
+                  label: c.legal_name,
+                  meta: c.company_type,
+                })),
+              ]}
             />
           </div>
 

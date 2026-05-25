@@ -33,6 +33,7 @@ public class FirmsMigrationRunner implements ApplicationRunner {
             createGroupsTable();
             createAccessTable();
             addGroupIdColumn();
+            addPosDeviceOwnerMyCompanyColumn();
             log.info("[firms-migration] WP TODO ba04debb migration complete.");
         } catch (Exception e) {
             log.error("[firms-migration] FAILED:", e);
@@ -86,6 +87,21 @@ public class FirmsMigrationRunner implements ApplicationRunner {
             log.warn("[firms-migration] group_id FK apply failed: {}", e.getMessage());
         }
         jdbc.execute("CREATE INDEX IF NOT EXISTS idx_my_companies_group ON my_companies(group_id) WHERE group_id IS NOT NULL");
+    }
+
+    /** v1.7.x: pos_devices.owner_my_company_id — POS cihazı artık kendi firmamıza bağlanabilir. */
+    private void addPosDeviceOwnerMyCompanyColumn() {
+        if (columnExists("pos_devices", "owner_my_company_id")) return;
+        log.info("[firms-migration] Adding pos_devices.owner_my_company_id...");
+        jdbc.execute("ALTER TABLE pos_devices ADD COLUMN owner_my_company_id UUID");
+        try {
+            jdbc.execute("ALTER TABLE pos_devices ADD CONSTRAINT pos_devices_owner_my_company_fk " +
+                    "FOREIGN KEY (owner_my_company_id) REFERENCES my_companies(id) ON DELETE SET NULL");
+        } catch (Exception e) {
+            log.warn("[firms-migration] owner_my_company_id FK failed: {}", e.getMessage());
+        }
+        jdbc.execute("CREATE INDEX IF NOT EXISTS idx_pos_devices_owner_mc " +
+                "ON pos_devices(owner_my_company_id) WHERE owner_my_company_id IS NOT NULL");
     }
 
     private boolean tableExists(String table) {

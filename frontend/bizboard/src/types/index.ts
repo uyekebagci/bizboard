@@ -544,8 +544,12 @@ export interface BankAccountTxRow {
 export interface PosDeviceListItem {
   id: string;
   name: string;
+  /** @deprecated v1.7.x — owner_my_company_id tercih edilmeli. */
   owner_counterpart_id: string | null;
   owner_counterpart_name: string | null;
+  /** v1.7.x: POS cihazını hangi kendi firmamıza (MyCompany) ait. */
+  owner_my_company_id: string | null;
+  owner_my_company_name: string | null;
   bank_name: string | null;
   /** Default BANKA komisyon oranı (cihaz default). */
   default_rate: number | null;

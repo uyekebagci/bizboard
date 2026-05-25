@@ -50,10 +50,19 @@ public class PosDevice {
     /**
      * POS cihazının sahibi olan firma (tüzel kişi). Genelde DGR'nin kendi cihazı
      * veya bir tedarikçi cihazı. PERSON kayıtları sahip olamaz.
+     * @deprecated v1.7.x — ownerMyCompany tercih edilmeli.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_counterpart_id")
     private Counterpart ownerCounterpart;
+
+    /**
+     * v1.7.x: POS cihazını hangi firmamıza (MyCompany) ait olduğu.
+     * owner_counterpart_id'nin yerine geçer — POS kendi firmamızın cihazı.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_my_company_id")
+    private MyCompany ownerMyCompany;
 
     /** Banka adı — basit string (banka entity'si daha sonra eklenebilir). */
     @Column(name = "bank_name", length = 120)

@@ -6,10 +6,12 @@ import com.bizboard.common.dto.PosDeviceDto;
 import com.bizboard.common.dto.UpdatePosDeviceRequest;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Counterpart;
+import com.bizboard.common.entity.MyCompany;
 import com.bizboard.common.entity.PosDevice;
 import com.bizboard.common.entity.User;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CounterpartRepository;
+import com.bizboard.repository.MyCompanyRepository;
 import com.bizboard.repository.PosDeviceRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class PosDeviceManagementService {
 
     private final PosDeviceRepository repository;
     private final CounterpartRepository counterpartRepository;
+    private final MyCompanyRepository myCompanyRepository;
     private final UserRepository userRepository;
     private final BusinessRepository businessRepository;
     private final BusinessAccessGuard accessGuard;
@@ -95,6 +98,14 @@ public class PosDeviceManagementService {
                             "Sahip firma bulunamadi: " + req.getOwnerCounterpartId()));
         }
 
+        // v1.7.x: owner_my_company_id — POS cihazının hangi firmamıza ait olduğu.
+        MyCompany ownerMyCompany = null;
+        if (req.getOwnerMyCompanyId() != null) {
+            ownerMyCompany = myCompanyRepository.findById(req.getOwnerMyCompanyId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Sahip firma (my_company) bulunamadi: " + req.getOwnerMyCompanyId()));
+        }
+
         // v1.7.x (POS Komisyon WP TODO fc3ed50f): device default rate'lerinde
         // de our >= bank validasyonu (constant aynı mesaj).
         if (req.getOurCommissionRate() != null && req.getDefaultRate() != null
@@ -106,6 +117,7 @@ public class PosDeviceManagementService {
                 .business(business)
                 .name(req.getName().trim())
                 .ownerCounterpart(owner)
+                .ownerMyCompany(ownerMyCompany)
                 .bankName(blankToNull(req.getBankName()))
                 .defaultRate(req.getDefaultRate())
                 .ourCommissionRate(req.getOurCommissionRate())
@@ -122,7 +134,7 @@ public class PosDeviceManagementService {
                 "POS cihazi olusturuldu: " + d.getName(),
                 java.util.Map.of(
                         "name", d.getName(),
-                        "ownerCounterpartId", owner != null ? owner.getId().toString() : "null",
+                        "ownerMyCompanyId", ownerMyCompany != null ? ownerMyCompany.getId().toString() : "null",
                         "defaultRate", d.getDefaultRate() != null ? d.getDefaultRate().toPlainString() : "null"));
 
         log.info("POS device created: id={} name={} owner={}",
@@ -154,6 +166,21 @@ public class PosDeviceManagementService {
                 changes.put("ownerCounterpartId", Map.of(
                         "from", oldOwnerId != null ? oldOwnerId.toString() : "null",
                         "to", req.getOwnerCounterpartId().toString()));
+            }
+        }
+        // v1.7.x: owner_my_company_id — her zaman uygulanır (null = temizle).
+        {
+            UUID oldMcId = d.getOwnerMyCompany() != null ? d.getOwnerMyCompany().getId() : null;
+            if (!Objects.equals(oldMcId, req.getOwnerMyCompanyId())) {
+                MyCompany mc = req.getOwnerMyCompanyId() != null
+                        ? myCompanyRepository.findById(req.getOwnerMyCompanyId())
+                              .orElseThrow(() -> new IllegalArgumentException(
+                                      "Sahip firma (my_company) bulunamadi: " + req.getOwnerMyCompanyId()))
+                        : null;
+                d.setOwnerMyCompany(mc);
+                changes.put("ownerMyCompanyId", Map.of(
+                        "from", oldMcId != null ? oldMcId.toString() : "null",
+                        "to", req.getOwnerMyCompanyId() != null ? req.getOwnerMyCompanyId().toString() : "null"));
             }
         }
         if (req.getBankName() != null && !Objects.equals(req.getBankName(), d.getBankName())) {
@@ -244,6 +271,8 @@ public class PosDeviceManagementService {
                 .name(d.getName())
                 .ownerCounterpartId(d.getOwnerCounterpart() != null ? d.getOwnerCounterpart().getId() : null)
                 .ownerCounterpartName(d.getOwnerCounterpart() != null ? d.getOwnerCounterpart().getName() : null)
+                .ownerMyCompanyId(d.getOwnerMyCompany() != null ? d.getOwnerMyCompany().getId() : null)
+                .ownerMyCompanyName(d.getOwnerMyCompany() != null ? d.getOwnerMyCompany().getLegalName() : null)
                 .bankName(d.getBankName())
                 .defaultRate(d.getDefaultRate())
                 .lastUsedRate(d.getLastUsedRate())

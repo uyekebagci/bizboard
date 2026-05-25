@@ -17,8 +17,13 @@ public class UpdatePosDeviceRequest {
     @Size(max = 120)
     private String name;
 
+    /** @deprecated v1.7.x — owner_my_company_id tercih edilmeli. */
     @JsonProperty("owner_counterpart_id")
     private UUID ownerCounterpartId;
+
+    /** v1.7.x: POS cihazı hangi kendi firmamıza (MyCompany) ait — partial update. */
+    @JsonProperty("owner_my_company_id")
+    private UUID ownerMyCompanyId;
 
     @JsonProperty("bank_name")
     @Size(max = 120)

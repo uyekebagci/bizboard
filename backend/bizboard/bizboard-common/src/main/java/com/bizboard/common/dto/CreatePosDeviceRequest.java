@@ -26,9 +26,13 @@ public class CreatePosDeviceRequest {
     @Size(max = 120)
     private String name;
 
-    /** Cihazın sahibi firma — counterpart (FIRM tipi önerilir). Opsiyonel. */
+    /** @deprecated v1.7.x — owner_my_company_id tercih edilmeli. */
     @JsonProperty("owner_counterpart_id")
     private UUID ownerCounterpartId;
+
+    /** v1.7.x: POS cihazı hangi kendi firmamıza (MyCompany) ait. Opsiyonel. */
+    @JsonProperty("owner_my_company_id")
+    private UUID ownerMyCompanyId;
 
     @JsonProperty("bank_name")
     @Size(max = 120)

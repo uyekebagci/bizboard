@@ -32,6 +32,13 @@ public class PosDeviceDto {
     @JsonProperty("owner_counterpart_name")
     private String ownerCounterpartName;
 
+    /** v1.7.x: POS cihazını hangi kendi firmamıza ait (MyCompany). */
+    @JsonProperty("owner_my_company_id")
+    private UUID ownerMyCompanyId;
+
+    @JsonProperty("owner_my_company_name")
+    private String ownerMyCompanyName;
+
     @JsonProperty("bank_name")
     private String bankName;
 
