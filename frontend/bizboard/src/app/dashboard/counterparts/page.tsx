@@ -85,11 +85,18 @@ export default function CounterpartsPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>("");
 
+  // v1.7.x: business filter + grup görünümü (default: birden fazla business
+  // varsa business-bazlı gruplama, tek varsa düz liste).
+  const [businessFilter, setBusinessFilter] = useState<string>("ALL");
+  const [groupBy, setGroupBy] = useState<"business" | "none">("business");
+
   useEffect(() => {
     api.get<Business[]>("/businesses")
       .then((r) => {
         setBusinesses(r || []);
         if ((r || []).length === 1) setSelectedBusinessId(r[0].id);
+        // Tek business varsa gruplama anlamsız
+        if ((r || []).length <= 1) setGroupBy("none");
       })
       .catch(() => { /* silent */ });
   }, []);
@@ -114,14 +121,105 @@ export default function CounterpartsPage() {
   }, [roleFilter]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return list;
-    const q = search.toLocaleLowerCase("tr");
-    return list.filter(
-      (c) =>
-        c.name.toLocaleLowerCase("tr").includes(q) ||
-        (c.tax_id && c.tax_id.includes(search.trim()))
+    let out = list;
+    // v1.7.x: business filter
+    if (businessFilter !== "ALL") {
+      out = out.filter((c) => c.business_id === businessFilter);
+    }
+    if (search.trim()) {
+      const q = search.toLocaleLowerCase("tr");
+      out = out.filter(
+        (c) =>
+          c.name.toLocaleLowerCase("tr").includes(q) ||
+          (c.tax_id && c.tax_id.includes(search.trim()))
+      );
+    }
+    return out;
+  }, [list, search, businessFilter]);
+
+  // v1.7.x: gruplama — businessId → counterpart[]
+  const grouped = useMemo(() => {
+    if (groupBy !== "business" || businessFilter !== "ALL") return null;
+    const map = new Map<string, Counterpart[]>();
+    for (const c of filtered) {
+      const k = c.business_id || "_no_business";
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(c);
+    }
+    // Business sırası — businesses listesindeki sıra + bilinmeyen sona
+    const ordered: Array<{ businessId: string; businessName: string; items: Counterpart[] }> = [];
+    for (const b of businesses) {
+      const items = map.get(b.id);
+      if (items && items.length > 0) {
+        ordered.push({ businessId: b.id, businessName: b.name, items });
+      }
+    }
+    const noBiz = map.get("_no_business");
+    if (noBiz && noBiz.length > 0) {
+      ordered.push({ businessId: "_no_business", businessName: "İşletme bağlantısı yok", items: noBiz });
+    }
+    return ordered;
+  }, [filtered, groupBy, businessFilter, businesses]);
+
+  // v1.7.x: hem grouped hem flat list aynı card markup'ını kullansın
+  function renderCard(c: Counterpart) {
+    const m = roleMeta(c.role);
+    const Icon = m.icon;
+    const balance = c.current_balance ?? 0;
+    return (
+      <div
+        key={c.id}
+        onClick={() => router.push(`/dashboard/counterparts/${c.id}`)}
+        className="card p-4 cursor-pointer hover:shadow-card-hover transition-all active:scale-[0.98] group"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", m.badge)}>
+              <Icon size={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-white text-sm leading-tight truncate">
+                {c.name}
+              </h3>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded", m.badge)}>
+                  {m.label}
+                </span>
+                {c.tax_id && (
+                  <span className="text-[10px] text-surface-400">{c.tax_id}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className={cn(
+              "text-sm font-bold whitespace-nowrap",
+              balance > 0 ? "text-green-400" : balance < 0 ? "text-red-400" : "text-surface-300"
+            )}>
+              {formatCurrency(balance)}
+            </div>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditing(c); }}
+                className="p-1.5 rounded-lg hover:bg-white/10 text-surface-400 hover:text-white"
+                title="Duzenle"
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setDeleteConfirm(c); }}
+                className="p-1.5 rounded-lg hover:bg-red-500/20 text-surface-400 hover:text-red-400"
+                title="Sil"
+              >
+                <Trash2 size={14} />
+              </button>
+              <ArrowRight size={14} className="text-surface-500 ml-1" />
+            </div>
+          </div>
+        </div>
+      </div>
     );
-  }, [list, search]);
+  }
 
   async function handleDelete(id: string) {
     try {
@@ -172,31 +270,74 @@ export default function CounterpartsPage() {
       )}
 
       {/* Filters */}
-      <section className="card p-3 flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Isim veya vergi no ara..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-white placeholder-surface-400 text-sm focus:outline-none focus:border-brand-500"
-          />
+      <section className="card p-3 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Isim veya vergi no ara..."
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-white placeholder-surface-400 text-sm focus:outline-none focus:border-brand-500"
+            />
+          </div>
+          {/* v1.7.x: business filter (sadece >1 business varsa) */}
+          {businesses.length > 1 && (
+            <div className="min-w-[200px]">
+              <DarkSelect
+                value={businessFilter}
+                onChange={setBusinessFilter}
+                placeholder="Tüm İşletmeler"
+                searchable={businesses.length > 6}
+                options={[
+                  { value: "ALL", label: "Tüm İşletmeler" },
+                  ...businesses.map((b) => ({ value: b.id, label: b.name })),
+                ]}
+              />
+            </div>
+          )}
         </div>
-        <div className="flex gap-2 overflow-x-auto -mx-1 px-1">
-          {(["ALL", ...ROLES.map((r) => r.value)] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRoleFilter(r as CounterpartRole | "ALL")}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
-                roleFilter === r
-                  ? "bg-brand-600 text-white"
-                  : "bg-surface-700/50 text-surface-300 hover:bg-surface-700"
-              )}
-            >
-              {r === "ALL" ? "Tumu" : roleMeta(r as CounterpartRole).label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex gap-2 overflow-x-auto -mx-1 px-1">
+            {(["ALL", ...ROLES.map((r) => r.value)] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRoleFilter(r as CounterpartRole | "ALL")}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
+                  roleFilter === r
+                    ? "bg-brand-600 text-white"
+                    : "bg-surface-700/50 text-surface-300 hover:bg-surface-700"
+                )}
+              >
+                {r === "ALL" ? "Tumu" : roleMeta(r as CounterpartRole).label}
+              </button>
+            ))}
+          </div>
+          {/* v1.7.x: grup görünümü toggle (sadece >1 business + ALL filter) */}
+          {businesses.length > 1 && businessFilter === "ALL" && (
+            <div className="ml-auto flex items-center gap-1 text-[11px]">
+              <span className="text-surface-400">Görünüm:</span>
+              <button
+                onClick={() => setGroupBy("business")}
+                className={cn(
+                  "px-2 py-1 rounded-md font-medium",
+                  groupBy === "business" ? "bg-brand-500/20 text-brand-200" : "text-surface-400 hover:bg-surface-700",
+                )}
+              >
+                İşletmeye Göre
+              </button>
+              <button
+                onClick={() => setGroupBy("none")}
+                className={cn(
+                  "px-2 py-1 rounded-md font-medium",
+                  groupBy === "none" ? "bg-brand-500/20 text-brand-200" : "text-surface-400 hover:bg-surface-700",
+                )}
+              >
+                Düz Liste
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -213,70 +354,28 @@ export default function CounterpartsPage() {
             ? 'Henuz karsi firma yok. "Yeni" ile ilk kaydi ekleyebilirsin.'
             : "Aramaya uyan kayit bulunamadi."}
         </div>
+      ) : grouped ? (
+        // v1.7.x: business-bazlı gruplama
+        <div className="space-y-4">
+          {grouped.map((g) => (
+            <section key={g.businessId}>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <div className="w-1 h-4 bg-brand-500 rounded-full" />
+                <h3 className="text-xs font-semibold text-surface-200 uppercase tracking-wider">
+                  {g.businessName}
+                </h3>
+                <span className="text-[10px] text-surface-400">({g.items.length})</span>
+                <div className="flex-1 border-b border-surface-700 ml-2" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {g.items.map((c) => renderCard(c))}
+              </div>
+            </section>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filtered.map((c) => {
-            const m = roleMeta(c.role);
-            const Icon = m.icon;
-            const balance = c.current_balance ?? 0;
-            return (
-              <div
-                key={c.id}
-                onClick={() => router.push(`/dashboard/counterparts/${c.id}`)}
-                className="card p-4 cursor-pointer hover:shadow-card-hover transition-all active:scale-[0.98] group"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", m.badge)}>
-                      <Icon size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-white text-sm leading-tight truncate">
-                        {c.name}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded", m.badge)}>
-                          {m.label}
-                        </span>
-                        {c.tax_id && (
-                          <span className="text-[10px] text-surface-400">
-                            {c.tax_id}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <div
-                      className={cn(
-                        "text-sm font-bold whitespace-nowrap",
-                        balance > 0 ? "text-green-400" : balance < 0 ? "text-red-400" : "text-surface-300"
-                      )}
-                    >
-                      {formatCurrency(balance)}
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditing(c); }}
-                        className="p-1.5 rounded-lg hover:bg-white/10 text-surface-400 hover:text-white"
-                        title="Duzenle"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm(c); }}
-                        className="p-1.5 rounded-lg hover:bg-red-500/20 text-surface-400 hover:text-red-400"
-                        title="Sil"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                      <ArrowRight size={14} className="text-surface-500 ml-1" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {filtered.map((c) => renderCard(c))}
         </div>
       )}
 
