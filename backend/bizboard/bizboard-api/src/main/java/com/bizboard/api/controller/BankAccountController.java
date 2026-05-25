@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,6 +42,15 @@ public class BankAccountController {
     // v1.6.23.27 (UI Fix WP TODO d884a0ec): MAIN/SUB için computed aggregate.
     private final SubCashAggregateService aggregateService;
 
+    /**
+     * v1.7.0 (prod-fix TODO lazy-init): @Transactional(readOnly=true) eklendi.
+     * Production'da open-in-view=false olduğu için repository query sonrası
+     * Hibernate session kapanıyor; BankAccountService.toDto() içinde
+     * b.getBusiness().getName() lazy proxy → LazyInitializationException.
+     * Transaction controller method'una taşındı — tüm DTO mapping session
+     * içinde gerçekleşiyor.
+     */
+    @Transactional(readOnly = true)
     @GetMapping
     public ResponseEntity<List<BankAccountDto>> list(
             @AuthenticationPrincipal UserPrincipal principal,
