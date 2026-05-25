@@ -39,6 +39,9 @@ public class SubCashController {
     private final BankAccountRepository bankAccountRepository;
     private final CounterpartRepository counterpartRepository;
     private final PosDeviceRepository posDeviceRepository;
+    /** WP Sub-Cash Retroactive Inclusion. */
+    private final com.bizboard.service.SubCashInclusionService inclusionService;
+    private final com.bizboard.repository.SubCashTxInclusionRepository inclusionRepository;
 
     /**
      * v1.7.x WP 8b961444 TODO 474b775c: Sub-cash periyot geliri (multi-attribution).
@@ -94,9 +97,24 @@ public class SubCashController {
 
             List<SubCashAssignmentDto> assignDtos = assigns.stream()
                     .map(this::toAssignmentDto).toList();
+            // WP Sub-Cash Retroactive Inclusion: tx'leri inclusion table'dan
+            // okuyup scope bilgisini DTO'ya damgalıyoruz.
+            java.util.Map<UUID, String> scopeByTxId = new java.util.HashMap<>();
+            for (com.bizboard.common.entity.SubCashTxInclusion inc :
+                    inclusionRepository.findBySubCash_Id(subCashId)) {
+                if (inc.getTransaction() != null && inc.getScope() != null) {
+                    scopeByTxId.put(inc.getTransaction().getId(), inc.getScope().name());
+                }
+            }
             List<TransactionDto> txDtos = subCashService
                     .transactionsForSubCash(subCashId, principal.getId(), txLimit)
-                    .stream().map(DtoMapper::toTransactionDto).toList();
+                    .stream()
+                    .map(t -> {
+                        TransactionDto d = DtoMapper.toTransactionDto(t);
+                        d.setInclusionScope(scopeByTxId.get(t.getId()));
+                        return d;
+                    })
+                    .toList();
 
             SubCashDetailDto detail = SubCashDetailDto.builder()
                     .subCash(BankAccountService.toDto(subCash, agg))
@@ -194,5 +212,103 @@ public class SubCashController {
                 .assignedAt(a.getAssignedAt())
                 .assignedBy(a.getAssignedBy())
                 .build();
+    }
+
+    // ─────────────────── WP Sub-Cash Retroactive Inclusion ───────────────────
+
+    /**
+     * Sub-cash'in assigned entity'lerine ait ama henüz inclusion'da OLMAYAN
+     * tx'ler (eklenebilir tx'ler). Paginated + tarih filtreli.
+     */
+    @GetMapping("/available-tx")
+    public ResponseEntity<?> availableTx(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal
+                    com.bizboard.security.UserPrincipal principal,
+            @PathVariable UUID subCashId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+                    java.time.LocalDate from,
+            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+                    java.time.LocalDate to,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int offset,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "50") int limit) {
+        try {
+            com.bizboard.service.SubCashInclusionService.AvailableTxPage page =
+                    inclusionService.listAvailableTx(subCashId, from, to, offset, limit, principal.getId());
+            List<TransactionDto> items = page.items.stream()
+                    .map(DtoMapper::toTransactionDto).toList();
+            return ResponseEntity.ok(Map.of(
+                    "total", page.total,
+                    "offset", offset,
+                    "limit", limit,
+                    "items", items));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Sub-cash bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * RETROACTIVE bulk insert — kullanıcı UI'sından seçtiği tx'leri ekler.
+     * Body: {"transaction_ids": [uuid, uuid, ...]}
+     */
+    @PostMapping("/inclusions")
+    public ResponseEntity<?> addInclusions(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal
+                    com.bizboard.security.UserPrincipal principal,
+            @PathVariable UUID subCashId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            Object raw = body == null ? null : body.get("transaction_ids");
+            if (!(raw instanceof List<?> list) || list.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "transaction_ids zorunlu (boş olamaz)"));
+            }
+            List<UUID> txIds = new java.util.ArrayList<>();
+            for (Object o : list) {
+                if (o == null) continue;
+                try { txIds.add(UUID.fromString(o.toString())); }
+                catch (Exception ignored) { /* skip invalid */ }
+            }
+            com.bizboard.service.SubCashInclusionService.BulkInclusionResult r =
+                    inclusionService.bulkInsertRetroactive(subCashId, txIds, principal.getId());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("added", r.added, "skipped", r.skipped, "failed", r.failed));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Sub-cash bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Tek inclusion sil — manuel veya otomatik, fark etmez.
+     */
+    @DeleteMapping("/inclusions/{transactionId}")
+    public ResponseEntity<?> removeInclusion(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal
+                    com.bizboard.security.UserPrincipal principal,
+            @PathVariable UUID subCashId,
+            @PathVariable UUID transactionId) {
+        try {
+            boolean removed = inclusionService.removeInclusion(subCashId, transactionId, principal.getId());
+            if (!removed) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Inclusion bulunamadi"));
+            }
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Sub-cash bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }

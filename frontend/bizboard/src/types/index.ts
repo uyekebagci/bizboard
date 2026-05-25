@@ -196,6 +196,16 @@ export interface Transaction {
   // Joined
   category?: Category;
   business_name?: string;
+  /** WP Sub-Cash Retroactive Inclusion: sub-cash detail tx list context'i için. */
+  inclusion_scope?: "AUTOMATIC" | "RETROACTIVE" | null;
+}
+
+/** WP Sub-Cash Retroactive Inclusion: available-tx endpoint response. */
+export interface AvailableTxPage {
+  total: number;
+  offset: number;
+  limit: number;
+  items: Transaction[];
 }
 
 /** v1.6.3+: GET /api/pos/businesses cevabı — POS işlemi olan işletme özeti. */
@@ -542,6 +552,8 @@ export interface BankAccountTxRow {
   payment_method: string;
   pos_settled: boolean | null;
   pos_device_name: string | null;
+  /** WP Sub-Cash Retroactive Inclusion: sub-cash context'inde scope. */
+  inclusion_scope?: "AUTOMATIC" | "RETROACTIVE" | null;
 }
 
 export interface PosDeviceListItem {

@@ -17,12 +17,13 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, AlertTriangle, TrendingUp, Receipt, Plus, X, Trash2, Search, ChevronLeft, ChevronRight, BarChart3, CalendarRange } from "lucide-react";
+import { Loader2, AlertTriangle, TrendingUp, Receipt, Plus, X, Trash2, Search, ChevronLeft, ChevronRight, BarChart3, CalendarRange, Rewind } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn, trNormalize } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { SubCashDetail, SubCashEntityType, SubCashIncomeSummary } from "@/types";
+import { RetroactiveInclusionModal } from "./RetroactiveInclusionModal";
 
 // Period preset → from/to (YYYY-MM-DD)
 type PeriodPreset = "THIS_MONTH" | "LAST_MONTH" | "THIS_YEAR" | "LAST_30D";
@@ -71,6 +72,9 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [showAssignPicker, setShowAssignPicker] = useState(false);
   const [busyAssignId, setBusyAssignId] = useState<string | null>(null);
+  // WP Sub-Cash Retroactive Inclusion: modal + remove inclusion
+  const [showRetroactive, setShowRetroactive] = useState(false);
+  const [busyRemoveTxId, setBusyRemoveTxId] = useState<string | null>(null);
 
   // v1.7.x WP TODO f3b3cd2f + 7bebe2f8: Periyot geliri + breakdown
   const [period, setPeriod] = useState<PeriodPreset>("THIS_MONTH");
@@ -328,35 +332,98 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
         </section>
       )}
 
-      {/* Tx kartı (COALESCE) */}
+      {/* Tx kartı (inclusion table'dan) */}
       <section>
-        <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider mb-2 flex items-center gap-1">
-          <Receipt size={12} /> Bu Sub-Cash'e Route Edilen İşlemler ({data.transactions.length})
-        </h4>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider flex items-center gap-1">
+            <Receipt size={12} /> Bu Sub-Cash&apos;in İşlemleri ({data.transactions.length})
+          </h4>
+          <button
+            type="button"
+            onClick={() => setShowRetroactive(true)}
+            className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-500 text-white inline-flex items-center gap-1"
+          >
+            <Rewind size={11} />
+            Geri Dönük Ekle
+          </button>
+        </div>
         {data.transactions.length === 0 ? (
           <p className="text-xs text-surface-500 italic">
-            COALESCE(bank_account &gt; pos_device &gt; counterpart) ile bu sub-cash'e
-            düşen işlem yok.
+            Bu sub-cash&apos;e dahil edilmiş işlem yok. Yeni tx oluştururken
+            entity match olursa otomatik eklenir; eski tx&apos;ler için
+            &quot;Geri Dönük Ekle&quot; kullanın.
           </p>
         ) : (
           <div className="rounded-xl border border-surface-700 divide-y divide-surface-700 max-h-64 overflow-y-auto">
-            {data.transactions.map((t) => (
-              <div key={t.id} className="px-3 py-2 flex items-center justify-between gap-2 text-xs">
-                <div className="min-w-0">
-                  <p className="text-surface-200 truncate">{t.description || "—"}</p>
-                  <p className="text-[10px] text-surface-500">{t.date} · {t.payment_method}</p>
+            {data.transactions.map((t) => {
+              const isRetro = t.inclusion_scope === "RETROACTIVE";
+              const isAuto = t.inclusion_scope === "AUTOMATIC";
+              return (
+                <div key={t.id} className="px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-surface-200 truncate flex items-center gap-1.5">
+                      <span className="truncate">{t.description || "—"}</span>
+                      {isAuto && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-surface-700 text-surface-400 border border-surface-600">
+                          AUTO
+                        </span>
+                      )}
+                      {isRetro && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                          GERİ DÖNÜK
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-surface-500">{t.date} · {t.payment_method}</p>
+                  </div>
+                  <p className={cn(
+                    "font-medium shrink-0",
+                    t.direction === "INCOME" ? "text-emerald-300" : "text-red-300",
+                  )}>
+                    {t.direction === "INCOME" ? "+" : "−"}{formatCurrency(t.amount, t.currency || "TRY")}
+                  </p>
+                  <button
+                    type="button"
+                    title="Bu sub-cash'ten çıkar"
+                    disabled={busyRemoveTxId === t.id}
+                    onClick={async () => {
+                      if (!confirm("Bu işlemi sub-cash'ten çıkarmak istiyor musun?")) return;
+                      setBusyRemoveTxId(t.id);
+                      try {
+                        await api.delete(`/bank-accounts/${subCashId}/inclusions/${t.id}`);
+                        await refresh();
+                        onChange?.();
+                      } catch (err) {
+                        const msg = err instanceof ApiError ? err.message : "Çıkarma başarısız";
+                        alert(msg);
+                      } finally {
+                        setBusyRemoveTxId(null);
+                      }
+                    }}
+                    className="p-1 rounded-md text-surface-500 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50 shrink-0"
+                  >
+                    {busyRemoveTxId === t.id ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={11} />
+                    )}
+                  </button>
                 </div>
-                <p className={cn(
-                  "font-medium shrink-0",
-                  t.direction === "INCOME" ? "text-emerald-300" : "text-red-300",
-                )}>
-                  {t.direction === "INCOME" ? "+" : "−"}{formatCurrency(t.amount, t.currency || "TRY")}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
+
+      {/* WP Sub-Cash Retroactive Inclusion modal */}
+      {showRetroactive && (
+        <RetroactiveInclusionModal
+          subCashId={subCashId}
+          subCashName={data.sub_cash.name}
+          onClose={() => setShowRetroactive(false)}
+          onAdded={() => { void refresh(); onChange?.(); }}
+        />
+      )}
 
       {showAssignPicker && (
         <AssignmentPicker

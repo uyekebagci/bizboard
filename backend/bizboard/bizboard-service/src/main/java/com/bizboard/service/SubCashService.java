@@ -39,6 +39,8 @@ public class SubCashService {
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
     private final UserRepository userRepository;
+    /** WP Sub-Cash Retroactive Inclusion: income query inclusion table'dan okur. */
+    private final com.bizboard.repository.SubCashTxInclusionRepository inclusionRepository;
 
     // ─────────────────────── ASSIGN ───────────────────────
 
@@ -333,12 +335,31 @@ public class SubCashService {
                     .build();
         }
 
-        // Periyot içindeki tüm business tx'leri (kind != TRANSFER da contribute=0
-        // ama görsel olarak elenebilir — formülde 0 zaten).
-        List<Transaction> txs = transactionRepository
-                .findByBusinessIdAndDateBetween(bizId, effFrom, effTo);
+        // WP Sub-Cash Retroactive Inclusion: eski multi-attribution runtime
+        // query yerine inclusion table'dan oku. Sub-cash income artık YALNIZ
+        // sub_cash_tx_inclusion'da kayıtlı tx'leri sayar (AUTOMATIC tx create
+        // anında, RETROACTIVE kullanıcı manuel ekleyince).
+        Set<UUID> includedTxIds = inclusionRepository.findIncludedTxIdsBySubCashId(subCashId);
+        if (includedTxIds.isEmpty()) {
+            return com.bizboard.common.dto.SubCashIncomeSummaryDto.builder()
+                    .subCashId(subCashId)
+                    .fromDate(effFrom).toDate(effTo)
+                    .totalIncome(java.math.BigDecimal.ZERO)
+                    .txCount(0)
+                    .breakdownBySource(List.of())
+                    .byMonth(List.of())
+                    .build();
+        }
 
-        // Source breakdown — aggregate maps
+        // Periyot içindeki business tx'lerinden YALNIZ included olanlar.
+        List<Transaction> allInPeriod = transactionRepository
+                .findByBusinessIdAndDateBetween(bizId, effFrom, effTo);
+        List<Transaction> txs = new ArrayList<>(allInPeriod.size());
+        for (Transaction t : allInPeriod) {
+            if (includedTxIds.contains(t.getId())) txs.add(t);
+        }
+
+        // Source breakdown — aggregate maps (entity match'i hâlâ priority logic için kullanılır)
         Map<UUID, java.math.BigDecimal[]> bankAgg = new HashMap<>(); // {sum, count}
         Map<UUID, java.math.BigDecimal[]> posAgg = new HashMap<>();
         Map<UUID, java.math.BigDecimal[]> cpAgg = new HashMap<>();
@@ -349,14 +370,15 @@ public class SubCashService {
         int matchedTxCount = 0;
 
         for (Transaction t : txs) {
-            // Match çek
+            // Tx zaten included — entity match yine entity-bazlı breakdown için.
+            // Match yoksa (RETROACTIVE'de assignment sonradan kaldırılmış olabilir):
+            // hâlâ tx contribute eder ama herhangi bir source breakdown'ında yer almaz.
             UUID matchBank = (t.getBankAccount() != null && bankIds.contains(t.getBankAccount().getId()))
                     ? t.getBankAccount().getId() : null;
             UUID matchPos = (t.getPosDevice() != null && posIds.contains(t.getPosDevice().getId()))
                     ? t.getPosDevice().getId() : null;
             UUID matchCp = (t.getTargetCounterpart() != null && cpIds.contains(t.getTargetCounterpart().getId()))
                     ? t.getTargetCounterpart().getId() : null;
-            if (matchBank == null && matchPos == null && matchCp == null) continue;
 
             java.math.BigDecimal contrib = incomeValue(t);
             if (contrib.signum() == 0) {

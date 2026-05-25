@@ -45,6 +45,8 @@ public class TransactionService {
     private final com.bizboard.repository.PosDeviceRepository posDeviceRepository;
     // v1.6.23.4 (sandbox-test): HESAPDAN ödemeleri için bank_account binding
     private final com.bizboard.repository.BankAccountRepository bankAccountRepository;
+    /** WP Sub-Cash Retroactive Inclusion: tx create/update sonrası auto-include hook. */
+    private final SubCashInclusionService subCashInclusionService;
 
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
@@ -276,6 +278,12 @@ public class TransactionService {
                 // v1.6.19 (WP-2): backdated tx için UI rozet/renk için highlight set.
                 backdated ? AuditAction.HIGHLIGHT_BACKDATED : null);
 
+        // WP Sub-Cash Retroactive Inclusion: tx oluşturulduktan sonra
+        // entity'leri (counterpart/POS/bank) sub-cash assignment'la match'lerse
+        // her bir sub-cash için AUTOMATIC inclusion kaydı eklenir. Spec:
+        // mevcut tx'ler için backfill YOK; sadece yeni tx'ler auto-include.
+        subCashInclusionService.autoIncludeIfApplicable(transaction);
+
         return DtoMapper.toTransactionDto(transaction);
     }
 
@@ -296,6 +304,14 @@ public class TransactionService {
         final java.math.BigDecimal oldAmount = transaction.getAmount();
         final TransactionDirection oldDirection = transaction.getDirection();
         final com.bizboard.common.entity.BankAccount oldBank = transaction.getBankAccount();
+
+        // WP Sub-Cash Retroactive Inclusion: entity ID snapshot — update sonrası
+        // değişim olduysa eski inclusion'lar silinip yenisi hesaplanacak.
+        final UUID oldCounterpartId = transaction.getTargetCounterpart() != null
+                ? transaction.getTargetCounterpart().getId() : null;
+        final UUID oldPosDeviceId = transaction.getPosDevice() != null
+                ? transaction.getPosDevice().getId() : null;
+        final UUID oldBankAccountIdForInclusion = oldBank != null ? oldBank.getId() : null;
 
         // v1.7.0-beta+ (Bankalar WP TODO 317415bb): POS settled tx için
         // eski net'i yakala — pos_rate veya amount değişirse bank balance
@@ -548,6 +564,11 @@ public class TransactionService {
                 meta,
                 // v1.6.19 (WP-2): değişiklik varsa CORRECTION highlight.
                 changes.isEmpty() ? null : AuditAction.HIGHLIGHT_CORRECTION);
+
+        // WP Sub-Cash Retroactive Inclusion: entity ID değişimi varsa inclusion'lar
+        // yeniden hesaplansın (eski sil + yeniden hesapla).
+        subCashInclusionService.onTransactionUpdated(
+                transaction, oldCounterpartId, oldPosDeviceId, oldBankAccountIdForInclusion);
 
         TransactionDto dto = DtoMapper.toTransactionDto(transaction);
         dto.setBusinessName(transaction.getBusiness().getName());

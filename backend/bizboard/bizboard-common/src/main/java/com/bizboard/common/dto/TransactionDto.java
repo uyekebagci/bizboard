@@ -162,4 +162,12 @@ public class TransactionDto {
 
     @JsonProperty("business_name")
     private String businessName;
+
+    /**
+     * WP Sub-Cash Retroactive Inclusion: tx bir sub-cash detail listesinde
+     * gösterildiğinde inclusion'ın scope'u (AUTOMATIC/RETROACTIVE).
+     * Sub-cash context dışında null.
+     */
+    @JsonProperty("inclusion_scope")
+    private String inclusionScope;
 }
