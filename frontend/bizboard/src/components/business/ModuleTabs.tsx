@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Wallet, Package, Users, FolderKanban, FileText,
   CalendarCheck, CarFront, UtensilsCrossed, UserCircle,
@@ -49,12 +49,24 @@ export function ModuleTabs({ business }: Props) {
   const { profile, triggerRefresh } = useAppStore();
   const isAdmin = profile?.role === "admin";
 
-  const enabledModules =
-    business.modules?.filter((m) => m.is_enabled) ?? [];
+  // v1.7.0.x: Notlar (notes) modülü her zaman ilk sırada sabit ve
+  // sayfa açılışında default aktif tab.
+  const enabledModules = useMemo(() => {
+    const all = business.modules?.filter((m) => m.is_enabled) ?? [];
+    // Notes'u öne çek — diğerleri DB sırasını korur.
+    return [...all].sort((a, b) => {
+      if (a.module === "notes" && b.module !== "notes") return -1;
+      if (a.module !== "notes" && b.module === "notes") return 1;
+      return 0;
+    });
+  }, [business.modules]);
 
-  const [activeTab, setActiveTab] = useState<ModuleType>(
-    enabledModules[0]?.module || "finance"
-  );
+  const [activeTab, setActiveTab] = useState<ModuleType>(() => {
+    // Sayfa açılışında Notlar varsa onu aç; yoksa ilk enabled; o da yoksa "notes".
+    const hasNotes = enabledModules.some((m) => m.module === "notes");
+    if (hasNotes) return "notes";
+    return enabledModules[0]?.module || "notes";
+  });
   const [showAddModal, setShowAddModal] = useState(false);
 
   if (enabledModules.length === 0 && !isAdmin) {

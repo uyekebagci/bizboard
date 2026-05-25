@@ -141,10 +141,17 @@ public class BusinessService {
                 .metadata(metadata)
                 .build();
 
-        // Create modules — yalnız kullanıcının seçtikleri (master tip'ten geliş yok)
-        List<String> moduleNames = request.getModules() != null && !request.getModules().isEmpty()
-                ? request.getModules()
-                : List.of("finance"); // fallback: en azından finans modülü
+        // Create modules — yalnız kullanıcının seçtikleri (master tip'ten geliş yok).
+        // v1.7.0.x: NOTES her zaman default — kullanıcı seçmese de eklenir.
+        java.util.LinkedHashSet<String> moduleNames = new java.util.LinkedHashSet<>();
+        moduleNames.add("notes"); // her işletmede default Notlar modülü (ilk sıra)
+        if (request.getModules() != null) {
+            request.getModules().forEach(m -> moduleNames.add(m.toLowerCase(java.util.Locale.ENGLISH)));
+        }
+        if (moduleNames.size() == 1) {
+            // Sadece notes varsa finans'ı da default ekle (geriye dönük uyum).
+            moduleNames.add("finance");
+        }
         for (String moduleName : moduleNames) {
             ModuleType moduleType = ModuleType.valueOf(moduleName.toUpperCase(java.util.Locale.ENGLISH));
             BusinessModule module = BusinessModule.builder()
