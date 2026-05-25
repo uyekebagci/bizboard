@@ -83,12 +83,21 @@ public class PosDeviceManagementService {
     public PosDeviceDto create(CreatePosDeviceRequest req, UUID actorUserId) {
         User actor = lookupActor(actorUserId);
 
-        if (req.getBusinessId() == null) {
-            throw new IllegalArgumentException("business_id zorunlu");
+        // business_id gönderilmemişse kullanıcının erişebildiği tek işletmeyi otomatik seç.
+        final UUID resolvedBusinessId;
+        if (req.getBusinessId() != null) {
+            resolvedBusinessId = req.getBusinessId();
+        } else {
+            List<UUID> accessible = accessGuard.accessibleBusinessIds(actorUserId);
+            if (accessible.size() == 1) {
+                resolvedBusinessId = accessible.get(0);
+            } else {
+                throw new IllegalArgumentException("business_id zorunlu (birden fazla işletmeye erişiminiz var)");
+            }
         }
-        Business business = businessRepository.findById(req.getBusinessId())
+        Business business = businessRepository.findById(resolvedBusinessId)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "business_id bulunamadi: " + req.getBusinessId()));
+                        "business_id bulunamadi: " + resolvedBusinessId));
         accessGuard.assertCanAccessBusiness(actorUserId, business.getId());
 
         Counterpart owner = null;

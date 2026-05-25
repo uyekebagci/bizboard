@@ -16,9 +16,9 @@ import java.util.UUID;
 public class CreatePosDeviceRequest {
 
     /**
-     * v1.6.23.20 (Security WP / arch-rules §1.1): tenant binding zorunlu.
+     * v1.6.23.20 (Security WP / arch-rules §1.1): tenant binding.
+     * Null gönderilirse servis, kullanıcının tek erişebildiği işletmeyi otomatik seçer.
      */
-    @NotNull
     @JsonProperty("business_id")
     private UUID businessId;
 
