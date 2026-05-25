@@ -73,6 +73,10 @@ export function AddTransactionForm({
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
+
+  // WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet
+  const [saveAsQuickAction, setSaveAsQuickAction] = useState(false);
+  const [quickActionName, setQuickActionName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     preselectedPaymentMethod || "NAKIT",
   );
@@ -227,6 +231,32 @@ export function AddTransactionForm({
           } catch {
             /* dosya linklemesi başarısız olsa bile devam et */
           }
+        }
+      }
+
+      // WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlem olarak kaydet
+      if (saveAsQuickAction && quickActionName.trim()) {
+        try {
+          await api.post("/quick-actions", {
+            business_id: businessId,
+            name: quickActionName.trim(),
+            tx_template: {
+              direction,
+              kind: "NORMAL",
+              amount: parseMoneyInput(amount),
+              payment_method: paymentMethod,
+              bank_account_id: null, // AddTransactionForm bank seçimi yok
+              pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
+              counterpart_id: targetCounterpartId || null,
+              applied_pos_rate: posRateValue,
+              applied_our_commission_rate: ourRateValue,
+              category_id: categoryId || null,
+              description: description || null,
+            },
+          });
+        } catch (qaErr: unknown) {
+          // tx başarılı oldu ama hızlı işlem kayıt başarısız — yumuşak hata.
+          logger.warn("api", "quick-action save failed (tx succeeded)", { err: String(qaErr) });
         }
       }
 
@@ -622,6 +652,36 @@ export function AddTransactionForm({
         />
       </div>
 
+      {/* WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet */}
+      <div className="rounded-xl border border-surface-600 bg-surface-700/40 p-3 space-y-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={saveAsQuickAction}
+            onChange={(e) => setSaveAsQuickAction(e.target.checked)}
+            className="w-4 h-4 rounded border-surface-500 bg-surface-800 accent-brand-500 cursor-pointer"
+          />
+          <span className="text-sm font-medium text-surface-200">
+            ⚡ Bu işlemi hızlı işlemlere kaydet
+          </span>
+        </label>
+        {saveAsQuickAction && (
+          <div className="pl-6 space-y-1">
+            <input
+              type="text"
+              value={quickActionName}
+              onChange={(e) => setQuickActionName(e.target.value)}
+              placeholder='Örn: "Bi Dünya 300K POS", "Aylık Kira"'
+              maxLength={100}
+              className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <p className="text-[10px] text-surface-400">
+              Dashboard widget&apos;ından tek tıkla tekrar oluşturulabilir. Limit: 12/işletme.
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Error */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
@@ -646,7 +706,11 @@ export function AddTransactionForm({
         )}
         <button
           type="submit"
-          disabled={isSubmitting || !businessId || !amount || success}
+          disabled={
+            isSubmitting || !businessId || !amount || success ||
+            // WP e4dc5271: toggle açıkken ad boş ise submit bloklu
+            (saveAsQuickAction && !quickActionName.trim())
+          }
           className={cn(
             "py-3 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50",
             direction === "income"

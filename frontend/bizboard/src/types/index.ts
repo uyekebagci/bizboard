@@ -1295,3 +1295,53 @@ export interface TransferDto {
   /** Bakiye yetersiz uyarısı (200 + warning). Null = OK. */
   low_balance_warning: string | null;
 }
+
+// ─────────── WP e4dc5271 (Beta v1.4): Hızlı İşlemler ───────────
+
+/**
+ * tx_template JSONB içeriği — backend Map<String, Object>'ten geliyor.
+ * Tüm alanlar opsiyonel (execute zamanı override ile tamamlanabilir),
+ * ama direction + payment_method (NORMAL için) backend tarafında zorunlu.
+ */
+export interface QuickActionTemplate {
+  direction?: "income" | "expense";
+  kind?: "NORMAL" | "TRANSFER";
+  amount?: number;
+  payment_method?: "POS" | "NAKIT" | "HESAPDAN";
+  bank_account_id?: string | null;
+  pos_device_id?: string | null;
+  counterpart_id?: string | null;
+  applied_pos_rate?: number | null;
+  applied_our_commission_rate?: number | null;
+  category?: string | null;
+  category_id?: string | null;
+  description?: string | null;
+  // Transfer (kind=TRANSFER) için ek alanlar
+  from_bank_account_id?: string | null;
+  to_bank_account_id?: string | null;
+  to_external_name?: string | null;
+}
+
+export interface QuickActionListItem {
+  id: string;
+  user_id: string;
+  business_id: string;
+  business_name: string | null;
+  name: string;
+  tx_template: QuickActionTemplate;
+  icon: string | null;
+  color: string | null;
+  order_index: number;
+  usage_count: number;
+  last_used_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExecuteQuickActionResponse {
+  quick_action: QuickActionListItem;
+  /** NORMAL kind sonucu */
+  transaction?: Transaction;
+  /** TRANSFER kind sonucu */
+  transfer?: TransferDto;
+}

@@ -20,6 +20,7 @@ import { WidgetDetailModal } from "./WidgetDetailModal";
 import { BankAccountDetailContent } from "@/components/bank/BankAccountDetailContent";
 import { SubCashDetailContent } from "@/components/bank/SubCashDetailContent";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
+import { QuickActionsWidget } from "./QuickActionsWidget";
 
 interface Props {
   data: ConsolidatedDashboard;
@@ -60,6 +61,10 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
         <ConsolidatedPositionCard d={data} />
         <TodayClosingCard d={data} onCloseDay={onCloseDay} />
       </div>
+
+      {/* WP e4dc5271 (Beta v1.4) TODO 6ae21ec4:
+          Hızlı İşlemler widget — Row 1 (Konsolide + Bugünkü Kasa) ALTINDA. */}
+      <QuickActionsWidget businessId={data.business_id} />
 
       {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">

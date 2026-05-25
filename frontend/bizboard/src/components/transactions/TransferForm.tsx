@@ -48,6 +48,10 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
 
+  // WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet (TRANSFER)
+  const [saveAsQuickAction, setSaveAsQuickAction] = useState(false);
+  const [quickActionName, setQuickActionName] = useState("");
+
   useEffect(() => {
     api.get<BankAccountListItem[]>("/bank-accounts")
       .then((r) => setAccounts(r || []))
@@ -90,6 +94,28 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         date,
         description: description.trim() || null,
       });
+
+      // WP e4dc5271 (Beta v1.4): Hızlı işlem olarak kaydet (TRANSFER)
+      if (saveAsQuickAction && quickActionName.trim() && fromAcc) {
+        try {
+          await api.post("/quick-actions", {
+            business_id: fromAcc.business_id,
+            name: quickActionName.trim(),
+            tx_template: {
+              kind: "TRANSFER",
+              direction: "expense", // transfer kaynak hesaptan çıkış
+              amount: parsedAmount,
+              payment_method: "HESAPDAN",
+              from_bank_account_id: fromId,
+              to_external_name: trimmedTarget,
+              description: description.trim() || null,
+            },
+          });
+        } catch (qaErr) {
+          logger.warn("api", "quick-action save failed (transfer succeeded)", { err: String(qaErr) });
+        }
+      }
+
       triggerRefresh();
       if (dto.low_balance_warning) setWarning(dto.low_balance_warning);
       onSuccess?.(dto);
@@ -229,6 +255,36 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         />
       </div>
 
+      {/* WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet */}
+      <div className="rounded-xl border border-surface-600 bg-surface-700/40 p-3 space-y-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={saveAsQuickAction}
+            onChange={(e) => setSaveAsQuickAction(e.target.checked)}
+            className="w-4 h-4 rounded border-surface-500 bg-surface-800 accent-brand-500 cursor-pointer"
+          />
+          <span className="text-sm font-medium text-surface-200">
+            ⚡ Bu transferi hızlı işlemlere kaydet
+          </span>
+        </label>
+        {saveAsQuickAction && (
+          <div className="pl-6 space-y-1">
+            <input
+              type="text"
+              value={quickActionName}
+              onChange={(e) => setQuickActionName(e.target.value)}
+              placeholder='Örn: "Aylık Kira Ödemesi"'
+              maxLength={100}
+              className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <p className="text-[10px] text-surface-400">
+              Sonraki sefer tek tıkla aynı transferi tekrar oluştur.
+            </p>
+          </div>
+        )}
+      </div>
+
       {warning && (
         <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
           {warning}
@@ -253,7 +309,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         )}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || (saveAsQuickAction && !quickActionName.trim())}
           className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
