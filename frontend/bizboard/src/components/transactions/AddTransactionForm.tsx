@@ -26,6 +26,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart, PosDeviceListItem } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { QuickCounterpartModal } from "@/components/counterparts/QuickCounterpartModal";
 
 export interface AddTransactionFormProps {
   /** İşletme önceden seçili — modal "/business/[id]" pano'sundan açılırken kullanılır. */
@@ -82,6 +83,7 @@ export function AddTransactionForm({
 
   const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
   const [targetCounterpartId, setTargetCounterpartId] = useState<string>("");
+  const [showCreateCounterpart, setShowCreateCounterpart] = useState(false);
 
   const [posDevices, setPosDevices] = useState<PosDeviceListItem[]>([]);
   const [posDeviceId, setPosDeviceId] = useState<string>("");
@@ -243,6 +245,7 @@ export function AddTransactionForm({
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className={cn("space-y-5", compact && "space-y-4")}>
       {/* Success Banner */}
       {success && (
@@ -512,7 +515,7 @@ export function AddTransactionForm({
           ]}
           addOption={{
             label: "+ Yeni Karşı Taraf Ekle",
-            onClick: () => { window.location.href = "/dashboard/counterparts"; },
+            onClick: () => setShowCreateCounterpart(true),
           }}
         />
       </div>
@@ -666,5 +669,19 @@ export function AddTransactionForm({
         </button>
       </div>
     </form>
+
+    {showCreateCounterpart && (
+      <QuickCounterpartModal
+        businessId={businessId}
+        onClose={() => setShowCreateCounterpart(false)}
+        onCreated={(c) => {
+          // Listeye ekle + otomatik seç
+          setCounterparts((prev) => [...prev, c]);
+          setTargetCounterpartId(c.id);
+          setShowCreateCounterpart(false);
+        }}
+      />
+    )}
+    </>
   );
 }

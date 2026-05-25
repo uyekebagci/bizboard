@@ -341,8 +341,8 @@ export default function AllTransactionsPage() {
 
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteTarget(tx); }}
-                  className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-50
-                             opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                  className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-500/10
+                             opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0"
                 >
                   <Trash2 size={16} />
                 </button>
