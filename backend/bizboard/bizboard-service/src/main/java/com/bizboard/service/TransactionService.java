@@ -774,6 +774,49 @@ public class TransactionService {
         // Kapanmış döneme ait mi?
         boolean wasClosed = ledgerService.isClosedPeriod(txDate);
 
+        // v1.7.0.x (BUG fix): Silinen tx'in banka bakiyesine etkisini reverse et.
+        // Eksik reversal yüzünden settled POS tx silinince bank balance "şişip
+        // kalıyordu". Üç durum:
+        //   1) HESAPDAN/NAKIT tx + bankAccount → create'de ±amount uygulanmış
+        //      idi; silerken delta'yı geri çevir (income → -amount, expense → +amount).
+        //   2) POS tx + posSettled=true + bankAccount → settle anında +net
+        //      eklenmişti; silerken -net.
+        //   3) Diğer: dokunmaya gerek yok (balance etkisi yok).
+        com.bizboard.common.entity.BankAccount txBank = transaction.getBankAccount();
+        String txPm = transaction.getPaymentMethod();
+        java.math.BigDecimal reverseDelta = null;
+        if (txBank != null) {
+            if (("HESAPDAN".equals(txPm) || "NAKIT".equals(txPm))) {
+                // Direction'a göre apply edilmiş delta'yı tersle.
+                java.math.BigDecimal applied = transaction.getAmount();
+                if (transaction.getDirection() == TransactionDirection.EXPENSE) {
+                    applied = applied.negate();
+                }
+                reverseDelta = applied.negate();
+            } else if ("POS".equalsIgnoreCase(txPm)
+                    && Boolean.TRUE.equals(transaction.getPosSettled())) {
+                // Settled POS net = amount × (1 - rate/100). Negatif (geri çek).
+                java.math.BigDecimal amt = transaction.getAmount();
+                java.math.BigDecimal rate = transaction.getAppliedPosRate() != null
+                        ? transaction.getAppliedPosRate()
+                        : (transaction.getPosRate() != null
+                                ? transaction.getPosRate() : java.math.BigDecimal.ZERO);
+                java.math.BigDecimal commission = amt.multiply(rate)
+                        .divide(java.math.BigDecimal.valueOf(100), 2,
+                                java.math.RoundingMode.HALF_UP);
+                java.math.BigDecimal net = amt.subtract(commission);
+                reverseDelta = net.negate();
+            }
+            if (reverseDelta != null) {
+                java.math.BigDecimal current = txBank.getCurrentBalance() != null
+                        ? txBank.getCurrentBalance() : java.math.BigDecimal.ZERO;
+                txBank.setCurrentBalance(current.add(reverseDelta));
+                bankAccountRepository.save(txBank);
+                log.info("[tx-delete] bank balance reversed: bank={} delta={} (tx pm={} settled={})",
+                        txBank.getName(), reverseDelta, txPm, transaction.getPosSettled());
+            }
+        }
+
         // Transaction'ı sil
         transactionRepository.delete(transaction);
 
