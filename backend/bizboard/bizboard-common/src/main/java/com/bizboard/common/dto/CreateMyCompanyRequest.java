@@ -46,4 +46,8 @@ public class CreateMyCompanyRequest {
 
     @JsonProperty("contact_email")
     private String contactEmail;
+
+    /** v1.7.x WP TODO ba04debb: opsiyonel grup. null veya geçerli group_id. */
+    @JsonProperty("group_id")
+    private java.util.UUID groupId;
 }

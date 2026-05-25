@@ -52,6 +52,19 @@ public class MyCompanyDto {
     @JsonProperty("is_default")
     private boolean isDefault;
 
+    // v1.7.x WP TODO ba04debb: opsiyonel grup
+    @JsonProperty("group_id")
+    private UUID groupId;
+
+    @JsonProperty("group_name")
+    private String groupName;
+
+    @JsonProperty("group_color")
+    private String groupColor;
+
+    @JsonProperty("group_icon")
+    private String groupIcon;
+
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 

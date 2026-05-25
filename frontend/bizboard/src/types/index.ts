@@ -999,6 +999,11 @@ export interface MyCompany {
   contact_phone: string | null;
   contact_email: string | null;
   is_default: boolean;
+  // v1.7.x: opsiyonel grup
+  group_id?: string | null;
+  group_name?: string | null;
+  group_color?: string | null;
+  group_icon?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -1058,6 +1063,29 @@ export interface CounterpartStatement {
   total_payable: number;
   entry_count: number;
   entries: CounterpartStatementEntry[];
+}
+
+// ──────────────────────────────────────────────────────────────────
+// v1.7.x WP 8b961444 TODO ba04debb: Firmalarım (MyCompany) refactor
+// ──────────────────────────────────────────────────────────────────
+
+export interface MyCompanyGroup {
+  id: string;
+  name: string;
+  color: string | null;
+  icon: string | null;
+  order_index: number;
+  firm_count: number;
+  created_at: string;
+}
+
+export interface MyCompanyAccessUser {
+  access_id: string;
+  user_id: string;
+  username: string;
+  full_name: string | null;
+  granted_at: string;
+  granted_by_username: string | null;
 }
 
 // ──────────────────────────────────────────────────────────────────

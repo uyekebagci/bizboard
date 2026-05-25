@@ -57,6 +57,8 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/cekler",           label: "Cekler",        icon: FileText },
   { href: "/dashboard/inventory",        label: "Envanter",      icon: Package },
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3 },
+  // v1.7.x WP 8b961444: Firmalarım — admin tüm firmaları yönetir, non-admin yalnız erişim verilenleri görür.
+  { href: "/dashboard/firmalarim",       label: "Firmalarim",    icon: Building2 },
   { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck },
   { href: "/dashboard/kisiler",          label: "Kisiler",       icon: User },
   { href: "/dashboard/add-transaction",  label: "Islem Ekle",    icon: Receipt },

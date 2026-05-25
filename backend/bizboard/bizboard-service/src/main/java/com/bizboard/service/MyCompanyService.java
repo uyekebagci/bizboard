@@ -4,10 +4,13 @@ import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.CreateMyCompanyRequest;
 import com.bizboard.common.dto.MyCompanyDto;
 import com.bizboard.common.entity.MyCompany;
+import com.bizboard.common.entity.MyCompanyGroup;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.CompanyType;
 import com.bizboard.common.util.TaxIdValidator;
+import com.bizboard.repository.MyCompanyGroupRepository;
 import com.bizboard.repository.MyCompanyRepository;
+import com.bizboard.repository.MyCompanyUserAccessRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,16 +39,37 @@ public class MyCompanyService {
     private final MyCompanyRepository repository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    // v1.7.x WP TODO ba04debb: groups + access
+    private final MyCompanyGroupRepository groupRepository;
+    private final MyCompanyUserAccessRepository accessRepository;
 
     @Transactional(readOnly = true)
     public List<MyCompanyDto> list() {
-        return repository.findAll().stream().map(this::toDto).toList();
+        return repository.findAllByOrderByLegalNameAsc().stream().map(this::toDto).toList();
+    }
+
+    /**
+     * v1.7.x WP TODO 113bbe5b: erişim-filtreli liste.
+     * Admin → tüm firmalar. Non-admin → sadece my_company_user_access kayıtlı olanlar.
+     */
+    @Transactional(readOnly = true)
+    public List<MyCompanyDto> listForUser(UUID userId, boolean isAdmin) {
+        if (isAdmin) return list();
+        List<UUID> ids = accessRepository.findAccessibleMyCompanyIds(userId);
+        if (ids.isEmpty()) return List.of();
+        return repository.findByIdInOrderByLegalNameAsc(ids).stream().map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
     public MyCompanyDto get(UUID id) {
         return toDto(repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Firma bulunamadi")));
+    }
+
+    /** v1.7.x: non-admin için erişim kontrolü helper. */
+    @Transactional(readOnly = true)
+    public List<UUID> accessibleIds(UUID userId) {
+        return accessRepository.findAccessibleMyCompanyIds(userId);
     }
 
     @Transactional
@@ -55,6 +79,13 @@ public class MyCompanyService {
             repository.findByTaxId(req.getTaxId()).ifPresent(existing -> {
                 throw new IllegalArgumentException("Bu vergi numarasi zaten kayitli: " + existing.getLegalName());
             });
+        }
+
+        // v1.7.x: opsiyonel group_id
+        MyCompanyGroup group = null;
+        if (req.getGroupId() != null) {
+            group = groupRepository.findById(req.getGroupId())
+                    .orElseThrow(() -> new IllegalArgumentException("Grup bulunamadi: " + req.getGroupId()));
         }
 
         MyCompany c = MyCompany.builder()
@@ -71,6 +102,7 @@ public class MyCompanyService {
                 .contactPhone(blankToNull(req.getContactPhone()))
                 .contactEmail(blankToNull(req.getContactEmail()))
                 .isDefault(false)
+                .group(group)
                 .build();
 
         c = repository.save(c);
@@ -163,6 +195,23 @@ public class MyCompanyService {
             changes.put("contactEmail", "changed");
             c.setContactEmail(blankToNull(req.getContactEmail()));
         }
+        // v1.7.x: group_id update — null = gruplanmamış'a düşür
+        if (req.getGroupId() != null || !Objects.equals(
+                c.getGroup() != null ? c.getGroup().getId() : null, req.getGroupId())) {
+            UUID newGroupId = req.getGroupId();
+            UUID oldGroupId = c.getGroup() != null ? c.getGroup().getId() : null;
+            if (!Objects.equals(oldGroupId, newGroupId)) {
+                MyCompanyGroup newGroup = null;
+                if (newGroupId != null) {
+                    newGroup = groupRepository.findById(newGroupId)
+                            .orElseThrow(() -> new IllegalArgumentException("Grup bulunamadi: " + newGroupId));
+                }
+                changes.put("groupId", Map.of(
+                        "from", oldGroupId != null ? oldGroupId.toString() : "null",
+                        "to", newGroupId != null ? newGroupId.toString() : "null"));
+                c.setGroup(newGroup);
+            }
+        }
 
         c = repository.save(c);
         User actor = lookupActor(actorUserId);
@@ -231,6 +280,7 @@ public class MyCompanyService {
     }
 
     public MyCompanyDto toDto(MyCompany c) {
+        MyCompanyGroup g = c.getGroup();
         return MyCompanyDto.builder()
                 .id(c.getId())
                 .legalName(c.getLegalName())
@@ -246,6 +296,10 @@ public class MyCompanyService {
                 .contactPhone(c.getContactPhone())
                 .contactEmail(c.getContactEmail())
                 .isDefault(c.isDefault())
+                .groupId(g != null ? g.getId() : null)
+                .groupName(g != null ? g.getName() : null)
+                .groupColor(g != null ? g.getColor() : null)
+                .groupIcon(g != null ? g.getIcon() : null)
                 .createdAt(c.getCreatedAt())
                 .updatedAt(c.getUpdatedAt())
                 .build();

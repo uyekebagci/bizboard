@@ -74,6 +74,14 @@ public class MyCompany {
     @Builder.Default
     private boolean isDefault = false;
 
+    /**
+     * v1.7.x WP 8b961444 TODO ba04debb: opsiyonel grup atama.
+     * ON DELETE SET NULL — grup silinirse firm null'a düşer (gruplanmamış).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private MyCompanyGroup group;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
