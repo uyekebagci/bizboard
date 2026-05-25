@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -69,6 +70,13 @@ public class SubCashController {
      * v1.6.23.27 (TODO 85a7e425 + 31c441cb): Sub-cash detay aggregate.
      * Balance kartı + assignment listesi + tx listesi tek round-trip.
      */
+    /**
+     * v1.7.0.x (prod hotfix): @Transactional eklendi — prod open-in-view=false
+     * olduğu için bankAccountRepository.findById sonrası subCash.getBusiness()
+     * lazy proxy erişimi LazyInitializationException atıyordu (kullanıcıya 401
+     * gibi görünüyordu, gerçekte 500).
+     */
+    @Transactional(readOnly = true)
     @GetMapping("/sub-cash-detail")
     public ResponseEntity<?> detail(
             @AuthenticationPrincipal UserPrincipal principal,
