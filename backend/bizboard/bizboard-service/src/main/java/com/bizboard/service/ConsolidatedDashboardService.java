@@ -464,9 +464,16 @@ public class ConsolidatedDashboardService {
         return d.getCounterparty();
     }
 
+    /**
+     * v1.7.0.x (BUG fix): Parsiyel ödeme sonrası alacak/borç widget'ı eski
+     * orijinal tutarı gösteriyordu. Kullanıcı bir alacağa 1.48M tahsilat aldı,
+     * debt.remaining_amount düştü ama widget yine debt.amount sumladığı için
+     * stale görünüyordu. Doğru davranış: remaining_amount kullan; null ise
+     * (legacy data, parsiyel ödeme öncesi kayıt) amount fallback.
+     */
     private static BigDecimal sumDebt(List<Debt> debts) {
         return debts.stream()
-                .map(Debt::getAmount)
+                .map(d -> d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount())
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
