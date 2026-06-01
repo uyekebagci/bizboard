@@ -76,9 +76,15 @@ public class ConsolidatedDashboardService {
                 .map(BankAccount::getCurrentBalance)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // v1.7.0.x (BUG fix, defansif): SUB_CASH/MAIN_CASH bakiyeleri assigned
+        // bank'lerin aggregate'i — bank'lerin kendileri zaten toplamda var.
+        // Explicit CHECKING/SAVINGS filter ile çift sayım riskini sıfırla.
+        // (Şu an current_balance=0 ile teknik olarak doğru sonuç dönüyor ama
+        // ileride değişebilir; explicit filter daha güvenli.)
         BigDecimal totalBankBalance = banks.stream()
                 .filter(b -> b.getType() != null
-                        && !"CASH_HOLDER".equals(b.getType().name()))
+                        && ("CHECKING".equals(b.getType().name())
+                            || "SAVINGS".equals(b.getType().name())))
                 .map(BankAccount::getCurrentBalance)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

@@ -89,8 +89,13 @@ export function FirmDetailModal({
       .finally(() => setRelatedLoading(false));
   }, [firm.id]);
 
+  // v1.7.0.x (BUG fix): SUB_CASH/MAIN_CASH current_balance assigned bank
+  // aggregate'idir — fiziksel hesaplarla beraber toplarsak çift sayım olur.
+  // Yalnız CHECKING/SAVINGS/CASH_HOLDER fiziksel para tutar.
   const totalBankBalance = useMemo(
-    () => relatedBanks.reduce((sum, b) => sum + (b.current_balance ?? 0), 0),
+    () => relatedBanks
+      .filter((b) => b.type === "CHECKING" || b.type === "SAVINGS" || b.type === "CASH_HOLDER")
+      .reduce((sum, b) => sum + (b.current_balance ?? 0), 0),
     [relatedBanks],
   );
 

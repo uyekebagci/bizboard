@@ -141,7 +141,15 @@ export default function HesaplarPage() {
 
   const activeFiltered = filtered.filter((a) => a.is_active);
   const inactiveFiltered = filtered.filter((a) => !a.is_active);
-  const totalActive = activeFiltered.reduce((sum, a) => sum + (a.current_balance || 0), 0);
+  // v1.7.0.x (BUG fix): SUB_CASH ve MAIN_CASH'in current_balance'ı assigned
+  // bank'lerin aggregate'idir — bunlar zaten CHECKING/SAVINGS/CASH_HOLDER
+  // satırlarında ayrı sayılıyor. Topluya katarsak çift sayım olur. Sub-cash
+  // INVARIANT: Σ sub.aggregate + unassigned.aggregate == MAIN.aggregate
+  // (TODO 73dd2694). Toplam yalnız fiziksel para tutan satırlardan hesaplanır.
+  const PHYSICAL_TYPES: ReadonlyArray<BankAccountType> = ["CHECKING", "SAVINGS", "CASH_HOLDER"];
+  const physicalActive = activeFiltered.filter((a) => PHYSICAL_TYPES.includes(a.type));
+  const physicalInactive = inactiveFiltered.filter((a) => PHYSICAL_TYPES.includes(a.type));
+  const totalActive = physicalActive.reduce((sum, a) => sum + (a.current_balance || 0), 0);
 
   return (
     <div className="space-y-5 pb-24">
@@ -173,11 +181,11 @@ export default function HesaplarPage() {
       <section className="grid grid-cols-3 gap-3">
         <div className="card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Aktif Hesap</p>
-          <p className="mt-1 text-lg font-bold text-white">{activeFiltered.length}</p>
+          <p className="mt-1 text-lg font-bold text-white">{physicalActive.length}</p>
         </div>
         <div className="card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Pasif Hesap</p>
-          <p className="mt-1 text-lg font-bold text-surface-400">{inactiveFiltered.length}</p>
+          <p className="mt-1 text-lg font-bold text-surface-400">{physicalInactive.length}</p>
         </div>
         <div className="card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Toplam Bakiye</p>
