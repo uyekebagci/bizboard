@@ -41,6 +41,17 @@ export interface AddTransactionFormProps {
   onCancel?: () => void;
   /** Modal içinde mi render ediliyor? Submit sonrası router.back() yapma. */
   compact?: boolean;
+  /**
+   * v1.7.0.x dedicated page: direction toggle'ı gizle ve preselectedType'ı zorunlu kıl.
+   * /dashboard/add-transaction/income ve /expense sayfaları kullanır.
+   */
+  lockDirection?: boolean;
+  /**
+   * v1.7.0.x dedicated page: payment method seçicisini gizle ve
+   * preselectedPaymentMethod'u zorunlu kıl. /dashboard/add-transaction/pos
+   * sayfası POS'a kilitler.
+   */
+  lockPaymentMethod?: boolean;
 }
 
 export function AddTransactionForm({
@@ -50,6 +61,8 @@ export function AddTransactionForm({
   onSuccess,
   onCancel,
   compact = false,
+  lockDirection = false,
+  lockPaymentMethod = false,
 }: AddTransactionFormProps) {
   const { triggerRefresh } = useAppStore();
 
@@ -287,8 +300,10 @@ export function AddTransactionForm({
       {/* Direction Toggle —
           v1.7.x hotfix: compact (modal) modunda outer AddTransactionModal'ın
           3'lü toggle'ı (Gelir/Gider/Transfer) direction'ı yönetir; iç toggle
-          duplicate olmasın diye sadece standalone page'de gösterilir. */}
-      {!compact && (
+          duplicate olmasın diye sadece standalone page'de gösterilir.
+          v1.7.0.x: lockDirection ise dedicated page kendi yön kilidini
+          tutar (chooser üzerinden gelir/gider seçildi). */}
+      {!compact && !lockDirection && (
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -322,8 +337,12 @@ export function AddTransactionForm({
       {/* Payment Method —
           v1.7.x: POS yalnız Gelir yönünde anlamlıdır (komisyon = tahsilat
           kesintisi; gider akışında karşılığı yok). Gider seçiliyken POS
-          butonu gizlenir, paymentMethod otomatik NAKIT'a çekilir. */}
+          butonu gizlenir, paymentMethod otomatik NAKIT'a çekilir.
+          v1.7.0.x: lockPaymentMethod ise dedicated page (örn /pos) zaten
+          method'u kilitlemiş — seçici gizlenir, POS-spesifik alanlar görünmeye devam eder. */}
       <div>
+        {!lockPaymentMethod && (
+        <>
         <label className="block text-sm font-medium text-surface-200 mb-1.5">
           Odeme Yontemi *
         </label>
@@ -362,6 +381,8 @@ export function AddTransactionForm({
           </button>
           )}
         </div>
+        </>
+        )}
         {paymentMethod === "POS" && (
           <>
             {posDevices.length > 0 && (
