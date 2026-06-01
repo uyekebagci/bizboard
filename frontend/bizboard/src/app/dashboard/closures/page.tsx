@@ -45,8 +45,18 @@ export default function ClosuresListPage() {
   useEffect(() => {
     if (!businessId) return;
     setLoading(true);
-    api.get<ClosingRow[]>(`/closings?business_id=${businessId}`)
-      .then((r) => setClosings(r || []))
+    // Backend pagination wrapper: {items, page, size, total_elements, ...}
+    // Bazı sürümler doğrudan array de dönebilir — defansif handle.
+    api.get<ClosingRow[] | { items: ClosingRow[] }>(`/closings?business_id=${businessId}`)
+      .then((r) => {
+        if (Array.isArray(r)) {
+          setClosings(r);
+        } else if (r && Array.isArray(r.items)) {
+          setClosings(r.items);
+        } else {
+          setClosings([]);
+        }
+      })
       .catch(() => setClosings([]))
       .finally(() => setLoading(false));
   }, [businessId]);
