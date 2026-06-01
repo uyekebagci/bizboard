@@ -103,7 +103,48 @@ public class SubCashInclusionService {
         autoIncludeIfApplicable(tx);
     }
 
-    // ───────────────────────── RETROACTIVE ─────────────────────────
+    // ───────────────────────── MANUAL (tx-time) ─────────────────────────
+
+    /**
+     * Beta v1.1: Tx oluşturulurken kullanıcı bir alt kasaya da bağlamak
+     * istiyor → MANUAL inclusion ekle. Validation: tx + sub-cash aynı
+     * business; sub-cash SUB_CASH tipinde; duplicate sessiz skip.
+     * Transfer kind=TRANSFER tx'lerinde IllegalArgumentException atar
+     * (controller 400 dönmesi için).
+     */
+    @Transactional
+    public void addManualInclusion(UUID subCashId, UUID txId, UUID actorUserId) {
+        if (subCashId == null || txId == null) return;
+        Transaction tx = transactionRepository.findById(txId)
+                .orElseThrow(() -> new IllegalArgumentException("Tx bulunamadi: " + txId));
+        if (tx.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+            throw new IllegalArgumentException(
+                    "Transfer tx'lerinde manuel alt kasa ataması yapılamaz");
+        }
+        BankAccount subCash = bankAccountRepository.findById(subCashId)
+                .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
+        if (subCash.getType() != BankAccountType.SUB_CASH) {
+            throw new IllegalArgumentException("Hedef hesap SUB_CASH tipinde olmali");
+        }
+        if (tx.getBusiness() == null || subCash.getBusiness() == null
+                || !tx.getBusiness().getId().equals(subCash.getBusiness().getId())) {
+            throw new IllegalArgumentException("Tx ve sub-cash farkli business'a ait");
+        }
+        if (inclusionRepository.existsBySubCash_IdAndTransaction_Id(subCashId, txId)) {
+            return; // duplicate skip (AUTOMATIC zaten varsa)
+        }
+        SubCashTxInclusion inc = SubCashTxInclusion.builder()
+                .business(tx.getBusiness())
+                .subCash(subCash)
+                .transaction(tx)
+                .scope(InclusionScope.MANUAL)
+                .includedBy(actorUserId)
+                .build();
+        inclusionRepository.save(inc);
+        log.info("[inclusion-manual] subCash={} tx={} added by user={}", subCashId, txId, actorUserId);
+    }
+
+    // ───────────────────────── MANUAL bulk (retroactive UI) ─────────────────────────
 
     /**
      * Kullanıcı UI'sından bulk insert (RETROACTIVE scope).
@@ -150,7 +191,7 @@ public class SubCashInclusionService {
                     .business(tx.getBusiness())
                     .subCash(subCash)
                     .transaction(tx)
-                    .scope(InclusionScope.RETROACTIVE)
+                    .scope(InclusionScope.MANUAL)
                     .includedBy(actorUserId)
                     .build();
             inclusionRepository.save(inc);

@@ -356,7 +356,7 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
         ) : (
           <div className="rounded-xl border border-surface-700 divide-y divide-surface-700 max-h-64 overflow-y-auto">
             {data.transactions.map((t) => {
-              const isRetro = t.inclusion_scope === "RETROACTIVE";
+              const isManual = t.inclusion_scope === "MANUAL";
               const isAuto = t.inclusion_scope === "AUTOMATIC";
               return (
                 <div key={t.id} className="px-3 py-2 flex items-center justify-between gap-2 text-xs">
@@ -368,9 +368,9 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
                           AUTO
                         </span>
                       )}
-                      {isRetro && (
+                      {isManual && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/30">
-                          GERİ DÖNÜK
+                          MANUEL
                         </span>
                       )}
                     </p>

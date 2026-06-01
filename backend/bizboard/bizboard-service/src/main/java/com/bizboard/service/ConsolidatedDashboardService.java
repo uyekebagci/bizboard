@@ -367,16 +367,23 @@ public class ConsolidatedDashboardService {
         String pm = t.getPaymentMethod();
         boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
         if (isPos && t.getDirection() == TransactionDirection.INCOME) {
+            // Beta v1.1 (legacy-aware): rate alanları DOLU ise eski profit
+            // formülü (komisyon WP), NULL ise yeni model — tam tutar gelir
+            // olarak konsolide net'e katkı yapar.
             BigDecimal bankRate = t.getAppliedPosRate() != null
                     ? t.getAppliedPosRate()
-                    : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
-            BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
-                    ? t.getAppliedOurCommissionRate()
-                    : bankRate; // backfill: profit=0
-            BigDecimal diffRate = ourRate.subtract(bankRate);
-            if (diffRate.signum() == 0) return BigDecimal.ZERO;
-            return t.getAmount().multiply(diffRate)
-                    .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                    : t.getPosRate();
+            BigDecimal ourRate = t.getAppliedOurCommissionRate();
+            if (bankRate != null && ourRate != null) {
+                // Legacy: profit = amount × (our - bank) / 100
+                BigDecimal diffRate = ourRate.subtract(bankRate);
+                if (diffRate.signum() == 0) return BigDecimal.ZERO;
+                return t.getAmount().multiply(diffRate)
+                        .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            }
+            // Beta v1.1 yeni POS: rate NULL → tam tutar income (eskiden POS
+            // profit'iyle confuse oluyordu, artık net gelir = amount).
+            return t.getAmount();
         }
         if (t.getDirection() == TransactionDirection.INCOME) {
             return t.getAmount();

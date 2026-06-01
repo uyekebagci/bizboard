@@ -90,13 +90,26 @@ export function AddTransactionForm({
   // WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet
   const [saveAsQuickAction, setSaveAsQuickAction] = useState(false);
   const [quickActionName, setQuickActionName] = useState("");
+
+  // Beta v1.1: tx-time manuel alt kasa atama (otomatik attribution'a EK).
+  const [addToSubCash, setAddToSubCash] = useState(false);
+  const [manualSubCashId, setManualSubCashId] = useState("");
+  const [subCashList, setSubCashList] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    api.get<Array<{ id: string; name: string; type: string }>>("/bank-accounts")
+      .then((all) => {
+        setSubCashList((all || []).filter((b) => b.type === "SUB_CASH"));
+      })
+      .catch(() => setSubCashList([]));
+  }, []);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     preselectedPaymentMethod || "NAKIT",
   );
   // v1.7.x (POS Komisyon WP TODO 54f94805): pos_rate = BANKA oranı;
   // our_commission_rate = BİZİM müşteriden aldığımız oran.
-  const [posRate, setPosRate] = useState("");
-  const [ourCommissionRate, setOurCommissionRate] = useState("");
+  // Beta v1.1: POS komisyon state'i KALDIRILDI. Form submit body'sine
+  // pos_rate/our_commission_rate gönderilmez; backend NULL kaydeder.
+  // İlgili setter'ları PaymentMethod toggle'ında ihmal ediyoruz.
 
   const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
   const [targetCounterpartId, setTargetCounterpartId] = useState<string>("");
@@ -120,8 +133,6 @@ export function AddTransactionForm({
   useEffect(() => {
     if (direction === "expense" && paymentMethod === "POS") {
       setPaymentMethod("NAKIT");
-      setPosRate("");
-      setOurCommissionRate("");
       setPosDeviceId("");
     }
   }, [direction, paymentMethod]);
@@ -140,19 +151,7 @@ export function AddTransactionForm({
 
   function handlePosDeviceChange(devId: string) {
     setPosDeviceId(devId);
-    if (!devId) return;
-    const dev = posDevices.find((p) => p.id === devId);
-    if (!dev) return;
-    // v1.7.x (POS Komisyon WP TODO 54f94805): cihaz seçilince hem banka oranı
-    // hem bizim oran auto-fill (boşsa). Manuel override için zaten dolu olanı
-    // tekrar yazma.
-    const bankRate = dev.last_used_rate ?? dev.default_rate;
-    if (bankRate != null) {
-      setPosRate(String(bankRate));
-    }
-    if (dev.our_commission_rate != null) {
-      setOurCommissionRate(String(dev.our_commission_rate));
-    }
+    // Beta v1.1: komisyon auto-fill kaldırıldı (UI alanları yok).
   }
 
   useEffect(() => {
@@ -202,24 +201,9 @@ export function AddTransactionForm({
     setError(null);
 
     try {
-      const posRateValue =
-        paymentMethod === "POS" && posRate.trim() !== ""
-          ? Number(posRate.replace(",", "."))
-          : null;
-      // v1.7.x (POS Komisyon WP TODO 54f94805): bizim oran POS için zorunlu.
-      const ourRateValue =
-        paymentMethod === "POS" && ourCommissionRate.trim() !== ""
-          ? Number(ourCommissionRate.replace(",", "."))
-          : null;
-
-      // Client-side validation: our >= bank (server da aynı kontrolü yapar)
-      if (paymentMethod === "POS" && ourRateValue != null && posRateValue != null
-          && ourRateValue < posRateValue) {
-        setError("Bizim komisyonumuz banka komisyonundan düşük olamaz");
-        setIsSubmitting(false);
-        return;
-      }
-
+      // Beta v1.1: POS komisyon alanları UI'dan kaldırıldı. Body'ye
+      // pos_rate / our_commission_rate gönderilmez; backend NULL kaydeder.
+      // KONSOLİDE NET legacy-aware (eski rate'li tx'ler korunur).
       const tx = await api.post<{ id: string }>(`/businesses/${businessId}/transactions`, {
         direction,
         amount: parseMoneyInput(amount),
@@ -228,10 +212,10 @@ export function AddTransactionForm({
         category_id: categoryId || null,
         tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         payment_method: paymentMethod,
-        pos_rate: posRateValue,
-        our_commission_rate: ourRateValue,
         target_counterpart_id: targetCounterpartId || null,
         pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
+        // Beta v1.1: tx-time manuel alt kasa atama
+        manual_sub_cash_id: addToSubCash && manualSubCashId ? manualSubCashId : null,
       });
 
       if (uploadedFiles.length > 0 && tx?.id) {
@@ -261,8 +245,9 @@ export function AddTransactionForm({
               bank_account_id: null, // AddTransactionForm bank seçimi yok
               pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
               counterpart_id: targetCounterpartId || null,
-              applied_pos_rate: posRateValue,
-              applied_our_commission_rate: ourRateValue,
+              // Beta v1.1: POS komisyon snapshot kaldırıldı
+              applied_pos_rate: null,
+              applied_our_commission_rate: null,
               category_id: categoryId || null,
               description: description || null,
             },
@@ -352,7 +337,7 @@ export function AddTransactionForm({
         )}>
           <button
             type="button"
-            onClick={() => { setPaymentMethod("NAKIT"); setPosRate(""); setOurCommissionRate(""); }}
+            onClick={() => setPaymentMethod("NAKIT")}
             className={cn(
               "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               paymentMethod === "NAKIT"
@@ -415,91 +400,11 @@ export function AddTransactionForm({
                 />
               </div>
             )}
-            {/* v1.7.x (POS Komisyon WP TODO 54f94805): iki oran input */}
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-surface-300 mb-1.5">
-                  Banka Komisyonu (%)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={posRate}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
-                      setPosRate(cleaned);
-                    }}
-                    placeholder="orn. 1.95"
-                    className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">%</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-surface-300 mb-1.5">
-                  Bizim Komisyonumuz (%)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={ourCommissionRate}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
-                      setOurCommissionRate(cleaned);
-                    }}
-                    placeholder="orn. 5.50"
-                    className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">%</span>
-                </div>
-              </div>
-            </div>
-            {/* v1.7.x (POS Komisyon WP TODO 54f94805): inline validation + breakdown */}
-            {(() => {
-              const bank = posRate.trim() !== "" ? Number(posRate.replace(",", ".")) : NaN;
-              const ours = ourCommissionRate.trim() !== "" ? Number(ourCommissionRate.replace(",", ".")) : NaN;
-              const amt = parseMoneyInput(amount);
-              if (!isNaN(bank) && !isNaN(ours) && ours < bank) {
-                return (
-                  <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-                    Bizim komisyonumuz banka komisyonundan düşük olamaz.
-                  </div>
-                );
-              }
-              if (!isNaN(bank) && !isNaN(ours) && amt > 0) {
-                const bankAmt = (amt * bank) / 100;
-                const ourAmt = (amt * ours) / 100;
-                const profit = ourAmt - bankAmt;
-                const fmt = (n: number) =>
-                  n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const fmtRate = (n: number) =>
-                  `%${n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                // v1.7.x (POS Komisyon WP TODO 54f94805): brief spec breakdown card
-                return (
-                  <div className="mt-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-200 space-y-1">
-                    <div className="flex justify-between">
-                      <span>İşlem Tutarı:</span>
-                      <span className="font-mono">₺{fmt(amt)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Banka Komisyonu:</span>
-                      <span className="font-mono">₺{fmt(bankAmt)} <span className="text-indigo-300/70">({fmtRate(bank)})</span></span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Bizim Komisyon:</span>
-                      <span className="font-mono">₺{fmt(ourAmt)} <span className="text-indigo-300/70">({fmtRate(ours)})</span></span>
-                    </div>
-                    <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-bold text-emerald-300">
-                      <span>Net Kâr (gelir):</span>
-                      <span className="font-mono">₺{fmt(profit)}</span>
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            })()}
+            {/* Beta v1.1: POS komisyon UI alanları kaldırıldı.
+                Tx artık SADELEŞTİRİLDİ: tutar + cihaz + tarih + counterpart + açıklama.
+                applied_pos_rate / applied_our_commission_rate backend tarafında
+                NULL kaydedilir. KONSOLİDE NET formülü legacy-aware: eski rate'li
+                tx'ler profit hesaplar, yeni'ler tam tutar income'a katkı yapar. */}
           </>
         )}
       </div>
@@ -671,6 +576,42 @@ export function AddTransactionForm({
             api.delete(`/files/${fid}`).catch(() => {});
           }}
         />
+      </div>
+
+      {/* Beta v1.1: Bir alt kasaya da ekle (tx-time manuel atama) */}
+      <div className="rounded-xl border border-surface-600 bg-surface-700/40 p-3 space-y-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={addToSubCash}
+            onChange={(e) => setAddToSubCash(e.target.checked)}
+            disabled={subCashList.length === 0}
+            className="w-4 h-4 rounded border-surface-500 bg-surface-800 accent-brand-500 cursor-pointer"
+          />
+          <span className="text-sm font-medium text-surface-200">
+            🏦 Bir alt kasaya da ekle (manuel)
+          </span>
+          {subCashList.length === 0 && (
+            <span className="text-[10px] text-surface-500">(alt kasa yok)</span>
+          )}
+        </label>
+        {addToSubCash && subCashList.length > 0 && (
+          <div className="pl-6">
+            <select
+              value={manualSubCashId}
+              onChange={(e) => setManualSubCashId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+            >
+              <option value="">— Alt kasa seç —</option>
+              {subCashList.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-surface-400 mt-1">
+              Otomatik attribution&apos;a EK — bu tx seçili alt kasaya da düşer.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet */}

@@ -172,7 +172,10 @@ export default function BusinessDetailPage() {
       {consolidated && (
         <ConsolidatedWidgets
           data={consolidated}
-          onCloseDay={() => setShowCloseModal(true)}
+          onCloseDay={() => {
+            // Beta v1.1: modal yerine dedicated /closure sayfası
+            window.location.href = `/dashboard/closure?business_id=${consolidated.business_id}`;
+          }}
           onChange={() => {
             void refreshConsolidated();
             triggerRefresh();

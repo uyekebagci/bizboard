@@ -486,15 +486,17 @@ public class SubCashService {
         String pm = t.getPaymentMethod();
         boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
         if (isPos && t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
+            // Beta v1.1 legacy-aware: rate dolu → eski profit; NULL → tam tutar.
             java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
-                    ? t.getAppliedPosRate()
-                    : (t.getPosRate() != null ? t.getPosRate() : java.math.BigDecimal.ZERO);
-            java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
-                    ? t.getAppliedOurCommissionRate() : bankRate;
-            java.math.BigDecimal diff = ourRate.subtract(bankRate);
-            if (diff.signum() == 0) return java.math.BigDecimal.ZERO;
-            return t.getAmount().multiply(diff)
-                    .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                    ? t.getAppliedPosRate() : t.getPosRate();
+            java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate();
+            if (bankRate != null && ourRate != null) {
+                java.math.BigDecimal diff = ourRate.subtract(bankRate);
+                if (diff.signum() == 0) return java.math.BigDecimal.ZERO;
+                return t.getAmount().multiply(diff)
+                        .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            }
+            return t.getAmount();
         }
         if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
             return t.getAmount();

@@ -42,11 +42,32 @@ public class SubCashInclusionMigrationRunner implements ApplicationRunner {
                     "ON sub_cash_tx_inclusion(transaction_id)");
             jdbc.execute("CREATE INDEX IF NOT EXISTS idx_scti_scope " +
                     "ON sub_cash_tx_inclusion(sub_cash_bank_account_id, scope)");
-            // Scope check constraint (defensive — enum string'leri sınırla)
-            if (!constraintExists("sub_cash_tx_inclusion_scope_check")) {
+            // Beta v1.1: RETROACTIVE → MANUAL rename
+            // 1) Eski check constraint varsa drop
+            // 2) UPDATE RETROACTIVE → MANUAL
+            // 3) Yeni check constraint (AUTOMATIC, MANUAL)
+            // İdempotent — constraint adına bakar.
+            String existingDef = jdbc.query(
+                    "SELECT pg_get_constraintdef(c.oid) FROM pg_constraint c " +
+                            "JOIN pg_class t ON c.conrelid = t.oid " +
+                            "WHERE t.relname = 'sub_cash_tx_inclusion' " +
+                            "AND c.conname = 'sub_cash_tx_inclusion_scope_check'",
+                    rs -> rs.next() ? rs.getString(1) : null);
+            boolean needsRename = existingDef != null && existingDef.contains("RETROACTIVE");
+            if (needsRename || existingDef == null) {
+                log.info("[sub-cash-inclusion-migration] Scope enum rename (RETROACTIVE→MANUAL)...");
+                if (existingDef != null) {
+                    jdbc.execute("ALTER TABLE sub_cash_tx_inclusion " +
+                            "DROP CONSTRAINT sub_cash_tx_inclusion_scope_check");
+                }
+                int updated = jdbc.update(
+                        "UPDATE sub_cash_tx_inclusion SET scope='MANUAL' WHERE scope='RETROACTIVE'");
+                if (updated > 0) {
+                    log.info("[sub-cash-inclusion-migration] {} RETROACTIVE → MANUAL", updated);
+                }
                 jdbc.execute("ALTER TABLE sub_cash_tx_inclusion " +
                         "ADD CONSTRAINT sub_cash_tx_inclusion_scope_check " +
-                        "CHECK (scope IN ('AUTOMATIC','RETROACTIVE'))");
+                        "CHECK (scope IN ('AUTOMATIC','MANUAL'))");
             }
             log.info("[sub-cash-inclusion-migration] Constraints + indexes OK.");
         } catch (Exception e) {

@@ -197,7 +197,7 @@ export interface Transaction {
   category?: Category;
   business_name?: string;
   /** WP Sub-Cash Retroactive Inclusion: sub-cash detail tx list context'i için. */
-  inclusion_scope?: "AUTOMATIC" | "RETROACTIVE" | null;
+  inclusion_scope?: "AUTOMATIC" | "MANUAL" | null;
 }
 
 /** WP Sub-Cash Retroactive Inclusion: available-tx endpoint response. */
@@ -553,7 +553,7 @@ export interface BankAccountTxRow {
   pos_settled: boolean | null;
   pos_device_name: string | null;
   /** WP Sub-Cash Retroactive Inclusion: sub-cash context'inde scope. */
-  inclusion_scope?: "AUTOMATIC" | "RETROACTIVE" | null;
+  inclusion_scope?: "AUTOMATIC" | "MANUAL" | null;
 }
 
 export interface PosDeviceListItem {

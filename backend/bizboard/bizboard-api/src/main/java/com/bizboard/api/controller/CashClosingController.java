@@ -92,6 +92,32 @@ public class CashClosingController {
         }
     }
 
+    /**
+     * Beta v1.1: 5-section closure preview — POS by sub-cash, Transfers,
+     * Cash Withdrawals, Debts, Expenses + summary. Date opsiyonel
+     * (default bugün).
+     */
+    private final com.bizboard.service.ClosureSectionService sectionService;
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @GetMapping("/sectioned")
+    public ResponseEntity<?> sectioned(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
+            @RequestParam(name = "date", required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+                    java.time.LocalDate date) {
+        try {
+            java.time.LocalDate d = date != null ? date : java.time.LocalDate.now();
+            return ResponseEntity.ok(sectionService.sectioned(businessId, d, principal.getId()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "İşletme bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/today")
     public ResponseEntity<?> closeToday(
             @AuthenticationPrincipal UserPrincipal principal,

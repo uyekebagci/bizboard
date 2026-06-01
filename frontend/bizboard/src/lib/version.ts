@@ -21,7 +21,7 @@
  */
 
 /** v1.7.x BETA: Beta süresince UI'da gösterilen sabit sürüm etiketi. */
-export const BETA_LABEL = "BETA v1.0";
+export const BETA_LABEL = "BETA v1.1";
 
 export function formatVersion(raw: string | undefined | null): string {
   if (!raw) return "?";

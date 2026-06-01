@@ -81,4 +81,13 @@ public class CreateTransactionRequest {
      */
     @JsonProperty("bank_account_id")
     private java.util.UUID bankAccountId;
+
+    /**
+     * Beta v1.1: Tx-time manuel alt kasa atama. Verilirse tx oluşturulduktan
+     * sonra ilgili sub-cash için MANUAL scope'lu inclusion kaydı eklenir
+     * (otomatik entity-based attribution'a EK — overlap allowed). Transfer
+     * tx'lerinde reject edilir.
+     */
+    @JsonProperty("manual_sub_cash_id")
+    private java.util.UUID manualSubCashId;
 }

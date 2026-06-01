@@ -363,13 +363,13 @@ function PosTrendChart({
     <section className="card p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold text-white">POS Kar Trendi (30 gün)</h2>
+          <h2 className="text-sm font-bold text-white">POS Hacmi (30 gün)</h2>
           <p className="text-[11px] text-surface-400">
-            Brüt {formatCurrency(t.gross, "TRY")}
-            {" · Komisyon "}
-            <span className="text-red-300">-{formatCurrency(t.commission, "TRY")}</span>
-            {" · Net "}
-            <span className="text-emerald-300">{formatCurrency(t.net, "TRY")}</span>
+            Brüt <span className="text-emerald-300">{formatCurrency(t.gross, "TRY")}</span>
+            {" · "}
+            <span className="text-surface-500 text-[10px]">
+              Beta v1.1: komisyon hesabı kaldırıldı — hacim = SUM(amount).
+            </span>
           </p>
         </div>
         {devices.length > 0 && (

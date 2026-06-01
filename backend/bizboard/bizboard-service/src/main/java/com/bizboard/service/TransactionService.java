@@ -284,6 +284,15 @@ public class TransactionService {
         // mevcut tx'ler için backfill YOK; sadece yeni tx'ler auto-include.
         subCashInclusionService.autoIncludeIfApplicable(transaction);
 
+        // Beta v1.1: manual_sub_cash_id verilirse MANUAL scope'lu inclusion ekle.
+        // Transfer tx'lerinde reject (front'da da gizlendi ama defansif).
+        if (request.getManualSubCashId() != null) {
+            // (kind=TRANSFER bu endpoint'te zaten oluşmaz — transfer ayrı endpoint;
+            // yine de defansif assertion.)
+            subCashInclusionService.addManualInclusion(
+                    request.getManualSubCashId(), transaction.getId(), userId);
+        }
+
         return DtoMapper.toTransactionDto(transaction);
     }
 
@@ -916,18 +925,16 @@ public class TransactionService {
             "Bizim komisyonumuz banka komisyonundan düşük olamaz";
 
     /**
-     * v1.7.x (TODO fc3ed50f): POS tx için her iki oran zorunlu + our >= bank.
-     * Hata fırlatır (IllegalArgumentException → 400).
+     * v1.7.x: POS tx için iki oran validation.
+     *
+     * <p>Beta v1.1: Oran alanları artık ZORUNLU DEĞİL. Verilirse tutarlılık
+     * kontrolü yapılır (bizim >= banka). Hiç verilmezse no-op — KONSOLİDE NET
+     * formülü legacy-aware (rate dolu→profit, NULL→tam tutar).</p>
      */
     static void validatePosCommissionRates(java.math.BigDecimal ourRate,
                                             java.math.BigDecimal bankRate) {
-        if (ourRate == null) {
-            throw new IllegalArgumentException(
-                    "POS işlem için bizim komisyon oranı (our_commission_rate) zorunlu");
-        }
-        if (bankRate == null) {
-            throw new IllegalArgumentException(
-                    "POS işlem için banka komisyon oranı (pos_rate) zorunlu");
+        if (ourRate == null || bankRate == null) {
+            return; // Beta v1.1: opsiyonel — bir tarafı NULL ise check skipped
         }
         if (ourRate.compareTo(bankRate) < 0) {
             throw new IllegalArgumentException(MSG_OUR_LT_BANK);
