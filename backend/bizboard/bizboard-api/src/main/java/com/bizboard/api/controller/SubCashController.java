@@ -220,6 +220,13 @@ public class SubCashController {
      * Sub-cash'in assigned entity'lerine ait ama henüz inclusion'da OLMAYAN
      * tx'ler (eklenebilir tx'ler). Paginated + tarih filtreli.
      */
+    /**
+     * v1.7.0.x (prod hotfix): @Transactional eklendi — service'in döndürdüğü
+     * Transaction entity'leri DtoMapper içinde lazy field'lara erişiyor
+     * (business, category, posDevice). open-in-view=false prod'da kapalı
+     * session → LazyInitializationException → response 401 görünüyordu.
+     */
+    @Transactional(readOnly = true)
     @GetMapping("/available-tx")
     public ResponseEntity<?> availableTx(
             @org.springframework.security.core.annotation.AuthenticationPrincipal
