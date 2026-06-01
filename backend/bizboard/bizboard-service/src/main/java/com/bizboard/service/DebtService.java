@@ -335,26 +335,45 @@ public class DebtService {
 
     // ─── Helpers ──────────────────────────────────────────────
 
+    /**
+     * v1.7.0.x (BUG fix): Parsiyel ödeme sonrası ana sayfa Borç/Alacak widget'ı
+     * eski (orijinal) tutarı gösteriyordu — pendingReceivable/Payable formülü
+     * "amount - settled_amount" idi, parsiyel ödemeleri görmüyordu.
+     *
+     * Yeni model: PaymentService.applyAllocation() debt.remaining_amount'ı
+     * günceller (parsiyel veya tam ödeme). pending* artık doğrudan
+     * remaining_amount'tan toplanır (null fallback amount). settled debt'lerin
+     * remaining'i 0'a düşer veya settled=true filtresi ile dışlanır.
+     */
     private DebtSummaryDto buildSummary(List<Debt> debts) {
         BigDecimal totalReceivable = BigDecimal.ZERO;
         BigDecimal totalPayable = BigDecimal.ZERO;
         BigDecimal settledReceivable = BigDecimal.ZERO;
         BigDecimal settledPayable = BigDecimal.ZERO;
+        BigDecimal pendingReceivable = BigDecimal.ZERO;
+        BigDecimal pendingPayable = BigDecimal.ZERO;
         int receivableCount = 0;
         int payableCount = 0;
 
         for (Debt d : debts) {
+            BigDecimal amount = d.getAmount() != null ? d.getAmount() : BigDecimal.ZERO;
+            BigDecimal remaining = d.getRemainingAmount() != null
+                    ? d.getRemainingAmount() : amount;
             if (d.getDirection() == DebtDirection.RECEIVABLE) {
-                totalReceivable = totalReceivable.add(d.getAmount());
+                totalReceivable = totalReceivable.add(amount);
                 receivableCount++;
                 if (d.isSettled()) {
-                    settledReceivable = settledReceivable.add(d.getAmount());
+                    settledReceivable = settledReceivable.add(amount);
+                } else {
+                    pendingReceivable = pendingReceivable.add(remaining);
                 }
             } else {
-                totalPayable = totalPayable.add(d.getAmount());
+                totalPayable = totalPayable.add(amount);
                 payableCount++;
                 if (d.isSettled()) {
-                    settledPayable = settledPayable.add(d.getAmount());
+                    settledPayable = settledPayable.add(amount);
+                } else {
+                    pendingPayable = pendingPayable.add(remaining);
                 }
             }
         }
@@ -362,11 +381,11 @@ public class DebtService {
         return DebtSummaryDto.builder()
                 .totalReceivable(totalReceivable)
                 .totalPayable(totalPayable)
-                .netBalance(totalReceivable.subtract(totalPayable))
+                .netBalance(pendingReceivable.subtract(pendingPayable))
                 .settledReceivable(settledReceivable)
                 .settledPayable(settledPayable)
-                .pendingReceivable(totalReceivable.subtract(settledReceivable))
-                .pendingPayable(totalPayable.subtract(settledPayable))
+                .pendingReceivable(pendingReceivable)
+                .pendingPayable(pendingPayable)
                 .receivableCount(receivableCount)
                 .payableCount(payableCount)
                 .build();
