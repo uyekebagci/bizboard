@@ -24,7 +24,7 @@ import { ChequeAddModal } from "@/components/cheques/ChequeAddModal";
 
 export default function ChequesPage() {
   const router = useRouter();
-  const { refreshKey } = useAppStore();
+  const { refreshKey, triggerRefresh } = useAppStore();
   const [list, setList] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +55,9 @@ export default function ChequesPage() {
     try {
       await api.patch(`/debts/${d.id}/settle`, {});
       await refresh(days);
+      // BUG fix: consolidated dashboard alacaklar/verecekler widget'ları
+      // bu mutation'dan haberdar olsun.
+      triggerRefresh();
     } catch (err) {
       logger.error("api", "cheque settle failed", { id: d.id }, err);
     } finally {

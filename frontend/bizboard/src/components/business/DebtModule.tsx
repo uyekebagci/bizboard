@@ -61,7 +61,7 @@ interface Props {
 }
 
 export function DebtModule({ businessId, currency }: Props) {
-  const { profile } = useAppStore();
+  const { profile, triggerRefresh } = useAppStore();
   const isAdmin = profile?.role === "admin";
 
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -98,6 +98,9 @@ export function DebtModule({ businessId, currency }: Props) {
       await api.patch(`/debts/${debtId}/settle`, {});
       setSettleConfirm(null);
       fetchData();
+      // BUG fix: alacaklar widget'ı consolidated dashboard'dan beslenir;
+      // global refresh tetiklenmezse stale kalır.
+      triggerRefresh();
     } catch (err: unknown) {
       alert(getErrorMessage(err));
     }
@@ -108,6 +111,7 @@ export function DebtModule({ businessId, currency }: Props) {
       await api.delete(`/debts/${debtId}`);
       setDeleteConfirm(null);
       fetchData();
+      triggerRefresh();
     } catch (err: unknown) {
       alert(getErrorMessage(err));
     }
@@ -331,6 +335,8 @@ export function DebtModule({ businessId, currency }: Props) {
           onSuccess={() => {
             setShowCreateModal(false);
             fetchData();
+            // BUG fix: alacaklar/verecekler widget'larını invalidate et
+            triggerRefresh();
           }}
         />
       )}
