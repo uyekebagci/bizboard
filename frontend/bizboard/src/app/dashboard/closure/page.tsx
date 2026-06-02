@@ -8,17 +8,19 @@
  * route üzerinden geçmiş tarih için read-only.</p>
  */
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp,
   CreditCard, ArrowLeftRight, Banknote, FileText, TrendingDown, BarChart3,
+  Plus, Trash2, Zap,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { ClosureQuickAddModal, type ClosureSection } from "@/components/closure/ClosureQuickAddModal";
 
 interface TxSummary {
   id: string;
@@ -88,6 +90,16 @@ function ClosurePage() {
   const [actualBalanceStr, setActualBalanceStr] = useState("");
   const [description, setDescription] = useState("");
 
+  // WP 08617251 (Beta v1.1): closure session — inline tx ekleme akışı
+  const [sessionId] = useState<string>(() =>
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : "session-" + Math.random().toString(36).slice(2),
+  );
+  const [sessionTxCount, setSessionTxCount] = useState(0);
+  const [quickAddSection, setQuickAddSection] = useState<ClosureSection | null>(null);
+  const [rollbacking, setRollbacking] = useState(false);
+
   useEffect(() => {
     api.get<Array<{ id: string; name: string }>>("/businesses")
       .then((bs) => {
@@ -97,27 +109,55 @@ function ClosurePage() {
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
+  const refreshSections = useCallback(async (showSpinner = true) => {
     if (!businessId) return;
-    setLoading(true);
-    Promise.all([
-      api.get<SectionedClosure>(
-        `/closings/sectioned?business_id=${businessId}&date=${closureDate}`,
-      ).catch((err) => {
-        logger.error("api", "sectioned closure fetch failed", { businessId, date: closureDate }, err);
-        return null;
-      }),
-      api.get<PreviewBasic>(`/closings/preview?business_id=${businessId}`).catch(() => null),
-    ])
-      .then(([s, b]) => {
-        setSectioned(s);
-        setBasic(b);
-        if (b && actualBalanceStr === "") {
-          setActualBalanceStr(String(b.computed_closing));
+    if (showSpinner) setLoading(true);
+    try {
+      const [s, b] = await Promise.all([
+        api.get<SectionedClosure>(
+          `/closings/sectioned?business_id=${businessId}&date=${closureDate}`,
+        ).catch((err) => {
+          logger.error("api", "sectioned closure fetch failed", { businessId, date: closureDate }, err);
+          return null;
+        }),
+        api.get<PreviewBasic>(`/closings/preview?business_id=${businessId}`).catch(() => null),
+      ]);
+      setSectioned(s);
+      setBasic(b);
+      if (b && actualBalanceStr === "") {
+        setActualBalanceStr(String(b.computed_closing));
+      }
+    } finally {
+      if (showSpinner) setLoading(false);
+    }
+  }, [businessId, closureDate, actualBalanceStr]);
+
+  useEffect(() => { void refreshSections(true); }, [refreshSections]);
+
+  // WP 08617251: beforeunload uyarısı + sendBeacon ile session abandon.
+  // Kullanıcı sekmeyi/sayfayı kapatırsa session tx'leri otomatik silinir.
+  useEffect(() => {
+    if (sessionTxCount === 0 || isPast) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = ""; // browser default uyarı
+    }
+    function onUnload() {
+      try {
+        const url = `/closings/sessions/${sessionId}/abandon`;
+        // sendBeacon native fetch'ten daha güvenilir (page unload sırasında)
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, new Blob([JSON.stringify({})], { type: "application/json" }));
         }
-      })
-      .finally(() => setLoading(false));
-  }, [businessId, closureDate]); // eslint-disable-line react-hooks/exhaustive-deps
+      } catch { /* ignore */ }
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("unload", onUnload);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("unload", onUnload);
+    };
+  }, [sessionTxCount, sessionId, isPast]);
 
   const opening = basic?.opening_balance ?? 0;
   const computed = basic?.computed_closing ?? 0;
@@ -133,8 +173,12 @@ function ClosurePage() {
       await api.post(`/closings/today?business_id=${businessId}`, {
         actual_balance: Number(actualBalanceStr) || computed,
         description: description.trim() || null,
+        // WP 08617251: session etiketi → finalize atomic'inde session tx'lerin
+        // closure_session_id NULL'a strip edilir (= kalıcı, draft çıkar).
+        closure_session_id: sessionTxCount > 0 ? sessionId : null,
       });
       triggerRefresh();
+      setSessionTxCount(0); // beforeunload uyarısını kapat
       setSuccess("Kapanış başarıyla kaydedildi.");
       setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err) {
@@ -142,6 +186,28 @@ function ClosurePage() {
     } finally {
       setSavingClose(false);
     }
+  }
+
+  async function handleRollbackSession() {
+    if (!confirm(`${sessionTxCount} adet inline eklenen işlemi silmek istiyor musun?`)) return;
+    setRollbacking(true);
+    try {
+      await api.delete(`/closings/sessions/${sessionId}`);
+      setSessionTxCount(0);
+      await refreshSections(false);
+      triggerRefresh();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Vazgeçme başarısız");
+    } finally {
+      setRollbacking(false);
+    }
+  }
+
+  function handleQuickAddCreated() {
+    setQuickAddSection(null);
+    setSessionTxCount((c) => c + 1);
+    void refreshSections(false);
+    triggerRefresh();
   }
 
   return (
@@ -186,6 +252,31 @@ function ClosurePage() {
         </div>
       )}
 
+      {/* WP 08617251: session indicator banner — inline tx eklemeden sonra görünür */}
+      {sessionTxCount > 0 && !isReadOnly && (
+        <div className="card p-3 border-amber-500/40 bg-amber-500/[0.06] flex items-center gap-3">
+          <Zap size={16} className="text-amber-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-amber-200">
+              Bu kapanışta <strong>{sessionTxCount}</strong> yeni işlem eklendi —
+              kapanışı tamamladığında kalıcı olur.
+            </p>
+            <p className="text-[10px] text-amber-300/70 mt-0.5">
+              Sayfayı kapatırsan tarayıcı uyarısı çıkar; onaylarsan eklenenler otomatik silinir.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleRollbackSession}
+            disabled={rollbacking}
+            className="px-2.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-medium border border-rose-500/40 inline-flex items-center gap-1 disabled:opacity-50"
+          >
+            {rollbacking ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+            Vazgeç & Hepsini Sil
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={24} className="animate-spin text-surface-500" />
@@ -197,7 +288,8 @@ function ClosurePage() {
       ) : (
         <>
           {/* BÖLÜM A: POS */}
-          <Section title="POS İşlemleri" icon={CreditCard} count={sectioned.pos.grand_count} total={sectioned.pos.grand_total} color="blue">
+          <Section title="POS İşlemleri" icon={CreditCard} count={sectioned.pos.grand_count} total={sectioned.pos.grand_total} color="blue"
+            action={!isReadOnly && <AddBtn label="+ POS İşlemi" color="blue" onClick={() => setQuickAddSection("pos")} />}>
             {sectioned.pos.groups.length === 0 ? (
               <Empty msg="Bu gün POS işlemi yok." />
             ) : (
@@ -212,7 +304,13 @@ function ClosurePage() {
 
           {/* BÖLÜM B: Transferler */}
           <Section title="Transferler" icon={ArrowLeftRight} color="purple"
-            count={sectioned.transfers.outgoing_external.count + sectioned.transfers.internal.count + sectioned.transfers.incoming_external.count}>
+            count={sectioned.transfers.outgoing_external.count + sectioned.transfers.internal.count + sectioned.transfers.incoming_external.count}
+            action={!isReadOnly && (
+              <div className="flex gap-1">
+                <AddBtn label="+ Giden" color="rose" onClick={() => setQuickAddSection("outgoing")} />
+                <AddBtn label="+ Gelen" color="emerald" onClick={() => setQuickAddSection("incoming")} />
+              </div>
+            )}>
             <GroupCard title="Dışarı Giden" count={sectioned.transfers.outgoing_external.count} total={sectioned.transfers.outgoing_external.total}>
               <TxList txs={sectioned.transfers.outgoing_external.list} />
             </GroupCard>
@@ -226,7 +324,8 @@ function ClosurePage() {
 
           {/* BÖLÜM C: Cash Withdrawals */}
           <Section title="Hesaptan Para Çekme" icon={Banknote} color="amber"
-            count={sectioned.cash_withdrawals.count} total={sectioned.cash_withdrawals.total}>
+            count={sectioned.cash_withdrawals.count} total={sectioned.cash_withdrawals.total}
+            action={!isReadOnly && <AddBtn label="+ Para Çekme" color="amber" onClick={() => setQuickAddSection("withdrawal")} />}>
             {sectioned.cash_withdrawals.count === 0 ? (
               <Empty msg="Bu gün hesaptan para çekme yok." />
             ) : (
@@ -234,7 +333,7 @@ function ClosurePage() {
             )}
           </Section>
 
-          {/* BÖLÜM D: Debt hareketleri */}
+          {/* BÖLÜM D: Debt hareketleri — inline add desteklenmez (debt create farklı flow) */}
           <Section title="Borç / Alacak Hareketleri" icon={FileText} color="indigo">
             <GroupCard title="Yeni Alacaklar" count={sectioned.debts.new_receivables.count} total={sectioned.debts.new_receivables.total}>
               {sectioned.debts.new_receivables.list.length === 0 ? <Empty msg="—" /> : (
@@ -264,7 +363,8 @@ function ClosurePage() {
 
           {/* BÖLÜM E: Expenses */}
           <Section title="Harcamalar" icon={TrendingDown} color="rose"
-            count={sectioned.expenses.count} total={sectioned.expenses.total}>
+            count={sectioned.expenses.count} total={sectioned.expenses.total}
+            action={!isReadOnly && <AddBtn label="+ Harcama" color="rose" onClick={() => setQuickAddSection("expense")} />}>
             {sectioned.expenses.count === 0 ? (
               <Empty msg="Bu gün non-HESAPDAN harcama yok." />
             ) : (
@@ -340,18 +440,58 @@ function ClosurePage() {
           </section>
         </>
       )}
+
+      {/* WP 08617251: inline tx ekleme modal — section seçildiğinde açılır */}
+      {quickAddSection && businessId && (
+        <ClosureQuickAddModal
+          section={quickAddSection}
+          businessId={businessId}
+          closureSessionId={sessionId}
+          onClose={() => setQuickAddSection(null)}
+          onCreated={handleQuickAddCreated}
+        />
+      )}
     </div>
   );
 }
 
 // ─────────── small components ───────────
 
-function Section({ title, icon: Icon, color, count, total, children }: {
+/** WP 08617251: section header'ında inline tx ekleme butonu. */
+function AddBtn({ label, color, onClick }: {
+  label: string;
+  color: string;
+  onClick: () => void;
+}) {
+  const colorMap: Record<string, string> = {
+    blue:    "bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-500/40",
+    rose:    "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border-rose-500/40",
+    emerald: "bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border-emerald-500/40",
+    amber:   "bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border-amber-500/40",
+    indigo:  "bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border-indigo-500/40",
+  };
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      className={cn(
+        "text-[10px] px-2 py-1 rounded-md border font-medium inline-flex items-center gap-1 shrink-0",
+        colorMap[color] || colorMap.blue,
+      )}
+    >
+      <Plus size={10} /> {label}
+    </button>
+  );
+}
+
+function Section({ title, icon: Icon, color, count, total, action, children }: {
   title: string;
   icon: typeof CreditCard;
   color: string;
   count?: number;
   total?: number;
+  /** WP 08617251: header sağında inline aksiyon (+ İşlem Ekle butonu). */
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(true);
@@ -364,12 +504,12 @@ function Section({ title, icon: Icon, color, count, total, children }: {
   };
   return (
     <section className="card overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full px-4 py-3 border-b border-surface-700 flex items-center justify-between hover:bg-surface-700/30"
-      >
-        <div className="flex items-center gap-2 text-left">
+      <div className="w-full px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2 text-left flex-1 hover:opacity-80"
+        >
           <Icon size={16} className={colorMap[color]} />
           <div>
             <h2 className="text-sm font-semibold text-white">{title}</h2>
@@ -380,9 +520,12 @@ function Section({ title, icon: Icon, color, count, total, children }: {
               </p>
             )}
           </div>
+        </button>
+        <div className="flex items-center gap-1.5">
+          {action}
+          {open ? <ChevronUp size={14} className="text-surface-400" /> : <ChevronDown size={14} className="text-surface-400" />}
         </div>
-        {open ? <ChevronUp size={14} className="text-surface-400" /> : <ChevronDown size={14} className="text-surface-400" />}
-      </button>
+      </div>
       {open && <div className="p-3 space-y-3">{children}</div>}
     </section>
   );

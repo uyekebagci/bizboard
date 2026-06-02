@@ -90,4 +90,12 @@ public class CreateTransactionRequest {
      */
     @JsonProperty("manual_sub_cash_id")
     private java.util.UUID manualSubCashId;
+
+    /**
+     * WP 08617251 (Beta v1.1 Closure Modülü): inline tx ekleme akışında
+     * closure sayfasından gönderilen session UUID. NULL = normal tx.
+     * Closure finalize'de strip; rollback/abandon'da bulk delete.
+     */
+    @JsonProperty("closure_session_id")
+    private java.util.UUID closureSessionId;
 }

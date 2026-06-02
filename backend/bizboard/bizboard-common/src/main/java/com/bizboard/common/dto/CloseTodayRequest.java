@@ -26,4 +26,14 @@ public class CloseTodayRequest {
 
     @JsonProperty("reason_note")
     private String reasonNote;
+
+    /**
+     * WP 08617251 (Beta v1.1 Closure Modülü): closure sayfasında inline
+     * eklenen tx'lerin etiketi. Verilirse closeToday atomic'inde bu
+     * session'a ait tx'lerin closure_session_id NULL'a strip edilir
+     * (= tx'ler kalıcı, draft olmaktan çıkar). NULL ise hiçbir tx strip
+     * edilmez (geriye dönük uyumluluk).
+     */
+    @JsonProperty("closure_session_id")
+    private java.util.UUID closureSessionId;
 }

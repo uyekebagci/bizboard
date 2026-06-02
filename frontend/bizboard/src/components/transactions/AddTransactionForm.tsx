@@ -52,6 +52,12 @@ export interface AddTransactionFormProps {
    * sayfası POS'a kilitler.
    */
   lockPaymentMethod?: boolean;
+  /**
+   * WP 08617251 (Beta v1.1 Closure Modülü): inline tx ekleme akışı.
+   * Verilirse submit body'sine closure_session_id eklenir; tx draft
+   * olarak işaretlenir. Closure finalize → strip, rollback → delete.
+   */
+  closureSessionId?: string;
 }
 
 export function AddTransactionForm({
@@ -63,6 +69,7 @@ export function AddTransactionForm({
   compact = false,
   lockDirection = false,
   lockPaymentMethod = false,
+  closureSessionId,
 }: AddTransactionFormProps) {
   const { triggerRefresh } = useAppStore();
 
@@ -216,6 +223,8 @@ export function AddTransactionForm({
         pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
         // Beta v1.1: tx-time manuel alt kasa atama
         manual_sub_cash_id: addToSubCash && manualSubCashId ? manualSubCashId : null,
+        // WP 08617251: closure session etiketi (inline tx)
+        closure_session_id: closureSessionId || null,
       });
 
       if (uploadedFiles.length > 0 && tx?.id) {

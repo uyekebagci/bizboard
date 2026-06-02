@@ -223,4 +223,12 @@ public class Transaction {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    /**
+     * WP 08617251 (Beta v1.1 Closure Modülü): inline tx ekleme akışında
+     * tx'i bir closure session'a etiketler. NULL = normal tx. Session
+     * finalize'de strip edilir; rollback'te tx'lerle birlikte silinir.
+     */
+    @Column(name = "closure_session_id")
+    private java.util.UUID closureSessionId;
 }

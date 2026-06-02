@@ -172,4 +172,58 @@ public class CashClosingController {
             @Valid @RequestBody ReopenClosingRequest req) {
         return ResponseEntity.ok(service.reopen(principal.getId(), closingId, req));
     }
+
+    // ───────── WP 08617251 Beta v1.1 Closure Modülü: session yönetimi ─────────
+
+    /**
+     * Session rollback (vazgeç & hepsini sil) — session'a etiketli tüm
+     * tx'ler standart delete akışıyla silinir (balance reversal + audit).
+     * Yalnız actor'ün kendi tx'leri (cross-user guard service'te).
+     */
+    @DeleteMapping("/sessions/{sessionId}")
+    public ResponseEntity<?> rollbackSession(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID sessionId) {
+        try {
+            int deleted = service.rollbackSession(sessionId, principal.getId());
+            return ResponseEntity.ok(Map.of("deleted_count", deleted));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Browser tab close (sendBeacon) — DELETE ile aynı logic; sendBeacon
+     * native DELETE method desteklemediği için POST endpoint.
+     */
+    @PostMapping("/sessions/{sessionId}/abandon")
+    public ResponseEntity<?> abandonSession(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID sessionId) {
+        try {
+            int deleted = service.rollbackSession(sessionId, principal.getId());
+            return ResponseEntity.ok(Map.of("deleted_count", deleted));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * "Kaydet & Çık" — closure finalize ETMEDEN session etiketi strip.
+     * Tx'ler kalır, normal current-day tx olarak görünür.
+     */
+    @PostMapping("/sessions/{sessionId}/keep")
+    public ResponseEntity<?> keepSession(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID sessionId) {
+        try {
+            int kept = service.keepSessionTransactions(sessionId, principal.getId());
+            return ResponseEntity.ok(Map.of("kept_count", kept));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }

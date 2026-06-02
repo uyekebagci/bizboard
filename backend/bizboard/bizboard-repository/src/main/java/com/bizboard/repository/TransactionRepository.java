@@ -12,6 +12,13 @@ import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 
+    /** WP 08617251: closure session'a etiketli tx'ler (rollback/finalize için). */
+    List<Transaction> findByClosureSessionId(UUID closureSessionId);
+
+    /** WP 08617251: cross-user guard — yalnız aktör'ün kendi session tx'leri. */
+    List<Transaction> findByClosureSessionIdAndCreatedBy_Id(
+            UUID closureSessionId, UUID createdById);
+
     List<Transaction> findByBusinessIdOrderByDateDesc(UUID businessId, Pageable pageable);
 
     @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId " +

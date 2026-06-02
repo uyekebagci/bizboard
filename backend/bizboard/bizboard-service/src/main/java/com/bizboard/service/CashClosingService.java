@@ -49,6 +49,9 @@ public class CashClosingService {
     private final AuditLogService auditLogService;
     private final BusinessRepository businessRepository;
     private final BusinessAccessGuard accessGuard;
+    /** WP 08617251 (Beta v1.1 Closure Modülü): session tx'lerini yönet. */
+    private final com.bizboard.repository.TransactionRepository transactionRepository;
+    private final TransactionService transactionService;
 
     // ───────────────────────── CLOSE TODAY ─────────────────────────
 
@@ -93,6 +96,21 @@ public class CashClosingService {
 
         closing = repository.save(closing);
 
+        // WP 08617251: session strip — closure finalize'da inline eklenen
+        // tx'ler artık "draft" değil; closure_session_id NULL'a çekilir
+        // (= kalıcı tx). Yalnız actor'un kendi tx'leri (cross-user guard).
+        int strippedCount = 0;
+        if (req.getClosureSessionId() != null) {
+            var sessionTxs = transactionRepository
+                    .findByClosureSessionIdAndCreatedBy_Id(req.getClosureSessionId(), userId);
+            for (var t : sessionTxs) {
+                t.setClosureSessionId(null);
+                transactionRepository.save(t);
+                strippedCount++;
+            }
+            log.info("[closure-finalize] session={} stripped {} tx", req.getClosureSessionId(), strippedCount);
+        }
+
         // Audit
         Map<String, Object> meta = new HashMap<>();
         meta.put("date", today.toString());
@@ -101,6 +119,10 @@ public class CashClosingService {
         meta.put("actual", actual);
         meta.put("difference", difference);
         if (req.getReasonCategory() != null) meta.put("reasonCategory", req.getReasonCategory());
+        if (req.getClosureSessionId() != null) {
+            meta.put("closureSessionId", req.getClosureSessionId().toString());
+            meta.put("sessionTxStripped", strippedCount);
+        }
         auditLogService.recordEntityAction(
                 AuditAction.CASH_CLOSING_CLOSED,
                 user.getId(), user.getUsername(),
@@ -109,6 +131,56 @@ public class CashClosingService {
                 meta, null);
 
         return toDto(closing);
+    }
+
+    // ───────────────────────── CLOSURE SESSION (WP 08617251) ─────────────────────────
+
+    /**
+     * WP 08617251 Beta v1.1 Closure Modülü: session rollback (DELETE) /
+     * abandon (sendBeacon). Aynı işi yapar — session'a etiketli tüm tx'leri
+     * standart delete akışıyla (bank balance reversal, inclusion CASCADE,
+     * audit log) siler.
+     *
+     * <p>Cross-user guard: yalnız actor'ün kendi yarattığı tx'ler silinir.</p>
+     */
+    @Transactional
+    public int rollbackSession(java.util.UUID sessionId, UUID actorUserId) {
+        if (sessionId == null) return 0;
+        var sessionTxs = transactionRepository
+                .findByClosureSessionIdAndCreatedBy_Id(sessionId, actorUserId);
+        int deleted = 0;
+        for (var t : sessionTxs) {
+            try {
+                // Standart delete akışı: balance reversal + audit + inclusion CASCADE
+                transactionService.deleteTransaction(t.getId(), actorUserId,
+                        "Closure session rollback");
+                deleted++;
+            } catch (Exception e) {
+                log.warn("[closure-session-rollback] tx {} delete failed: {}", t.getId(), e.getMessage());
+            }
+        }
+        log.info("[closure-session-rollback] session={} deleted={} of {}",
+                sessionId, deleted, sessionTxs.size());
+        return deleted;
+    }
+
+    /**
+     * WP 08617251: "Kaydet & Çık" akışı — closure finalize ETMEDEN
+     * session etiketi strip. Tx'ler kalır (normal current-day tx'e dönüşür).
+     */
+    @Transactional
+    public int keepSessionTransactions(java.util.UUID sessionId, UUID actorUserId) {
+        if (sessionId == null) return 0;
+        var sessionTxs = transactionRepository
+                .findByClosureSessionIdAndCreatedBy_Id(sessionId, actorUserId);
+        int kept = 0;
+        for (var t : sessionTxs) {
+            t.setClosureSessionId(null);
+            transactionRepository.save(t);
+            kept++;
+        }
+        log.info("[closure-session-keep] session={} stripped={}", sessionId, kept);
+        return kept;
     }
 
     // ───────────────────────── BACKDATE CLOSE (v1.6.23.4) ─────────────────────────

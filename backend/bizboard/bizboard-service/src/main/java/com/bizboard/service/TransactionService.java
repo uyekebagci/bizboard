@@ -231,6 +231,8 @@ public class TransactionService {
                 .tags(request.getTags())
                 .metadata(request.getMetadata())
                 .createdBy(user)
+                // WP 08617251: closure session etiketi (NULL = normal tx)
+                .closureSessionId(request.getClosureSessionId())
                 .build();
 
         transaction = transactionRepository.save(transaction);
