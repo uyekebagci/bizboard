@@ -503,8 +503,11 @@ public class ConsolidatedDashboardService {
     }
 
     /**
-     * v1.6.23.9 (TODO 8c7ffaac) + v1.6.23.21: Bekleyen POS tx net toplamı —
-     * business-scoped. Hesap: SUM(amount × (1 − applied_pos_rate/100)).
+     * Beta v1.1 (WP 4f6baaa3 follow-up): bekleyen POS tx toplam HACIM —
+     * komisyon hesabı kaldırıldı. SUM(amount). POS Hacmi mantığı: kullanıcı
+     * banka komisyonunu raporlama'da görmek istemiyor.
+     *
+     * <p>Önceki sürüm (v1.6.23.21) net döndürüyordu: SUM(amount × (1 − rate/100)).</p>
      */
     private BigDecimal computePendingPosReceivables(UUID businessId) {
         List<Transaction> unsettled = transactionRepository
@@ -512,12 +515,7 @@ public class ConsolidatedDashboardService {
         BigDecimal total = BigDecimal.ZERO;
         for (Transaction t : unsettled) {
             if (t.getAmount() == null) continue;
-            BigDecimal rate = t.getAppliedPosRate() != null
-                    ? t.getAppliedPosRate()
-                    : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
-            BigDecimal commission = t.getAmount().multiply(rate)
-                    .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-            total = total.add(t.getAmount().subtract(commission));
+            total = total.add(t.getAmount());
         }
         return total;
     }

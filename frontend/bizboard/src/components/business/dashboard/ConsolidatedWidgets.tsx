@@ -182,12 +182,12 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
             <DetailRow label="Beklenen Net (settle sonrası)" value={expectedNet} tone="pos" bold />
           )}
         </div>
-        {/* v1.7.x WP 8b961444 TODO b92d05fe: yeni formül */}
+        {/* Beta v1.1: komisyon kaldırıldı — formül sadeleşti. */}
         <p className="text-[11px] text-surface-400 pt-2">
-          <strong>Konsolide Net</strong> = Σ POS_profit + Σ non-POS gelir − Σ gider
-          (transfer 0). Alacak/verecek bu hesaba DAHİL DEĞİL; ayrı satırda
-          görünür. <strong>Genel Kasa</strong> = nakit + banka bakiyeleri
-          (fiziksel para). İki sayı farklıdır — POS'ta banka komisyonu kadar fark normal.
+          <strong>Konsolide Net</strong> = Σ POS hacim + Σ non-POS gelir − Σ gider
+          (transfer 0). Alacak/verecek bu hesaba DAHİL DEĞİL; ayrı satırda görünür.{" "}
+          <strong>Genel Kasa</strong> = nakit + banka bakiyeleri (fiziksel para).
+          Bekleyen POS settle olunca Genel Kasa'ya geçer.
         </p>
       </div>
     </WidgetDetailModal>
