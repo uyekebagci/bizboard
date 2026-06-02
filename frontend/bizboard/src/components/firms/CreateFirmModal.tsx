@@ -15,6 +15,7 @@ import { isValidTaxId } from "@/lib/taxId";
 import type { CompanyType, MyCompany, MyCompanyGroup } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { CreateGroupModal } from "./CreateGroupModal";
+import { toast } from "@/lib/toast";
 
 const COMPANY_TYPES: { value: CompanyType; label: string }[] = [
   { value: "AS", label: "Anonim Şirket" },
@@ -80,9 +81,11 @@ export function CreateFirmModal({
         contact_email: form.contact_email || null,
         group_id: form.group_id || null,
       });
+      toast.success("Firma oluşturuldu");
       onCreated(created);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Firma oluşturulamadı");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

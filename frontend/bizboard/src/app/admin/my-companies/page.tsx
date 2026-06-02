@@ -15,6 +15,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { isValidTaxId } from "@/lib/taxId";
 import type { MyCompany, CompanyType } from "@/types";
 
@@ -122,10 +123,12 @@ export default function AdminMyCompaniesPage() {
   async function handleDelete(id: string) {
     try {
       await api.delete(`/admin/my-companies/${id}`);
+      toast.info("Firma silindi");
       setDeleteConfirm(null);
       fetchList();
     } catch (e) {
       setError(getErrorMessage(e));
+      toast.error(e);
     }
   }
 
@@ -239,6 +242,7 @@ export default function AdminMyCompaniesPage() {
           onClose={() => setShowCreate(false)}
           onSubmit={async (form) => {
             await api.post("/admin/my-companies", toPayload(form));
+            toast.success("Firma oluşturuldu");
             setShowCreate(false);
             fetchList();
           }}
@@ -253,6 +257,7 @@ export default function AdminMyCompaniesPage() {
           onClose={() => setEditing(null)}
           onSubmit={async (form) => {
             await api.put(`/admin/my-companies/${editing.id}`, toPayload(form));
+            toast.success("Firma güncellendi");
             setEditing(null);
             fetchList();
           }}

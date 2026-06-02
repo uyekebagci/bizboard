@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
+import { toast } from "@/lib/toast";
 import type { MyCompanyGroup } from "@/types";
 
 const PRESET_COLORS = [
@@ -47,9 +48,11 @@ export function CreateGroupModal({ onClose, onCreated }: Props) {
         icon,
         order_index: 0,
       });
+      toast.success("Grup oluşturuldu");
       onCreated(created);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Grup oluşturulamadı");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

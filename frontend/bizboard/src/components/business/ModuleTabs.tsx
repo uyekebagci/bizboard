@@ -10,6 +10,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
+import { toast } from "@/lib/toast";
 import { useAppStore } from "@/lib/store";
 import type { Business, ModuleType } from "@/types";
 import { DebtModule } from "@/components/business/DebtModule";
@@ -208,6 +209,7 @@ function ModuleManagerModal({
       setChanged(true);
     } catch (err) {
       logger.error("api", "Module toggle error", undefined, err);
+      toast.error(err);
     } finally {
       setLoading(null);
     }

@@ -17,6 +17,7 @@ import type { BankAccountListItem, CompanyType, MyCompany, MyCompanyGroup, PosDe
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { formatCurrency } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 const COMPANY_TYPES: { value: CompanyType; label: string }[] = [
   { value: "AS", label: "Anonim Şirket" },
@@ -138,10 +139,12 @@ export function FirmDetailModal({
         contact_email: form.contact_email || null,
         group_id: form.group_id || null,
       });
+      toast.success("Firma güncellendi");
       onChange();
       setMode("view");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Kayıt başarısız");
+      toast.error(err);
     } finally {
       setSaving(false);
     }
@@ -172,11 +175,13 @@ export function FirmDetailModal({
     setSaving(true);
     try {
       await api.delete(`/firms/${firm.id}`);
+      toast.info("Firma silindi");
       onChange();
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Silme başarısız");
       setConfirmDelete(false);
+      toast.error(err);
     } finally {
       setSaving(false);
     }

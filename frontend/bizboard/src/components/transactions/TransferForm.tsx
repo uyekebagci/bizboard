@@ -20,6 +20,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { BankAccountListItem, TransferDto } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 
@@ -118,10 +119,12 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
 
       triggerRefresh();
       if (dto.low_balance_warning) setWarning(dto.low_balance_warning);
+      toast.success("Transfer tamamlandı");
       onSuccess?.(dto);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Transfer olusturulamadi");
       logger.error("api", "transfer create failed", { fromId, target: trimmedTarget, parsedAmount }, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

@@ -13,6 +13,7 @@ import { X, Loader2, AlertTriangle, ArrowRight, Trash2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { TransferDto } from "@/types";
 
 interface Props {
@@ -60,10 +61,12 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
     setError(null);
     try {
       await api.delete(`/transfers/${pairId}`);
+      toast.info("İşlem silindi");
       onDeleted?.();
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Silinemedi");
+      toast.error(err);
     } finally {
       setBusy(false);
     }

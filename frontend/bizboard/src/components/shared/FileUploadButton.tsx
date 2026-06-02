@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Upload, X, Loader2, FileText, Image as ImageIcon, Check } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import type { FileUploadInfo } from "@/types";
 
 interface FileUploadButtonProps {
@@ -66,10 +67,12 @@ export function FileUploadButton({
 
       const result = await api.upload<FileUploadInfo>("/files", formData);
       setUploaded(true);
+      toast.success("Dosya yüklendi");
       onUploaded?.(result);
       setTimeout(() => setUploaded(false), 2000);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Yukleme hatasi"));
+      toast.error(err);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -156,9 +159,11 @@ export function InlineFileUpload({
       if (entityId) formData.append("entity_id", entityId);
 
       const result = await api.upload<FileUploadInfo>("/files", formData);
+      toast.success("Dosya yüklendi");
       onUploaded?.(result);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Yukleme hatasi"));
+      toast.error(err);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

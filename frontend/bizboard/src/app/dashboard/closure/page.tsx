@@ -20,6 +20,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { toast } from "@/lib/toast";
 import { ClosureQuickAddModal, type ClosureSection } from "@/components/closure/ClosureQuickAddModal";
 
 interface TxSummary {
@@ -183,6 +184,7 @@ function ClosurePage() {
       setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Kapanış kaydedilemedi");
+      toast.error(err);
     } finally {
       setSavingClose(false);
     }
@@ -196,14 +198,16 @@ function ClosurePage() {
       setSessionTxCount(0);
       await refreshSections(false);
       triggerRefresh();
+      toast.success("Kapanış oturumu temizlendi");
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Vazgeçme başarısız");
+      toast.error(err);
     } finally {
       setRollbacking(false);
     }
   }
 
   function handleQuickAddCreated() {
+    // Success toast modal içinde basıldı; burada tekrar etmiyoruz.
     setQuickAddSection(null);
     setSessionTxCount((c) => c + 1);
     void refreshSections(false);

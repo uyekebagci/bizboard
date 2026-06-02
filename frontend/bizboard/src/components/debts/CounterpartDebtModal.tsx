@@ -33,6 +33,7 @@ import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import type { Business, Counterpart } from "@/types";
 import { CounterpartCreateModal } from "@/components/counterparts/CounterpartCreateModal";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 
 type Direction = "RECEIVABLE" | "PAYABLE";
 type Kind = "FIRM" | "PERSON";
@@ -157,10 +158,12 @@ export function CounterpartDebtModal({
         description: description.trim() || null,
       });
       triggerRefresh();
+      toast.success("Borç eklendi");
       onSuccess?.(r.id);
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Kayıt başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

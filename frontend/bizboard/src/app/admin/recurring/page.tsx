@@ -8,6 +8,7 @@ import {
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 
 interface RunResult {
   processed: number;
@@ -35,8 +36,10 @@ export default function RecurringPage() {
     try {
       const r = await api.post<RunResult>("/admin/recurring/run", {});
       setResult(r);
+      toast.info(`Recurring tamamlandı: ${r.created} oluşturuldu, ${r.skipped} atlandı`);
     } catch (e) {
       setError(getErrorMessage(e));
+      toast.error(e);
     } finally {
       setLoading(false);
     }

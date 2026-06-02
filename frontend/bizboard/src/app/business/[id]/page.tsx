@@ -18,6 +18,7 @@ import { useBusiness } from "@/hooks/useBusiness";
 import { useAppStore } from "@/lib/store";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { AddTransactionModal } from "@/components/transactions/AddTransactionModal";
 import Link from "next/link";
 
@@ -47,10 +48,12 @@ export default function BusinessDetailPage() {
     setDeleteError(null);
     try {
       await api.delete(`/businesses/${businessId}`);
+      toast.info("İşletme silindi");
       triggerRefresh();
       router.push("/dashboard");
     } catch (e) {
       setDeleteError(getErrorMessage(e));
+      toast.error(e);
       setDeleting(false);
     }
   }

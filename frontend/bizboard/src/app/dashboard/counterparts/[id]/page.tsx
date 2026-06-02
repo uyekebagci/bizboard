@@ -19,6 +19,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { toast } from "@/lib/toast";
 import type {
   AccountStatement, Counterpart, PaymentDirection, PaymentInstrumentDto,
 } from "@/types";
@@ -96,9 +97,10 @@ export default function CounterpartDetailPage() {
     setBusyInstId(inst.id);
     try {
       await api.delete(`/payment-instruments/${inst.id}`);
+      toast.info("Çek/senet silindi");
       triggerRefresh();
     } catch (e) {
-      alert(e instanceof ApiError ? e.message : "Silme başarısız");
+      toast.error(e);
     } finally {
       setBusyInstId(null);
     }

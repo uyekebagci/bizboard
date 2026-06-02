@@ -22,6 +22,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn, trNormalize } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 import type { SubCashDetail, SubCashEntityType, SubCashIncomeSummary } from "@/types";
 import { RetroactiveInclusionModal } from "./RetroactiveInclusionModal";
 
@@ -118,11 +119,13 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
     setBusyAssignId(assignmentId);
     try {
       await api.delete(`/bank-accounts/${subCashId}/assignments/${assignmentId}`);
+      toast.info("Atama kaldırıldı");
       await refresh();
       onChange?.();
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "Kaldirilamadi";
       setError(msg);
+      toast.error(err);
     } finally {
       setBusyAssignId(null);
     }
@@ -391,11 +394,11 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
                       setBusyRemoveTxId(t.id);
                       try {
                         await api.delete(`/bank-accounts/${subCashId}/inclusions/${t.id}`);
+                        toast.info("İşlem çıkarıldı");
                         await refresh();
                         onChange?.();
                       } catch (err) {
-                        const msg = err instanceof ApiError ? err.message : "Çıkarma başarısız";
-                        alert(msg);
+                        toast.error(err);
                       } finally {
                         setBusyRemoveTxId(null);
                       }
@@ -613,10 +616,12 @@ function AssignmentPicker({
         entity_type: opt.type,
         entity_id: opt.id,
       });
+      toast.success("Atama eklendi");
       onAssigned();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Atama basarisiz");
       logger.error("api", "sub-cash assign failed", { subCashId, opt }, err);
+      toast.error(err);
     } finally {
       setBusyId(null);
     }

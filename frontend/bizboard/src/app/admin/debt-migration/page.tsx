@@ -8,6 +8,7 @@ import {
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 
 interface MigrationResult {
   dry_run: boolean;
@@ -44,8 +45,10 @@ export default function DebtMigrationPage() {
         {}
       );
       setDryResult(r);
+      toast.info("Dry-run tamamlandı");
     } catch (e) {
       setError(getErrorMessage(e));
+      toast.error(e);
     } finally {
       setLoading(false);
     }
@@ -62,8 +65,10 @@ export default function DebtMigrationPage() {
       );
       setApplyResult(r);
       setDryResult(null);
+      toast.success("Migration uygulandı");
     } catch (e) {
       setError(getErrorMessage(e));
+      toast.error(e);
     } finally {
       setLoading(false);
     }

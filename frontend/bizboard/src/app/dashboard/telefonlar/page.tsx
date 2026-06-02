@@ -24,6 +24,7 @@ import type {
   PhoneDevice, PhoneBrand, PhoneModel, PhoneDeviceBank, Counterpart, Business,
 } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 
 export default function TelefonlarPage() {
   const router = useRouter();
@@ -420,10 +421,12 @@ function PhoneDeviceModal({
           }
         }
       }
+      toast.success(existing ? "Telefon güncellendi" : "Telefon eklendi");
       onSuccess();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || "İşlem başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -637,8 +640,10 @@ function DeleteConfirmModal({
     setSubmitting(true);
     try {
       await api.delete(`/phone-devices/${device.id}`);
+      toast.info("Telefon silindi");
       onSuccess();
-    } catch {
+    } catch (err) {
+      toast.error(err);
       onClose();
     } finally {
       setSubmitting(false);

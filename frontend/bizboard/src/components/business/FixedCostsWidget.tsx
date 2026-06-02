@@ -11,6 +11,7 @@ import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 import type { FixedCost, FixedCostSummary, FileUploadInfo } from "@/types";
 
 function formatMoney(n: number) {
@@ -304,6 +305,7 @@ function CreateFixedCostModal({
         );
       }
 
+      toast.success(isEdit ? "Sabit gider güncellendi" : "Sabit gider eklendi");
       onCreated();
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -324,6 +326,7 @@ function CreateFixedCostModal({
       } else {
         setError("Bir hata olustu");
       }
+      toast.error(err);
     } finally {
       setSaving(false);
     }
@@ -496,8 +499,10 @@ function DeleteFixedCostModal({
     setError(null);
     try {
       await api.delete(`/fixed-costs/${fixedCost.id}`);
+      toast.info("Sabit gider silindi");
       onDeleted();
     } catch (err: unknown) {
+      toast.error(err);
       if (err instanceof ApiError && err.code === "CONF-409") {
         setError(
           "Bu kayit otomatik yonetiliyor; personel/arac modulunden silinmeden buradan silinemez."

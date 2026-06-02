@@ -5,6 +5,7 @@ import { ChevronDown, Plus, X, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { Counterpart, CounterpartRole } from "@/types";
 
@@ -248,10 +249,12 @@ function InlineCreateModal({
         name: name.trim(),
         role,
       });
+      toast.success("Cari oluşturuldu");
       onCreated(created);
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Olusturma basarisiz";
       setError(msg);
+      toast.error(e);
     } finally {
       setSubmitting(false);
     }

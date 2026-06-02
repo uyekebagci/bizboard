@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { X, Loader2, Save, Trash2, AlertTriangle } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
+import { toast } from "@/lib/toast";
 import type { MyCompanyGroup } from "@/types";
 
 const PRESET_COLORS = [
@@ -43,9 +44,11 @@ export function EditGroupModal({ group, onClose, onUpdated, onDeleted }: Props) 
       const updated = await api.patch<MyCompanyGroup>(`/firms/groups/${group.id}`, {
         name: name.trim(), color, icon,
       });
+      toast.success("Grup güncellendi");
       onUpdated(updated);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Güncelleme başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -55,10 +58,12 @@ export function EditGroupModal({ group, onClose, onUpdated, onDeleted }: Props) 
     setSubmitting(true);
     try {
       await api.delete(`/firms/groups/${group.id}`);
+      toast.info("Grup silindi");
       onDeleted(group.id);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Silme başarısız");
       setConfirmDelete(false);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

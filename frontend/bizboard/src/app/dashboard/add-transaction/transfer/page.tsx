@@ -30,6 +30,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 import type { BankAccountListItem, MyCompany, Counterpart } from "@/types";
 
 type Mode = "internal" | "cross_firm" | "incoming" | "outgoing";
@@ -215,10 +216,12 @@ function InternalTransferForm({ accounts, onSuccess }: {
         description: description.trim() || null,
       });
       triggerRefresh();
+      toast.success("Transfer tamamlandı");
       onSuccess();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Transfer oluşturulamadı");
       logger.error("api", "internal transfer failed", undefined, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -300,10 +303,12 @@ function CrossFirmTransferForm({ accounts, firms, onSuccess }: {
         description: description.trim() || null,
       });
       triggerRefresh();
+      toast.success("Transfer tamamlandı");
       onSuccess();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Transfer oluşturulamadı");
       logger.error("api", "cross-firm transfer failed", undefined, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -407,10 +412,12 @@ function BankTransferIO({ direction, accounts, firms, counterparts, onSuccess }:
         target_counterpart_id: counterpartId || null,
       });
       triggerRefresh();
+      toast.success(direction === "income" ? "Gelir kaydedildi" : "Gider kaydedildi");
       onSuccess();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "İşlem oluşturulamadı");
       logger.error("api", "bank-transfer-io failed", { direction }, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

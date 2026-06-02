@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import { useAppStore } from "@/lib/store";
 import type { MyCompany, MyCompanyGroup } from "@/types";
 import { FirmDetailModal } from "@/components/firms/FirmDetailModal";
@@ -213,10 +214,12 @@ export default function FirmalarimPage() {
       // firm_count'ları senkron için silent refresh
       const gs = await api.get<MyCompanyGroup[]>("/firms/groups");
       setGroups(gs || []);
+      toast.success("Grup güncellendi");
     } catch (err) {
       // Rollback
       setFirms(prev);
       setError(err instanceof ApiError ? err.message : "Grup değiştirilemedi");
+      toast.error(err);
     }
   }
 

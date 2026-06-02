@@ -9,6 +9,7 @@ import { api, API_URL } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
 import type { FileUploadInfo } from "@/types";
 
@@ -68,11 +69,12 @@ export function DocumentsModule({ businessId }: Props) {
   async function handleDelete(fileId: string) {
     try {
       await api.delete(`/files/${fileId}`);
+      toast.info("Belge silindi");
       setDeleteConfirm(null);
       setSelectedFile(null);
       fetchFiles();
     } catch (err: unknown) {
-      alert(getErrorMessage(err));
+      toast.error(err);
     }
   }
 

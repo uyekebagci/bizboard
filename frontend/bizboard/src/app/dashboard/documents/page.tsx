@@ -10,6 +10,7 @@ import { api, API_URL } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { Business, FileUploadInfo } from "@/types";
@@ -68,11 +69,12 @@ export default function DocumentsPage() {
   async function handleDelete(fileId: string) {
     try {
       await api.delete(`/files/${fileId}`);
+      toast.info("Belge silindi");
       setDeleteConfirm(null);
       setSelectedFile(null);
       fetchData();
     } catch (err: unknown) {
-      alert(getErrorMessage(err));
+      toast.error(err);
     }
   }
 

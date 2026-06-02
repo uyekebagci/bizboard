@@ -14,6 +14,7 @@ import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import type { Business, InventoryItem, MaintenanceLog, FuelLog, Employee, FileUploadInfo } from "@/types";
 import type { LucideIcon } from "lucide-react";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
@@ -451,7 +452,7 @@ function InventoryDetailModal({ item, onClose, onUpdated }: {
 
   async function handleDelete() {
     setDeleting(true);
-    try { await api.delete(`/inventory/${item.id}`); onUpdated(); } catch { setDeleting(false); }
+    try { await api.delete(`/inventory/${item.id}`); toast.info("Stok silindi"); onUpdated(); } catch (err) { toast.error(err); setDeleting(false); }
   }
 
   async function handleSave() {
@@ -485,8 +486,10 @@ function InventoryDetailModal({ item, onClose, onUpdated }: {
         purchase_date: editPurchaseDate || null,
         notes: editNotes || null,
       });
+      toast.success("Stok güncellendi");
       onUpdated();
-    } catch {
+    } catch (err) {
+      toast.error(err);
       setSaving(false);
     }
   }
@@ -901,8 +904,9 @@ function AddMaintenanceModal({ itemId, onClose, onAdded }: {
         maintenance_type: type, description: description || null,
         cost: cost ? parseMoneyInput(cost) : null, date, performed_by: performedBy || null,
       });
+      toast.success("Bakım kaydedildi");
       onAdded(log);
-    } catch { setSaving(false); }
+    } catch (err) { toast.error(err); setSaving(false); }
   }
 
   const inputCls = "w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
@@ -1038,8 +1042,9 @@ function AddFuelLogModal({ itemId, onClose, onAdded }: {
         receipt_url: receiptUrl || (uploadedFiles.length > 0 ? uploadedFiles[0].url : null),
         notes: [timeRaw.length === 4 ? `Saat: ${timeDisplay}` : null, notes || null].filter(Boolean).join(" | ") || null,
       });
+      toast.success("Yakıt kaydedildi");
       onAdded(log);
-    } catch { setSaving(false); }
+    } catch (err) { toast.error(err); setSaving(false); }
   }
 
   const inputCls = "w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
@@ -1259,9 +1264,11 @@ function CreateInventoryModal({ businesses, presetBusinessId, onClose, onCreated
         purchase_date: hasField("purchase_date") && purchaseDate ? purchaseDate : null,
         notes: notes || null,
       });
+      toast.success("Stok eklendi");
       onCreated();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Hata olustu"));
+      toast.error(err);
     } finally {
       setSaving(false);
     }

@@ -16,6 +16,7 @@ import { X, Loader2, AlertTriangle, Check } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import type { CashClosing, CashClosingPreview, CashClosingReason } from "@/types";
 
 const REASONS: { value: CashClosingReason; label: string }[] = [
@@ -60,6 +61,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
         reason_category: hasDiff ? reason : null,
         reason_note: hasDiff ? note.trim() : null,
       });
+      toast.success("Gün kapatıldı");
       onClosed(result);
       onClose();
     } catch (err: unknown) {
@@ -68,6 +70,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
       } else {
         setError(getErrorMessage(err, "Kapatılamadı"));
       }
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

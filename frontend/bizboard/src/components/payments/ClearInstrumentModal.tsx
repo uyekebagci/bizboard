@@ -13,6 +13,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { BankAccountListItem, PaymentInstrumentDto } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 
 interface Props {
   instrument: PaymentInstrumentDto;
@@ -54,10 +55,12 @@ export function ClearInstrumentModal({ instrument, onClose, onSuccess }: Props) 
           bank_account_id: bankAccountId,
           cleared_at: clearedDate + "T00:00:00",
         });
+      toast.success("Tahsil edildi olarak işaretlendi");
       onSuccess?.(updated);
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Tahsil işlemi başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

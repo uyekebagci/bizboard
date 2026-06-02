@@ -5,6 +5,7 @@ import { X, Upload, Loader2, Check, FileText, EyeOff } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import {
   CATEGORY_LABELS,
   FILE_CATEGORIES,
@@ -95,8 +96,10 @@ export function FileUploadModal({
 
       const result = await api.upload<FileUploadInfo>("/files", formData);
       setUploaded(result);
+      toast.success("Dosya yüklendi");
       onUploaded?.(result);
     } catch (err: unknown) {
+      toast.error(err);
       if (err instanceof ApiError) {
         // Backend code'a göre kullanıcı dostu mesaj.
         switch (err.code) {

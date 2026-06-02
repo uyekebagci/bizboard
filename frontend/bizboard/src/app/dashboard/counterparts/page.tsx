@@ -10,6 +10,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { isValidTaxId } from "@/lib/taxId";
 import { formatCurrency, cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { Counterpart, CounterpartRole, Business } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 
@@ -224,12 +225,14 @@ export default function CounterpartsPage() {
   async function handleDelete(id: string) {
     try {
       await api.delete(`/counterparts/${id}`);
+      toast.info("Cari silindi");
       setDeleteConfirm(null);
       fetchList();
     } catch (e) {
       // 409 mesajını göster — silinmedi
       setError(getErrorMessage(e));
       setDeleteConfirm(null);
+      toast.error(e);
     }
   }
 
@@ -400,6 +403,7 @@ export default function CounterpartsPage() {
               "/counterparts",
               { ...toPayload(f), business_id: selectedBusinessId },
             );
+            toast.success("Cari oluşturuldu");
             setShowCreate(false);
             fetchList();
             if (typeof window !== "undefined" && created?.id) {
@@ -422,6 +426,7 @@ export default function CounterpartsPage() {
           onClose={() => setEditing(null)}
           onSubmit={async (f) => {
             await api.put(`/counterparts/${editing.id}`, toPayload(f));
+            toast.success("Cari güncellendi");
             setEditing(null);
             fetchList();
           }}
@@ -523,6 +528,7 @@ function CounterpartFormModal({
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Kaydetme basarisiz";
       setError(msg);
+      toast.error(e);
     } finally {
       setSubmitting(false);
     }

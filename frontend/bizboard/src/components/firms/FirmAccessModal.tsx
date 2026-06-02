@@ -14,6 +14,7 @@ import { X, Plus, Loader2, ShieldCheck, Trash2, Users, Search, AlertTriangle } f
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 import type { AdminUser, MyCompany, MyCompanyAccessUser } from "@/types";
 
 interface Props {
@@ -54,9 +55,11 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
       await api.post(`/firms/${firm.id}/access/users/bulk-revoke`, {
         user_ids: Array.from(selected),
       });
+      toast.success("Yetki güncellendi");
       await refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Kaldırma başarısız");
+      toast.error(err);
     } finally {
       setBusy(false);
     }
@@ -66,10 +69,12 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
     setBusy(true);
     try {
       await api.post(`/firms/${firm.id}/access/clear`, {});
+      toast.success("Yetki güncellendi");
       setConfirmClear(false);
       await refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Temizleme başarısız");
+      toast.error(err);
     } finally {
       setBusy(false);
     }
@@ -79,9 +84,11 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
     setBusy(true);
     try {
       await api.delete(`/firms/${firm.id}/access/users/${userId}`);
+      toast.success("Yetki güncellendi");
       await refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Kaldırma başarısız");
+      toast.error(err);
     } finally {
       setBusy(false);
     }
@@ -291,9 +298,11 @@ function AddUsersSubmodal({
         return;
       }
       await api.post(`/firms/${firm.id}/access/users`, { user_ids: newUserIds });
+      toast.success("Yetki güncellendi");
       onAdded();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Ekleme başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

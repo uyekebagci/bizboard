@@ -36,6 +36,7 @@ import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { BusinessType, ModuleType } from "@/types";
 
@@ -352,9 +353,11 @@ export default function AddBusinessPage() {
       });
 
       localStorage.removeItem("bizboard_draft_business");
+      toast.success("İşletme oluşturuldu");
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Isletme olusturulamadi"));
+      toast.error(err);
     } finally {
       setIsSubmitting(false);
     }

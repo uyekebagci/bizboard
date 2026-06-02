@@ -16,6 +16,7 @@ import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import type { BusinessNote } from "@/types";
 
 const NOTE_COLORS = [
@@ -82,17 +83,18 @@ export function NotesModule({ businessId }: Props) {
       await api.patch(`/businesses/${businessId}/notes/${noteId}/pin`, {});
       fetchNotes();
     } catch (err: unknown) {
-      alert(getErrorMessage(err));
+      toast.error(err);
     }
   }
 
   async function handleDelete(noteId: string) {
     try {
       await api.delete(`/businesses/${businessId}/notes/${noteId}`);
+      toast.info("Not silindi");
       setDeleteConfirm(null);
       fetchNotes();
     } catch (err: unknown) {
-      alert(getErrorMessage(err));
+      toast.error(err);
     }
   }
 
@@ -313,12 +315,15 @@ function NoteFormModal({
 
       if (isEdit) {
         await api.put(`/businesses/${businessId}/notes/${note!.id}`, body);
+        toast.success("Not güncellendi");
       } else {
         await api.post(`/businesses/${businessId}/notes`, body);
+        toast.success("Not eklendi");
       }
       onSuccess();
     } catch (err: unknown) {
       setError(getErrorMessage(err));
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

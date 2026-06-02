@@ -19,6 +19,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { toast } from "@/lib/toast";
 import type { QuickActionListItem, QuickActionTemplate } from "@/types";
 import { QuickActionExecuteModal } from "./QuickActionExecuteModal";
 
@@ -60,9 +61,11 @@ export function QuickActionsWidget({ businessId }: Props) {
     setBusyId(qa.id);
     try {
       await api.delete(`/quick-actions/${qa.id}`);
+      toast.info("Hızlı işlem silindi");
       await refresh();
     } catch (err) {
       logger.error("api", "quick-action delete failed", { id: qa.id }, err);
+      toast.error(err);
     } finally {
       setBusyId(null);
       setMenuOpenId(null);
@@ -78,9 +81,10 @@ export function QuickActionsWidget({ businessId }: Props) {
     setBusyId(qa.id);
     try {
       await api.patch(`/quick-actions/${qa.id}`, { name: newName.trim() });
+      toast.success("Hızlı işlem güncellendi");
       await refresh();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Yeniden adlandırma başarısız");
+      toast.error(err);
     } finally {
       setBusyId(null);
       setMenuOpenId(null);

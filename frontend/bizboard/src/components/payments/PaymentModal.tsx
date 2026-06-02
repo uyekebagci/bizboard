@@ -21,6 +21,7 @@ import {
 import { api, ApiError } from "@/lib/api/client";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 import type {
   AccountStatement, BankAccountListItem, CreatePaymentRequest, PaymentDirection,
   PaymentMethodKind, PaymentResponse,
@@ -194,10 +195,12 @@ export function PaymentModal({
       }
       const resp = await api.post<PaymentResponse>(
         `/counterparts/${counterpartId}/payments`, body);
+      toast.success("Ödeme kaydedildi");
       onSuccess?.(resp);
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Ödeme oluşturulamadı");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

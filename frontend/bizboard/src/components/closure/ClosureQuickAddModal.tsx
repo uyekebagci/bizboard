@@ -14,6 +14,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { toast } from "@/lib/toast";
 import type {
   BankAccountListItem, Counterpart, PosDeviceListItem,
 } from "@/types";
@@ -174,10 +175,12 @@ export function ClosureQuickAddModal({
           closure_session_id: closureSessionId,
         });
       }
+      toast.success("İşlem kapanışa eklendi");
       onCreated();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Kayıt başarısız");
       logger.error("api", "closure quick-add failed", { section }, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

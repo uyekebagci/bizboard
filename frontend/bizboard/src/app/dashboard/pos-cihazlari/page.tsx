@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { formatCurrency, cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
@@ -683,10 +684,12 @@ function BulkSettleModal({
         bank_account_id: selectedBank,
         settled_at: settledAt.length > 0 ? `${settledAt}:00` : undefined,
       });
+      toast.success("Toplu settle tamamlandı");
       onSuccess();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || "İşlem başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

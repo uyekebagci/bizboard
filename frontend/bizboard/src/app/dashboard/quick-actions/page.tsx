@@ -22,6 +22,7 @@ import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { useAppStore } from "@/lib/store";
+import { toast } from "@/lib/toast";
 import type { QuickActionListItem, QuickActionTemplate } from "@/types";
 import { QuickActionExecuteModal } from "@/components/business/dashboard/QuickActionExecuteModal";
 import { DarkSelect } from "@/components/shared/DarkSelect";
@@ -113,9 +114,10 @@ export default function QuickActionsManagePage() {
     setBusyId(qa.id);
     try {
       await api.delete(`/quick-actions/${qa.id}`);
+      toast.info("Hızlı işlem silindi");
       await refresh();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Silinemedi");
+      toast.error(err);
     } finally {
       setBusyId(null);
     }
@@ -127,9 +129,10 @@ export default function QuickActionsManagePage() {
     setBusyId(qa.id);
     try {
       await api.patch(`/quick-actions/${qa.id}`, { name: newName.trim() });
+      toast.success("Hızlı işlem güncellendi");
       await refresh();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Yeniden adlandırma başarısız");
+      toast.error(err);
     } finally {
       setBusyId(null);
     }
@@ -152,9 +155,10 @@ export default function QuickActionsManagePage() {
         icon: qa.icon,
         color: qa.color,
       });
+      toast.success("Hızlı işlem kaydedildi");
       await refresh();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Kopya oluşturulamadı");
+      toast.error(err);
     } finally {
       setBusyId(null);
     }
@@ -193,7 +197,7 @@ export default function QuickActionsManagePage() {
     } catch (err) {
       // Revert on failure
       await refresh();
-      alert(err instanceof ApiError ? err.message : "Sıralama kaydedilemedi");
+      toast.error(err);
     }
   }
 

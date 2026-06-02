@@ -23,6 +23,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart, PosDeviceListItem } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
@@ -269,6 +270,12 @@ export function AddTransactionForm({
 
       setSuccess(true);
       triggerRefresh();
+      const successMsg = paymentMethod === "POS"
+        ? "POS işlemi kaydedildi"
+        : direction === "income"
+          ? "Gelir kaydedildi"
+          : "Gider kaydedildi";
+      toast.success(successMsg);
       // v1.6.23.26: callback ile parent'a haber ver; eski navigation logic
       // sadece page route'unda kalır.
       if (onSuccess) {
@@ -276,6 +283,7 @@ export function AddTransactionForm({
       }
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Islem eklenirken bir hata olustu"));
+      toast.error(err);
     } finally {
       setIsSubmitting(false);
     }

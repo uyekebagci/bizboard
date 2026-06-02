@@ -14,6 +14,7 @@ import { X, Loader2, Scissors, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { AccountStatement } from "@/types";
 
 interface Props {
@@ -76,6 +77,7 @@ export function WriteoffModal({
         amount: parsedAmount,
         reason: reason.trim() || null,
       });
+      toast.success("Borç silindi");
       onSuccess();
     } catch (err) {
       const msg = err instanceof ApiError
@@ -84,6 +86,7 @@ export function WriteoffModal({
       setError(msg);
       logger.error("api", "debt writeoff failed", { debtId }, err);
       setShowConfirm(false);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

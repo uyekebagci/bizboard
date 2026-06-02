@@ -20,6 +20,7 @@ import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import { CounterpartCombobox } from "@/components/shared/CounterpartCombobox";
 import type { Debt, DebtSummary, FileUploadInfo, ReceivableType } from "@/types";
@@ -96,24 +97,26 @@ export function DebtModule({ businessId, currency }: Props) {
   async function handleSettle(debtId: string) {
     try {
       await api.patch(`/debts/${debtId}/settle`, {});
+      toast.success("Borç kapatıldı");
       setSettleConfirm(null);
       fetchData();
       // BUG fix: alacaklar widget'ı consolidated dashboard'dan beslenir;
       // global refresh tetiklenmezse stale kalır.
       triggerRefresh();
     } catch (err: unknown) {
-      alert(getErrorMessage(err));
+      toast.error(err);
     }
   }
 
   async function handleDelete(debtId: string) {
     try {
       await api.delete(`/debts/${debtId}`);
+      toast.info("Borç silindi");
       setDeleteConfirm(null);
       fetchData();
       triggerRefresh();
     } catch (err: unknown) {
-      alert(getErrorMessage(err));
+      toast.error(err);
     }
   }
 
@@ -543,9 +546,11 @@ function CreateDebtModal({
           } catch {}
         }
       }
+      toast.success("Borç eklendi");
       onSuccess();
     } catch (err: unknown) {
       setError(getErrorMessage(err));
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

@@ -10,6 +10,7 @@ import { formatCurrency, formatRelativeDate, cn, formatMoneyInput, parseMoneyInp
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { TransferDetailModal } from "@/components/transactions/TransferDetailModal";
@@ -320,9 +321,11 @@ export function TransactionDetailModal({
       }
 
       triggerRefresh();
+      toast.success("İşlem güncellendi");
       onClose();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Guncelleme sirasinda hata olustu"));
+      toast.error(err);
     } finally {
       setSaving(false);
     }
@@ -877,9 +880,11 @@ function DeleteTransactionModal({
         { reason: reason.trim() }
       );
       triggerRefresh();
+      toast.info("İşlem silindi");
       onClose();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Islem silinirken bir hata olustu"));
+      toast.error(err);
     } finally {
       setIsDeleting(false);
     }
@@ -1005,9 +1010,11 @@ function PosSettledToggle({
       await api.patch(`/businesses/${businessId}/transactions/${transactionId}/unsettle`);
       setSettled(false);
       setBankName(null);
+      toast.success("Settle iptal edildi");
       onSettleChange?.();
-    } catch {
+    } catch (err) {
       // silent — toggle değiştirilmez
+      toast.error(err);
     } finally {
       setUnsettling(false);
     }
@@ -1107,10 +1114,12 @@ function SettleModal({
         }
       );
       const bank = banks.find((b) => b.id === selectedBank);
+      toast.success("Hesaba düştü olarak işaretlendi");
       onSuccess(bank?.name || "");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || "İşlem başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

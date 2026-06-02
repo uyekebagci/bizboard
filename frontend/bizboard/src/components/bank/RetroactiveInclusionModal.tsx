@@ -13,6 +13,7 @@ import { X, Loader2, Rewind, Search, AlertTriangle, CheckCircle2 } from "lucide-
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { AvailableTxPage, Transaction } from "@/types";
 
 interface Props {
@@ -115,11 +116,13 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
       logger.info("api", "retroactive inclusions added", {
         subCashId, added: result.added, skipped: result.skipped, failed: result.failed.length,
       });
+      toast.success("İşlem dahil edildi");
       onAdded();
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Ekleme başarısız");
       logger.error("api", "retroactive inclusion failed", { subCashId }, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

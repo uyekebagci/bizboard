@@ -16,6 +16,7 @@ import { X, Loader2, Zap, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { ExecuteQuickActionResponse, QuickActionListItem } from "@/types";
 
 interface Props {
@@ -81,11 +82,13 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
         },
       );
       setSuccess(true);
+      toast.success("İşlem oluşturuldu");
       setTimeout(() => onSuccess(), 600);
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "İşlem oluşturulamadı";
       setError(msg);
       logger.error("api", "quick-action execute failed", { id: quickAction.id }, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

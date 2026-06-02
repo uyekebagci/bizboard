@@ -14,6 +14,7 @@ import { useState } from "react";
 import { X, Loader2, Building2, User as UserIcon } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { Counterpart } from "@/types";
 
 type Kind = "FIRM" | "PERSON";
@@ -56,9 +57,11 @@ export function CounterpartCreateModal({
         contact_email: email.trim() || null,
         address: isFirm ? (address.trim() || null) : null,
       });
+      toast.success("Cari oluşturuldu");
       onCreated(created);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Oluşturma başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

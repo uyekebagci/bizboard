@@ -23,6 +23,7 @@ import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { useBusinesses } from "@/hooks/useBusinesses";
+import { toast } from "@/lib/toast";
 import type { BankAccountType, MyCompany } from "@/types";
 
 type CreatableType = Exclude<BankAccountType, "MAIN_CASH">;
@@ -116,11 +117,13 @@ export function BankAccountCreateForm({
       // v1.7.0.x: ownerMyCompany (opsiyonel) — null gönderilirse boş kalır.
       body.owner_my_company_id = ownerMyCompanyId || null;
       await api.post("/bank-accounts", body);
+      toast.success("Hesap kaydedildi");
       onCreated();
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "Hesap olusturulamadi";
       setError(msg);
       logger.error("api", "bank-account create failed", { type, businessId }, err);
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

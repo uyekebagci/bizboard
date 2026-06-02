@@ -18,6 +18,7 @@ import {
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { BankAccountListItem, BankAccountType } from "@/types";
 import { BankAccountDetailModal } from "@/components/bank/BankAccountDetailModal";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
@@ -72,6 +73,7 @@ export default function HesaplarPage() {
         is_active: !a.is_active,
         force,
       });
+      toast.success(!a.is_active ? "Hesap aktifleştirildi" : "Hesap pasifleştirildi");
       setConfirmAction(null);
       await refresh();
     } catch (err) {
@@ -79,6 +81,7 @@ export default function HesaplarPage() {
         setConfirmAction({ account: a, active: !a.is_active, force: true });
       } else {
         logger.error("api", "bank-account toggle failed", { id: a.id }, err);
+        toast.error(err);
       }
     } finally {
       setBusyId(null);
@@ -89,12 +92,14 @@ export default function HesaplarPage() {
     setBusyId(a.id);
     try {
       await api.delete(`/bank-accounts/${a.id}`);
+      toast.info("Hesap silindi");
       setDeleteTarget(null);
       await refresh();
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "Silinemedi";
       setError(msg);
       logger.error("api", "bank-account delete failed", { id: a.id }, err);
+      toast.error(err);
     } finally {
       setBusyId(null);
     }

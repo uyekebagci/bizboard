@@ -19,6 +19,7 @@ import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { formatCurrency, cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { Debt } from "@/types";
 import { ChequeAddModal } from "@/components/cheques/ChequeAddModal";
 
@@ -58,8 +59,10 @@ export default function ChequesPage() {
       // BUG fix: consolidated dashboard alacaklar/verecekler widget'ları
       // bu mutation'dan haberdar olsun.
       triggerRefresh();
+      toast.success("Çek kapatıldı");
     } catch (err) {
       logger.error("api", "cheque settle failed", { id: d.id }, err);
+      toast.error(err);
     } finally {
       setBusyId(null);
     }

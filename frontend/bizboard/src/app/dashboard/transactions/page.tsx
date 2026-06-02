@@ -11,6 +11,7 @@ import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import { TransactionDetailModal } from "@/components/business/TransactionList";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { Business, Transaction, FixedCostSummary } from "@/types";
@@ -396,9 +397,11 @@ function DeleteModal({
         `/businesses/${transaction.business_id}/transactions/${transaction.id}`,
         { reason: reason.trim() }
       );
+      toast.info("İşlem silindi");
       onDeleted();
     } catch (err: unknown) {
       setError(getErrorMessage(err));
+      toast.error(err);
     } finally {
       setIsDeleting(false);
     }

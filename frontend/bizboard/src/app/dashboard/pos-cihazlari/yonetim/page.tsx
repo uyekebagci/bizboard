@@ -16,6 +16,7 @@ import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { PosDeviceListItem, MyCompany } from "@/types";
 
@@ -65,10 +66,12 @@ export default function PosDeviceManagementPage() {
   async function handleDelete(d: PosDeviceListItem) {
     try {
       await api.delete(`/pos-devices/${d.id}`);
+      toast.info("POS cihazı silindi");
       setPendingDelete(null);
       void refresh();
     } catch (err) {
       logger.error("api", "POS device delete failed", { id: d.id }, err);
+      toast.error(err);
     }
   }
 
@@ -254,12 +257,15 @@ function PosDeviceFormModal({
       };
       if (isEdit && device) {
         await api.patch(`/pos-devices/${device.id}`, { ...body, is_active: active });
+        toast.success("POS cihazı güncellendi");
       } else {
         await api.post("/pos-devices", body);
+        toast.success("POS cihazı eklendi");
       }
       onSaved();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Kaydedilemedi");
+      toast.error(err);
     } finally {
       setSaving(false);
     }

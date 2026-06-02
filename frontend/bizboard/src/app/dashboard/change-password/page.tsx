@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Lock, Loader2, ShieldCheck } from "lucide-react";
 import { api, ApiError, clearToken } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function ChangePasswordPage() {
         { autoRefresh: true }
       );
       setSuccess(true);
+      toast.success("Şifre güncellendi");
       // Backend tum refresh token'lari revoke etti — yeniden login gerekecek.
       // Kullaniciya 2 saniye basari ekrani gosterip login'e at.
       setTimeout(() => {
@@ -47,6 +49,7 @@ export default function ChangePasswordPage() {
         router.replace("/auth/login");
       }, 2000);
     } catch (err: unknown) {
+      toast.error(err);
       if (err instanceof ApiError) {
         if (err.code === "VAL-400" && err.fieldErrors) {
           // Backend field hatalarını snake_case ile dönüyor

@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import type { Employee, EmployeeSummary } from "@/types";
 
 function formatMoney(n: number) {
@@ -212,11 +213,13 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
           onToggleActive={async () => {
             try {
               await api.patch(`/employees/${detailTarget.id}/toggle-active`);
+              toast.success("Personel durumu güncellendi");
               setDetailTarget(null);
               fetchData();
               triggerRefresh();
             } catch (err) {
               logger.error("api", "Personnel toggle-active failed", undefined, err);
+              toast.error(err);
             }
           }}
           onDelete={() => { setDetailTarget(null); setDeleteTarget(detailTarget); }}
@@ -445,12 +448,15 @@ function CreateEmployeeModal({
     try {
       if (isEdit) {
         await api.put(`/employees/${employee.id}`, body);
+        toast.success("Personel güncellendi");
       } else {
         await api.post(`/businesses/${businessId}/employees`, body);
+        toast.success("Personel eklendi");
       }
       onCreated();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Bir hata olustu"));
+      toast.error(err);
     } finally {
       setSaving(false);
     }
@@ -667,9 +673,11 @@ function DeleteEmployeeModal({
     setError(null);
     try {
       await api.delete(`/employees/${employee.id}`);
+      toast.info("Personel silindi");
       onDeleted();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Personel silinirken bir hata olustu"));
+      toast.error(err);
     } finally {
       setIsDeleting(false);
     }

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { X, Loader2, AlertTriangle } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { PaymentInstrumentDto } from "@/types";
 
 interface Props {
@@ -36,10 +37,12 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
       const updated = await api.post<PaymentInstrumentDto>(
         `/payment-instruments/${instrument.id}/bounce`,
         { bounced_at: bouncedDate + "T00:00:00", reason: reason.trim() || null });
+      toast.success("Karşılıksız olarak işaretlendi");
       onSuccess?.(updated);
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Bounce başarısız");
+      toast.error(err);
     } finally {
       setSubmitting(false);
     }

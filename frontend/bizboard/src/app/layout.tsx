@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import { ClientProviders } from "@/components/layout/ClientProviders";
 import { EnvironmentBanner } from "@/components/layout/EnvironmentBanner";
 import { PwaUpdatePrompt } from "@/components/layout/PwaUpdatePrompt";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -57,6 +58,21 @@ export default function RootLayout({
           <EnvironmentBanner />
           {children}
           <PwaUpdatePrompt />
+          {/* WP 4f6baaa3: global toast — sağ üst, dark theme, aria-live="polite" yerleşik */}
+          <Toaster
+            position="top-right"
+            gutter={8}
+            containerStyle={{ top: 16, right: 16 }}
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: "#1e293b",
+                color: "#e2e8f0",
+                fontSize: "13px",
+                borderRadius: "10px",
+              },
+            }}
+          />
         </ClientProviders>
       </body>
     </html>

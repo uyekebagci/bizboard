@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
+import { toast } from "@/lib/toast";
 import type { Vehicle, VehicleSummary } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 
@@ -211,7 +212,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
           onClose={() => setDetailTarget(null)}
           onEdit={() => { setDetailTarget(null); setEditTarget(detailTarget); }}
           onToggleActive={async () => {
-            try { await api.patch(`/vehicles/${detailTarget.id}/toggle-active`); setDetailTarget(null); fetchData(); triggerRefresh(); } catch (err) { logger.error("api", "Vehicle toggle-active failed", undefined, err); }
+            try { await api.patch(`/vehicles/${detailTarget.id}/toggle-active`); toast.success("Araç durumu güncellendi"); setDetailTarget(null); fetchData(); triggerRefresh(); } catch (err) { logger.error("api", "Vehicle toggle-active failed", undefined, err); toast.error(err); }
           }}
           onDelete={() => { setDetailTarget(null); setDeleteTarget(detailTarget); }} />
       )}
@@ -582,12 +583,15 @@ function CreateVehicleModal({
     try {
       if (isEdit) {
         await api.put(`/vehicles/${vehicle.id}`, body);
+        toast.success("Araç güncellendi");
       } else {
         await api.post(`/businesses/${businessId}/vehicles`, body);
+        toast.success("Araç eklendi");
       }
       onCreated();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Bir hata olustu"));
+      toast.error(err);
     } finally {
       setSaving(false);
     }
@@ -770,9 +774,11 @@ function DeleteVehicleModal({
     setError(null);
     try {
       await api.delete(`/vehicles/${vehicle.id}`);
+      toast.info("Araç silindi");
       onDeleted();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Arac silinirken bir hata olustu"));
+      toast.error(err);
     } finally {
       setIsDeleting(false);
     }
