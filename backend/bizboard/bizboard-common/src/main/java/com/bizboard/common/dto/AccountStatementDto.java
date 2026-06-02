@@ -43,6 +43,14 @@ public class AccountStatementDto {
     @JsonProperty("running_balance_history")
     private List<RunningBalanceEntry> runningBalanceHistory;
 
+    /**
+     * WP a9da4e9d (Beta v1.1): Borç silme kayıtları — ödeme almadan
+     * manuel düşümler. Tx tabanlı raporlar etkilenmez; yalnız cari
+     * hesap balance'ı düşer ve burada listelenir.
+     */
+    @JsonProperty("writeoffs")
+    private List<DebtWriteoffDto> writeoffs;
+
     @Data
     @Builder
     public static class CounterpartSummary {
@@ -64,6 +72,8 @@ public class AccountStatementDto {
         @JsonProperty("portfolio_notes_outgoing") private BigDecimal portfolioNotesOutgoing;
         @JsonProperty("net_realized") private BigDecimal netRealized;
         @JsonProperty("net_with_portfolio") private BigDecimal netWithPortfolio;
+        /** v1.7.0.x (WP a9da4e9d): bu counterpart için toplam silme tutarı (info). */
+        @JsonProperty("total_writeoffs_amount") private BigDecimal totalWriteoffsAmount;
     }
 
     @Data
@@ -98,7 +108,7 @@ public class AccountStatementDto {
     @Builder
     public static class RunningBalanceEntry {
         private LocalDateTime date;
-        /** DEBT_CREATED | PAYMENT | INSTRUMENT_CLEARED | INSTRUMENT_BOUNCED | TRANSACTION */
+        /** DEBT_CREATED | PAYMENT | INSTRUMENT_CLEARED | INSTRUMENT_BOUNCED | TRANSACTION | WRITEOFF */
         private String type;
         private BigDecimal amount;            // pozitif: alacak yönü; negatif: verecek yönü
         @JsonProperty("balance_after") private BigDecimal balanceAfter;

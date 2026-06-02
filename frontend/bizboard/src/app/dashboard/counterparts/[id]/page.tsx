@@ -13,7 +13,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ChevronLeft, Plus, ArrowDownLeft, ArrowUpRight, TrendingUp, TrendingDown,
   FileText, Scroll, Check, AlertTriangle, RefreshCw, Loader2, Trash2,
-  Wallet, Banknote, Receipt,
+  Wallet, Banknote, Receipt, Scissors,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -26,6 +26,7 @@ import { PaymentModal } from "@/components/payments/PaymentModal";
 import { ClearInstrumentModal } from "@/components/payments/ClearInstrumentModal";
 import { BounceInstrumentModal } from "@/components/payments/BounceInstrumentModal";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
+import { WriteoffModal } from "@/components/debts/WriteoffModal";
 
 type TabKey = "running" | "receivables" | "payables" | "instruments" | "transactions";
 
@@ -63,6 +64,8 @@ export default function CounterpartDetailPage() {
     | null
   >(null);
   const [debtModal, setDebtModal] = useState<"RECEIVABLE" | "PAYABLE" | null>(null);
+  // WP a9da4e9d: borç silme modal
+  const [showWriteoff, setShowWriteoff] = useState(false);
   const [clearInst, setClearInst] = useState<PaymentInstrumentDto | null>(null);
   const [bounceInst, setBounceInst] = useState<PaymentInstrumentDto | null>(null);
   const [instStatusFilter, setInstStatusFilter] = useState<"ALL" | "PORTFOLIO" | "CLEARED" | "BOUNCED">("ALL");
@@ -199,6 +202,25 @@ export default function CounterpartDetailPage() {
               className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold inline-flex items-center gap-1.5">
               <Plus size={14} /> Alacak
             </button>
+            {/* WP a9da4e9d: borç silme — admin only (non-admin tooltip) */}
+            <button
+              onClick={() => {
+                if (!isAdmin) {
+                  alert("Yönetici yetkisi gerekli");
+                  return;
+                }
+                setShowWriteoff(true);
+              }}
+              title={isAdmin ? "Borçtan ödeme almadan manuel düşüm" : "Yönetici yetkisi gerekli"}
+              className={cn(
+                "px-3 py-2 rounded-xl text-sm font-semibold inline-flex items-center gap-1.5 border",
+                isAdmin
+                  ? "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border-rose-500/40"
+                  : "bg-surface-700 text-surface-500 border-surface-600 cursor-not-allowed",
+              )}
+            >
+              <Scissors size={14} /> Borç Sil
+            </button>
           </div>
         </div>
       </section>
@@ -259,18 +281,26 @@ export default function CounterpartDetailPage() {
                   <tr><td colSpan={4} className="px-4 py-8 text-center text-surface-400 text-xs">
                     Henüz hareket yok.
                   </td></tr>
-                ) : statement.running_balance_history.map((r, i) => (
-                  <tr key={r.reference_id + "-" + i}>
+                ) : statement.running_balance_history.map((r, i) => {
+                  const isWriteoff = r.type === "WRITEOFF";
+                  return (
+                  <tr key={r.reference_id + "-" + i} className={isWriteoff ? "bg-rose-500/[0.03]" : ""}>
                     <td className="px-4 py-2 text-surface-300 whitespace-nowrap text-xs">
                       {formatDateTime(r.date)}
                     </td>
                     <td className="px-4 py-2 text-surface-200">
-                      <span className="inline-block text-[9px] uppercase mr-1 px-1.5 py-0.5 rounded bg-surface-700 text-surface-400">
-                        {r.type}
+                      <span className={cn(
+                        "inline-block text-[9px] uppercase mr-1 px-1.5 py-0.5 rounded border",
+                        isWriteoff
+                          ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                          : "bg-surface-700 text-surface-400 border-surface-600",
+                      )}>
+                        {isWriteoff ? "✂ Borç Silindi" : r.type}
                       </span>
                       {r.description}
                     </td>
                     <td className={cn("px-4 py-2 text-right font-semibold whitespace-nowrap",
+                      isWriteoff ? "text-rose-300" :
                       r.amount > 0 ? "text-emerald-400" : r.amount < 0 ? "text-red-400" : "text-surface-400")}>
                       {r.amount === 0 ? "—" : (r.amount > 0 ? "+" : "−") + formatCurrency(Math.abs(r.amount), "TRY")}
                     </td>
@@ -278,7 +308,8 @@ export default function CounterpartDetailPage() {
                       {formatCurrency(r.balance_after, "TRY")}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -460,6 +491,15 @@ export default function CounterpartDetailPage() {
           preselectedBusinessId={cp.business_id || undefined}
           preselectedCounterpart={cp}
           onClose={() => setDebtModal(null)}
+        />
+      )}
+      {showWriteoff && (
+        <WriteoffModal
+          counterpartId={id!}
+          counterpartName={cp.name}
+          openDebts={statement.open_debts}
+          onClose={() => setShowWriteoff(false)}
+          onSuccess={() => { setShowWriteoff(false); triggerRefresh(); }}
         />
       )}
       {clearInst && (

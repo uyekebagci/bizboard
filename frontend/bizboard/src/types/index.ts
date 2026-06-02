@@ -1197,6 +1197,8 @@ export interface AccountStatement {
     portfolio_notes_outgoing: number;
     net_realized: number;
     net_with_portfolio: number;
+    /** v1.7.0.x WP a9da4e9d: bu counterpart için toplam silme tutarı. */
+    total_writeoffs_amount?: number;
   };
   open_debts: Array<{
     id: string;
@@ -1224,12 +1226,30 @@ export interface AccountStatement {
   transactions: Transaction[];
   running_balance_history: Array<{
     date: string;
-    type: "DEBT_CREATED" | "PAYMENT" | "INSTRUMENT_CLEARED" | "INSTRUMENT_BOUNCED" | "TRANSACTION";
+    type: "DEBT_CREATED" | "PAYMENT" | "INSTRUMENT_CLEARED" | "INSTRUMENT_BOUNCED" | "TRANSACTION" | "WRITEOFF";
     amount: number;
     balance_after: number;
     reference_id: string;
     description: string;
   }>;
+  /** v1.7.0.x WP a9da4e9d: borç silme kayıtları. */
+  writeoffs?: DebtWriteoff[];
+}
+
+/** v1.7.0.x WP a9da4e9d: Borç silme kaydı. */
+export interface DebtWriteoff {
+  id: string;
+  business_id: string;
+  counterpart_id: string;
+  counterpart_name: string | null;
+  debt_id: string;
+  amount: number;
+  reason: string | null;
+  written_off_by: string;
+  written_off_by_name: string | null;
+  written_off_at: string;
+  debt_remaining_after?: number | null;
+  debt_status_after?: string | null;
 }
 
 // v1.6.2: BusinessTypeDefaultCost interface'i kaldırıldı — backend master

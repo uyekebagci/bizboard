@@ -45,6 +45,9 @@ public final class AuditAction {
     public static final String DEBT_DELETE        = "DEBT_DELETE";
     public static final String DEBT_SETTLED       = "DEBT_SETTLED";
     public static final String DEBT_MIGRATION     = "DEBT_MIGRATION";
+    /** WP a9da4e9d: ödeme almadan manuel düşüm (af/iskonto/mutabakat). */
+    public static final String DEBT_WRITEOFF      = "DEBT_WRITEOFF";
+    public static final String DEBT_WRITEOFF_REVERSE = "DEBT_WRITEOFF_REVERSE";
 
     // ── Notifications ────────────────────────────────────────────────────
     public static final String NOTIFICATION_SENT  = "NOTIFICATION_SENT";

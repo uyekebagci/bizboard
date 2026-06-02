@@ -34,6 +34,9 @@ public class AccountStatementService {
     private final PaymentInstrumentRepository paymentInstrumentRepository;
     private final TransactionRepository transactionRepository;
     private final BusinessAccessGuard accessGuard;
+    /** WP a9da4e9d: statement içinde writeoff log + WRITEOFF event. */
+    private final DebtWriteoffRepository writeoffRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public AccountStatementDto getAccountStatement(UUID counterpartId, LocalDate from, LocalDate to,
@@ -156,9 +159,38 @@ public class AccountStatementService {
             txDtos.add(DtoMapper.toTransactionDto(t));
         }
 
+        // ── Writeoffs (WP a9da4e9d) ─────────────────────────────────
+        List<DebtWriteoff> writeoffs = writeoffRepository
+                .findByCounterpart_IdOrderByWrittenOffAtDesc(counterpartId);
+        BigDecimal totalWriteoffs = writeoffs.stream()
+                .map(DebtWriteoff::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        breakdown.setTotalWriteoffsAmount(totalWriteoffs);
+        List<com.bizboard.common.dto.DebtWriteoffDto> writeoffDtos = new ArrayList<>();
+        for (DebtWriteoff w : writeoffs) {
+            String byName = w.getWrittenOffBy() != null
+                    ? userRepository.findById(w.getWrittenOffBy()).map(User::getUsername).orElse(null)
+                    : null;
+            writeoffDtos.add(com.bizboard.common.dto.DebtWriteoffDto.builder()
+                    .id(w.getId())
+                    .businessId(w.getBusiness() != null ? w.getBusiness().getId() : null)
+                    .counterpartId(w.getCounterpart() != null ? w.getCounterpart().getId() : null)
+                    .counterpartName(w.getCounterpart() != null ? w.getCounterpart().getName() : null)
+                    .debtId(w.getDebt() != null ? w.getDebt().getId() : null)
+                    .amount(w.getAmount())
+                    .reason(w.getReason())
+                    .writtenOffBy(w.getWrittenOffBy())
+                    .writtenOffByName(byName)
+                    .writtenOffAt(w.getWrittenOffAt())
+                    .debtRemainingAfter(w.getDebt() != null ? w.getDebt().getRemainingAmount() : null)
+                    .debtStatusAfter(w.getDebt() != null ? w.getDebt().getStatus() : null)
+                    .build());
+        }
+
         // ── Running balance history (chronological) ─────────────────
         List<AccountStatementDto.RunningBalanceEntry> running = buildRunningBalance(
-                allDebts, payments, allInstruments, cpTxs, from, to);
+                allDebts, payments, allInstruments, cpTxs, writeoffs, from, to);
 
         return AccountStatementDto.builder()
                 .counterpart(summary)
@@ -170,12 +202,13 @@ public class AccountStatementService {
                 .instrumentsPortfolio(instrumentDtos)
                 .transactions(txDtos)
                 .runningBalanceHistory(running)
+                .writeoffs(writeoffDtos)
                 .build();
     }
 
     private List<AccountStatementDto.RunningBalanceEntry> buildRunningBalance(
             List<Debt> debts, List<DebtPayment> payments, List<PaymentInstrument> instruments,
-            List<Transaction> txs, LocalDate from, LocalDate to) {
+            List<Transaction> txs, List<DebtWriteoff> writeoffs, LocalDate from, LocalDate to) {
 
         List<AccountStatementDto.RunningBalanceEntry> rows = new ArrayList<>();
         // 1) DEBT_CREATED events
@@ -226,6 +259,24 @@ public class AccountStatementService {
                         .description(pi.getInstrumentType() + " karşılıksız: " + pi.getAmount())
                         .build());
             }
+        }
+
+        // 4) WRITEOFF events (WP a9da4e9d) — debt remaining düşer, alacak negatif delta
+        // RECEIVABLE writeoff: alacak azaldı (negatif delta — bizim için kayıp)
+        // PAYABLE writeoff:    verecek azaldı (pozitif delta — bizim için kazanç)
+        for (DebtWriteoff w : writeoffs) {
+            Debt d = w.getDebt();
+            if (d == null || w.getAmount() == null) continue;
+            BigDecimal amt = d.getDirection() == DebtDirection.RECEIVABLE
+                    ? w.getAmount().negate() : w.getAmount();
+            rows.add(AccountStatementDto.RunningBalanceEntry.builder()
+                    .date(w.getWrittenOffAt())
+                    .type("WRITEOFF")
+                    .amount(amt)
+                    .referenceId(w.getId())
+                    .description("Borç silindi: " + w.getAmount()
+                            + (w.getReason() != null ? " · " + w.getReason() : ""))
+                    .build());
         }
 
         // Sort by date asc, compute running balance
