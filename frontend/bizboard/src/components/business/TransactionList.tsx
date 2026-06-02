@@ -100,17 +100,9 @@ export function TransactionList({
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
-                  {/* v1.7.x (POS Komisyon WP TODO e718df3d): POS satır title
-                      brief format = "{tutar} TL POS işlemi yapıldı". User
-                      description varsa suffix olarak eklenir. */}
-                  {isPos
-                    ? (
-                        <>
-                          {formatCurrency(tx.amount, currency)} POS işlemi yapıldı
-                          {tx.description ? ` · ${tx.description}` : ""}
-                        </>
-                      )
-                    : (tx.description || tx.category?.name || (isTransfer ? "Transfer" : "Islem"))}
+                  {/* Beta v1.1: POS komisyon UI tamamen kaldırıldı — POS satırı
+                      da normal title formatı kullanır (description / kategori). */}
+                  {tx.description || tx.category?.name || (isTransfer ? "Transfer" : isPos ? "POS İşlemi" : "Islem")}
                   {isTransfer && (
                     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40">
                       ⇄ {tx.direction === "expense" ? "OUT" : "IN"}
@@ -133,7 +125,6 @@ export function TransactionList({
                     >
                       {isPos ? <CreditCard size={10} /> : <Banknote size={10} />}
                       {isPos ? "POS" : "Nakit"}
-                      {isPos && tx.pos_rate ? <span className="opacity-70">%{tx.pos_rate}</span> : null}
                     </span>
                   )}
                 </p>
@@ -142,19 +133,12 @@ export function TransactionList({
               <span
                 className={cn(
                   "text-sm font-bold flex-shrink-0 text-right",
-                  isPos ? "text-emerald-400"
-                        : isIncome ? "text-green-600" : "text-red-600"
+                  isIncome ? "text-green-600" : "text-red-600",
                 )}
               >
-                {/* v1.7.x (POS Komisyon WP TODO e718df3d): brief format —
-                    POS satırında sağda SADECE profit (yeşil bold). Gross
-                    title satırında "X TL POS işlemi yapıldı" olarak gözüküyor. */}
-                {isPos
-                  ? (tx.pos_profit != null
-                      ? `+${formatCurrency(tx.pos_profit, currency)}`
-                      // Backward compat (eski tx, profit yok): gross göster
-                      : `+${formatCurrency(tx.amount, currency)}`)
-                  : `${isIncome ? "+" : "-"}${formatCurrency(tx.amount, currency)}`}
+                {/* Beta v1.1: POS komisyon UI kaldırıldı — sağdaki amount her
+                    zaman tx.amount (POS Hacmi mantığı). */}
+                {isIncome ? "+" : "-"}{formatCurrency(tx.amount, currency)}
               </span>
 
               {/* Delete button */}
@@ -245,13 +229,8 @@ export function TransactionDetailModal({
   const [editPaymentMethod, setEditPaymentMethod] = useState<PaymentMethod>(
     (transaction.payment_method as PaymentMethod) || "NAKIT",
   );
-  const [editPosRate, setEditPosRate] = useState(
-    transaction.pos_rate != null ? String(transaction.pos_rate) : "",
-  );
-  // v1.7.x (POS Komisyon WP TODO 54f94805): edit modunda da iki oran.
-  const [editOurCommissionRate, setEditOurCommissionRate] = useState(
-    transaction.applied_our_commission_rate != null ? String(transaction.applied_our_commission_rate) : "",
-  );
+  // Beta v1.1: POS komisyon UI kaldırıldı — edit'te de oran sorulmuyor.
+  // Mevcut tx'in oranı save sırasında olduğu gibi geri yollanır (data koruma).
 
   // Categories
   const [categories, setCategories] = useState<Category[]>([]);
@@ -282,24 +261,8 @@ export function TransactionDetailModal({
         .map((t) => t.trim())
         .filter(Boolean);
 
-      const posRateValue =
-        editPaymentMethod === "POS" && editPosRate.trim() !== ""
-          ? Number(editPosRate.replace(",", "."))
-          : null;
-      // v1.7.x (POS Komisyon WP TODO 54f94805)
-      const ourRateValue =
-        editPaymentMethod === "POS" && editOurCommissionRate.trim() !== ""
-          ? Number(editOurCommissionRate.replace(",", "."))
-          : null;
-
-      // Client-side: our >= bank
-      if (editPaymentMethod === "POS" && ourRateValue != null && posRateValue != null
-          && ourRateValue < posRateValue) {
-        setError("Bizim komisyonumuz banka komisyonundan düşük olamaz");
-        setSaving(false);
-        return;
-      }
-
+      // Beta v1.1: POS komisyon UI kaldırıldı — edit'te eski oranları KORU
+      // (backend tarafında migration yok, eski tx'ler değiştirilmesin).
       await api.put(`/businesses/${transaction.business_id}/transactions/${transaction.id}`, {
         direction: editDirection,
         amount: parseMoneyInput(editAmount),
@@ -308,8 +271,8 @@ export function TransactionDetailModal({
         category_id: editCategoryId || null,
         tags,
         payment_method: editPaymentMethod,
-        pos_rate: posRateValue,
-        our_commission_rate: ourRateValue,
+        pos_rate: transaction.pos_rate ?? null,
+        our_commission_rate: transaction.applied_our_commission_rate ?? null,
       });
 
       // Link newly uploaded files to transaction
@@ -388,7 +351,7 @@ export function TransactionDetailModal({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => { setEditPaymentMethod("NAKIT"); setEditPosRate(""); setEditOurCommissionRate(""); }}
+                    onClick={() => setEditPaymentMethod("NAKIT")}
                     className={cn(
                       "flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all border",
                       editPaymentMethod === "NAKIT"
@@ -413,71 +376,8 @@ export function TransactionDetailModal({
                     POS
                   </button>
                 </div>
-                {editPaymentMethod === "POS" && (
-                  <>
-                    {/* v1.7.x (POS Komisyon WP TODO 54f94805): iki oran input */}
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-xs font-medium text-surface-300 mb-1">
-                          Banka Komisyonu (%)
-                        </label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={editPosRate}
-                          onChange={(e) => setEditPosRate(e.target.value.replace(/[^0-9.,]/g, ""))}
-                          placeholder="orn. 1.95"
-                          className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-surface-300 mb-1">
-                          Bizim Komisyonumuz (%)
-                        </label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={editOurCommissionRate}
-                          onChange={(e) => setEditOurCommissionRate(e.target.value.replace(/[^0-9.,]/g, ""))}
-                          placeholder="orn. 5.50"
-                          className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                    {/* Inline validation + breakdown */}
-                    {(() => {
-                      const bank = editPosRate.trim() !== "" ? Number(editPosRate.replace(",", ".")) : NaN;
-                      const ours = editOurCommissionRate.trim() !== "" ? Number(editOurCommissionRate.replace(",", ".")) : NaN;
-                      const amt = parseMoneyInput(editAmount);
-                      if (!isNaN(bank) && !isNaN(ours) && ours < bank) {
-                        return (
-                          <div className="mt-2 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-                            Bizim komisyonumuz banka komisyonundan düşük olamaz.
-                          </div>
-                        );
-                      }
-                      if (!isNaN(bank) && !isNaN(ours) && amt > 0) {
-                        const bankAmt = (amt * bank) / 100;
-                        const ourAmt = (amt * ours) / 100;
-                        const profit = ourAmt - bankAmt;
-                        const fmt = (n: number) =>
-                          n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        const fmtRate = (n: number) =>
-                          `%${n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                        // v1.7.x (POS Komisyon WP TODO 54f94805): brief spec breakdown
-                        return (
-                          <div className="mt-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-200 space-y-1">
-                            <div className="flex justify-between"><span>İşlem Tutarı:</span><span className="font-mono">₺{fmt(amt)}</span></div>
-                            <div className="flex justify-between"><span>Banka Komisyonu:</span><span className="font-mono">₺{fmt(bankAmt)} <span className="text-indigo-300/70">({fmtRate(bank)})</span></span></div>
-                            <div className="flex justify-between"><span>Bizim Komisyon:</span><span className="font-mono">₺{fmt(ourAmt)} <span className="text-indigo-300/70">({fmtRate(ours)})</span></span></div>
-                            <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-bold text-emerald-300"><span>Net Kâr (gelir):</span><span className="font-mono">₺{fmt(profit)}</span></div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </>
-                )}
+                {/* Beta v1.1: POS komisyon input'ları kaldırıldı — edit modunda
+                    da artık iki oran sorulmuyor. */}
               </div>
 
               {/* Amount */}
@@ -626,24 +526,11 @@ export function TransactionDetailModal({
                   "text-3xl font-bold",
                   isIncome ? "text-green-700" : "text-red-700"
                 )}>
-                  {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net göster; gross alt-bilgi olarak. */}
+                  {/* Beta v1.1 (WP 4f6baaa3 follow-up): POS komisyon UI tamamen kaldırıldı —
+                      tx tutarı her zaman amount (POS Hacmi mantığı). */}
                   {isIncome ? "+" : "-"}
-                  {formatCurrency(
-                    (transaction.payment_method || "NAKIT") === "POS" && transaction.pos_net != null
-                      ? transaction.pos_net
-                      : transaction.amount,
-                    effectiveCurrency,
-                  )}
+                  {formatCurrency(transaction.amount, effectiveCurrency)}
                 </p>
-                {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_net != null
-                  && transaction.pos_net !== transaction.amount && (
-                  <p className="text-xs text-surface-400 mt-1">
-                    Brüt: {formatCurrency(transaction.amount, effectiveCurrency)}
-                    {transaction.pos_commission != null && (
-                      <> · Komisyon: {formatCurrency(transaction.pos_commission, effectiveCurrency)}</>
-                    )}
-                  </p>
-                )}
               </div>
 
               {/* Details Grid */}
@@ -701,63 +588,12 @@ export function TransactionDetailModal({
                   <div className="flex-1">
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Odeme</p>
                     <p className="text-sm text-white font-medium">
+                      {/* Beta v1.1: POS komisyon UI kaldırıldı — sadece method + cihaz adı. */}
                       {(transaction.payment_method || "NAKIT") === "POS" ? "POS" : "Nakit"}
-                      {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_rate != null && (
-                        <span className="ml-2 text-surface-300">%{transaction.pos_rate}</span>
-                      )}
                       {transaction.pos_device_name && (
                         <span className="ml-2 text-surface-400">· {transaction.pos_device_name}</span>
                       )}
                     </p>
-                    {(transaction.payment_method || "NAKIT") === "POS"
-                      && (transaction.pos_commission != null || transaction.pos_rate != null) && (
-                      <p className="text-[11px] text-surface-400 mt-0.5">
-                        {/* v1.6.23.8: backend-derived field varsa onu, yoksa hesapla. */}
-                        Komisyon: {formatCurrency(
-                          transaction.pos_commission != null
-                            ? transaction.pos_commission
-                            : (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
-                          effectiveCurrency,
-                        )}
-                        {" · Net: "}
-                        {formatCurrency(
-                          transaction.pos_net != null
-                            ? transaction.pos_net
-                            : Number(transaction.amount) -
-                              (Number(transaction.amount) * Number(transaction.pos_rate)) / 100,
-                          effectiveCurrency,
-                        )}
-                      </p>
-                    )}
-                    {/* v1.7.x (POS Komisyon WP TODO d8aa8a99): iki oran breakdown */}
-                    {(transaction.payment_method || "NAKIT") === "POS"
-                      && transaction.applied_our_commission_rate != null && (
-                      <div className="mt-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-2 text-[11px] text-indigo-200 space-y-1">
-                        <div className="flex justify-between">
-                          <span>Banka oranı (%{transaction.applied_pos_rate ?? transaction.pos_rate})</span>
-                          <span className="font-mono">
-                            {formatCurrency(
-                              transaction.bank_commission_amount != null
-                                ? transaction.bank_commission_amount
-                                : transaction.pos_commission ?? 0,
-                              effectiveCurrency,
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Bizim oran (%{transaction.applied_our_commission_rate})</span>
-                          <span className="font-mono">
-                            {formatCurrency(transaction.our_commission_amount ?? 0, effectiveCurrency)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between border-t border-indigo-500/30 pt-1 font-semibold text-emerald-300">
-                          <span>Kâr</span>
-                          <span className="font-mono">
-                            {formatCurrency(transaction.pos_profit ?? 0, effectiveCurrency)}
-                          </span>
-                        </div>
-                      </div>
-                    )}
                     {/* v1.6.23.9 (TODO 658c6f63): POS settle button + bank modal */}
                     {(transaction.payment_method || "NAKIT") === "POS" && (
                       <PosSettledToggle
