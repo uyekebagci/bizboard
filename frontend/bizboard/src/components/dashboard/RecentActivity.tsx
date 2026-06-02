@@ -159,9 +159,9 @@ function TransactionRow({
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">
-          {isPos
-            ? <>{formatCurrency(tx.amount, tx.currency)} POS işlemi yapıldı{tx.description ? ` · ${tx.description}` : ""}</>
-            : (tx.description || tx.category?.name || "Islem")}
+          {/* Beta v1.1: POS komisyon UI kaldırıldı — POS satırı da normal
+              description/kategori formatı kullanır. */}
+          {tx.description || tx.category?.name || (isPos ? "POS İşlemi" : "Islem")}
         </p>
         <p className="text-xs text-surface-400 mt-0.5">
           {tx.business_name && <span>{tx.business_name} · </span>}
@@ -176,12 +176,11 @@ function TransactionRow({
       <span
         className={cn(
           "text-sm font-bold flex-shrink-0",
-          isPos ? "text-emerald-400" : isIncome ? "text-green-600" : "text-red-600"
+          isIncome ? "text-green-600" : "text-red-600",
         )}
       >
-        {isPos
-          ? `+${formatCurrency(tx.pos_profit ?? tx.amount, tx.currency)}`
-          : `${isIncome ? "+" : "-"}${formatCurrency(tx.amount, tx.currency)}`}
+        {/* Beta v1.1: POS Hacmi mantığı — sağdaki tutar her zaman tx.amount. */}
+        {isIncome ? "+" : "-"}{formatCurrency(tx.amount, tx.currency)}
       </span>
     </div>
   );

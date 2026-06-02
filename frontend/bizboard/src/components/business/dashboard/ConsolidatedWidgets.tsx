@@ -358,10 +358,8 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
       </section>
     );
   }
+  // Beta v1.1: POS Hacmi mantığı — sadece amount toplamı, komisyon/kâr yok.
   const totalGross = devs.reduce((a, x) => a + x.today_gross, 0);
-  const totalNet = devs.reduce((a, x) => a + x.today_net, 0);
-  // v1.7.x (POS Komisyon WP TODO 8a7a8416): toplam kâr = Σ today_profit.
-  const totalProfit = devs.reduce((a, x) => a + (x.today_profit ?? 0), 0);
   const unsettled = devs.reduce((a, x) => a + x.unsettled_count, 0);
   const totalTx = devs.reduce((a, x) => a + x.tx_count, 0);
 
@@ -391,19 +389,8 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
               </p>
             </div>
             <div className="text-right shrink-0">
+              {/* Beta v1.1: sadece günlük hacim — komisyon/kâr satırı kaldırıldı. */}
               <p className="text-sm font-semibold text-white">{formatCurrency(dev.today_gross, "TRY")}</p>
-              <p className="text-[10px]">
-                {/* v1.7.x (POS Komisyon WP TODO 8a7a8416): kâr ön plana */}
-                {dev.today_profit != null ? (
-                  <span className="text-emerald-300 font-semibold">+kâr {formatCurrency(dev.today_profit, "TRY")}</span>
-                ) : (
-                  <>
-                    <span className="text-red-300">-{formatCurrency(dev.today_commission, "TRY")}</span>
-                    {" · "}
-                    <span className="text-emerald-300">{formatCurrency(dev.today_net, "TRY")}</span>
-                  </>
-                )}
-              </p>
             </div>
           </div>
         ))}
@@ -412,18 +399,8 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
         left={`${totalTx} çekim`}
         right={
           <span>
-            Brüt {formatCurrency(totalGross, "TRY")}
-            {" · "}
-            {/* v1.7.x (POS Komisyon WP TODO 8a7a8416): footer'da toplam kâr */}
-            {totalProfit !== 0 ? (
-              <>
-                Kâr <span className="text-emerald-300 font-semibold">{formatCurrency(totalProfit, "TRY")}</span>
-              </>
-            ) : (
-              <>
-                Net <span className="text-emerald-300">{formatCurrency(totalNet, "TRY")}</span>
-              </>
-            )}
+            {/* Beta v1.1: footer'da sadece toplam hacim. */}
+            Hacim <span className="text-emerald-300 font-semibold">{formatCurrency(totalGross, "TRY")}</span>
           </span>
         }
       />
@@ -1442,12 +1419,10 @@ function PosDeviceModalDetail({
         <Info label="Durum" value={info.is_active ? "Aktif" : "Pasif"} tone={info.is_active ? "pos" : "neg"} />
       </div>
 
-      {/* Analytics totals */}
+      {/* Analytics totals — Beta v1.1: sadece hacim + settled bilgisi. */}
       {t && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Stat2 label="Brüt" value={formatCurrency(t.gross, "TRY")} />
-          <Stat2 label="Komisyon" value={`−${formatCurrency(t.commission, "TRY")}`} tone="neg" />
-          <Stat2 label="Net" value={formatCurrency(t.net, "TRY")} tone="pos" />
+        <div className="grid grid-cols-2 gap-2">
+          <Stat2 label="Hacim" value={formatCurrency(t.gross, "TRY")} tone="pos" />
           <Stat2 label="Settled / Bekleyen" value={`${t.settled_count} / ${t.unsettled_count}`} />
         </div>
       )}
@@ -1532,7 +1507,8 @@ function Stat2({ label, value, tone }: { label: string; value: string; tone?: "p
 }
 
 function TxMiniRow({ tx }: { tx: { id: string; date: string; amount: number; pos_net?: number | null; pos_settled?: boolean | null; settled_bank_account_name?: string | null; description?: string | null; currency: string } }) {
-  const net = tx.pos_net ?? tx.amount;
+  // Beta v1.1: POS Hacmi mantığı — her tx tutarı amount.
+  const displayAmount = tx.amount;
   const settled = tx.pos_settled === true;
   return (
     <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded bg-surface-700/30 text-xs">
@@ -1544,7 +1520,7 @@ function TxMiniRow({ tx }: { tx: { id: string; date: string; amount: number; pos
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-emerald-300 font-semibold">+{formatCurrency(net, tx.currency)}</p>
+        <p className="text-emerald-300 font-semibold">+{formatCurrency(displayAmount, tx.currency)}</p>
         <p className="text-[9px]">
           {settled ? (
             <span className="text-emerald-300">✓ düştü</span>
