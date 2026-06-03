@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, Loader2, Lock } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import { cn } from "@/lib/utils";
+import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { toast } from "@/lib/toast";
@@ -112,7 +112,7 @@ export function BankAccountCreateForm({
       };
       if (bankName.trim()) body.bank_name = bankName.trim();
       if (iban.trim()) body.iban = iban.trim().toUpperCase();
-      if (openingBalance) body.opening_balance = Number(openingBalance);
+      if (openingBalance) body.opening_balance = parseMoneyInput(openingBalance);
       if (type === "CASH_HOLDER") body.holder_person_id = holderPersonId;
       // v1.7.0.x: ownerMyCompany (opsiyonel) — null gönderilirse boş kalır.
       body.owner_my_company_id = ownerMyCompanyId || null;
@@ -276,11 +276,11 @@ export function BankAccountCreateForm({
           Açılış Bakiyesi (opsiyonel)
         </label>
         <input
-          type="number"
-          step="0.01"
+          type="text"
+          inputMode="decimal"
           value={openingBalance}
-          onChange={(e) => setOpeningBalance(e.target.value)}
-          placeholder="0.00"
+          onChange={(e) => setOpeningBalance(formatMoneyInput(e.target.value))}
+          placeholder="0"
           className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
         />
       </div>
