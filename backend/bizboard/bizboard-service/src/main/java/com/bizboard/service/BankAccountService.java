@@ -3,6 +3,7 @@ package com.bizboard.service;
 import com.bizboard.common.dto.BankAccountDetailDto;
 import com.bizboard.common.dto.BankAccountDto;
 import com.bizboard.common.dto.BankAccountToggleRequest;
+import com.bizboard.common.dto.CashHoldersSummaryDto;
 import com.bizboard.common.dto.CreateBankAccountRequest;
 import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.common.dto.UpdateBankAccountRequest;
@@ -146,30 +147,47 @@ public class BankAccountService {
                     "type=CASH artik kullanilmiyor — SUB_CASH kullan.");
         }
 
-        // CASH_HOLDER → holder_person zorunlu + counterpart.kind=PERSON kontrolü
-        // v1.6.23.27 (UI Fix WP TODO 7e0c5333): system-managed CASH_HOLDER
-        // (örn. "Genel Nakit") için holder_person_id null olabilir. Kullanıcı
-        // create endpoint'inden is_system=true gönderemez (request DTO'da
-        // bu alan yok); system hesaplar yalnız BusinessService hook'undan
-        // yaratılır.
+        // Beta v1.1 (WP 2786a36e): CASH_HOLDER artık standalone — holder_name
+        // mandatory, holder_person_id (counterpart) opsiyonel (backward compat).
+        // holder_name verilmemişse legacy holder_person_id'den çekilebilir
+        // (eski client'lar için), her ikisi de yoksa hata.
         Counterpart holder = null;
+        String holderName = null;
+        String holderPhone = null;
+        String holderNotes = null;
         if (type == BankAccountType.CASH_HOLDER) {
-            if (req.getHolderPersonId() == null) {
-                throw new IllegalArgumentException(
-                        "type=CASH_HOLDER icin holder_person_id zorunlu");
+            holderName = req.getHolderName() != null ? req.getHolderName().trim() : null;
+            holderPhone = req.getHolderPhone() != null ? req.getHolderPhone().trim() : null;
+            holderNotes = req.getHolderNotes() != null ? req.getHolderNotes().trim() : null;
+            if (holderPhone != null && holderPhone.isEmpty()) holderPhone = null;
+            if (holderNotes != null && holderNotes.isEmpty()) holderNotes = null;
+
+            // Backward compat: yeni client holder_name göndermezse, eski
+            // counterpart-link akışı çalışabilir (legacy clients için).
+            if ((holderName == null || holderName.isEmpty()) && req.getHolderPersonId() != null) {
+                holder = counterpartRepository.findById(req.getHolderPersonId())
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "holder_person_id bulunamadi: " + req.getHolderPersonId()));
+                com.bizboard.common.enums.CounterpartKind k = holder.getKind();
+                if (k != com.bizboard.common.enums.CounterpartKind.PERSON) {
+                    throw new IllegalArgumentException(
+                            "holder counterpart.kind 'PERSON' olmali (gonderilen: " + k + ")");
+                }
+                // Legacy create — holder_name'i counterpart adından doldur
+                holderName = holder.getName();
             }
-            holder = counterpartRepository.findById(req.getHolderPersonId())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "holder_person_id bulunamadi: " + req.getHolderPersonId()));
-            // Kind kontrolü — Counterpart.kind enum (CounterpartKind: PERSON/FIRM)
-            com.bizboard.common.enums.CounterpartKind k = holder.getKind();
-            if (k != com.bizboard.common.enums.CounterpartKind.PERSON) {
+
+            if (holderName == null || holderName.isEmpty()) {
                 throw new IllegalArgumentException(
-                        "holder counterpart.kind 'PERSON' olmali (gonderilen: " + k + ")");
+                        "type=CASH_HOLDER icin holder_name zorunlu");
             }
-        } else if (req.getHolderPersonId() != null) {
-            // Non-CASH_HOLDER için holder verilmiş — sessiz yoksay (yine de log'la)
-            log.warn("[bank-account-create] type={} olmasina ragmen holder_person_id gonderildi — yoksayildi",
+            if (holderName.length() > 200) {
+                throw new IllegalArgumentException("holder_name max 200 karakter");
+            }
+        } else if (req.getHolderPersonId() != null
+                || req.getHolderName() != null) {
+            // Non-CASH_HOLDER için holder bilgisi verilmiş — sessiz yoksay
+            log.warn("[bank-account-create] type={} olmasina ragmen holder bilgisi gonderildi — yoksayildi",
                     type);
         }
 
@@ -191,7 +209,10 @@ public class BankAccountService {
                 .bankName(req.getBankName())
                 .iban(req.getIban())
                 .currency(req.getCurrency() != null ? req.getCurrency().trim() : "TRY")
-                .holderPerson(holder)
+                .holderPerson(holder) // backward compat; yeni create'lerde null
+                .holderName(holderName)
+                .holderPhone(holderPhone)
+                .holderNotes(holderNotes)
                 .ownerMyCompany(ownerMyCompany)
                 .currentBalance(opening)
                 .active(true)
@@ -206,6 +227,7 @@ public class BankAccountService {
         meta.put("bankName", entity.getBankName());
         meta.put("openingBalance", opening);
         if (holder != null) meta.put("holderPersonId", holder.getId());
+        if (holderName != null) meta.put("holderName", holderName);
         auditLogService.recordEntityAction(
                 "BANK_ACCOUNT_CREATED",
                 actorUserId, actor != null ? actor.getUsername() : null,
@@ -510,12 +532,54 @@ public class BankAccountService {
                 .currency(b.getCurrency())
                 .holderPersonId(b.getHolderPerson() != null ? b.getHolderPerson().getId() : null)
                 .holderPersonName(b.getHolderPerson() != null ? b.getHolderPerson().getName() : null)
+                .holderName(b.getHolderName())
+                .holderPhone(b.getHolderPhone())
+                .holderNotes(b.getHolderNotes())
                 .ownerMyCompanyId(b.getOwnerMyCompany() != null ? b.getOwnerMyCompany().getId() : null)
                 .ownerMyCompanyName(b.getOwnerMyCompany() != null ? b.getOwnerMyCompany().getLegalName() : null)
                 .currentBalance(effectiveBalance)
                 .active(b.isActive())
                 .notes(b.getNotes())
                 .createdAt(b.getCreatedAt())
+                .build();
+    }
+
+    // ─────────── WP 2786a36e Beta v1.1: Elde Tutulan Nakitler ───────────
+
+    /**
+     * Business-scoped CASH_HOLDER bank_account özeti — "Elde Tutulan Nakitler"
+     * widget'ı için. Yalnız aktif hesaplar, bakiye DESC.
+     *
+     * <p>Erişim guard: actor bu business'a erişebilmeli.</p>
+     */
+    @Transactional(readOnly = true)
+    public CashHoldersSummaryDto cashHoldersSummary(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        List<BankAccount> rows = repository
+                .findByBusinessIdAndTypeAndActiveTrueOrderByCurrentBalanceDesc(
+                        businessId, BankAccountType.CASH_HOLDER);
+        List<CashHoldersSummaryDto.Item> items = new ArrayList<>(rows.size());
+        BigDecimal total = BigDecimal.ZERO;
+        for (BankAccount b : rows) {
+            BigDecimal bal = b.getCurrentBalance() != null ? b.getCurrentBalance() : BigDecimal.ZERO;
+            total = total.add(bal);
+            // holderName öncelikli; legacy NULL ise holderPerson.name'e düş.
+            String hn = b.getHolderName();
+            if ((hn == null || hn.isBlank()) && b.getHolderPerson() != null) {
+                hn = b.getHolderPerson().getName();
+            }
+            items.add(CashHoldersSummaryDto.Item.builder()
+                    .bankAccountId(b.getId())
+                    .holderName(hn)
+                    .name(b.getName())
+                    .currentBalance(bal)
+                    .lastTxAt(null) // şimdilik null — optimizasyon ileride
+                    .build());
+        }
+        return CashHoldersSummaryDto.builder()
+                .items(items)
+                .totalAmount(total)
+                .totalCount(items.size())
                 .build();
     }
 }

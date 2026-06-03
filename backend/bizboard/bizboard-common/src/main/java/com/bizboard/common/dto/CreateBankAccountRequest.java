@@ -52,9 +52,27 @@ public class CreateBankAccountRequest {
     /** Default TRY. */
     private String currency;
 
-    /** {@code type=CASH_HOLDER} için zorunlu; counterpart.kind=PERSON olmalı. */
+    /**
+     * @deprecated Beta v1.1 (WP 2786a36e): CASH_HOLDER artık counterpart'a
+     * bağımlı değil. Yeni client'lar {@link #holderName} kullanır; bu alan
+     * eski client'lar için backward-compat. Gönderilirse sessiz kabul edilir.
+     */
+    @Deprecated
     @JsonProperty("holder_person_id")
     private UUID holderPersonId;
+
+    /**
+     * Beta v1.1 (WP 2786a36e): CASH_HOLDER yeni create akışında ZORUNLU.
+     * Nakdi tutan kişinin adı (standalone — counterpart yaratmaz).
+     */
+    @JsonProperty("holder_name")
+    private String holderName;
+
+    @JsonProperty("holder_phone")
+    private String holderPhone;
+
+    @JsonProperty("holder_notes")
+    private String holderNotes;
 
     /**
      * v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany).

@@ -36,6 +36,8 @@ public class BusinessController {
     private final TransactionService transactionService;
     private final SummaryService summaryService;
     private final ConsolidatedDashboardService consolidatedService;
+    /** WP 2786a36e (Beta v1.1): Elde Tutulan Nakitler widget endpoint. */
+    private final com.bizboard.service.BankAccountService bankAccountService;
 
     @GetMapping
     public ResponseEntity<List<BusinessDto>> getBusinesses(@AuthenticationPrincipal UserPrincipal principal) {
@@ -117,6 +119,18 @@ public class BusinessController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(consolidatedService.getConsolidated(principal.getId(), id));
+    }
+
+    /**
+     * WP 2786a36e (Beta v1.1): "Elde Tutulan Nakitler" widget — business-scoped
+     * CASH_HOLDER bank_account özeti. Yalnız aktif hesaplar, bakiye DESC.
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @GetMapping("/{id}/cash-holders-summary")
+    public ResponseEntity<com.bizboard.common.dto.CashHoldersSummaryDto> getCashHoldersSummary(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(bankAccountService.cashHoldersSummary(id, principal.getId()));
     }
 
     @PutMapping("/{id}/transactions/{txId}")

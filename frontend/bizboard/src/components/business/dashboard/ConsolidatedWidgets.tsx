@@ -19,6 +19,7 @@ import type { ConsolidatedDashboard } from "@/types";
 import { WidgetDetailModal } from "./WidgetDetailModal";
 import { BankAccountDetailContent } from "@/components/bank/BankAccountDetailContent";
 import { SubCashDetailContent } from "@/components/bank/SubCashDetailContent";
+import { CashHoldersWidget } from "@/components/business/dashboard/CashHoldersWidget";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
 import { QuickActionsWidget } from "./QuickActionsWidget";
 
@@ -74,7 +75,14 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
 
       {/* Row 3 — Alt Kasalar + Çek/Hatırlatma combined */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-        <SubCashesCard d={data} onChange={onChange} />
+        <div className="space-y-3">
+          <SubCashesCard d={data} onChange={onChange} />
+          {/* WP 2786a36e (Beta v1.1): Alt Kasalar'ın hemen altında. */}
+          <CashHoldersWidget
+            businessId={data.business_id}
+            onChange={onChange}
+          />
+        </div>
         <div className="space-y-3">
           <UpcomingChequesCard d={data} />
           <UpcomingRemindersCard d={data} />

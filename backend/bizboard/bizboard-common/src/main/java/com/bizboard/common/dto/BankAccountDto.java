@@ -64,6 +64,16 @@ public class BankAccountDto {
     @JsonProperty("holder_person_name")
     private String holderPersonName;
 
+    /** Beta v1.1 (WP 2786a36e): CASH_HOLDER standalone — kişi adı/telefon/not. */
+    @JsonProperty("holder_name")
+    private String holderName;
+
+    @JsonProperty("holder_phone")
+    private String holderPhone;
+
+    @JsonProperty("holder_notes")
+    private String holderNotes;
+
     /** v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany). */
     @JsonProperty("owner_my_company_id")
     private UUID ownerMyCompanyId;

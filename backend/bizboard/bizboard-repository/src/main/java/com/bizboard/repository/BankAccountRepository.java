@@ -30,4 +30,8 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> 
     // v1.6.23.19 (Security WP TODO 809834ef): business-scoped queries.
     List<BankAccount> findByActiveTrueAndBusinessIdInOrderByNameAsc(List<UUID> businessIds);
     List<BankAccount> findByBusinessIdInOrderByActiveDescNameAsc(List<UUID> businessIds);
+
+    /** Beta v1.1 (WP 2786a36e): CASH_HOLDER summary widget için. */
+    List<BankAccount> findByBusinessIdAndTypeAndActiveTrueOrderByCurrentBalanceDesc(
+            UUID businessId, BankAccountType type);
 }

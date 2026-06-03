@@ -63,8 +63,12 @@ export function BankAccountCreateForm({
   const [bankName, setBankName] = useState("");
   const [iban, setIban] = useState("");
   const [openingBalance, setOpeningBalance] = useState("");
-  const [holderPersonId, setHolderPersonId] = useState("");
-  const [persons, setPersons] = useState<{ id: string; name: string }[]>([]);
+  // Beta v1.1 (WP 2786a36e): CASH_HOLDER artık standalone — counterpart yok.
+  const [holderName, setHolderName] = useState("");
+  const [holderPhone, setHolderPhone] = useState("");
+  const [holderNotes, setHolderNotes] = useState("");
+  /** Kullanıcı hesap adını manuel düzeltirse otomatik suggest devre dışı. */
+  const [nameTouched, setNameTouched] = useState(false);
   // v1.7.0.x: ownerMyCompany — banka hesabı kendi firmamıza bağlanabilir.
   const [ownerMyCompanyId, setOwnerMyCompanyId] = useState("");
   const [myCompanies, setMyCompanies] = useState<MyCompany[]>([]);
@@ -78,29 +82,21 @@ export function BankAccountCreateForm({
       .catch(() => setMyCompanies([]));
   }, []);
 
+  // Beta v1.1: CASH_HOLDER artık standalone — counterpart fetch kaldırıldı.
+  // Holder adı yazıldıkça hesap adı auto-suggest ("<Tuncay> (Eldeki)").
   useEffect(() => {
-    if (type !== "CASH_HOLDER" || !businessId) {
-      setPersons([]);
-      return;
-    }
-    api.get<Array<{ id: string; name: string; business_id: string; kind?: string }>>(
-      "/counterparts?kind=PERSON",
-    )
-      .then((all) => {
-        const scoped = (all || []).filter((c) => c.business_id === businessId);
-        setPersons(scoped);
-        if (scoped.length > 0) setHolderPersonId(scoped[0].id);
-      })
-      .catch(() => setPersons([]));
-  }, [type, businessId]);
+    if (type !== "CASH_HOLDER") return;
+    if (nameTouched) return;
+    setName(holderName.trim() ? `${holderName.trim()} (Eldeki)` : "");
+  }, [holderName, type, nameTouched]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (!businessId) { setError("İşletme seçin"); return; }
     if (!name.trim()) { setError("Hesap adı zorunlu"); return; }
-    if (type === "CASH_HOLDER" && !holderPersonId) {
-      setError("Kişide tutulan için holder seçin (PERSON tipinde counterpart)");
+    if (type === "CASH_HOLDER" && !holderName.trim()) {
+      setError("Kişide tutulan için kişi adı zorunlu");
       return;
     }
     setSubmitting(true);
@@ -113,7 +109,12 @@ export function BankAccountCreateForm({
       if (bankName.trim()) body.bank_name = bankName.trim();
       if (iban.trim()) body.iban = iban.trim().toUpperCase();
       if (openingBalance) body.opening_balance = parseMoneyInput(openingBalance);
-      if (type === "CASH_HOLDER") body.holder_person_id = holderPersonId;
+      if (type === "CASH_HOLDER") {
+        // Beta v1.1: standalone — holder_name mandatory, telefon/notlar opsiyonel.
+        body.holder_name = holderName.trim();
+        if (holderPhone.trim()) body.holder_phone = holderPhone.trim();
+        if (holderNotes.trim()) body.holder_notes = holderNotes.trim();
+      }
       // v1.7.0.x: ownerMyCompany (opsiyonel) — null gönderilirse boş kalır.
       body.owner_my_company_id = ownerMyCompanyId || null;
       await api.post("/bank-accounts", body);
@@ -195,11 +196,15 @@ export function BankAccountCreateForm({
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={type === "SUB_CASH" ? "Ör. Kasa #2" : "Ör. Garanti Vakif"}
+          onChange={(e) => { setName(e.target.value); setNameTouched(true); }}
+          placeholder={
+            type === "SUB_CASH" ? "Ör. Kasa #2"
+              : type === "CASH_HOLDER" ? "Ör. Tuncay (Eldeki)"
+              : "Ör. Garanti Vakif"
+          }
           className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
           required
-          autoFocus
+          autoFocus={type !== "CASH_HOLDER"}
         />
       </div>
 
@@ -229,25 +234,54 @@ export function BankAccountCreateForm({
         </>
       )}
 
-      {/* CASH_HOLDER → holder person */}
+      {/* CASH_HOLDER — Beta v1.1 (WP 2786a36e): standalone, 3 free-text input.
+          Counterpart yaratmaz; counterpart sayfası temiz kalır. */}
       {type === "CASH_HOLDER" && (
-        <div>
-          <label className="text-[11px] text-surface-400 uppercase mb-1 block">
-            Kişi (counterpart, PERSON)
-          </label>
-          <DarkSelect
-            required
-            value={holderPersonId}
-            onChange={setHolderPersonId}
-            placeholder={persons.length === 0 ? "PERSON kayıt yok — önce ekle" : "Kişi seçin"}
-            searchable={persons.length > 6}
-            options={persons.map((p) => ({ value: p.id, label: p.name }))}
-            addOption={{
-              label: "+ Yeni Kişi Ekle",
-              onClick: () => { window.location.href = "/dashboard/counterparts"; },
-            }}
-          />
-        </div>
+        <>
+          <div>
+            <label className="text-[11px] text-surface-400 uppercase mb-1 block">
+              Kişi Adı <span className="text-rose-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={holderName}
+              onChange={(e) => setHolderName(e.target.value)}
+              placeholder="Ör. Tuncay"
+              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              required
+              autoFocus
+              maxLength={200}
+            />
+            <p className="text-[10px] text-surface-500 mt-1">
+              Hesap adı otomatik öneriliyor; istersen üstte değiştirebilirsin.
+            </p>
+          </div>
+          <div>
+            <label className="text-[11px] text-surface-400 uppercase mb-1 block">
+              Telefon (opsiyonel)
+            </label>
+            <input
+              type="tel"
+              value={holderPhone}
+              onChange={(e) => setHolderPhone(e.target.value)}
+              placeholder="+90 5__ ___ __ __"
+              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              maxLength={20}
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-surface-400 uppercase mb-1 block">
+              Not (opsiyonel)
+            </label>
+            <textarea
+              value={holderNotes}
+              onChange={(e) => setHolderNotes(e.target.value)}
+              placeholder="Kısa açıklama (örn. saha şefi, eldeki avans)"
+              rows={2}
+              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50 resize-none"
+            />
+          </div>
+        </>
       )}
 
       {/* v1.7.0.x: Sahip Firma (Firmalarım) — opsiyonel her tip için */}

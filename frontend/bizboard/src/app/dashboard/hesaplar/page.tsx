@@ -6,7 +6,8 @@
  *   + "+ Yeni Hesap" modal + MAIN_CASH visual lock + SUB_CASH full CRUD.
  *
  * <p>Tip enum: CHECKING / SAVINGS / MAIN_CASH (auto/unique/silinmez) /
- * SUB_CASH (manuel CRUD) / CASH_HOLDER (holder_person_id zorunlu).</p>
+ * SUB_CASH (manuel CRUD) / CASH_HOLDER (Beta v1.1: standalone,
+ * holder_name zorunlu; counterpart bağı kaldırıldı — WP 2786a36e).</p>
  */
 
 import { useEffect, useMemo, useState } from "react";

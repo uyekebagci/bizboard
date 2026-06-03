@@ -66,12 +66,29 @@ public class BankAccount {
     private String currency = "TRY";
 
     /**
-     * {@code type=CASH_HOLDER} ise zorunlu — kasada kimi tuttuğumuz (PERSON
-     * tipinde counterpart). Diğer tiplerde null.
+     * @deprecated Beta v1.1 (WP 2786a36e): CASH_HOLDER artık counterpart'a
+     * bağımlı değil — standalone. Yeni create'lerde NULL olur; geriye dönük
+     * compat için kolon kalır. Yerine {@link #holderName} kullanılır.
      */
+    @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "holder_person_id")
     private Counterpart holderPerson;
+
+    /**
+     * Beta v1.1 (WP 2786a36e): CASH_HOLDER bank_account'larda nakdi tutan
+     * kişinin adı. Counterpart concept'i artık sadece dış taraflar için
+     * (müşteri/tedarikçi/diğer). Eldeki nakit için holderName + opsiyonel
+     * telefon/notes. {@code type=CASH_HOLDER} ise yeni create'lerde zorunlu.
+     */
+    @Column(name = "holder_name", length = 200)
+    private String holderName;
+
+    @Column(name = "holder_phone", length = 20)
+    private String holderPhone;
+
+    @Column(name = "holder_notes", columnDefinition = "TEXT")
+    private String holderNotes;
 
     /**
      * v1.7.0.x: Banka hesabının ait olduğu kendi firmamız (MyCompany).
