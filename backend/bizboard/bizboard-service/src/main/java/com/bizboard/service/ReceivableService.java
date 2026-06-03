@@ -98,8 +98,11 @@ public class ReceivableService {
             for (Map.Entry<String, List<Debt>> e : byType.entrySet()) {
                 String key = e.getKey();
                 List<Debt> chunk = e.getValue();
+                // Beta v1.1 fix: gross amount yerine remainingAmount kullan —
+                // kısmi ödeme + writeoff sonrası kalan tutarı göster (frontend
+                // sağdaki sayı ile tutarlı).
                 BigDecimal sum = chunk.stream()
-                        .map(Debt::getAmount)
+                        .map(d -> d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount())
                         .filter(Objects::nonNull)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -121,9 +124,9 @@ public class ReceivableService {
                         .build());
             }
 
-            // toplam
+            // toplam — Beta v1.1: remainingAmount (net), gross değil.
             BigDecimal total = rows.stream()
-                    .map(Debt::getAmount)
+                    .map(d -> d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount())
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
