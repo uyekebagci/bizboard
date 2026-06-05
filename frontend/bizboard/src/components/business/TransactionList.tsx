@@ -232,6 +232,31 @@ export function TransactionDetailModal({
   // Beta v1.1: POS komisyon UI kaldırıldı — edit'te de oran sorulmuyor.
   // Mevcut tx'in oranı save sırasında olduğu gibi geri yollanır (data koruma).
 
+  // WP b446c696 (Beta v1.1 Hotfix · POS Gider): pos_tx_subtype + related bank.
+  const [editPosTxSubtype, setEditPosTxSubtype] = useState<"NAKIT" | "TRANSFER">(
+    (transaction.pos_tx_subtype as "NAKIT" | "TRANSFER" | null) || "NAKIT",
+  );
+  const [editRelatedBankAccountId, setEditRelatedBankAccountId] = useState<string>(
+    transaction.related_bank_account_id || "",
+  );
+  const [bankAccountsForRelated, setBankAccountsForRelated] = useState<
+    Array<{ id: string; name: string; type: string }>
+  >([]);
+  useEffect(() => {
+    api.get<Array<{ id: string; name: string; type: string; is_active?: boolean; business_id?: string }>>(
+      `/bank-accounts`,
+    )
+      .then((accs) => {
+        setBankAccountsForRelated(
+          (accs || [])
+            .filter((a) => a.is_active !== false)
+            .filter((a) => !a.business_id || a.business_id === transaction.business_id)
+            .filter((a) => ["CHECKING", "SAVINGS", "CASH_HOLDER", "MAIN_CASH", "SUB_CASH"].includes(a.type)),
+        );
+      })
+      .catch(() => setBankAccountsForRelated([]));
+  }, [transaction.business_id]);
+
   // Categories
   const [categories, setCategories] = useState<Category[]>([]);
   const [editCategoryId, setEditCategoryId] = useState(transaction.category_id || "");
@@ -263,6 +288,7 @@ export function TransactionDetailModal({
 
       // Beta v1.1: POS komisyon UI kaldırıldı — edit'te eski oranları KORU
       // (backend tarafında migration yok, eski tx'ler değiştirilmesin).
+      const isPosExpenseEdit = editPaymentMethod === "POS" && editDirection === "expense";
       await api.put(`/businesses/${transaction.business_id}/transactions/${transaction.id}`, {
         direction: editDirection,
         amount: parseMoneyInput(editAmount),
@@ -273,6 +299,12 @@ export function TransactionDetailModal({
         payment_method: editPaymentMethod,
         pos_rate: transaction.pos_rate ?? null,
         our_commission_rate: transaction.applied_our_commission_rate ?? null,
+        // WP b446c696 (Beta v1.1 Hotfix): POS gider alt-tipi düzenlemesi.
+        pos_tx_subtype: isPosExpenseEdit ? editPosTxSubtype : null,
+        related_bank_account_id:
+          isPosExpenseEdit && editPosTxSubtype === "TRANSFER" && editRelatedBankAccountId
+            ? editRelatedBankAccountId
+            : null,
       });
 
       // Link newly uploaded files to transaction
@@ -378,6 +410,56 @@ export function TransactionDetailModal({
                 </div>
                 {/* Beta v1.1: POS komisyon input'ları kaldırıldı — edit modunda
                     da artık iki oran sorulmuyor. */}
+
+                {/* WP b446c696 (Beta v1.1 Hotfix): POS gider alt-tipi düzenleme */}
+                {editPaymentMethod === "POS" && editDirection === "expense" && (
+                  <div className="mt-3 space-y-2">
+                    <label className="block text-xs font-medium text-surface-300">
+                      İşlem Tipi
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["NAKIT", "TRANSFER"] as const).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setEditPosTxSubtype(opt)}
+                          className={cn(
+                            "py-2 px-3 rounded-xl text-xs font-medium border transition-all",
+                            editPosTxSubtype === opt
+                              ? "bg-indigo-500/15 border-indigo-500/50 text-indigo-200"
+                              : "bg-surface-800 border-surface-600 text-surface-400 hover:border-surface-300",
+                          )}
+                        >
+                          {opt === "NAKIT" ? "Nakit" : "Transfer"}
+                        </button>
+                      ))}
+                    </div>
+                    {editPosTxSubtype === "TRANSFER" && (
+                      <div>
+                        <label className="block text-[11px] font-medium text-surface-300 mb-1 mt-1">
+                          İlgili Banka Hesabı (opsiyonel)
+                        </label>
+                        <DarkSelect
+                          value={editRelatedBankAccountId}
+                          onChange={setEditRelatedBankAccountId}
+                          placeholder="Sonra seçebilirsin (opsiyonel)"
+                          searchable={bankAccountsForRelated.length > 6}
+                          options={[
+                            { value: "", label: "— (Atlanır)" },
+                            ...bankAccountsForRelated.map((b) => ({
+                              value: b.id,
+                              label: b.name,
+                              meta: b.type,
+                            })),
+                          ]}
+                        />
+                        <p className="mt-1 text-[10px] text-surface-500">
+                          Sadece bilgi alanı — hesap bakiyesini etkilemez.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Amount */}
@@ -594,8 +676,22 @@ export function TransactionDetailModal({
                         <span className="ml-2 text-surface-400">· {transaction.pos_device_name}</span>
                       )}
                     </p>
-                    {/* v1.6.23.9 (TODO 658c6f63): POS settle button + bank modal */}
-                    {(transaction.payment_method || "NAKIT") === "POS" && (
+                    {/* WP b446c696 (Beta v1.1 Hotfix): POS gider tx için alt-tip + related bank info */}
+                    {(transaction.payment_method || "NAKIT") === "POS"
+                      && transaction.direction === "expense"
+                      && transaction.pos_tx_subtype && (
+                      <p className="text-[11px] text-surface-400 mt-1">
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[10px] font-medium">
+                          {transaction.pos_tx_subtype === "NAKIT" ? "Nakit" : "Transfer"}
+                        </span>
+                        {transaction.pos_tx_subtype === "TRANSFER" && transaction.related_bank_account_name && (
+                          <span className="ml-1.5 text-surface-300">· {transaction.related_bank_account_name}</span>
+                        )}
+                      </p>
+                    )}
+                    {/* v1.6.23.9 (TODO 658c6f63): POS settle button + bank modal — sadece income POS için */}
+                    {(transaction.payment_method || "NAKIT") === "POS"
+                      && transaction.direction !== "expense" && (
                       <PosSettledToggle
                         transactionId={transaction.id}
                         businessId={transaction.business_id}

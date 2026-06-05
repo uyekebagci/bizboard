@@ -98,4 +98,20 @@ public class CreateTransactionRequest {
      */
     @JsonProperty("closure_session_id")
     private java.util.UUID closureSessionId;
+
+    /**
+     * WP b446c696 (Beta v1.1 Hotfix): POS gider akışında alt-tipi.
+     * Değerler: "NAKIT" | "TRANSFER". Sadece POS+EXPENSE kombinasyonunda
+     * anlamlı; diğer tx'lerde NULL bekleniyor.
+     */
+    @JsonProperty("pos_tx_subtype")
+    private String posTxSubtype;
+
+    /**
+     * WP b446c696: POS gider TRANSFER alt-tipinde ilgili banka hesabı.
+     * SADECE bilgi alanı — bakiyeyi etkilemez. business/active/type guard
+     * service'te. NAKIT subtype'da gönderilirse ignore + warning.
+     */
+    @JsonProperty("related_bank_account_id")
+    private java.util.UUID relatedBankAccountId;
 }

@@ -204,6 +204,49 @@ public class TransactionService {
             validatePosCommissionRates(appliedOurRate, appliedRate);
         }
 
+        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı.
+        // POS+EXPENSE için pos_device_id mandatory, pos_tx_subtype CHECK,
+        // related_bank_account_id ise business+aktif+type guard.
+        boolean isPosExpense = "POS".equals(pm)
+                && "EXPENSE".equalsIgnoreCase(request.getDirection());
+        String posTxSubtype = null;
+        com.bizboard.common.entity.BankAccount relatedBankAccount = null;
+        if (isPosExpense) {
+            if (request.getPosDeviceId() == null || posDevice == null) {
+                throw new IllegalArgumentException("POS gider için cihaz seçimi zorunlu");
+            }
+            posTxSubtype = request.getPosTxSubtype();
+            if (posTxSubtype != null) {
+                posTxSubtype = posTxSubtype.toUpperCase(java.util.Locale.ENGLISH);
+                if (!"NAKIT".equals(posTxSubtype) && !"TRANSFER".equals(posTxSubtype)) {
+                    throw new IllegalArgumentException(
+                            "Geçersiz pos_tx_subtype (NAKIT veya TRANSFER olmalı)");
+                }
+            }
+            if (request.getRelatedBankAccountId() != null && "TRANSFER".equals(posTxSubtype)) {
+                relatedBankAccount = bankAccountRepository
+                        .findById(request.getRelatedBankAccountId())
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "İlgili banka hesabı bulunamadı"));
+                if (!relatedBankAccount.getBusiness().getId().equals(business.getId())) {
+                    throw new IllegalArgumentException(
+                            "İlgili banka hesabı bu işletmeye ait değil");
+                }
+                if (!relatedBankAccount.isActive()) {
+                    throw new IllegalArgumentException(
+                            "Pasif banka hesabı atanamaz: " + relatedBankAccount.getName());
+                }
+                String type = relatedBankAccount.getType() != null
+                        ? relatedBankAccount.getType().name() : "";
+                if (!java.util.Set.of("CHECKING", "SAVINGS", "CASH_HOLDER", "MAIN_CASH", "SUB_CASH")
+                        .contains(type)) {
+                    throw new IllegalArgumentException(
+                            "Geçersiz hesap tipi: " + type);
+                }
+            }
+            // NAKIT subtype'da related_bank_account_id ignore edilir (silent).
+        }
+
         // v1.6.23.5 (BUG-V3 fix): POS tx için pos_settled default=false (NULL değil).
         // Önceki davranış: pos_settled NULL → analytics settled/unsettled count'ları
         // 0 dönüyordu çünkü Boolean.FALSE.equals(NULL) = false. Şimdi default false
@@ -233,6 +276,9 @@ public class TransactionService {
                 .createdBy(user)
                 // WP 08617251: closure session etiketi (NULL = normal tx)
                 .closureSessionId(request.getClosureSessionId())
+                // WP b446c696: POS gider akışı alanları (income veya non-POS için NULL).
+                .posTxSubtype(posTxSubtype)
+                .relatedBankAccount(relatedBankAccount)
                 .build();
 
         transaction = transactionRepository.save(transaction);
@@ -456,6 +502,61 @@ public class TransactionService {
             throw new IllegalArgumentException(
                     "pos_settled bu endpoint'ten degistirilemez; "
                             + "PATCH /businesses/{bizId}/transactions/{txId}/settle veya /unsettle kullan.");
+        }
+
+        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı pos_tx_subtype +
+        // related_bank_account_id update. Yalnız POS+EXPENSE tx'lerde anlamlı.
+        boolean isPosExpenseUpdate = "POS".equals(transaction.getPaymentMethod())
+                && transaction.getDirection() == TransactionDirection.EXPENSE;
+        if (isPosExpenseUpdate) {
+            if (request.getPosTxSubtype() != null) {
+                String newSubtype = request.getPosTxSubtype()
+                        .toUpperCase(java.util.Locale.ENGLISH);
+                if (!"NAKIT".equals(newSubtype) && !"TRANSFER".equals(newSubtype)) {
+                    throw new IllegalArgumentException(
+                            "Geçersiz pos_tx_subtype (NAKIT veya TRANSFER olmalı)");
+                }
+                if (!newSubtype.equals(transaction.getPosTxSubtype())) {
+                    changes.put("posTxSubtype", Map.of(
+                            "from", transaction.getPosTxSubtype() != null
+                                    ? transaction.getPosTxSubtype() : "null",
+                            "to", newSubtype));
+                    transaction.setPosTxSubtype(newSubtype);
+                    // TRANSFER → NAKIT geçişte related_bank_account_id NULL'a force.
+                    if ("NAKIT".equals(newSubtype)
+                            && transaction.getRelatedBankAccount() != null) {
+                        transaction.setRelatedBankAccount(null);
+                    }
+                }
+            }
+            // related_bank_account_id update — sadece TRANSFER subtype'da.
+            if (request.getRelatedBankAccountId() != null
+                    && "TRANSFER".equals(transaction.getPosTxSubtype())) {
+                com.bizboard.common.entity.BankAccount newRelated = bankAccountRepository
+                        .findById(request.getRelatedBankAccountId())
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "İlgili banka hesabı bulunamadı"));
+                if (!newRelated.getBusiness().getId()
+                        .equals(transaction.getBusiness().getId())) {
+                    throw new IllegalArgumentException(
+                            "İlgili banka hesabı bu işletmeye ait değil");
+                }
+                if (!newRelated.isActive()) {
+                    throw new IllegalArgumentException(
+                            "Pasif banka hesabı atanamaz: " + newRelated.getName());
+                }
+                com.bizboard.common.entity.BankAccount oldRelated = transaction.getRelatedBankAccount();
+                if (oldRelated == null || !oldRelated.getId().equals(newRelated.getId())) {
+                    changes.put("relatedBankAccount", Map.of(
+                            "from", oldRelated != null ? oldRelated.getId().toString() : "null",
+                            "to", newRelated.getId().toString()));
+                    transaction.setRelatedBankAccount(newRelated);
+                }
+            }
+        } else {
+            // POS+EXPENSE değilse alanlar her zaman NULL.
+            if (transaction.getPosTxSubtype() != null) transaction.setPosTxSubtype(null);
+            if (transaction.getRelatedBankAccount() != null) transaction.setRelatedBankAccount(null);
         }
 
         // v1.6.23.4 (BUG-1 fix): HESAPDAN bank_account update + balance reversal/apply.

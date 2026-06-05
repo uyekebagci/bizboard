@@ -367,7 +367,10 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
     );
   }
   // Beta v1.1: POS Hacmi mantığı — sadece amount toplamı, komisyon/kâr yok.
-  const totalGross = devs.reduce((a, x) => a + x.today_gross, 0);
+  // WP b446c696: gelir/gider ayrı + net (gelir − gider).
+  const totalIncomeGross = devs.reduce((a, x) => a + (x.today_income_gross ?? x.today_gross ?? 0), 0);
+  const totalExpenseGross = devs.reduce((a, x) => a + (x.today_expense_gross ?? 0), 0);
+  const totalNetVolume = totalIncomeGross - totalExpenseGross;
   const unsettled = devs.reduce((a, x) => a + x.unsettled_count, 0);
   const totalTx = devs.reduce((a, x) => a + x.tx_count, 0);
 
@@ -406,9 +409,26 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
       <Footer
         left={`${totalTx} çekim`}
         right={
-          <span>
-            {/* Beta v1.1: footer'da sadece toplam hacim. */}
-            Hacim <span className="text-emerald-300 font-semibold">{formatCurrency(totalGross, "TRY")}</span>
+          <span className="space-x-2">
+            {/* WP b446c696 (Beta v1.1 Hotfix): gelir/gider/net ayrı. */}
+            <span>
+              Gelir <span className="text-emerald-300 font-semibold">{formatCurrency(totalIncomeGross, "TRY")}</span>
+            </span>
+            {totalExpenseGross > 0 && (
+              <>
+                <span className="text-surface-600">·</span>
+                <span>
+                  Gider <span className="text-rose-300 font-semibold">−{formatCurrency(totalExpenseGross, "TRY")}</span>
+                </span>
+                <span className="text-surface-600">·</span>
+                <span>
+                  Net <span className={cn(
+                    "font-bold",
+                    totalNetVolume >= 0 ? "text-emerald-300" : "text-rose-300",
+                  )}>{formatCurrency(Math.abs(totalNetVolume), "TRY")}</span>
+                </span>
+              </>
+            )}
           </span>
         }
       />

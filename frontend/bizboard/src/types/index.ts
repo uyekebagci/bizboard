@@ -181,6 +181,11 @@ export interface Transaction {
   /** v1.6.23.9: settle sonrası hangi banka. */
   settled_bank_account_id?: string | null;
   settled_bank_account_name?: string | null;
+  /** WP b446c696 (Beta v1.1 Hotfix): POS gider alt-tip. NAKIT | TRANSFER | null. */
+  pos_tx_subtype?: "NAKIT" | "TRANSFER" | null;
+  /** WP b446c696: POS gider TRANSFER alt-tipinde ilgili banka hesabı (sadece bilgi). */
+  related_bank_account_id?: string | null;
+  related_bank_account_name?: string | null;
   /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived komisyon (legacy = bank_commission_amount). */
   pos_commission?: number | null;
   /** v1.6.23.8 (WP 3cdf2a4f): POS tx için derived net (= amount − bank_commission). */
@@ -374,6 +379,10 @@ export interface ConsolidatedDashboard {
     device_id: string;
     device_name: string;
     today_gross: number;
+    /** WP b446c696 (Beta v1.1 Hotfix): POS gelir hacmi (= today_gross). */
+    today_income_gross?: number;
+    /** WP b446c696: POS gider hacmi. */
+    today_expense_gross?: number;
     /** Legacy alias of today_bank_commission. */
     today_commission: number;
     /** v1.7.x (POS Komisyon WP): banka komisyon toplamı. */

@@ -143,6 +143,10 @@ public class ConsolidatedDashboardDto {
         @JsonProperty("device_id")        private UUID deviceId;
         @JsonProperty("device_name")      private String deviceName;
         @JsonProperty("today_gross")      private BigDecimal todayGross;
+        /** WP b446c696 (Beta v1.1 Hotfix): income POS hacmi (geri uyumlu için today_gross ile eş). */
+        @JsonProperty("today_income_gross") private BigDecimal todayIncomeGross;
+        /** WP b446c696: expense POS hacmi (POS gider akışı). */
+        @JsonProperty("today_expense_gross") private BigDecimal todayExpenseGross;
         /** Legacy: banka komisyonu toplamı (= today_bank_commission). */
         @JsonProperty("today_commission") private BigDecimal todayCommission;
         /** v1.7.x (POS Komisyon WP): banka komisyon toplamı. */

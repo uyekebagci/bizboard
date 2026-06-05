@@ -409,12 +409,21 @@ public class ConsolidatedDashboardService {
     private ConsolidatedDashboardDto.PosDeviceToday buildPosDeviceToday(PosDevice d, LocalDate date) {
         List<Transaction> txs = transactionRepository.findByPosDeviceIdAndDate(d.getId(), date);
         BigDecimal gross = BigDecimal.ZERO;
+        // WP b446c696 (Beta v1.1 Hotfix): income/expense ayrı toplamlar.
+        BigDecimal incomeGross = BigDecimal.ZERO;
+        BigDecimal expenseGross = BigDecimal.ZERO;
         BigDecimal bankCommission = BigDecimal.ZERO;
         // v1.7.x (POS Komisyon WP TODO 8a7a8416): bizim komisyon + kâr toplamı.
         BigDecimal ourCommission = BigDecimal.ZERO;
         int unsettled = 0;
         for (Transaction t : txs) {
             if (t.getAmount() == null) continue;
+            // WP b446c696: gross sadece income (geri uyumlu için legacy semantik).
+            if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.EXPENSE) {
+                expenseGross = expenseGross.add(t.getAmount());
+                continue;
+            }
+            incomeGross = incomeGross.add(t.getAmount());
             gross = gross.add(t.getAmount());
             BigDecimal bankRate = t.getAppliedPosRate() != null
                     ? t.getAppliedPosRate()
@@ -435,6 +444,9 @@ public class ConsolidatedDashboardService {
                 .deviceId(d.getId())
                 .deviceName(d.getName())
                 .todayGross(gross)
+                // WP b446c696: income/expense ayrı raporlama (POS Hacmi widget).
+                .todayIncomeGross(incomeGross)
+                .todayExpenseGross(expenseGross)
                 .todayCommission(bankCommission) // legacy alias
                 .todayBankCommission(bankCommission)
                 .todayOurCommission(ourCommission)

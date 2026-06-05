@@ -124,6 +124,12 @@ public final class DtoMapper {
                         ? t.getBankAccount().getId() : null)
                 .settledBankAccountName(t.getBankAccount() != null && Boolean.TRUE.equals(t.getPosSettled())
                         ? t.getBankAccount().getName() : null)
+                // WP b446c696 (Beta v1.1 Hotfix · POS Gider): subtype + related bank info.
+                .posTxSubtype(t.getPosTxSubtype())
+                .relatedBankAccountId(t.getRelatedBankAccount() != null
+                        ? t.getRelatedBankAccount().getId() : null)
+                .relatedBankAccountName(t.getRelatedBankAccount() != null
+                        ? t.getRelatedBankAccount().getName() : null)
                 .posCommission(posCommission)
                 .posNet(posNet)
                 .targetCounterpartId(t.getTargetCounterpart() != null ? t.getTargetCounterpart().getId() : null)

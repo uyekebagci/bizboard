@@ -202,6 +202,24 @@ public class Transaction {
     @Column(name = "pos_settled")
     private Boolean posSettled;
 
+    /**
+     * WP b446c696 (Beta v1.1 Hotfix): POS gider akışında alt-tipi —
+     * NAKIT veya TRANSFER. Sadece {@code paymentMethod LIKE 'POS%' AND
+     * direction=EXPENSE} kombinasyonunda set edilir; diğer tx'lerde NULL.
+     * CHECK constraint migration runner tarafından eklenir.
+     */
+    @Column(name = "pos_tx_subtype", length = 10)
+    private String posTxSubtype;
+
+    /**
+     * WP b446c696: POS gider TRANSFER alt-tipinde ilgili banka hesabı —
+     * SADECE bilgi alanı. Bakiyeyi etkilemez; kullanıcı gerçek hareketi
+     * ayrı Transfer tx ile yapar. business+aktif+type guard service'te.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "related_bank_account_id")
+    private BankAccount relatedBankAccount;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     @Builder.Default

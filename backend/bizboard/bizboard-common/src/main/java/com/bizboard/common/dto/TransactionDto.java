@@ -123,6 +123,17 @@ public class TransactionDto {
     @JsonProperty("settled_bank_account_name")
     private String settledBankAccountName;
 
+    /** WP b446c696 (Beta v1.1 Hotfix · POS Gider): NAKIT | TRANSFER | null. */
+    @JsonProperty("pos_tx_subtype")
+    private String posTxSubtype;
+
+    /** WP b446c696: POS gider TRANSFER alt-tipinde ilgili banka hesabı (bilgi). */
+    @JsonProperty("related_bank_account_id")
+    private UUID relatedBankAccountId;
+
+    @JsonProperty("related_bank_account_name")
+    private String relatedBankAccountName;
+
     /**
      * v1.6.23.8 (WP 3cdf2a4f / TODO ad8afc6f): POS tx için derived komisyon.
      * Formül: {@code amount × applied_pos_rate / 100} (applied_pos_rate yoksa

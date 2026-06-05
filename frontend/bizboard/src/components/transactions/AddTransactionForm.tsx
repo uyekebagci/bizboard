@@ -137,13 +137,41 @@ export function AddTransactionForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preselectedType]);
 
-  // v1.7.x: Gider seçilince POS opsiyonu mantıksız → otomatik NAKIT'a çek.
+  // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı GERİ GETİRİLDİ.
+  // POS+EXPENSE artık geçerli; auto-NAKIT zorlaması kaldırıldı.
+
+  // WP b446c696: POS gider alt-tipi (NAKIT default, kullanıcı Transfer'a geçer)
+  // ve opsiyonel ilgili banka hesabı.
+  const [posTxSubtype, setPosTxSubtype] = useState<"NAKIT" | "TRANSFER">("NAKIT");
+  const [relatedBankAccountId, setRelatedBankAccountId] = useState<string>("");
+  const [relatedBankAccounts, setRelatedBankAccounts] = useState<
+    Array<{ id: string; name: string; type: string; current_balance?: number }>
+  >([]);
+
   useEffect(() => {
-    if (direction === "expense" && paymentMethod === "POS") {
-      setPaymentMethod("NAKIT");
-      setPosDeviceId("");
+    // POS gider TRANSFER alt-tipinde dropdown için aktif banka hesapları.
+    if (!businessId) { setRelatedBankAccounts([]); return; }
+    api.get<Array<{ id: string; name: string; type: string; current_balance?: number; is_active?: boolean; business_id?: string }>>(
+      `/bank-accounts`,
+    )
+      .then((accs) => {
+        setRelatedBankAccounts(
+          (accs || [])
+            .filter((a) => a.is_active !== false)
+            .filter((a) => !a.business_id || a.business_id === businessId)
+            .filter((a) => ["CHECKING", "SAVINGS", "CASH_HOLDER", "MAIN_CASH", "SUB_CASH"].includes(a.type)),
+        );
+      })
+      .catch(() => setRelatedBankAccounts([]));
+  }, [businessId]);
+
+  // POS dışına geçilince state temizle.
+  useEffect(() => {
+    if (paymentMethod !== "POS" || direction !== "expense") {
+      if (posTxSubtype !== "NAKIT") setPosTxSubtype("NAKIT");
+      if (relatedBankAccountId !== "") setRelatedBankAccountId("");
     }
-  }, [direction, paymentMethod]);
+  }, [paymentMethod, direction, posTxSubtype, relatedBankAccountId]);
 
   useEffect(() => {
     api.get<Counterpart[]>("/counterparts")
@@ -222,6 +250,14 @@ export function AddTransactionForm({
         payment_method: paymentMethod,
         target_counterpart_id: targetCounterpartId || null,
         pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
+        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı.
+        pos_tx_subtype:
+          paymentMethod === "POS" && direction === "expense" ? posTxSubtype : null,
+        related_bank_account_id:
+          paymentMethod === "POS" && direction === "expense"
+            && posTxSubtype === "TRANSFER" && relatedBankAccountId
+            ? relatedBankAccountId
+            : null,
         // Beta v1.1: tx-time manuel alt kasa atama
         manual_sub_cash_id: addToSubCash && manualSubCashId ? manualSubCashId : null,
         // WP 08617251: closure session etiketi (inline tx)
@@ -337,21 +373,16 @@ export function AddTransactionForm({
       )}
 
       {/* Payment Method —
-          v1.7.x: POS yalnız Gelir yönünde anlamlıdır (komisyon = tahsilat
-          kesintisi; gider akışında karşılığı yok). Gider seçiliyken POS
-          butonu gizlenir, paymentMethod otomatik NAKIT'a çekilir.
-          v1.7.0.x: lockPaymentMethod ise dedicated page (örn /pos) zaten
-          method'u kilitlemiş — seçici gizlenir, POS-spesifik alanlar görünmeye devam eder. */}
+          WP b446c696 (Beta v1.1 Hotfix): POS gider akışı GERİ getirildi.
+          POS butonu artık hem gelir hem gider için aktif. Gider modunda
+          aşağıda "İşlem Tipi" alt-toggle çıkar (NAKIT / TRANSFER). */}
       <div>
         {!lockPaymentMethod && (
         <>
         <label className="block text-sm font-medium text-surface-200 mb-1.5">
           Odeme Yontemi *
         </label>
-        <div className={cn(
-          "grid gap-3",
-          direction === "income" ? "grid-cols-2" : "grid-cols-1",
-        )}>
+        <div className="grid gap-3 grid-cols-2">
           <button
             type="button"
             onClick={() => setPaymentMethod("NAKIT")}
@@ -365,7 +396,6 @@ export function AddTransactionForm({
             <Banknote size={16} />
             Nakit
           </button>
-          {direction === "income" && (
           <button
             type="button"
             onClick={() => {
@@ -381,7 +411,6 @@ export function AddTransactionForm({
             <CreditCard size={16} />
             POS
           </button>
-          )}
         </div>
         </>
         )}
@@ -422,6 +451,64 @@ export function AddTransactionForm({
                 applied_pos_rate / applied_our_commission_rate backend tarafında
                 NULL kaydedilir. KONSOLİDE NET formülü legacy-aware: eski rate'li
                 tx'ler profit hesaplar, yeni'ler tam tutar income'a katkı yapar. */}
+
+            {/* WP b446c696 (Beta v1.1 Hotfix): POS gider akışı — alt-tip toggle */}
+            {direction === "expense" && (
+              <div className="mt-3 space-y-2">
+                <label className="block text-xs font-medium text-surface-300">
+                  İşlem Tipi
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["NAKIT", "TRANSFER"] as const).map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setPosTxSubtype(opt)}
+                      className={cn(
+                        "py-2 px-3 rounded-xl text-xs font-medium border transition-all text-left",
+                        posTxSubtype === opt
+                          ? "bg-indigo-500/15 border-indigo-500/50 text-indigo-200"
+                          : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                      )}
+                    >
+                      <div className="font-semibold">
+                        {opt === "NAKIT" ? "Nakit" : "Transfer"}
+                      </div>
+                      <div className="text-[10px] text-surface-400 mt-0.5">
+                        {opt === "NAKIT"
+                          ? "POS'tan nakit hareket"
+                          : "Banka hesabımıza/dan"}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {posTxSubtype === "TRANSFER" && (
+                  <div className="pt-1">
+                    <label className="block text-[11px] font-medium text-surface-300 mb-1">
+                      İlgili Banka Hesabı (opsiyonel)
+                    </label>
+                    <DarkSelect
+                      value={relatedBankAccountId}
+                      onChange={setRelatedBankAccountId}
+                      placeholder="Sonra seçebilirsin (opsiyonel)"
+                      searchable={relatedBankAccounts.length > 6}
+                      options={[
+                        { value: "", label: "— (Atlanır)" },
+                        ...relatedBankAccounts.map((b) => ({
+                          value: b.id,
+                          label: b.name,
+                          meta: b.type,
+                        })),
+                      ]}
+                    />
+                    <p className="mt-1 text-[10px] text-surface-500">
+                      Sadece bilgi alanı — hesap bakiyesini etkilemez.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

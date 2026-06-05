@@ -59,4 +59,19 @@ public class UpdateTransactionRequest {
      */
     @JsonProperty("bank_account_id")
     private UUID bankAccountId;
+
+    /**
+     * WP b446c696 (Beta v1.1 Hotfix): POS gider tx için alt-tip düzenlemesi.
+     * "NAKIT" | "TRANSFER" | null. NAKIT'e geçişte relatedBankAccountId
+     * service'te otomatik NULL'a çekilir.
+     */
+    @JsonProperty("pos_tx_subtype")
+    private String posTxSubtype;
+
+    /**
+     * WP b446c696: POS gider TRANSFER alt-tipinde ilgili banka hesabı —
+     * sadece bilgi alanı, bakiyeyi etkilemez.
+     */
+    @JsonProperty("related_bank_account_id")
+    private UUID relatedBankAccountId;
 }
