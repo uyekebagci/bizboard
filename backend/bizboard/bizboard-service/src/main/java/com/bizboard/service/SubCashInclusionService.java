@@ -171,27 +171,16 @@ public class SubCashInclusionService {
     }
 
     /**
-     * income_value formülü — SubCashService.incomeValue ile özdeş.
-     * Beta v1.1 legacy-aware (rate NULL → tam tutar).
+     * income_value formülü — Beta v1.1: KOMİSYON YOK. POS gelir dahil
+     * tüm income tx'leri tam tutar (amount), expense tx'leri −amount,
+     * transfer 0. Eski rate snapshot'ları (legacy POS Komisyon WP) artık
+     * ignore edilir — kullanıcı "kaç liralık POS işlem yaptıysam o kadar
+     * gözüksün" istiyor.
      */
     private static java.math.BigDecimal incomeValueForTx(Transaction t) {
         if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
         if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
             return java.math.BigDecimal.ZERO;
-        }
-        String pm = t.getPaymentMethod();
-        boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
-        if (isPos && t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
-            java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
-                    ? t.getAppliedPosRate() : t.getPosRate();
-            java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate();
-            if (bankRate != null && ourRate != null) {
-                java.math.BigDecimal diff = ourRate.subtract(bankRate);
-                if (diff.signum() == 0) return java.math.BigDecimal.ZERO;
-                return t.getAmount().multiply(diff)
-                        .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-            }
-            return t.getAmount();
         }
         if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
             return t.getAmount();

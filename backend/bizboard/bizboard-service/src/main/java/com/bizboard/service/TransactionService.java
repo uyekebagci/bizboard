@@ -174,35 +174,17 @@ public class TransactionService {
                     .findById(request.getTargetCounterpartId())
                     .orElse(null);
         }
+        // Beta v1.1 (POS Komisyon Kaldırma): cihaz lookup hâlâ posDevice entity
+        // referansı için yapılır, ama rate snapshot YAPILMIYOR. applied_pos_rate /
+        // applied_our_commission_rate her zaman NULL kaydedilir — kullanıcı
+        // raporlama'da düz amount görmek istiyor.
         com.bizboard.common.entity.PosDevice posDevice = null;
         java.math.BigDecimal appliedRate = null;
-        // v1.7.x (POS Komisyon WP TODO fc3ed50f): bizim oran snapshot
         java.math.BigDecimal appliedOurRate = null;
         if ("POS".equals(pm) && request.getPosDeviceId() != null) {
             posDevice = posDeviceRepository.findById(request.getPosDeviceId()).orElse(null);
-            if (posDevice != null) {
-                // Snapshot: cihazın o anki rate'ini sabitle (banka oranı).
-                appliedRate = posRate != null ? posRate
-                        : (posDevice.getDefaultRate() != null ? posDevice.getDefaultRate()
-                            : posDevice.getLastUsedRate());
-                // v1.7.x: bizim oran — request'ten gelirse o, yoksa device default.
-                appliedOurRate = request.getOurCommissionRate() != null
-                        ? request.getOurCommissionRate()
-                        : posDevice.getOurCommissionRate();
-                // Cihazın "lastUsedRate"ini de güncelle.
-                if (posRate != null) {
-                    posDevice.setLastUsedRate(posRate);
-                    posDeviceRepository.save(posDevice);
-                }
-            }
-        } else if ("POS".equals(pm)) {
-            appliedRate = posRate;
-            appliedOurRate = request.getOurCommissionRate();
         }
-        // v1.7.x (TODO fc3ed50f): POS tx için her iki oran zorunlu + our >= bank.
-        if ("POS".equals(pm)) {
-            validatePosCommissionRates(appliedOurRate, appliedRate);
-        }
+        // validatePosCommissionRates: her iki oran NULL → no-op (Beta v1.1 davranışı).
 
         // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı.
         // POS+EXPENSE için pos_device_id mandatory, pos_tx_subtype CHECK,

@@ -476,27 +476,14 @@ public class SubCashService {
     }
 
     /**
-     * income_value per tx — KONSOLİDE NET formülüyle aynı.
+     * income_value per tx — Beta v1.1: KOMİSYON YOK.
+     * POS gelir dahil tüm income → amount; expense → −amount; transfer → 0.
+     * Eski rate snapshot'ları ignore.
      */
     private static java.math.BigDecimal incomeValue(Transaction t) {
         if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
         if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
             return java.math.BigDecimal.ZERO;
-        }
-        String pm = t.getPaymentMethod();
-        boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
-        if (isPos && t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
-            // Beta v1.1 legacy-aware: rate dolu → eski profit; NULL → tam tutar.
-            java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
-                    ? t.getAppliedPosRate() : t.getPosRate();
-            java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate();
-            if (bankRate != null && ourRate != null) {
-                java.math.BigDecimal diff = ourRate.subtract(bankRate);
-                if (diff.signum() == 0) return java.math.BigDecimal.ZERO;
-                return t.getAmount().multiply(diff)
-                        .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-            }
-            return t.getAmount();
         }
         if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
             return t.getAmount();
