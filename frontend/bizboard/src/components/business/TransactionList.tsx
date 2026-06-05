@@ -265,6 +265,19 @@ export function TransactionDetailModal({
   const [files, setFiles] = useState<FileUploadInfo[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
 
+  // Beta v1.1 hotfix: tx'in dahil olduğu sub-cash listesi — detay görüntüsü.
+  const [includedSubCashes, setIncludedSubCashes] = useState<
+    Array<{ sub_cash_id: string; sub_cash_name: string; scope: string | null }>
+  >([]);
+  useEffect(() => {
+    if (!transaction.business_id || !transaction.id) return;
+    api.get<Array<{ sub_cash_id: string; sub_cash_name: string; scope: string | null }>>(
+      `/businesses/${transaction.business_id}/transactions/${transaction.id}/sub-cashes`,
+    )
+      .then(setIncludedSubCashes)
+      .catch(() => setIncludedSubCashes([]));
+  }, [transaction.business_id, transaction.id]);
+
   useEffect(() => {
     if (transaction.business_id) {
       api.get<Category[]>(`/businesses/${transaction.business_id}/categories`)
@@ -702,6 +715,33 @@ export function TransactionDetailModal({
                     )}
                   </div>
                 </div>
+
+                {/* Beta v1.1 hotfix: tx hangi sub-cash'lere dahil — read-only display */}
+                {includedSubCashes.length > 0 && (
+                  <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
+                    <Banknote size={16} className="text-emerald-300 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-surface-400 uppercase tracking-wider">
+                        Atandığı Alt Kasalar ({includedSubCashes.length})
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {includedSubCashes.map((sc) => (
+                          <span
+                            key={sc.sub_cash_id}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                            title={sc.scope === "MANUAL" ? "Manuel atama" : "Otomatik (entity match)"}
+                          >
+                            <Banknote size={9} />
+                            {sc.sub_cash_name}
+                            {sc.scope === "MANUAL" && (
+                              <span className="text-[9px] opacity-70">·M</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {transaction.tags && transaction.tags.length > 0 && (
                   <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">

@@ -11,6 +11,8 @@ import com.bizboard.common.dto.PosSettleRequest;
 import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.common.dto.UpdateTransactionRequest;
 import com.bizboard.security.UserPrincipal;
+
+import java.util.Map;
 import com.bizboard.service.BusinessService;
 import com.bizboard.service.ConsolidatedDashboardService;
 import com.bizboard.service.SummaryService;
@@ -36,6 +38,8 @@ public class BusinessController {
     private final TransactionService transactionService;
     private final SummaryService summaryService;
     private final ConsolidatedDashboardService consolidatedService;
+    private final com.bizboard.repository.SubCashTxInclusionRepository inclusionRepository;
+    private final com.bizboard.service.BusinessAccessGuard accessGuard;
     /** WP 2786a36e (Beta v1.1): Elde Tutulan Nakitler widget endpoint. */
     private final com.bizboard.service.BankAccountService bankAccountService;
 
@@ -57,6 +61,36 @@ public class BusinessController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(businessService.getBusinessById(id, principal.getId()));
+    }
+
+    /**
+     * Beta v1.1 hotfix: Bir tx'in dahil olduğu sub-cash'leri listele.
+     * Tx detay modal'ında "Atandığı Alt Kasalar" satırı için.
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @GetMapping("/{id}/transactions/{txId}/sub-cashes")
+    public ResponseEntity<List<Map<String, Object>>> getTxSubCashes(
+            @PathVariable UUID id,
+            @PathVariable UUID txId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        accessGuard.assertCanAccessBusiness(principal.getId(), id);
+        List<com.bizboard.common.entity.SubCashTxInclusion> incs =
+                inclusionRepository.findByTransaction_Id(txId);
+        List<Map<String, Object>> result = new java.util.ArrayList<>(incs.size());
+        for (com.bizboard.common.entity.SubCashTxInclusion inc : incs) {
+            if (inc.getSubCash() == null) continue;
+            // Cross-business guard: yalnız sorgulanan business'a ait sub-cash'leri dön
+            if (inc.getBusiness() == null
+                    || !inc.getBusiness().getId().equals(id)) {
+                continue;
+            }
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("sub_cash_id", inc.getSubCash().getId());
+            row.put("sub_cash_name", inc.getSubCash().getName());
+            row.put("scope", inc.getScope() != null ? inc.getScope().name() : null);
+            result.add(row);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}/transactions")

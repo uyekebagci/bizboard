@@ -82,6 +82,37 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
   const [income, setIncome] = useState<SubCashIncomeSummary | null>(null);
   const [loadingIncome, setLoadingIncome] = useState(false);
 
+  // Beta v1.1 hotfix: tx listesi lazy fetch — initial 20 detail endpoint'inden,
+  // ek sayfalar /transactions-page ile gelir.
+  const [extraTxs, setExtraTxs] = useState<SubCashDetail["transactions"]>([]);
+  const [hasMoreTx, setHasMoreTx] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Sub-cash değişince extra tx'leri sıfırla.
+  useEffect(() => {
+    setExtraTxs([]);
+    setHasMoreTx(true);
+  }, [subCashId]);
+
+  const loadMoreTx = useCallback(async () => {
+    if (!data) return;
+    setLoadingMore(true);
+    try {
+      const offset = data.transactions.length + extraTxs.length;
+      const res = await api.get<{
+        items: SubCashDetail["transactions"];
+        total: number;
+        has_more: boolean;
+      }>(`/bank-accounts/${subCashId}/transactions-page?offset=${offset}&limit=20`);
+      setExtraTxs((prev) => [...prev, ...(res.items || [])]);
+      setHasMoreTx(res.has_more);
+    } catch (err) {
+      toast.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [subCashId, data, extraTxs.length]);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -363,11 +394,13 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
         </section>
       )}
 
-      {/* Tx kartı (inclusion table'dan) */}
+      {/* Tx kartı (inclusion table'dan) — Beta v1.1: lazy fetch ile pagination */}
       <section>
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider flex items-center gap-1">
-            <Receipt size={12} /> Bu Sub-Cash&apos;in İşlemleri ({data.transactions.length})
+            <Receipt size={12} /> Bu Sub-Cash&apos;in İşlemleri
+            ({data.transactions.length + extraTxs.length}
+            {hasMoreTx ? "+" : ""})
           </h4>
           <button
             type="button"
@@ -378,15 +411,15 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
             Geri Dönük Ekle
           </button>
         </div>
-        {data.transactions.length === 0 ? (
+        {data.transactions.length + extraTxs.length === 0 ? (
           <p className="text-xs text-surface-500 italic">
             Bu sub-cash&apos;e dahil edilmiş işlem yok. Yeni tx oluştururken
             entity match olursa otomatik eklenir; eski tx&apos;ler için
             &quot;Geri Dönük Ekle&quot; kullanın.
           </p>
         ) : (
-          <div className="rounded-xl border border-surface-700 divide-y divide-surface-700 max-h-64 overflow-y-auto">
-            {data.transactions.map((t) => {
+          <div className="rounded-xl border border-surface-700 divide-y divide-surface-700 max-h-96 overflow-y-auto">
+            {[...data.transactions, ...extraTxs].map((t) => {
               const isManual = t.inclusion_scope === "MANUAL";
               const isAuto = t.inclusion_scope === "AUTOMATIC";
               return (
@@ -442,6 +475,24 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
                 </div>
               );
             })}
+          </div>
+        )}
+        {/* Beta v1.1: Daha Fazla Yükle — lazy fetch */}
+        {hasMoreTx && (data.transactions.length + extraTxs.length) > 0 && (
+          <div className="mt-2 flex justify-center">
+            <button
+              type="button"
+              onClick={loadMoreTx}
+              disabled={loadingMore}
+              className="text-[11px] px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-200 border border-surface-600 inline-flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {loadingMore ? (
+                <Loader2 size={11} className="animate-spin" />
+              ) : (
+                <Receipt size={11} />
+              )}
+              Daha Fazla Yükle
+            </button>
           </div>
         )}
       </section>

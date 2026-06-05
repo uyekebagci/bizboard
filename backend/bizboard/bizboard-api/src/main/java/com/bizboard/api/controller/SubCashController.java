@@ -345,4 +345,58 @@ public class SubCashController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * Beta v1.1 hotfix: SUB_CASH'in tüm tx'lerini paginate olarak listele.
+     * Detail endpoint'i ilk N tx döner (default 20); bu endpoint "Daha
+     * Fazla Yükle" akışı için. Lazy fetch — yüzlerce tx olduğunda kullanıcı
+     * sayfayı açarken beklemez.
+     *
+     * <p>Response: {@code { items: TransactionDto[], total, has_more }}.</p>
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @GetMapping("/transactions-page")
+    public ResponseEntity<?> transactionsPage(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID subCashId,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "20") int limit) {
+        try {
+            int effLimit = Math.max(1, Math.min(limit, 100));
+            int effOffset = Math.max(0, offset);
+            List<com.bizboard.common.entity.Transaction> all = subCashService
+                    .transactionsForSubCash(subCashId, principal.getId(),
+                            Integer.MAX_VALUE);
+            int total = all.size();
+            int end = Math.min(effOffset + effLimit, total);
+            List<com.bizboard.common.entity.Transaction> page = effOffset >= total
+                    ? List.of() : all.subList(effOffset, end);
+
+            // scope bilgisi inclusion table'dan zenginleştir
+            java.util.Map<UUID, String> scopeByTxId = new java.util.HashMap<>();
+            for (com.bizboard.common.entity.SubCashTxInclusion inc :
+                    inclusionRepository.findBySubCash_Id(subCashId)) {
+                if (inc.getTransaction() != null && inc.getScope() != null) {
+                    scopeByTxId.put(inc.getTransaction().getId(), inc.getScope().name());
+                }
+            }
+
+            List<TransactionDto> items = page.stream().map(t -> {
+                TransactionDto d = DtoMapper.toTransactionDto(t);
+                d.setInclusionScope(scopeByTxId.get(t.getId()));
+                return d;
+            }).toList();
+
+            return ResponseEntity.ok(Map.of(
+                    "items", items,
+                    "total", total,
+                    "has_more", end < total));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Sub-cash bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }
