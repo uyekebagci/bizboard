@@ -83,7 +83,7 @@ export function BankAccountCreateForm({
   }, []);
 
   // Beta v1.1: CASH_HOLDER artık standalone — counterpart fetch kaldırıldı.
-  // Holder adı yazıldıkça hesap adı auto-suggest ("<Tuncay> (Eldeki)").
+  // Holder adı yazıldıkça hesap adı auto-suggest ("<Okan> (Eldeki)").
   useEffect(() => {
     if (type !== "CASH_HOLDER") return;
     if (nameTouched) return;
@@ -199,7 +199,7 @@ export function BankAccountCreateForm({
           onChange={(e) => { setName(e.target.value); setNameTouched(true); }}
           placeholder={
             type === "SUB_CASH" ? "Ör. Kasa #2"
-              : type === "CASH_HOLDER" ? "Ör. Tuncay (Eldeki)"
+              : type === "CASH_HOLDER" ? "Ör. Okan (Eldeki)"
               : "Ör. Garanti Vakif"
           }
           className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
@@ -246,7 +246,7 @@ export function BankAccountCreateForm({
               type="text"
               value={holderName}
               onChange={(e) => setHolderName(e.target.value)}
-              placeholder="Ör. Tuncay"
+              placeholder="Ör. Okan"
               className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
               required
               autoFocus
