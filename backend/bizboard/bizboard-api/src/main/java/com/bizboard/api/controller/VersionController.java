@@ -16,8 +16,8 @@ import java.util.Map;
 public class VersionController {
 
     /** Her commit'te değiştir veya CI inject etsin. */
-    private static final String VERSION_MARKER = "v1.1-hotfix-2026-06-02-tx-list-created-at-order";
-    private static final String BUILD_TIMESTAMP = "2026-06-02T23:30:00Z";
+    private static final String VERSION_MARKER = "v1.1-hotfix-2026-06-03-quick-action-sub-cash";
+    private static final String BUILD_TIMESTAMP = "2026-06-03T00:00:00Z";
 
     @GetMapping("/version")
     public Map<String, String> version() {

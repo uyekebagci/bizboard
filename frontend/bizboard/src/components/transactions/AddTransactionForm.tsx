@@ -296,6 +296,10 @@ export function AddTransactionForm({
               applied_our_commission_rate: null,
               category_id: categoryId || null,
               description: description || null,
+              // Beta v1.1 hotfix: alt kasa atamasını da template'a kaydet —
+              // hızlı işlem çağrılınca aynı sub-cash'e MANUAL inclusion eklenir.
+              manual_sub_cash_id:
+                addToSubCash && manualSubCashId ? manualSubCashId : null,
             },
           });
         } catch (qaErr: unknown) {

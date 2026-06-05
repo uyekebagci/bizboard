@@ -1361,6 +1361,8 @@ export interface QuickActionTemplate {
   from_bank_account_id?: string | null;
   to_bank_account_id?: string | null;
   to_external_name?: string | null;
+  // Beta v1.1 hotfix: alt kasa ataması (NORMAL kind için).
+  manual_sub_cash_id?: string | null;
 }
 
 export interface QuickActionListItem {

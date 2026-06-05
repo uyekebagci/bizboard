@@ -28,6 +28,19 @@ interface Props {
 export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Props) {
   const tpl = quickAction.tx_template;
 
+  // Beta v1.1 hotfix: template'te manual_sub_cash_id varsa adını bul
+  // (SABİT BİLGİLER altında göstermek için).
+  const [subCashName, setSubCashName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!tpl.manual_sub_cash_id) { setSubCashName(null); return; }
+    api.get<Array<{ id: string; name: string; type: string }>>(`/bank-accounts`)
+      .then((accs) => {
+        const match = (accs || []).find((a) => a.id === tpl.manual_sub_cash_id);
+        setSubCashName(match?.name ?? null);
+      })
+      .catch(() => setSubCashName(null));
+  }, [tpl.manual_sub_cash_id]);
+
   // Düzenlenebilir state
   const [amount, setAmount] = useState<string>(
     tpl.amount != null ? formatMoneyInput(String(tpl.amount)) : "",
@@ -207,6 +220,9 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
                 )}
                 {tpl.applied_our_commission_rate != null && (
                   <LockedRow label="Bizim Komisyon" value={`%${tpl.applied_our_commission_rate}`} />
+                )}
+                {tpl.manual_sub_cash_id && (
+                  <LockedRow label="Alt Kasa" value={subCashName ?? "[Kasa ID]"} hint="Tx oluşunca buraya da yansır" />
                 )}
               </>
             )}

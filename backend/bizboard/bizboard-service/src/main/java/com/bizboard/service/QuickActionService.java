@@ -286,6 +286,10 @@ public class QuickActionService {
         req.setTargetCounterpartId(toUuid(m.get("counterpart_id")));
         req.setPosDeviceId(toUuid(m.get("pos_device_id")));
         req.setBankAccountId(toUuid(m.get("bank_account_id")));
+        // Beta v1.1 hotfix: alt kasa atamasını template'tan oku — execute
+        // zamanı TransactionService MANUAL inclusion eklesin + SUB_CASH
+        // bakiyesini güncellesin.
+        req.setManualSubCashId(toUuid(m.get("manual_sub_cash_id")));
         // Validation
         if (req.getDirection() == null || req.getDirection().isBlank()) {
             throw new IllegalArgumentException("direction template'te eksik");
