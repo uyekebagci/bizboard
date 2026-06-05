@@ -271,17 +271,38 @@ public class SubCashInclusionService {
     @Transactional
     public void onTransactionDeleted(Transaction tx) {
         if (tx == null) return;
+        // Beta v1.1 hotfix: TransientObjectException önleme — inc.transaction
+        // lazy proxy üzerinden çalışmak Hibernate'i cascade'e zorluyordu.
+        // Önce delta'ları UUID+BigDecimal snapshot olarak çıkar, sonra
+        // inclusion'ları sil (modifying query), sonra fresh fetch + save.
         List<SubCashTxInclusion> incs = inclusionRepository.findByTransaction_Id(tx.getId());
+        UUID txBankId = tx.getBankAccount() != null ? tx.getBankAccount().getId() : null;
+        java.math.BigDecimal contrib = incomeValueForTx(tx);
+        java.util.Map<UUID, java.math.BigDecimal> deltasBySubCash = new java.util.HashMap<>();
         for (SubCashTxInclusion inc : incs) {
-            BankAccount sc = inc.getSubCash();
-            if (sc != null && inc.getScope() == InclusionScope.MANUAL) {
-                applyBalanceDelta(sc, tx, /*add=*/false);
-            }
+            if (inc.getScope() != InclusionScope.MANUAL) continue;
+            UUID scId = inc.getSubCash() != null ? inc.getSubCash().getId() : null;
+            if (scId == null) continue;
+            // Double-count guard: tx zaten o sub-cash bank_account'a routed ise skip.
+            if (txBankId != null && txBankId.equals(scId)) continue;
+            if (contrib == null || contrib.signum() == 0) continue;
+            // Reverse: add=false → contrib'i çıkar.
+            deltasBySubCash.merge(scId, contrib.negate(), java.math.BigDecimal::add);
         }
+        // 1) Inclusion'ları sil (FK CASCADE da var, defensive).
         int removed = inclusionRepository.deleteByTransactionId(tx.getId());
+        // 2) Fresh fetch + balance update (cascade'den arınmış).
+        for (java.util.Map.Entry<UUID, java.math.BigDecimal> e : deltasBySubCash.entrySet()) {
+            BankAccount fresh = bankAccountRepository.findById(e.getKey()).orElse(null);
+            if (fresh == null) continue;
+            java.math.BigDecimal current = fresh.getCurrentBalance() != null
+                    ? fresh.getCurrentBalance() : java.math.BigDecimal.ZERO;
+            fresh.setCurrentBalance(current.add(e.getValue()));
+            bankAccountRepository.save(fresh);
+        }
         if (removed > 0) {
-            log.info("[inclusion-tx-deleted] tx={} removed {} inclusion(s)",
-                    tx.getId(), removed);
+            log.info("[inclusion-tx-deleted] tx={} removed {} inclusion(s), subcash deltas={}",
+                    tx.getId(), removed, deltasBySubCash.size());
         }
     }
 
