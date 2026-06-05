@@ -166,8 +166,13 @@ public class ConsolidatedDashboardService {
         BigDecimal computed = closingCalculator.computeClosing(businessId, today);
         Optional<CashClosing> existing = cashClosingRepository
                 .findByBusinessIdAndClosingDate(businessId, today);
-        BigDecimal incoming = sumByDirection(businessId, today, "NAKIT", TransactionDirection.INCOME);
-        BigDecimal outgoing = sumByDirection(businessId, today, "NAKIT", TransactionDirection.EXPENSE);
+        // Beta v1.1 hotfix v2: bugünün kasa durumu artık POS gelir/gider'i de
+        // dahil eder. POS gelir kasaya settle olunca yansıyor ama günlük hareket
+        // raporlamasında dahil olmalı; POS gider de simetrik.
+        BigDecimal incoming = sumByDirection(businessId, today, "NAKIT", TransactionDirection.INCOME)
+                .add(sumByDirectionPosLike(businessId, today, TransactionDirection.INCOME));
+        BigDecimal outgoing = sumByDirection(businessId, today, "NAKIT", TransactionDirection.EXPENSE)
+                .add(sumByDirectionPosLike(businessId, today, TransactionDirection.EXPENSE));
 
         ConsolidatedDashboardDto.TodayClosing todayClosing =
                 ConsolidatedDashboardDto.TodayClosing.builder()
@@ -225,11 +230,14 @@ public class ConsolidatedDashboardService {
         // ── CASH OUTFLOWS (bugün, NAKIT, EXPENSE) ────────────────────
         // v1.6.23.21: business-scoped.
         // v1.7.0-beta (TODO d0567538): TRANSFER tx dışla (hesaplar arası taşıma).
+        // Beta v1.1 hotfix v2: pos_tx_subtype set edilmiş tx'ler POS gider
+        // olarak Closure sayfasında ayrı listeleniyor — buraya dahil edilmesin.
         List<Transaction> outflowsToday = transactionRepository
                 .findByBusinessIdAndDateAndPaymentMethodAndDirection(
                         businessId, today, "NAKIT", TransactionDirection.EXPENSE)
                 .stream()
                 .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .filter(t -> t.getPosTxSubtype() == null)
                 .toList();
         List<ConsolidatedDashboardDto.TxRow> outflowRows = outflowsToday.stream()
                 .map(this::toTxRow)
@@ -490,6 +498,23 @@ public class ConsolidatedDashboardService {
                 .findByBusinessIdAndDateAndPaymentMethodAndDirection(businessId, date, pm, dir)
                 .stream()
                 .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .map(Transaction::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Beta v1.1 hotfix v2: pm LIKE 'POS%' direction filter. "Bugünün Kasa
+     * Durumu" widget'ı için POS gelir/gider'i de toplama dahil etmek üzere.
+     */
+    private BigDecimal sumByDirectionPosLike(UUID businessId, LocalDate date, TransactionDirection dir) {
+        return transactionRepository
+                .findByBusinessIdAndDateBetween(businessId, date, date)
+                .stream()
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .filter(t -> t.getDirection() == dir)
+                .filter(t -> t.getPaymentMethod() != null
+                        && t.getPaymentMethod().toUpperCase(Locale.ENGLISH).startsWith("POS"))
                 .map(Transaction::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

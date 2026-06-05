@@ -80,18 +80,25 @@ public class ClosureSectionService {
     }
 
     private Map<String, Object> buildPosSection(UUID businessId, List<Transaction> all) {
-        // Beta v1.1 hotfix: POS tx'leri hem gelir hem gider — direction filter kaldırıldı.
-        List<Transaction> posTxs = all.stream()
+        // Beta v1.1 hotfix v2: POS section mantığı genişletildi.
+        // - POS Gelir: kind=NORMAL && direction=INCOME && pm LIKE 'POS%'
+        // - POS Gider: kind=NORMAL && direction=EXPENSE && (pm LIKE 'POS%'
+        //   OR pos_tx_subtype IS NOT NULL) — kullanıcı NAKIT pm seçip subtype
+        //   seçtiğinde de buraya gelir (Harcamalar'a değil).
+        List<Transaction> incomeTxs = all.stream()
                 .filter(t -> t.getKind() == TransactionKind.NORMAL
+                        && t.getDirection() == TransactionDirection.INCOME
                         && t.getPaymentMethod() != null
                         && t.getPaymentMethod().toUpperCase(Locale.ENGLISH).startsWith("POS"))
                 .toList();
-
-        List<Transaction> incomeTxs = posTxs.stream()
-                .filter(t -> t.getDirection() == TransactionDirection.INCOME)
-                .toList();
-        List<Transaction> expenseTxs = posTxs.stream()
-                .filter(t -> t.getDirection() == TransactionDirection.EXPENSE)
+        List<Transaction> expenseTxs = all.stream()
+                .filter(t -> t.getKind() == TransactionKind.NORMAL
+                        && t.getDirection() == TransactionDirection.EXPENSE
+                        && (
+                            (t.getPaymentMethod() != null
+                                && t.getPaymentMethod().toUpperCase(Locale.ENGLISH).startsWith("POS"))
+                            || t.getPosTxSubtype() != null
+                        ))
                 .toList();
 
         Map<String, Object> section = new LinkedHashMap<>();
@@ -100,7 +107,7 @@ public class ClosureSectionService {
 
         BigDecimal incomeTotal = sumAmount(incomeTxs);
         BigDecimal expenseTotal = sumAmount(expenseTxs);
-        section.put("grand_count", posTxs.size());
+        section.put("grand_count", incomeTxs.size() + expenseTxs.size());
         section.put("grand_total", incomeTotal.add(expenseTotal));
         section.put("net", incomeTotal.subtract(expenseTotal));
         return section;
@@ -239,12 +246,14 @@ public class ClosureSectionService {
     }
 
     private Map<String, Object> buildExpenseSection(List<Transaction> all) {
-        // Beta v1.1 hotfix: sadece NAKIT (HESAPDAN Bölüm B'de, POS Bölüm A'da).
-        // Subtype'a göre nakit/transfer alt-gruplaması — kullanıcı UI'da seçer.
+        // Beta v1.1 hotfix v2: sadece pos_tx_subtype BOŞ NAKIT EXPENSE.
+        // Subtype set edilmişse POS section > POS Gider'e gider; burada sadece
+        // saf nakit harcama (kullanıcı subtype seçmemiş).
         List<Transaction> expenses = all.stream()
                 .filter(t -> t.getKind() == TransactionKind.NORMAL
                         && t.getDirection() == TransactionDirection.EXPENSE
-                        && "NAKIT".equalsIgnoreCase(t.getPaymentMethod()))
+                        && "NAKIT".equalsIgnoreCase(t.getPaymentMethod())
+                        && t.getPosTxSubtype() == null)
                 .toList();
 
         List<Transaction> nakit = expenses.stream()
