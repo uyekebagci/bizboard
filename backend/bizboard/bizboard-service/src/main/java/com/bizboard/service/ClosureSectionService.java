@@ -80,17 +80,37 @@ public class ClosureSectionService {
     }
 
     private Map<String, Object> buildPosSection(UUID businessId, List<Transaction> all) {
-        // POS tx'leri al (kind=NORMAL, direction=INCOME, payment_method LIKE 'POS%')
+        // Beta v1.1 hotfix: POS tx'leri hem gelir hem gider — direction filter kaldırıldı.
         List<Transaction> posTxs = all.stream()
                 .filter(t -> t.getKind() == TransactionKind.NORMAL
-                        && t.getDirection() == TransactionDirection.INCOME
                         && t.getPaymentMethod() != null
                         && t.getPaymentMethod().toUpperCase(Locale.ENGLISH).startsWith("POS"))
                 .toList();
 
+        List<Transaction> incomeTxs = posTxs.stream()
+                .filter(t -> t.getDirection() == TransactionDirection.INCOME)
+                .toList();
+        List<Transaction> expenseTxs = posTxs.stream()
+                .filter(t -> t.getDirection() == TransactionDirection.EXPENSE)
+                .toList();
+
+        Map<String, Object> section = new LinkedHashMap<>();
+        section.put("income", buildPosIncomeSubsection(incomeTxs));
+        section.put("expense", buildPosExpenseSubsection(expenseTxs));
+
+        BigDecimal incomeTotal = sumAmount(incomeTxs);
+        BigDecimal expenseTotal = sumAmount(expenseTxs);
+        section.put("grand_count", posTxs.size());
+        section.put("grand_total", incomeTotal.add(expenseTotal));
+        section.put("net", incomeTotal.subtract(expenseTotal));
+        return section;
+    }
+
+    /** POS gelir: sub-cash bazlı gruplu (mevcut yapı). */
+    private Map<String, Object> buildPosIncomeSubsection(List<Transaction> incomeTxs) {
         // Inclusion table'dan tx → sub-cash mapping
         Map<UUID, Set<UUID>> txToSubCashes = new HashMap<>();
-        for (Transaction t : posTxs) {
+        for (Transaction t : incomeTxs) {
             for (SubCashTxInclusion inc : inclusionRepository.findByTransaction_Id(t.getId())) {
                 if (inc.getSubCash() != null) {
                     txToSubCashes.computeIfAbsent(t.getId(), k -> new HashSet<>())
@@ -98,58 +118,62 @@ public class ClosureSectionService {
                 }
             }
         }
-
-        // Sub-cash'leri grupla
         Map<UUID, List<Transaction>> bySubCash = new HashMap<>();
         List<Transaction> unassigned = new ArrayList<>();
-        for (Transaction t : posTxs) {
+        for (Transaction t : incomeTxs) {
             Set<UUID> subs = txToSubCashes.get(t.getId());
-            if (subs == null || subs.isEmpty()) {
-                unassigned.add(t);
-            } else {
-                for (UUID subId : subs) {
-                    bySubCash.computeIfAbsent(subId, k -> new ArrayList<>()).add(t);
-                }
-            }
+            if (subs == null || subs.isEmpty()) unassigned.add(t);
+            else for (UUID subId : subs)
+                bySubCash.computeIfAbsent(subId, k -> new ArrayList<>()).add(t);
         }
-
-        // Sub-cash names
         List<Map<String, Object>> groups = new ArrayList<>();
         for (Map.Entry<UUID, List<Transaction>> e : bySubCash.entrySet()) {
             String name = bankAccountRepository.findById(e.getKey())
                     .map(BankAccount::getName).orElse("Alt Kasa");
-            BigDecimal total = e.getValue().stream()
-                    .map(Transaction::getAmount).filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             groups.add(Map.of(
                     "sub_cash_id", e.getKey().toString(),
                     "sub_cash_name", name,
                     "tx_list", e.getValue().stream().map(this::txSummary).toList(),
                     "tx_count", e.getValue().size(),
-                    "total", total));
+                    "total", sumAmount(e.getValue())));
         }
         if (!unassigned.isEmpty()) {
-            BigDecimal total = unassigned.stream()
-                    .map(Transaction::getAmount).filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             Map<String, Object> u = new LinkedHashMap<>();
             u.put("sub_cash_id", null);
-            u.put("sub_cash_name", "Atanmamış POS");
+            // Beta v1.1 hotfix: "Atanmamış POS" → "Genel Kasa POS İşlemleri"
+            u.put("sub_cash_name", "Genel Kasa POS İşlemleri");
             u.put("tx_list", unassigned.stream().map(this::txSummary).toList());
             u.put("tx_count", unassigned.size());
-            u.put("total", total);
+            u.put("total", sumAmount(unassigned));
             groups.add(u);
         }
-        // Grand total — distinct tx
-        BigDecimal grandTotal = posTxs.stream()
-                .map(Transaction::getAmount).filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("groups", groups);
+        m.put("grand_count", incomeTxs.size());
+        m.put("grand_total", sumAmount(incomeTxs));
+        return m;
+    }
 
-        Map<String, Object> section = new LinkedHashMap<>();
-        section.put("groups", groups);
-        section.put("grand_total", grandTotal);
-        section.put("grand_count", posTxs.size());
-        return section;
+    /** POS gider: pos_tx_subtype'a göre NAKIT / TRANSFER alt-gruplu. */
+    private Map<String, Object> buildPosExpenseSubsection(List<Transaction> expenseTxs) {
+        List<Transaction> nakit = expenseTxs.stream()
+                .filter(t -> "NAKIT".equalsIgnoreCase(t.getPosTxSubtype())
+                        || t.getPosTxSubtype() == null)  // default NAKIT
+                .toList();
+        List<Transaction> transfer = expenseTxs.stream()
+                .filter(t -> "TRANSFER".equalsIgnoreCase(t.getPosTxSubtype()))
+                .toList();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("nakit", txGroup(nakit));
+        m.put("transfer", txGroup(transfer));
+        m.put("grand_count", expenseTxs.size());
+        m.put("grand_total", sumAmount(expenseTxs));
+        return m;
+    }
+
+    private static BigDecimal sumAmount(List<Transaction> txs) {
+        return txs.stream().map(Transaction::getAmount).filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private Map<String, Object> buildTransfersSection(List<Transaction> all) {
@@ -215,13 +239,27 @@ public class ClosureSectionService {
     }
 
     private Map<String, Object> buildExpenseSection(List<Transaction> all) {
-        // Non-HESAPDAN expense (NAKIT vs.) — Bölüm B'deki dışarı giden HESAPDAN'la çakışmaz
+        // Beta v1.1 hotfix: sadece NAKIT (HESAPDAN Bölüm B'de, POS Bölüm A'da).
+        // Subtype'a göre nakit/transfer alt-gruplaması — kullanıcı UI'da seçer.
         List<Transaction> expenses = all.stream()
                 .filter(t -> t.getKind() == TransactionKind.NORMAL
                         && t.getDirection() == TransactionDirection.EXPENSE
-                        && !"HESAPDAN".equalsIgnoreCase(t.getPaymentMethod()))
+                        && "NAKIT".equalsIgnoreCase(t.getPaymentMethod()))
                 .toList();
-        return txGroup(expenses);
+
+        List<Transaction> nakit = expenses.stream()
+                .filter(t -> "NAKIT".equalsIgnoreCase(t.getPosTxSubtype())
+                        || t.getPosTxSubtype() == null)  // default NAKIT
+                .toList();
+        List<Transaction> transfer = expenses.stream()
+                .filter(t -> "TRANSFER".equalsIgnoreCase(t.getPosTxSubtype()))
+                .toList();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("nakit", txGroup(nakit));
+        m.put("transfer", txGroup(transfer));
+        m.put("grand_count", expenses.size());
+        m.put("grand_total", sumAmount(expenses));
+        return m;
     }
 
     // ─── helpers ───

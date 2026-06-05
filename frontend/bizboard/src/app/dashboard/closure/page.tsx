@@ -40,9 +40,20 @@ interface SectionedClosure {
   date: string;
   business_id: string;
   pos: {
-    groups: Array<{ sub_cash_id: string | null; sub_cash_name: string; tx_list: TxSummary[]; tx_count: number; total: number }>;
+    income: {
+      groups: Array<{ sub_cash_id: string | null; sub_cash_name: string; tx_list: TxSummary[]; tx_count: number; total: number }>;
+      grand_total: number;
+      grand_count: number;
+    };
+    expense: {
+      nakit: { list: TxSummary[]; count: number; total: number };
+      transfer: { list: TxSummary[]; count: number; total: number };
+      grand_total: number;
+      grand_count: number;
+    };
     grand_total: number;
     grand_count: number;
+    net: number;
   };
   transfers: {
     outgoing_external: { list: TxSummary[]; count: number; total: number };
@@ -56,7 +67,12 @@ interface SectionedClosure {
     payments_received: { list: unknown[]; count: number; total: number };
     payments_made: { list: unknown[]; count: number; total: number };
   };
-  expenses: { list: TxSummary[]; count: number; total: number };
+  expenses: {
+    nakit: { list: TxSummary[]; count: number; total: number };
+    transfer: { list: TxSummary[]; count: number; total: number };
+    grand_total: number;
+    grand_count: number;
+  };
 }
 
 interface PreviewBasic {
@@ -291,19 +307,64 @@ function ClosurePage() {
         </div>
       ) : (
         <>
-          {/* BÖLÜM A: POS */}
+          {/* BÖLÜM A: POS (gelir + gider ayrı) */}
           <Section title="POS İşlemleri" icon={CreditCard} count={sectioned.pos.grand_count} total={sectioned.pos.grand_total} color="blue"
             action={!isReadOnly && <AddBtn label="+ POS İşlemi" color="blue" onClick={() => setQuickAddSection("pos")} />}>
-            {sectioned.pos.groups.length === 0 ? (
-              <Empty msg="Bu gün POS işlemi yok." />
-            ) : (
-              sectioned.pos.groups.map((g, i) => (
-                <GroupCard key={i} title={g.sub_cash_name} count={g.tx_count} total={g.total}>
-                  <TxList txs={g.tx_list} />
-                </GroupCard>
-              ))
+            {/* Gelir bloğu — sub-cash gruplu */}
+            {sectioned.pos.income.grand_count > 0 && (
+              <>
+                <div className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold flex items-center justify-between border-b border-emerald-500/30 pb-1.5">
+                  <span>POS Gelir</span>
+                  <span>{sectioned.pos.income.grand_count} işlem · {formatCurrency(sectioned.pos.income.grand_total, "TRY")}</span>
+                </div>
+                {sectioned.pos.income.groups.map((g, i) => (
+                  <GroupCard key={`inc-${i}`} title={g.sub_cash_name} count={g.tx_count} total={g.total}>
+                    <TxList txs={g.tx_list} />
+                  </GroupCard>
+                ))}
+              </>
             )}
-            <GrandRow label="GENEL POS TOPLAMI" count={sectioned.pos.grand_count} total={sectioned.pos.grand_total} />
+            {/* Gider bloğu — nakit/transfer alt-gruplu */}
+            {sectioned.pos.expense.grand_count > 0 && (
+              <>
+                <div className="text-[11px] uppercase tracking-wider text-rose-400 font-semibold flex items-center justify-between border-b border-rose-500/30 pb-1.5 mt-2">
+                  <span>POS Gider</span>
+                  <span>{sectioned.pos.expense.grand_count} işlem · {formatCurrency(sectioned.pos.expense.grand_total, "TRY")}</span>
+                </div>
+                {sectioned.pos.expense.nakit.count > 0 && (
+                  <GroupCard title="Nakit" count={sectioned.pos.expense.nakit.count} total={sectioned.pos.expense.nakit.total}>
+                    <TxList txs={sectioned.pos.expense.nakit.list} />
+                  </GroupCard>
+                )}
+                {sectioned.pos.expense.transfer.count > 0 && (
+                  <GroupCard title="Transfer" count={sectioned.pos.expense.transfer.count} total={sectioned.pos.expense.transfer.total}>
+                    <TxList txs={sectioned.pos.expense.transfer.list} />
+                  </GroupCard>
+                )}
+              </>
+            )}
+            {sectioned.pos.grand_count === 0 && (
+              <Empty msg="Bu gün POS işlemi yok." />
+            )}
+            {/* Genel toplam + net fark */}
+            {sectioned.pos.grand_count > 0 && (
+              <div className="rounded-xl border-2 border-blue-500/40 bg-blue-500/10 px-3 py-2.5 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-emerald-300 font-medium">+ Gelir</span>
+                  <span className="text-emerald-300 font-mono">{formatCurrency(sectioned.pos.income.grand_total, "TRY")}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-rose-300 font-medium">− Gider</span>
+                  <span className="text-rose-300 font-mono">−{formatCurrency(sectioned.pos.expense.grand_total, "TRY")}</span>
+                </div>
+                <div className="border-t border-blue-500/30 pt-1 flex items-center justify-between text-sm font-bold">
+                  <span className="text-blue-200">POS NET</span>
+                  <span className={cn("font-mono", sectioned.pos.net >= 0 ? "text-emerald-300" : "text-rose-300")}>
+                    {sectioned.pos.net >= 0 ? "" : "−"}{formatCurrency(Math.abs(sectioned.pos.net), "TRY")}
+                  </span>
+                </div>
+              </div>
+            )}
           </Section>
 
           {/* BÖLÜM B: Transferler */}
@@ -365,14 +426,25 @@ function ClosurePage() {
             </GroupCard>
           </Section>
 
-          {/* BÖLÜM E: Expenses */}
+          {/* BÖLÜM E: Harcamalar (sadece NAKIT, nakit/transfer alt-gruplu) */}
           <Section title="Harcamalar" icon={TrendingDown} color="rose"
-            count={sectioned.expenses.count} total={sectioned.expenses.total}
+            count={sectioned.expenses.grand_count} total={sectioned.expenses.grand_total}
             action={!isReadOnly && <AddBtn label="+ Harcama" color="rose" onClick={() => setQuickAddSection("expense")} />}>
-            {sectioned.expenses.count === 0 ? (
-              <Empty msg="Bu gün non-HESAPDAN harcama yok." />
+            {sectioned.expenses.grand_count === 0 ? (
+              <Empty msg="Bu gün nakit harcama yok." />
             ) : (
-              <TxList txs={sectioned.expenses.list} />
+              <>
+                {sectioned.expenses.nakit.count > 0 && (
+                  <GroupCard title="Nakit" count={sectioned.expenses.nakit.count} total={sectioned.expenses.nakit.total}>
+                    <TxList txs={sectioned.expenses.nakit.list} />
+                  </GroupCard>
+                )}
+                {sectioned.expenses.transfer.count > 0 && (
+                  <GroupCard title="Transfer" count={sectioned.expenses.transfer.count} total={sectioned.expenses.transfer.total}>
+                    <TxList txs={sectioned.expenses.transfer.list} />
+                  </GroupCard>
+                )}
+              </>
             )}
           </Section>
 
@@ -387,7 +459,7 @@ function ClosurePage() {
               <Row label="+ POS Hacmi" value={sectioned.pos.grand_total} colorClass="text-emerald-300" />
               <Row label="+ Gelen Havale" value={sectioned.transfers.incoming_external.total} colorClass="text-emerald-300" />
               <Row label="− Dışarı Giden" value={sectioned.transfers.outgoing_external.total} colorClass="text-rose-300" prefix="−" />
-              <Row label="− Harcamalar" value={sectioned.expenses.total} colorClass="text-rose-300" prefix="−" />
+              <Row label="− Harcamalar" value={sectioned.expenses.grand_total} colorClass="text-rose-300" prefix="−" />
               <Row label="± İç Transfer (net 0)" value={0} colorClass="text-surface-500" />
               <div className="border-t border-surface-700 pt-2 mt-2 flex justify-between font-bold text-sm">
                 <span className="text-white">Hesaplanan Kapanış</span>

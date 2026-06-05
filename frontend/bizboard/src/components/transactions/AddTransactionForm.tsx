@@ -165,9 +165,12 @@ export function AddTransactionForm({
       .catch(() => setRelatedBankAccounts([]));
   }, [businessId]);
 
-  // POS dışına geçilince state temizle.
+  // Beta v1.1 hotfix: subtype hem POS+EXPENSE hem NAKIT+EXPENSE için anlamlı.
+  // Diğer durumlarda state temizle.
   useEffect(() => {
-    if (paymentMethod !== "POS" || direction !== "expense") {
+    const acceptsSubtype = direction === "expense"
+      && (paymentMethod === "POS" || paymentMethod === "NAKIT");
+    if (!acceptsSubtype) {
       if (posTxSubtype !== "NAKIT") setPosTxSubtype("NAKIT");
       if (relatedBankAccountId !== "") setRelatedBankAccountId("");
     }
@@ -250,11 +253,12 @@ export function AddTransactionForm({
         payment_method: paymentMethod,
         target_counterpart_id: targetCounterpartId || null,
         pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
-        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı.
+        // WP b446c696 (Beta v1.1 Hotfix): POS+EXPENSE ve NAKIT+EXPENSE için subtype.
         pos_tx_subtype:
-          paymentMethod === "POS" && direction === "expense" ? posTxSubtype : null,
+          direction === "expense" && (paymentMethod === "POS" || paymentMethod === "NAKIT")
+            ? posTxSubtype : null,
         related_bank_account_id:
-          paymentMethod === "POS" && direction === "expense"
+          direction === "expense" && (paymentMethod === "POS" || paymentMethod === "NAKIT")
             && posTxSubtype === "TRANSFER" && relatedBankAccountId
             ? relatedBankAccountId
             : null,
@@ -456,64 +460,67 @@ export function AddTransactionForm({
                 NULL kaydedilir. KONSOLİDE NET formülü legacy-aware: eski rate'li
                 tx'ler profit hesaplar, yeni'ler tam tutar income'a katkı yapar. */}
 
-            {/* WP b446c696 (Beta v1.1 Hotfix): POS gider akışı — alt-tip toggle */}
-            {direction === "expense" && (
-              <div className="mt-3 space-y-2">
-                <label className="block text-xs font-medium text-surface-300">
-                  İşlem Tipi
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["NAKIT", "TRANSFER"] as const).map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => setPosTxSubtype(opt)}
-                      className={cn(
-                        "py-2 px-3 rounded-xl text-xs font-medium border transition-all text-left",
-                        posTxSubtype === opt
-                          ? "bg-indigo-500/15 border-indigo-500/50 text-indigo-200"
-                          : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
-                      )}
-                    >
-                      <div className="font-semibold">
-                        {opt === "NAKIT" ? "Nakit" : "Transfer"}
-                      </div>
-                      <div className="text-[10px] text-surface-400 mt-0.5">
-                        {opt === "NAKIT"
-                          ? "POS'tan nakit hareket"
-                          : "Banka hesabımıza/dan"}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+          </>
+        )}
 
-                {posTxSubtype === "TRANSFER" && (
-                  <div className="pt-1">
-                    <label className="block text-[11px] font-medium text-surface-300 mb-1">
-                      İlgili Banka Hesabı (opsiyonel)
-                    </label>
-                    <DarkSelect
-                      value={relatedBankAccountId}
-                      onChange={setRelatedBankAccountId}
-                      placeholder="Sonra seçebilirsin (opsiyonel)"
-                      searchable={relatedBankAccounts.length > 6}
-                      options={[
-                        { value: "", label: "— (Atlanır)" },
-                        ...relatedBankAccounts.map((b) => ({
-                          value: b.id,
-                          label: b.name,
-                          meta: b.type,
-                        })),
-                      ]}
-                    />
-                    <p className="mt-1 text-[10px] text-surface-500">
-                      Sadece bilgi alanı — hesap bakiyesini etkilemez.
-                    </p>
+        {/* WP b446c696 (Beta v1.1 Hotfix): Gider akışında alt-tip toggle —
+            POS+EXPENSE veya NAKIT+EXPENSE durumunda görünür. */}
+        {direction === "expense"
+          && (paymentMethod === "POS" || paymentMethod === "NAKIT") && (
+          <div className="mt-3 space-y-2">
+            <label className="block text-xs font-medium text-surface-300">
+              İşlem Tipi
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {(["NAKIT", "TRANSFER"] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setPosTxSubtype(opt)}
+                  className={cn(
+                    "py-2 px-3 rounded-xl text-xs font-medium border transition-all text-left",
+                    posTxSubtype === opt
+                      ? "bg-indigo-500/15 border-indigo-500/50 text-indigo-200"
+                      : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                  )}
+                >
+                  <div className="font-semibold">
+                    {opt === "NAKIT" ? "Nakit" : "Transfer"}
                   </div>
-                )}
+                  <div className="text-[10px] text-surface-400 mt-0.5">
+                    {opt === "NAKIT"
+                      ? (paymentMethod === "POS" ? "POS'tan nakit hareket" : "Elden nakit ödeme")
+                      : "Banka hesabımıza/dan"}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {posTxSubtype === "TRANSFER" && (
+              <div className="pt-1">
+                <label className="block text-[11px] font-medium text-surface-300 mb-1">
+                  İlgili Banka Hesabı (opsiyonel)
+                </label>
+                <DarkSelect
+                  value={relatedBankAccountId}
+                  onChange={setRelatedBankAccountId}
+                  placeholder="Sonra seçebilirsin (opsiyonel)"
+                  searchable={relatedBankAccounts.length > 6}
+                  options={[
+                    { value: "", label: "— (Atlanır)" },
+                    ...relatedBankAccounts.map((b) => ({
+                      value: b.id,
+                      label: b.name,
+                      meta: b.type,
+                    })),
+                  ]}
+                />
+                <p className="mt-1 text-[10px] text-surface-500">
+                  Sadece bilgi alanı — hesap bakiyesini etkilemez.
+                </p>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 

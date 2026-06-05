@@ -188,17 +188,20 @@ public class TransactionService {
         }
         // validatePosCommissionRates: her iki oran NULL → no-op (Beta v1.1 davranışı).
 
-        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı.
-        // POS+EXPENSE için pos_device_id mandatory, pos_tx_subtype CHECK,
-        // related_bank_account_id ise business+aktif+type guard.
+        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı + extended NAKIT gider.
+        // Hem POS+EXPENSE hem NAKIT+EXPENSE için pos_tx_subtype kabul (NAKIT/TRANSFER)
+        // ve related_bank_account_id (TRANSFER subtype'ta) guard'lı atanır.
         boolean isPosExpense = "POS".equals(pm)
                 && "EXPENSE".equalsIgnoreCase(request.getDirection());
+        boolean isNakitExpense = "NAKIT".equals(pm)
+                && "EXPENSE".equalsIgnoreCase(request.getDirection());
+        boolean acceptsSubtype = isPosExpense || isNakitExpense;
         String posTxSubtype = null;
         com.bizboard.common.entity.BankAccount relatedBankAccount = null;
-        if (isPosExpense) {
-            if (request.getPosDeviceId() == null || posDevice == null) {
-                throw new IllegalArgumentException("POS gider için cihaz seçimi zorunlu");
-            }
+        if (isPosExpense && (request.getPosDeviceId() == null || posDevice == null)) {
+            throw new IllegalArgumentException("POS gider için cihaz seçimi zorunlu");
+        }
+        if (acceptsSubtype) {
             posTxSubtype = request.getPosTxSubtype();
             if (posTxSubtype != null) {
                 posTxSubtype = posTxSubtype.toUpperCase(java.util.Locale.ENGLISH);
@@ -488,11 +491,13 @@ public class TransactionService {
                             + "PATCH /businesses/{bizId}/transactions/{txId}/settle veya /unsettle kullan.");
         }
 
-        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı pos_tx_subtype +
-        // related_bank_account_id update. Yalnız POS+EXPENSE tx'lerde anlamlı.
+        // WP b446c696 (Beta v1.1 Hotfix): POS+EXPENSE ve NAKIT+EXPENSE için
+        // pos_tx_subtype + related_bank_account_id update.
         boolean isPosExpenseUpdate = "POS".equals(transaction.getPaymentMethod())
                 && transaction.getDirection() == TransactionDirection.EXPENSE;
-        if (isPosExpenseUpdate) {
+        boolean isNakitExpenseUpdate = "NAKIT".equals(transaction.getPaymentMethod())
+                && transaction.getDirection() == TransactionDirection.EXPENSE;
+        if (isPosExpenseUpdate || isNakitExpenseUpdate) {
             if (request.getPosTxSubtype() != null) {
                 String newSubtype = request.getPosTxSubtype()
                         .toUpperCase(java.util.Locale.ENGLISH);
