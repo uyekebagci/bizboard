@@ -141,7 +141,65 @@ public class SubCashInclusionService {
                 .includedBy(actorUserId)
                 .build();
         inclusionRepository.save(inc);
+        // WP Beta v1.1 fix: SUB_CASH.current_balance'ı manuel atamada güncelle.
+        // Tx zaten bu sub-cash'in bank_account_id'sine bağlıysa double-count olmasın.
+        applyBalanceDelta(subCash, tx, /*add=*/true);
         log.info("[inclusion-manual] subCash={} tx={} added by user={}", subCashId, txId, actorUserId);
+    }
+
+    /**
+     * WP Beta v1.1 hotfix: Sub-cash bakiye senkronizasyonu.
+     *
+     * <p>Manuel inclusion ekleyince/silince SUB_CASH.current_balance'ı
+     * tx'in income contribution'ı kadar artır/azalt. Eğer tx zaten o sub-cash'in
+     * bank_account_id'sine routed ise (NAKIT/HESAPDAN), bakiye zaten doğrudan
+     * yansımıştır — double-count önleme.</p>
+     */
+    private void applyBalanceDelta(BankAccount subCash, Transaction tx, boolean add) {
+        if (tx == null || subCash == null) return;
+        // Tx zaten bu sub-cash'in bank_account'ına routed → skip (double-count önle).
+        if (tx.getBankAccount() != null
+                && tx.getBankAccount().getId().equals(subCash.getId())) {
+            return;
+        }
+        java.math.BigDecimal delta = incomeValueForTx(tx);
+        if (delta == null || delta.signum() == 0) return;
+        java.math.BigDecimal current = subCash.getCurrentBalance() != null
+                ? subCash.getCurrentBalance() : java.math.BigDecimal.ZERO;
+        subCash.setCurrentBalance(add ? current.add(delta) : current.subtract(delta));
+        bankAccountRepository.save(subCash);
+    }
+
+    /**
+     * income_value formülü — SubCashService.incomeValue ile özdeş.
+     * Beta v1.1 legacy-aware (rate NULL → tam tutar).
+     */
+    private static java.math.BigDecimal incomeValueForTx(Transaction t) {
+        if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+            return java.math.BigDecimal.ZERO;
+        }
+        String pm = t.getPaymentMethod();
+        boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
+        if (isPos && t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
+            java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
+                    ? t.getAppliedPosRate() : t.getPosRate();
+            java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate();
+            if (bankRate != null && ourRate != null) {
+                java.math.BigDecimal diff = ourRate.subtract(bankRate);
+                if (diff.signum() == 0) return java.math.BigDecimal.ZERO;
+                return t.getAmount().multiply(diff)
+                        .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            }
+            return t.getAmount();
+        }
+        if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
+            return t.getAmount();
+        }
+        if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.EXPENSE) {
+            return t.getAmount().negate();
+        }
+        return java.math.BigDecimal.ZERO;
     }
 
     // ───────────────────────── MANUAL bulk (retroactive UI) ─────────────────────────
@@ -222,8 +280,11 @@ public class SubCashInclusionService {
                 .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
         UUID businessId = subCash.getBusiness() != null ? subCash.getBusiness().getId() : null;
         accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        // Beta v1.1 hotfix: bakiye reverse — silmeden önce delta hesapla.
+        Transaction tx = transactionRepository.findById(txId).orElse(null);
         int removed = inclusionRepository.deleteBySubCashIdAndTransactionId(subCashId, txId);
         if (removed > 0) {
+            applyBalanceDelta(subCash, tx, /*add=*/false);
             log.info("[inclusion-remove] subCash={} tx={}", subCashId, txId);
         }
         return removed > 0;
