@@ -156,9 +156,28 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* SOL: Mevcut Bakiye + INVARIANT */}
         <div>
-          <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider mb-2 flex items-center gap-1">
-            <TrendingUp size={12} /> Mevcut Bakiye <span className="text-surface-500 normal-case text-[10px]">(anlık)</span>
-          </h4>
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider flex items-center gap-1">
+              <TrendingUp size={12} /> Mevcut Bakiye <span className="text-surface-500 normal-case text-[10px]">(anlık)</span>
+            </h4>
+            {/* Beta v1.1 hotfix: stale bakiye temizleme (admin recovery) */}
+            <button
+              type="button"
+              onClick={async () => {
+                if (!confirm("Sub-cash bakiyesini inclusion table'dan SIFIRDAN yeniden hesapla — bu stale değeri kalıcı sıfırlayıp doğru tutara çeker. Devam?")) return;
+                try {
+                  await api.post(`/bank-accounts/${subCashId}/recompute-balance`, {});
+                  toast.success("Bakiye yeniden hesaplandı");
+                  void refresh();
+                  onChange?.();
+                } catch (err) { toast.error(err); }
+              }}
+              className="text-[10px] px-2 py-1 rounded-md bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40"
+              title="Stale bakiye varsa düzelt"
+            >
+              ↻ Yeniden Hesapla
+            </button>
+          </div>
           <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
             <p className="text-2xl font-bold text-emerald-300 truncate">
               {formatCurrency(data.aggregate, "TRY")}

@@ -932,6 +932,12 @@ public class TransactionService {
             }
         }
 
+        // Beta v1.1 hotfix: tx silinmeden önce sub_cash_tx_inclusion'lara bağlı
+        // SUB_CASH bakiyelerini reverse et (önceki commit balance'a +contrib
+        // eklenmişti; tx silinince düşmesi gerek). subCashInclusionService bunu
+        // yapar ve inclusion satırlarını da temizler.
+        subCashInclusionService.onTransactionDeleted(transaction);
+
         // Transaction'ı sil
         transactionRepository.delete(transaction);
 

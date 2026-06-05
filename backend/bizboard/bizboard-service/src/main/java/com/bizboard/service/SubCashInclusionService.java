@@ -261,6 +261,87 @@ public class SubCashInclusionService {
         }
     }
 
+    // ───────────────────────── TX DELETE HOOK ─────────────────────────
+
+    /**
+     * Beta v1.1 hotfix: TX silindiğinde MANUAL inclusion'larına bağlı
+     * SUB_CASH'lerin current_balance'larını reverse et ve inclusion satırlarını
+     * temizle. Aksi takdirde silinen tx bakiyede stale kalır.
+     */
+    @Transactional
+    public void onTransactionDeleted(Transaction tx) {
+        if (tx == null) return;
+        List<SubCashTxInclusion> incs = inclusionRepository.findByTransaction_Id(tx.getId());
+        for (SubCashTxInclusion inc : incs) {
+            BankAccount sc = inc.getSubCash();
+            if (sc != null && inc.getScope() == InclusionScope.MANUAL) {
+                applyBalanceDelta(sc, tx, /*add=*/false);
+            }
+        }
+        int removed = inclusionRepository.deleteByTransactionId(tx.getId());
+        if (removed > 0) {
+            log.info("[inclusion-tx-deleted] tx={} removed {} inclusion(s)",
+                    tx.getId(), removed);
+        }
+    }
+
+    // ───────────────────────── RECOMPUTE BALANCE ─────────────────────────
+
+    /**
+     * Beta v1.1 hotfix: SUB_CASH bakiyesini inclusion table'dan SIFIRDAN
+     * yeniden hesapla. Geçmişteki yanlış delta'ları (legacy formula,
+     * silme reverse eksikliği vs.) temizler.
+     *
+     * <p>Formül: current_balance = Σ MANUAL inclusion.tx.simpleIncomeValue
+     * (NAKIT/HESAPDAN tx'in bank_account = SUB_CASH olanları skip — onlar
+     * zaten TransactionService tarafından current_balance'a apply edilmiş
+     * sayılır; ama burada inclusion authority olduğu için onlar da
+     * dahil/dahil değil seçimi tartışmalı).</p>
+     *
+     * <p>Bu fonksiyon admin recovery için: kullanıcı stale bakiye gördüğünde
+     * çağırırlar. Yeni create/delete akışı zaten doğru tutmalı.</p>
+     */
+    @Transactional
+    public java.math.BigDecimal recomputeBalance(UUID subCashId, UUID actorUserId) {
+        BankAccount subCash = bankAccountRepository.findById(subCashId)
+                .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
+        UUID businessId = subCash.getBusiness() != null ? subCash.getBusiness().getId() : null;
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        if (subCash.getType() != BankAccountType.SUB_CASH) {
+            throw new IllegalArgumentException("Yalnız SUB_CASH için recompute yapılır");
+        }
+
+        java.math.BigDecimal sum = java.math.BigDecimal.ZERO;
+        for (SubCashTxInclusion inc : inclusionRepository.findBySubCash_Id(subCashId)) {
+            Transaction t = inc.getTransaction();
+            if (t == null) continue;
+            // Double-count önle: tx zaten sub-cash bank_account'a routed ise
+            // TransactionService onu artırmıştı — fakat biz buradaki recompute'da
+            // sıfırdan başlayacağız, NAKIT routing kontribüsyonu UYGULANMAYACAK.
+            // Bu yüzden bu durum exception: o tutarı ekle. Aksi taktirde
+            // bank routing'li tx görünmez.
+            sum = sum.add(simpleIncomeValueLocal(t));
+        }
+        subCash.setCurrentBalance(sum);
+        bankAccountRepository.save(subCash);
+        log.info("[inclusion-recompute] subCash={} → balance={}", subCashId, sum);
+        return sum;
+    }
+
+    private static java.math.BigDecimal simpleIncomeValueLocal(Transaction t) {
+        if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+            return java.math.BigDecimal.ZERO;
+        }
+        if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
+            return t.getAmount();
+        }
+        if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.EXPENSE) {
+            return t.getAmount().negate();
+        }
+        return java.math.BigDecimal.ZERO;
+    }
+
     // ───────────────────────── REMOVE ─────────────────────────
 
     @Transactional

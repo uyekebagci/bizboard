@@ -807,9 +807,10 @@ function DeleteTransactionModal({
     setError(null);
 
     try {
+      // Beta v1.1 hotfix: reason artık query param (Cloudflare gibi proxy'ler
+      // DELETE body strip eder → 401 'Kimlik dogrulamasi gerekli' hatası).
       await api.delete(
-        `/businesses/${transaction.business_id}/transactions/${transaction.id}`,
-        { reason: reason.trim() }
+        `/businesses/${transaction.business_id}/transactions/${transaction.id}?reason=${encodeURIComponent(reason.trim())}`,
       );
       triggerRefresh();
       toast.info("İşlem silindi");

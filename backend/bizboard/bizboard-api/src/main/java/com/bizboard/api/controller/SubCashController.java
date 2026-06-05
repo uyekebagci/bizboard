@@ -318,4 +318,28 @@ public class SubCashController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * Beta v1.1 hotfix recovery: SUB_CASH bakiyesini inclusion table'dan
+     * sıfırdan recompute eder. Stale/şişmiş bakiyeleri temizler.
+     */
+    @PostMapping("/recompute-balance")
+    public ResponseEntity<?> recomputeBalance(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal
+                    com.bizboard.security.UserPrincipal principal,
+            @PathVariable UUID subCashId) {
+        try {
+            java.math.BigDecimal newBalance = inclusionService.recomputeBalance(
+                    subCashId, principal.getId());
+            return ResponseEntity.ok(Map.of(
+                    "sub_cash_id", subCashId.toString(),
+                    "current_balance", newBalance));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Sub-cash bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }

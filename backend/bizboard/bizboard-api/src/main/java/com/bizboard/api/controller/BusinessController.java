@@ -142,13 +142,29 @@ public class BusinessController {
         return ResponseEntity.ok(transactionService.updateTransaction(txId, request, principal.getId()));
     }
 
+    /**
+     * Beta v1.1 hotfix: DELETE artık body değil query param ile reason alıyor —
+     * bazı proxy/CDN'ler (Cloudflare vb.) DELETE body'sini strip eder ve
+     * @Valid @RequestBody null fırlatıp "Kimlik dogrulamasi gerekli" 401'e
+     * benzer hatalar üretir.
+     *
+     * <p>Geriye dönük uyumluluk için body de kabul edilir (body var ise body
+     * reason'u tercih edilir).</p>
+     */
     @DeleteMapping("/{id}/transactions/{txId}")
     public ResponseEntity<Void> deleteTransaction(
             @PathVariable UUID id,
             @PathVariable UUID txId,
-            @Valid @RequestBody DeleteTransactionRequest request,
+            @RequestParam(name = "reason", required = false) String reasonParam,
+            @RequestBody(required = false) DeleteTransactionRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        transactionService.deleteTransaction(txId, principal.getId(), request.getReason());
+        String reason = (request != null && request.getReason() != null && !request.getReason().isBlank())
+                ? request.getReason()
+                : reasonParam;
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Silme sebebi zorunludur");
+        }
+        transactionService.deleteTransaction(txId, principal.getId(), reason);
         return ResponseEntity.noContent().build();
     }
 
