@@ -51,8 +51,10 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
         accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        // Beta v1.1: date DESC + createdAt DESC — aynı gün eklenen tx'ler
+        // arasında en son insert üstte (Son İşlemler widget'ı için).
         List<Transaction> transactions = transactionRepository
-                .findByBusinessIdOrderByDateDesc(businessId, PageRequest.of(0, limit));
+                .findByBusinessIdOrderByDateDescCreatedAtDesc(businessId, PageRequest.of(0, limit));
         return transactions.stream()
                 .map(DtoMapper::toTransactionDto)
                 .toList();

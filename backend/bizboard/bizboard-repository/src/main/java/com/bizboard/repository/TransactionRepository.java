@@ -21,6 +21,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     List<Transaction> findByBusinessIdOrderByDateDesc(UUID businessId, Pageable pageable);
 
+    /**
+     * Beta v1.1 fix: Son İşlemler widget'ı için date DESC + createdAt DESC
+     * tie-breaker. Aynı gün eklenen tx'ler arasında en son insert üstte.
+     */
+    @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findByBusinessIdOrderByDateDescCreatedAtDesc(
+            @Param("businessId") UUID businessId, Pageable pageable);
+
     @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId " +
             "AND YEAR(t.date) = :year AND MONTH(t.date) = :month ORDER BY t.date DESC")
     List<Transaction> findByBusinessIdAndMonth(
