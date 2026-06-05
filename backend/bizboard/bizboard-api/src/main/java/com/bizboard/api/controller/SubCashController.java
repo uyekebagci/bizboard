@@ -116,8 +116,11 @@ public class SubCashController {
                     })
                     .toList();
 
+            // Beta v1.1 fix: subCash.current_balance entity field'ı (recompute
+                // edilmiş gerçek bakiye) — aggregate override geçirme!
+                // aggregate ayrı field olarak dönüyor zaten.
             SubCashDetailDto detail = SubCashDetailDto.builder()
-                    .subCash(BankAccountService.toDto(subCash, agg))
+                    .subCash(BankAccountService.toDto(subCash, null))
                     .aggregate(agg)
                     .mainAggregate(main)
                     .unassignedAggregate(unassigned)
