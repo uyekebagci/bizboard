@@ -47,6 +47,7 @@ public class SubCashInclusionService {
     private final TransactionRepository transactionRepository;
     private final BankAccountRepository bankAccountRepository;
     private final BusinessAccessGuard accessGuard;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     // ───────────────────────── AUTO-INCLUDE ─────────────────────────
 
@@ -271,38 +272,45 @@ public class SubCashInclusionService {
     @Transactional
     public void onTransactionDeleted(Transaction tx) {
         if (tx == null) return;
-        // Beta v1.1 hotfix: TransientObjectException önleme — inc.transaction
-        // lazy proxy üzerinden çalışmak Hibernate'i cascade'e zorluyordu.
-        // Önce delta'ları UUID+BigDecimal snapshot olarak çıkar, sonra
-        // inclusion'ları sil (modifying query), sonra fresh fetch + save.
-        List<SubCashTxInclusion> incs = inclusionRepository.findByTransaction_Id(tx.getId());
+        // Beta v1.1 hotfix v3: JPA cascade'inden TAMAMEN kaç — JdbcTemplate ile
+        // direkt SQL. Önceki refactor (find + save) hâlâ Hibernate flush
+        // sırasında inc.transaction proxy'sini resolve etmeye çalışıp
+        // TransientObjectException fırlatıyordu (-> IllegalStateException ->
+        // 409 Conflict). Pure JDBC ile entity manager hiç dokunulmaz.
+        UUID txId = tx.getId();
         UUID txBankId = tx.getBankAccount() != null ? tx.getBankAccount().getId() : null;
         java.math.BigDecimal contrib = incomeValueForTx(tx);
+
+        // 1) MANUAL inclusion'lara bağlı SUB_CASH'leri çıkar (read-only SQL)
         java.util.Map<UUID, java.math.BigDecimal> deltasBySubCash = new java.util.HashMap<>();
-        for (SubCashTxInclusion inc : incs) {
-            if (inc.getScope() != InclusionScope.MANUAL) continue;
-            UUID scId = inc.getSubCash() != null ? inc.getSubCash().getId() : null;
-            if (scId == null) continue;
-            // Double-count guard: tx zaten o sub-cash bank_account'a routed ise skip.
-            if (txBankId != null && txBankId.equals(scId)) continue;
-            if (contrib == null || contrib.signum() == 0) continue;
-            // Reverse: add=false → contrib'i çıkar.
-            deltasBySubCash.merge(scId, contrib.negate(), java.math.BigDecimal::add);
+        if (contrib != null && contrib.signum() != 0) {
+            List<UUID> manualSubCashIds = jdbcTemplate.queryForList(
+                    "SELECT sub_cash_id FROM sub_cash_tx_inclusion " +
+                    "WHERE transaction_id = ? AND scope = 'MANUAL'",
+                    UUID.class, txId);
+            java.math.BigDecimal reverseDelta = contrib.negate();
+            for (UUID scId : manualSubCashIds) {
+                if (scId == null) continue;
+                // Double-count guard: tx zaten o sub-cash bank_account'a routed ise skip.
+                if (txBankId != null && txBankId.equals(scId)) continue;
+                deltasBySubCash.merge(scId, reverseDelta, java.math.BigDecimal::add);
+            }
         }
-        // 1) Inclusion'ları sil (FK CASCADE da var, defensive).
-        int removed = inclusionRepository.deleteByTransactionId(tx.getId());
-        // 2) Fresh fetch + balance update (cascade'den arınmış).
+
+        // 2) Inclusion'ları sil (pure JDBC)
+        int removed = jdbcTemplate.update(
+                "DELETE FROM sub_cash_tx_inclusion WHERE transaction_id = ?", txId);
+
+        // 3) Balance update (pure JDBC — entity manager hiç dokunulmadı)
         for (java.util.Map.Entry<UUID, java.math.BigDecimal> e : deltasBySubCash.entrySet()) {
-            BankAccount fresh = bankAccountRepository.findById(e.getKey()).orElse(null);
-            if (fresh == null) continue;
-            java.math.BigDecimal current = fresh.getCurrentBalance() != null
-                    ? fresh.getCurrentBalance() : java.math.BigDecimal.ZERO;
-            fresh.setCurrentBalance(current.add(e.getValue()));
-            bankAccountRepository.save(fresh);
+            jdbcTemplate.update(
+                    "UPDATE bank_accounts SET current_balance = COALESCE(current_balance, 0) + ? " +
+                    "WHERE id = ?",
+                    e.getValue(), e.getKey());
         }
         if (removed > 0) {
             log.info("[inclusion-tx-deleted] tx={} removed {} inclusion(s), subcash deltas={}",
-                    tx.getId(), removed, deltasBySubCash.size());
+                    txId, removed, deltasBySubCash.size());
         }
     }
 
