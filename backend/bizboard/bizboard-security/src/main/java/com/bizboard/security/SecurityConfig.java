@@ -51,6 +51,8 @@ public class SecurityConfig {
                                           "/actuator/health/**",
                                           "/actuator/info",
                                           "/actuator/prometheus").permitAll()
+                        // Beta v1.1: deploy doğrulama endpoint'i (public).
+                        .requestMatchers("/version").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
