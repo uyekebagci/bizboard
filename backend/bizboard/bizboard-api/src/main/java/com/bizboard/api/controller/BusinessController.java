@@ -143,6 +143,26 @@ public class BusinessController {
     }
 
     /**
+     * Beta v1.1 hotfix: POST alternative — bazı proxy/CDN'ler (Sevalla edge,
+     * Cloudflare) DELETE method'una WAF reject yapıyor (403 Forbidden).
+     * Bu endpoint POST + path /delete ile aynı operasyonu yapar; body
+     * standart JSON kabul edilir.
+     */
+    @PostMapping("/{id}/transactions/{txId}/delete")
+    public ResponseEntity<Void> deleteTransactionViaPost(
+            @PathVariable UUID id,
+            @PathVariable UUID txId,
+            @RequestBody DeleteTransactionRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        String reason = request.getReason();
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Silme sebebi zorunludur");
+        }
+        transactionService.deleteTransaction(txId, principal.getId(), reason);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Beta v1.1 hotfix: DELETE artık body değil query param ile reason alıyor —
      * bazı proxy/CDN'ler (Cloudflare vb.) DELETE body'sini strip eder ve
      * @Valid @RequestBody null fırlatıp "Kimlik dogrulamasi gerekli" 401'e

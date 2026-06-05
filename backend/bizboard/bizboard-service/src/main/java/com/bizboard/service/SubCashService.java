@@ -264,15 +264,21 @@ public class SubCashService {
                 case COUNTERPART -> cpIds.add(a.getEntityId());
             }
         });
-        if (bankIds.isEmpty() && posIds.isEmpty() && cpIds.isEmpty()) return List.of();
+        // Beta v1.1 fix: inclusion table'dan da tx'leri al (MANUAL atamalar).
+        // Önceki davranış: sadece assignment match (entity-based) — manuel
+        // eklenen POS tx'leri görünmüyordu.
+        Set<UUID> manualTxIds = inclusionRepository.findIncludedTxIdsBySubCashId(subCashId);
+        if (bankIds.isEmpty() && posIds.isEmpty() && cpIds.isEmpty() && manualTxIds.isEmpty()) {
+            return List.of();
+        }
 
-        // tx listesini business genelinde çek + in-memory COALESCE filter.
-        // Performans: tx sayısı 1000+ olunca repository tarafına spesifik
-        // query taşınabilir; v1'de in-memory yeterli.
+        // tx listesini business genelinde çek + in-memory COALESCE/inclusion filter.
         List<Transaction> all = transactionRepository.findByBusinessIdOrderByDateDesc(bizId);
         return all.stream()
                 .filter(t -> {
-                    // COALESCE öncelik — bank > pos > counterpart
+                    // Inclusion table match (MANUAL veya AUTOMATIC) — assignment match'i kapsar.
+                    if (manualTxIds.contains(t.getId())) return true;
+                    // Assignment match (eski entity-based) — backward compat.
                     if (t.getBankAccount() != null && bankIds.contains(t.getBankAccount().getId())) return true;
                     if (t.getPosDevice() != null && posIds.contains(t.getPosDevice().getId())) return true;
                     if (t.getTargetCounterpart() != null && cpIds.contains(t.getTargetCounterpart().getId())) return true;

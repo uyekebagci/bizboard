@@ -179,12 +179,21 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
             </button>
           </div>
           <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
+            {/* Beta v1.1 fix: SUB_CASH'in kendi current_balance'ı (recompute
+                edilmiş + manuel inclusion'lar dahil). Önceki davranış sadece
+                "atanmış entity'lerin bakiye toplamı" gösteriyordu → entity
+                ataması olmayan kasalarda her zaman 0 görünüyordu. */}
             <p className="text-2xl font-bold text-emerald-300 truncate">
-              {formatCurrency(data.aggregate, "TRY")}
+              {formatCurrency(data.sub_cash?.current_balance ?? data.aggregate, "TRY")}
             </p>
             <p className="text-[10px] text-surface-400 mt-1">
-              Σ atanmış bank_account.current_balance
+              SUB_CASH bakiye (inclusion + atama)
             </p>
+            {data.aggregate !== (data.sub_cash?.current_balance ?? 0) && (
+              <p className="text-[10px] text-surface-500 mt-0.5">
+                Atanan entity'ler: {formatCurrency(data.aggregate, "TRY")}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-2 mt-2">
             <Stat label="Ana Kasa" value={data.main_aggregate} />
