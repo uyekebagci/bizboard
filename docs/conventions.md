@@ -71,10 +71,12 @@ Transaction `payment_method` enum: `NAKIT` / `POS` / `HESAPDAN`.
 | Method | Etki | Closing kasa hesabına dahil mi? |
 |---|---|:-:|
 | **NAKIT** | Fiziksel kasaya/kasadan | ✓ |
-| **POS** | Kart çekimi — banka hesabına düşer (sonradan settle) | ✗ |
+| **POS** | Kart çekimi — gün içi tahsilat kasaya yansır (sonradan banka settle) | ✓ (Beta v1.1'den itibaren) |
 | **HESAPDAN** | Banka havalesi/EFT — seçili `bank_account` güncellenir | ✗ |
 
-`ClosingCalculator.computeClosing` yalnız NAKIT tx'lerini kasaya yansıtır. POS/HESAPDAN ayrı widget'larda (POS analytics, bank account balances) görünür.
+`ClosingCalculator.sumCashFlowForDate` NAKIT + POS tx'lerini kasaya yansıtır; **HESAPDAN ve TRANSFER hariç**. POS ayrıca POS analytics ve bank account balance widget'larında da görünür.
+
+> **Not (Beta v1.1, 2026-06-08):** POS önceden kasaya dahil DEĞİLDİ (yalnız NAKIT). Beta v1.1'de bilinçli olarak kasaya dahil edildi (commit `905bfd9` "HESAPLANAN formülü POS dahil", `7ebd466` "Bugünün Kasa GELEN POS dahil"). Bu doküman koda göre güncellendi (FINDINGS M-1 kararı).
 
 ---
 
@@ -121,7 +123,7 @@ Transaction `payment_method` enum: `NAKIT` / `POS` / `HESAPDAN`.
 ## 7. Cash closing convention
 
 - `cash_closings.opening_balance` = bir önceki günün `actual_balance`'ı (v1.6.23.5'ten itibaren). Önceden `computed_closing` kullanılıyordu — drift opening'e taşınıyordu.
-- `computed_closing` = opening + NAKIT net flow
+- `computed_closing` = opening + (NAKIT + POS) net flow (HESAPDAN/TRANSFER hariç) — Beta v1.1'den itibaren POS dahil
 - `actual_balance` = kullanıcı physical sayım
 - `difference` = actual − computed (pozitif: fazla; negatif: eksik)
 

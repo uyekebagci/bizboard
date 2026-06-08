@@ -84,7 +84,10 @@ public class DebtAuditMetaBuilder {
             meta.put("amount_old", oldAmount);
             meta.put("amount_new", debt.getAmount());
         }
-        if (req.getDueDate() != null && !Objects.equals(oldDueDate, debt.getDueDate())) {
+        // Vade: ya yeni tarih verildi ya da "belli değil" (clearDueDate) ile null'a çekildi.
+        // Her iki durumda da debt.getDueDate() güncel değeri tutar (clearDueDate → null).
+        boolean dueDateTouched = req.getDueDate() != null || Boolean.TRUE.equals(req.getClearDueDate());
+        if (dueDateTouched && !Objects.equals(oldDueDate, debt.getDueDate())) {
             meta.put("due_date_old", oldDueDate);
             meta.put("due_date_new", debt.getDueDate());
         }

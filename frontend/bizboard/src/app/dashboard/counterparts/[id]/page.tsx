@@ -591,7 +591,7 @@ function DebtListTab({
                   {formatCurrency(d.remaining_amount, "TRY")}
                 </span>
                 {isPartial && ` · Orijinal ${formatCurrency(d.original_amount, "TRY")}`}
-                {d.due_date && ` · Vade ${formatDate(d.due_date)}`}
+                {` · Vade ${d.due_date ? formatDate(d.due_date) : "belli değil"}`}
               </p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">

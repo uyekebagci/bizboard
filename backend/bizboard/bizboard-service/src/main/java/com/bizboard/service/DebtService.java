@@ -203,8 +203,7 @@ public class DebtService {
         return toDto(debt);
     }
 
-    // ─── Borç düzenle (WP a9da4e9d) ───────────────────────────
-    /** Bireysel borç düzenleme (partial update); değişen alanlar audit'e eski→yeni yazılır. */
+    /** WP a9da4e9d — Bireysel borç düzenleme (partial update); değişen alanlar audit'e eski→yeni yazılır. */
     @Transactional
     public DebtDto updateDebt(UUID debtId, UpdateDebtRequest req, UUID userId) {
         Debt debt = debtRepository.findById(debtId)
@@ -215,14 +214,16 @@ public class DebtService {
         if (debt.isAdminOnly() && !"admin".equalsIgnoreCase(actor.getRole())) {
             throw new SecurityException("Bu borcu sadece admin duzenleyebilir");
         }
-        BigDecimal oldAmount = debt.getAmount(); // mutate öncesi — audit için
+        BigDecimal oldAmount = debt.getAmount(); // mutate öncesi değerler — audit için
         LocalDate oldDueDate = debt.getDueDate();
         String oldDescription = debt.getDescription();
         if (req.getAmount() != null) {
             debt.setAmount(req.getAmount());
             debtAuditMetaBuilder.recomputeRemainingForAmount(debt, req.getAmount());
         }
-        if (req.getDueDate() != null) debt.setDueDate(req.getDueDate());
+        // clearDueDate=true → vade "belli değil" (null); aksi halde dueDate verildiyse set.
+        if (Boolean.TRUE.equals(req.getClearDueDate())) debt.setDueDate(null);
+        else if (req.getDueDate() != null) debt.setDueDate(req.getDueDate());
         if (req.getDescription() != null) debt.setDescription(req.getDescription());
         debt = debtRepository.save(debt);
         log.info("Borc duzenlendi: {} - {} duzenleyen={}",
@@ -234,8 +235,7 @@ public class DebtService {
                 AuditAction.DEBT_UPDATE,
                 actor.getId(), actor.getUsername(),
                 "DEBT", debt.getId(),
-                debt.getBusiness().getName() + " — " + debt.getDirection().name()
-                        + " (" + debt.getCounterparty() + ") duzenlendi",
+                debt.getBusiness().getName() + " — " + debt.getDirection().name() + " (" + debt.getCounterparty() + ") duzenlendi",
                 debtAuditMetaBuilder.buildUpdateMeta(debt, oldAmount, oldDueDate, oldDescription, req));
         return toDto(debt);
     }

@@ -48,9 +48,16 @@ function seedDate(value: string | null | undefined): string {
 export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
   const [amount, setAmount] = useState(seedMoney(debt.original_amount));
   const [dueDate, setDueDate] = useState(seedDate(debt.due_date));
+  // WP a9da4e9d: "Henüz belli değil" — vade null ise varsayılan işaretli gelir.
+  const [dueDateUnknown, setDueDateUnknown] = useState(!debt.due_date);
   const [description, setDescription] = useState(debt.description ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function toggleDueDateUnknown(checked: boolean) {
+    setDueDateUnknown(checked);
+    if (checked) setDueDate(""); // işaretliyse tarih girişini temizle
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,11 +70,17 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
 
     setSubmitting(true);
     try {
-      await api.put(`/debts/${debt.id}`, {
+      // dueDateUnknown → vade'yi açıkça null'a çek (clear_due_date); aksi halde tarih gönder.
+      const body: Record<string, unknown> = {
         amount: parsedAmount,
-        due_date: dueDate || null,
         description: description.trim() || null,
-      });
+      };
+      if (dueDateUnknown) {
+        body.clear_due_date = true;
+      } else {
+        body.due_date = dueDate || null;
+      }
+      await api.put(`/debts/${debt.id}`, body);
       toast.success("Borç güncellendi");
       onSuccess?.();
       onClose();
@@ -146,8 +159,18 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              disabled={dueDateUnknown}
+              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
+            <label className="mt-2 flex items-center gap-2 text-xs text-surface-300 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={dueDateUnknown}
+                onChange={(e) => toggleDueDateUnknown(e.target.checked)}
+                className="w-4 h-4 rounded border-surface-500 bg-surface-700 text-brand-500 focus:ring-brand-500"
+              />
+              Henüz belli değil
+            </label>
           </div>
 
           {/* Açıklama */}

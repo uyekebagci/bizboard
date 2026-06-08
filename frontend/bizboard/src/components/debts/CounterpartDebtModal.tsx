@@ -72,6 +72,8 @@ export function CounterpartDebtModal({
   const counterpartLocked = !!preselectedCounterpart;
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
+  // WP a9da4e9d: "Henüz belli değil" — yeni borçta vade bilinmiyorsa null gönder.
+  const [dueDateUnknown, setDueDateUnknown] = useState(false);
   const [description, setDescription] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -154,7 +156,8 @@ export function CounterpartDebtModal({
         currency: "TRY",
         instrument_type: isReceivable ? "NAKIT" : "NAKIT", // default; ileride seçim
         receivable_type: isReceivable ? "NAKIT" : null,
-        due_date: dueDate || null,
+        // dueDateUnknown ise vade bilinmiyor → null (CreateDebtRequest.dueDate nullable).
+        due_date: dueDateUnknown ? null : (dueDate || null),
         description: description.trim() || null,
       });
       triggerRefresh();
@@ -316,8 +319,21 @@ export function CounterpartDebtModal({
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              disabled={dueDateUnknown}
+              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
+            <label className="mt-2 flex items-center gap-2 text-xs text-surface-300 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={dueDateUnknown}
+                onChange={(e) => {
+                  setDueDateUnknown(e.target.checked);
+                  if (e.target.checked) setDueDate("");
+                }}
+                className="w-4 h-4 rounded border-surface-500 bg-surface-700 text-brand-500 focus:ring-brand-500"
+              />
+              Henüz belli değil
+            </label>
           </div>
 
           {/* Açıklama */}

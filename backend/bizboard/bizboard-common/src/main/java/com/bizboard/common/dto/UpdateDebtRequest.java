@@ -26,6 +26,14 @@ public class UpdateDebtRequest {
     @JsonProperty("due_date")
     private LocalDate dueDate;
 
+    /**
+     * WP a9da4e9d: "Henüz belli değil" — vade'yi açıkça NULL'a çek (bilinmiyor).
+     * Partial update null'ı atladığı için vade'yi temizlemenin tek yolu budur.
+     * true ise {@link #dueDate} yok sayılır ve vade null yapılır.
+     */
+    @JsonProperty("clear_due_date")
+    private Boolean clearDueDate;
+
     /** Yeni açıklama. Null gelirse açıklama değiştirilmez. */
     private String description;
 }
