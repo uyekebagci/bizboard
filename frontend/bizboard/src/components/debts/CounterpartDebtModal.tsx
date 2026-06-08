@@ -71,6 +71,8 @@ export function CounterpartDebtModal({
   // Counterpart locked mod: detay sayfasından açıldı → picker değişmesin.
   const counterpartLocked = !!preselectedCounterpart;
   const [amount, setAmount] = useState("");
+  // WP a9da4e9d (USD+Altın): para birimi seçici. TRY/USD/GOLD.
+  const [currency, setCurrency] = useState<"TRY" | "USD" | "GOLD">("TRY");
   const [dueDate, setDueDate] = useState("");
   // WP a9da4e9d: "Henüz belli değil" — yeni borçta vade bilinmiyorsa null gönder.
   const [dueDateUnknown, setDueDateUnknown] = useState(false);
@@ -152,8 +154,9 @@ export function CounterpartDebtModal({
         direction,
         counterparty: cp.name,        // legacy free-text (auto-filled from cp.name)
         counterpart_id: counterpartId,
+        // WP a9da4e9d: amount = ORİJİNAL para birimi tutarı; backend TL'ye çevirir.
         amount: parsedAmount,
-        currency: "TRY",
+        currency,
         instrument_type: isReceivable ? "NAKIT" : "NAKIT", // default; ileride seçim
         receivable_type: isReceivable ? "NAKIT" : null,
         // dueDateUnknown ise vade bilinmiyor → null (CreateDebtRequest.dueDate nullable).
@@ -293,10 +296,12 @@ export function CounterpartDebtModal({
             )}
           </div>
 
-          {/* Tutar */}
+          {/* Tutar + Para Birimi (WP a9da4e9d: TRY/USD/GOLD) */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Tutar *</label>
-            <div className="relative">
+            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+              Tutar * {currency === "GOLD" && <span className="text-surface-400 font-normal">(gram)</span>}
+            </label>
+            <div className="flex gap-2">
               <input
                 type="text"
                 inputMode="numeric"
@@ -304,10 +309,25 @@ export function CounterpartDebtModal({
                 value={amount}
                 onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                 placeholder="0"
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-lg font-bold text-white placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-lg font-bold text-white placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm font-medium">TRY</span>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as "TRY" | "USD" | "GOLD")}
+                aria-label="Para birimi"
+                className="px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value="TRY">TRY</option>
+                <option value="USD">USD</option>
+                <option value="GOLD">Altın (gr)</option>
+              </select>
             </div>
+            {currency !== "TRY" && (
+              <p className="mt-1 text-[10px] text-surface-400">
+                {currency === "USD" ? "Dolar" : "Gram altın"} tutarı girilir; konsolide net
+                güncel kurla TL&apos;ye çevrilir.
+              </p>
+            )}
           </div>
 
           {/* Vade tarihi */}

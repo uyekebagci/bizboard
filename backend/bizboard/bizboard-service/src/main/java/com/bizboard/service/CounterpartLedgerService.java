@@ -38,10 +38,15 @@ public class CounterpartLedgerService {
 
     private final DebtRepository debtRepository;
     private final CounterpartRepository counterpartRepository;
+    private final DebtAmountConverter amountConverter;
 
     /**
      * Counterpart'ın current_balance kolonunu yeniden hesaplayıp persist eder.
      * Tüm aktif borçlar (settled=false) üzerinden: RECEIVABLE toplam - PAYABLE toplam.
+     *
+     * <p>WP a9da4e9d (B): USD/GOLD borçlar GÜNCEL kurla TL'ye çevrilip toplanır
+     * (current_balance TL'dir). TRY borçlar aynen. Çevrilen borçlarda rate_snapshot
+     * güncel kura set edilir (gösterim/referans).</p>
      */
     @Transactional
     public BigDecimal recompute(UUID counterpartId) {
@@ -53,11 +58,18 @@ public class CounterpartLedgerService {
         for (Debt d : debtRepository.findByCounterpartRefIdOrderByCreatedAtAsc(counterpartId)) {
             // v1.7.x WP fbb2ef55: remaining_amount kullan (kısmi ödenmiş borçlar için).
             if (d.isSettled()) continue;
-            BigDecimal rem = d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount();
+            BigDecimal remTl = d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount();
+            // WP a9da4e9d (B): USD/GOLD → güncel kurla TL.
+            if (amountConverter.isForeign(d)) {
+                remTl = amountConverter.toTry(d, remTl);
+                d.setRateSnapshot(amountConverter.currentRate(d));
+                d.setRateSnapshotAt(LocalDateTime.now());
+                debtRepository.save(d);
+            }
             if (d.getDirection() == DebtDirection.RECEIVABLE) {
-                balance = balance.add(rem);
+                balance = balance.add(remTl);
             } else {
-                balance = balance.subtract(rem);
+                balance = balance.subtract(remTl);
             }
         }
         c.setCurrentBalance(balance);

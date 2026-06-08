@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, LogOut, Shield, Menu } from "lucide-react";
+import { Search, LogOut, Shield, Menu, Sun, Moon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { getInitials } from "@/lib/utils";
 import { logout } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+import { useTheme } from "@/components/layout/ThemeProvider";
 
 interface TopBarProps {
   /** v1.6.13: mobile/tablet hamburger handler — sidebar açar/kapatır. */
@@ -27,6 +28,7 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
   const [loggingOut, setLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -74,6 +76,21 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
             className="p-2.5 rounded-xl hover:bg-surface-700 transition-colors"
           >
             <Search size={20} className="text-surface-300" />
+          </button>
+
+          {/* Çift tema FAZ 1: tema geçişi (güneş/ay). localStorage persist, default dark. */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
+            title={theme === "dark" ? "Açık tema" : "Koyu tema"}
+            className="p-2.5 rounded-xl hover:bg-surface-700 transition-colors"
+          >
+            {theme === "dark" ? (
+              <Sun size={20} className="text-surface-300" />
+            ) : (
+              <Moon size={20} className="text-surface-300" />
+            )}
           </button>
 
           <NotificationDropdown />

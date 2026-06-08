@@ -10,6 +10,7 @@ import {
   subscribeTokenChange,
 } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
+import { useIdleLogout } from "@/lib/useIdleLogout";
 
 /**
  * Bootstrap akışı:
@@ -28,6 +29,9 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [bootstrapped, setBootstrapped] = useState(false);
   const bootstrappingRef = useRef(false);
+
+  // WP 4b51cf42: proaktif idle logout — public route'larda kapalı (login'de gereksiz).
+  useIdleLogout(!pathname?.startsWith("/auth/"));
 
   // ── Bootstrap: silent refresh on mount ──────────────────────────────
   useEffect(() => {
@@ -145,8 +149,9 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#212529",
-          color: "white",
+          // Çift tema FAZ 1: splash bg/text tema değişkenine bağlı (light/dark uyumlu).
+          background: "rgb(var(--body-bg))",
+          color: "rgb(var(--body-text))",
           fontFamily: "system-ui, sans-serif",
         }}
       >

@@ -84,6 +84,26 @@ public class Debt {
     @Builder.Default
     private String currency = "TRY";
 
+    /**
+     * WP a9da4e9d (USD+Altın): Orijinal para birimindeki tutar (kaynak gerçeği).
+     * TRY borçlarda = amount. USD/GOLD borçlarda kullanıcının girdiği döviz/gram
+     * tutarı. magnitude POZİTİF. {@code amount}/{@code remaining_amount} TL
+     * cinsindendir (recompute güncel kurla yeniler); bu alan orijinal kalır.
+     */
+    @Column(name = "original_amount", precision = 19, scale = 4)
+    private BigDecimal originalAmount;
+
+    /**
+     * WP a9da4e9d: Son recompute/kayıt anındaki kur (1 birim original currency =
+     * rateSnapshot TL). TRY → 1. Referans/gösterim; canlı TL recompute'tan gelir.
+     */
+    @Column(name = "rate_snapshot", precision = 19, scale = 6)
+    private BigDecimal rateSnapshot;
+
+    /** WP a9da4e9d: rateSnapshot'ın alındığı an (gösterim). */
+    @Column(name = "rate_snapshot_at")
+    private LocalDateTime rateSnapshotAt;
+
     /** Borç tipi: CEK, SENET, NAKIT veya özel */
     @Column(name = "instrument_type", nullable = false)
     private String instrumentType;

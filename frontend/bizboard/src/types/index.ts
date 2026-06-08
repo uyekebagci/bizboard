@@ -660,6 +660,18 @@ export interface ReceivableTypeBreakdown {
   count: number;
 }
 
+/** WP a9da4e9d (USD+Altın): borç para birimi. */
+export type DebtCurrency = "TRY" | "USD" | "GOLD";
+
+/** WP a9da4e9d: GET /exchange-rates — güncel kur gösterimi. */
+export interface ExchangeRate {
+  code: "USD" | "GOLD";
+  rate_to_try: number;
+  source?: string | null;
+  fetched_at?: string | null;
+  stale: boolean;
+}
+
 /** v1.6.5+: GET /api/receivables — counterpart bazlı alacak özeti. */
 export interface ReceivableAggregate {
   counterpart_id?: string | null;

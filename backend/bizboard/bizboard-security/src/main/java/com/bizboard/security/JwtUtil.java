@@ -22,7 +22,10 @@ public class JwtUtil {
 
     public JwtUtil(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms:604800000}") long expirationMs) {
+            // WP 4b51cf42: footgun düzeltildi — default 7 gün (604800000) yerine 30 dk.
+            // application.yml zaten JWT_EXPIRATION_MS:1800000 veriyor; bu default,
+            // property hiç gelmezse bile uzun-ömürlü access token üretilmesini engeller.
+            @Value("${app.jwt.expiration-ms:1800000}") long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }

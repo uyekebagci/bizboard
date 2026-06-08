@@ -2,6 +2,9 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  // Çift tema FAZ 1: class-based dark mode. <html class="dark"> → dark palet,
+  // class yoksa → light palet (globals.css :root / .dark CSS değişkenleri).
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -18,18 +21,21 @@ const config: Config = {
           900: "#364fc7",
           950: "#1e3a8a",
         },
+        // Çift tema FAZ 1: surface paleti CSS değişkenine bağlandı. Triplet'ler
+        // globals.css :root (light) / .dark (dark = mevcut değerlerle BİREBİR).
+        // <alpha-value> korunur → opacity'li sınıflar (surface-700/50 vb.) çalışır.
         surface: {
-          0: "#ffffff",
-          50: "#f8f9fa",
-          100: "#f1f3f5",
-          200: "#e9ecef",
-          300: "#dee2e6",
-          400: "#ced4da",
-          500: "#adb5bd",
-          600: "#868e96",
-          700: "#495057",
-          800: "#343a40",
-          900: "#212529",
+          0: "rgb(var(--surface-0) / <alpha-value>)",
+          50: "rgb(var(--surface-50) / <alpha-value>)",
+          100: "rgb(var(--surface-100) / <alpha-value>)",
+          200: "rgb(var(--surface-200) / <alpha-value>)",
+          300: "rgb(var(--surface-300) / <alpha-value>)",
+          400: "rgb(var(--surface-400) / <alpha-value>)",
+          500: "rgb(var(--surface-500) / <alpha-value>)",
+          600: "rgb(var(--surface-600) / <alpha-value>)",
+          700: "rgb(var(--surface-700) / <alpha-value>)",
+          800: "rgb(var(--surface-800) / <alpha-value>)",
+          900: "rgb(var(--surface-900) / <alpha-value>)",
         },
         status: {
           success: "#40c057",

@@ -46,18 +46,45 @@ public class RefreshTokenService {
     @Value("${app.refresh.duration-days:30}")
     private long durationDays;
 
+    /**
+     * WP 4b51cf42: Oturum güvenliği eşikleri.
+     * idle: son refresh'ten beri bu kadar dk geçtiyse oturum ölür (sessiz uzamaz).
+     * absolute: oturum başlangıcından bu kadar saat sonra zorunlu re-login.
+     */
+    @Value("${auth.idle-timeout-min:30}")
+    private long idleTimeoutMin;
+
+    @Value("${auth.absolute-session-hours:12}")
+    private long absoluteSessionHours;
+
     private final SecureRandom random = new SecureRandom();
 
-    /** Yeni token üret ve kaydet. */
+    /** Yeni oturum başlatan token (login). sessionStartedAt = now. */
     @Transactional
     public Issued issue(UUID userId, HttpServletRequest request) {
+        return issue(userId, request, LocalDateTime.now());
+    }
+
+    /**
+     * Token üret ve kaydet. {@code sessionStartedAt} login'de now; rotation'da
+     * eski token'ın değeri taşınır (absolute cap aynı oturum boyu sabit kalsın).
+     *
+     * <p>Expiry = min(now + sliding(durationDays), sessionStartedAt + absolute).</p>
+     */
+    @Transactional
+    public Issued issue(UUID userId, HttpServletRequest request, LocalDateTime sessionStartedAt) {
         String plaintext = generatePlaintext();
-        LocalDateTime expiresAt = LocalDateTime.now().plusDays(durationDays);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime sliding = now.plusDays(durationDays);
+        LocalDateTime absoluteCap = sessionStartedAt.plusHours(absoluteSessionHours);
+        LocalDateTime expiresAt = sliding.isBefore(absoluteCap) ? sliding : absoluteCap;
 
         RefreshToken entity = RefreshToken.builder()
                 .userId(userId)
                 .tokenHash(hash(plaintext))
                 .expiresAt(expiresAt)
+                .sessionStartedAt(sessionStartedAt)
+                .lastUsedAt(now)
                 .userAgent(truncate(headerOrNull(request, "User-Agent"), 512))
                 .ipAddress(truncate(clientIp(request), 64))
                 .build();
@@ -91,8 +118,22 @@ public class RefreshTokenService {
             handleTheft(stored);
             throw new InvalidRefreshTokenException("revoked");
         }
-        if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
+        LocalDateTime now = LocalDateTime.now();
+        if (stored.getExpiresAt().isBefore(now)) {
             throw new InvalidRefreshTokenException("expired");
+        }
+        // WP 4b51cf42: idle timeout — son kullanım üzerinden idleTimeoutMin geçtiyse reddet.
+        // Legacy satır (null) → created_at fallback.
+        LocalDateTime lastUsed = stored.getLastUsedAt() != null
+                ? stored.getLastUsedAt() : stored.getCreatedAt();
+        if (lastUsed != null && lastUsed.plusMinutes(idleTimeoutMin).isBefore(now)) {
+            throw new InvalidRefreshTokenException("idle");
+        }
+        // WP 4b51cf42: absolute cap — oturum başlangıcından absoluteSessionHours geçtiyse reddet.
+        LocalDateTime started = stored.getSessionStartedAt() != null
+                ? stored.getSessionStartedAt() : stored.getCreatedAt();
+        if (started != null && started.plusHours(absoluteSessionHours).isBefore(now)) {
+            throw new InvalidRefreshTokenException("absolute");
         }
         return stored;
     }
@@ -125,7 +166,11 @@ public class RefreshTokenService {
      */
     @Transactional
     public Issued rotate(RefreshToken oldToken, HttpServletRequest request) {
-        Issued fresh = issue(oldToken.getUserId(), request);
+        // WP 4b51cf42: sessionStartedAt KORUNUR (absolute cap aynı oturum boyu sabit).
+        // Legacy satırda null ise created_at'e düş.
+        LocalDateTime sessionStart = oldToken.getSessionStartedAt() != null
+                ? oldToken.getSessionStartedAt() : oldToken.getCreatedAt();
+        Issued fresh = issue(oldToken.getUserId(), request, sessionStart);
 
         oldToken.setRevoked(true);
         oldToken.setRevokedAt(LocalDateTime.now());

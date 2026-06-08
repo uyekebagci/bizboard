@@ -40,6 +40,9 @@ public class DebtService {
     private final CounterpartRepository counterpartRepository;
     private final CounterpartLedgerService counterpartLedger;
     private final DebtAuditMetaBuilder debtAuditMetaBuilder;
+    // WP a9da4e9d (USD+Altın): kayıt anı kuru + TL çevrimi + özet.
+    private final DebtAmountConverter amountConverter;
+    private final DebtSummaryCalculator debtSummaryCalculator;
 
     // ─── İşletmeye ait borçları getir ──────────────────────────
 
@@ -149,16 +152,24 @@ public class DebtService {
             }
         }
 
+        // WP a9da4e9d (USD+Altın): TRY/USD/GOLD. Kullanıcının tutarı ORİJİNAL para
+        // birimindedir; amount/remaining TL (original × güncel kur) saklanır.
+        DebtAmountConverter.CreateResolution fx = amountConverter.resolveOnCreate(
+                request.getCurrency(), request.getAmount(), business.getCurrency());
+
         Debt debt = Debt.builder()
                 .business(business)
                 .direction(direction)
                 .counterparty(counterpartyName)
                 .counterpartRef(counterpart)
-                .amount(request.getAmount())
+                .amount(fx.tlAmount())
                 // v1.7.x WP fbb2ef55: yeni debt → remaining=amount, status=OPEN
-                .remainingAmount(request.getAmount())
+                .remainingAmount(fx.tlAmount())
+                .originalAmount(fx.originalAmount())
+                .rateSnapshot(fx.rate())
+                .rateSnapshotAt(java.time.LocalDateTime.now())
                 .status("OPEN")
-                .currency(request.getCurrency() != null ? request.getCurrency() : business.getCurrency())
+                .currency(fx.currency())
                 .instrumentType(request.getInstrumentType())
                 .receivableType(receivableType)
                 .receivableTypeOther(receivableTypeOther)
@@ -176,9 +187,8 @@ public class DebtService {
                 .build();
 
         debt = debtRepository.save(debt);
-        log.info("Borc olusturuldu: {} - {} {} TL ({}) isletme={}",
-                direction, counterpartyName, request.getAmount(),
-                request.getInstrumentType(), business.getName());
+        log.info("Borc olusturuldu: {} - {} {} {} isletme={}", direction, counterpartyName,
+                fx.originalAmount(), fx.currency(), business.getName());
 
         Map<String, Object> meta = new java.util.HashMap<>();
         meta.put("businessId", businessId);
@@ -346,7 +356,7 @@ public class DebtService {
             debts = debtRepository.findByBusinessIdAndAdminOnlyFalseOrderByCreatedAtDesc(businessId);
         }
 
-        return buildSummary(debts);
+        return debtSummaryCalculator.build(debts);
     }
 
     // ─── Tüm borçların özeti (admin) ──────────────────────────
@@ -362,7 +372,7 @@ public class DebtService {
         } else {
             String accessible = user.getAccessibleBusinesses();
             if (accessible == null || accessible.isBlank()) {
-                return emptySummary();
+                return debtSummaryCalculator.empty();
             }
             List<UUID> businessIds = Arrays.stream(accessible.split(","))
                     .map(String::trim).filter(s -> !s.isEmpty())
@@ -370,80 +380,10 @@ public class DebtService {
             debts = debtRepository.findByBusinessIdInAndAdminOnlyFalseOrderByCreatedAtDesc(businessIds);
         }
 
-        return buildSummary(debts);
+        return debtSummaryCalculator.build(debts);
     }
 
     // ─── Helpers ──────────────────────────────────────────────
-
-    /**
-     * v1.7.0.x (BUG fix): Parsiyel ödeme sonrası ana sayfa Borç/Alacak widget'ı
-     * eski (orijinal) tutarı gösteriyordu — pendingReceivable/Payable formülü
-     * "amount - settled_amount" idi, parsiyel ödemeleri görmüyordu.
-     *
-     * Yeni model: PaymentService.applyAllocation() debt.remaining_amount'ı
-     * günceller (parsiyel veya tam ödeme). pending* artık doğrudan
-     * remaining_amount'tan toplanır (null fallback amount). settled debt'lerin
-     * remaining'i 0'a düşer veya settled=true filtresi ile dışlanır.
-     */
-    private DebtSummaryDto buildSummary(List<Debt> debts) {
-        BigDecimal totalReceivable = BigDecimal.ZERO;
-        BigDecimal totalPayable = BigDecimal.ZERO;
-        BigDecimal settledReceivable = BigDecimal.ZERO;
-        BigDecimal settledPayable = BigDecimal.ZERO;
-        BigDecimal pendingReceivable = BigDecimal.ZERO;
-        BigDecimal pendingPayable = BigDecimal.ZERO;
-        int receivableCount = 0;
-        int payableCount = 0;
-
-        for (Debt d : debts) {
-            BigDecimal amount = d.getAmount() != null ? d.getAmount() : BigDecimal.ZERO;
-            BigDecimal remaining = d.getRemainingAmount() != null
-                    ? d.getRemainingAmount() : amount;
-            if (d.getDirection() == DebtDirection.RECEIVABLE) {
-                totalReceivable = totalReceivable.add(amount);
-                receivableCount++;
-                if (d.isSettled()) {
-                    settledReceivable = settledReceivable.add(amount);
-                } else {
-                    pendingReceivable = pendingReceivable.add(remaining);
-                }
-            } else {
-                totalPayable = totalPayable.add(amount);
-                payableCount++;
-                if (d.isSettled()) {
-                    settledPayable = settledPayable.add(amount);
-                } else {
-                    pendingPayable = pendingPayable.add(remaining);
-                }
-            }
-        }
-
-        return DebtSummaryDto.builder()
-                .totalReceivable(totalReceivable)
-                .totalPayable(totalPayable)
-                .netBalance(pendingReceivable.subtract(pendingPayable))
-                .settledReceivable(settledReceivable)
-                .settledPayable(settledPayable)
-                .pendingReceivable(pendingReceivable)
-                .pendingPayable(pendingPayable)
-                .receivableCount(receivableCount)
-                .payableCount(payableCount)
-                .build();
-    }
-
-    private DebtSummaryDto emptySummary() {
-        return DebtSummaryDto.builder()
-                .totalReceivable(BigDecimal.ZERO)
-                .totalPayable(BigDecimal.ZERO)
-                .netBalance(BigDecimal.ZERO)
-                .settledReceivable(BigDecimal.ZERO)
-                .settledPayable(BigDecimal.ZERO)
-                .pendingReceivable(BigDecimal.ZERO)
-                .pendingPayable(BigDecimal.ZERO)
-                .receivableCount(0)
-                .payableCount(0)
-                .build();
-    }
 
     private DebtDto toDto(Debt d) {
         Counterpart cp = d.getCounterpartRef();
@@ -457,6 +397,11 @@ public class DebtService {
                 .counterpartName(cp != null ? cp.getName() : null)
                 .amount(d.getAmount())
                 .currency(d.getCurrency())
+                // WP a9da4e9d (USD+Altın): çift gösterim — orijinal + güncel TL.
+                .originalAmount(d.getOriginalAmount() != null ? d.getOriginalAmount() : d.getAmount())
+                .rateSnapshot(d.getRateSnapshot())
+                .rateSnapshotAt(d.getRateSnapshotAt())
+                .currentAmountTry(amountConverter.fullToTry(d))
                 .instrumentType(d.getInstrumentType())
                 .receivableType(d.getReceivableType())
                 .receivableTypeOther(d.getReceivableTypeOther())

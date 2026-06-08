@@ -34,9 +34,26 @@ public class DebtDto {
     @JsonProperty("counterpart_name")
     private String counterpartName;
 
+    /** TL cinsinden tutar (kayıt anı kuruyla; USD/GOLD için çevrilmiş). */
     private BigDecimal amount;
 
     private String currency;
+
+    // ── WP a9da4e9d (USD+Altın): çift gösterim alanları ──
+    /** Orijinal para birimindeki tutar (USD/GOLD için döviz/gram; TRY için = amount). */
+    @JsonProperty("original_amount")
+    private BigDecimal originalAmount;
+
+    /** Son recompute/kayıt anı kuru (1 birim currency = rateSnapshot TL). */
+    @JsonProperty("rate_snapshot")
+    private BigDecimal rateSnapshot;
+
+    @JsonProperty("rate_snapshot_at")
+    private LocalDateTime rateSnapshotAt;
+
+    /** GÜNCEL kurla TL karşılığı (canlı; original × güncel kur). Gösterim için. */
+    @JsonProperty("current_amount_try")
+    private BigDecimal currentAmountTry;
 
     @JsonProperty("instrument_type")
     private String instrumentType;

@@ -49,6 +49,18 @@ server:
   error:
     include-message: always
 
+# WP a9da4e9d (USD+Altın): kur servisi cooldown (manuel "Anlık Güncelle" debounce).
+exchange:
+  # Dış API'ye (TCMB/frankfurter) min çağrı aralığı (sn). Cooldown'da cache döner.
+  min-refresh-interval-sec: ${EXCHANGE_MIN_REFRESH_INTERVAL_SEC:30}
+
+# WP 4b51cf42: Oturum güvenliği — sliding refresh + idle + absolute cap.
+auth:
+  # Son refresh'ten beri bu kadar dk hareketsizlik → oturum ölür (sessiz uzamaz).
+  idle-timeout-min: ${AUTH_IDLE_TIMEOUT_MIN:30}
+  # Oturum başlangıcından bu kadar saat sonra zorunlu yeniden giriş.
+  absolute-session-hours: ${AUTH_ABSOLUTE_SESSION_HOURS:12}
+
 app:
   jwt:
     secret: ${JWT_SECRET:bizboard-super-secret-key-that-is-at-least-256-bits-long-for-hs256}

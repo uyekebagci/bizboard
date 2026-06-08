@@ -38,6 +38,8 @@ public class ConsolidatedDashboardService {
     private final ClosingCalculator closingCalculator;
     // v1.7.x WP fbb2ef55: portföy çek/senet
     private final com.bizboard.repository.PaymentInstrumentRepository paymentInstrumentRepository;
+    // WP a9da4e9d (USD+Altın): borç toplamlarını güncel kurla TL'ye çevirir.
+    private final DebtAmountConverter amountConverter;
 
     @Transactional(readOnly = true)
     public ConsolidatedDashboardDto getConsolidated(UUID userId, UUID businessId) {
@@ -485,9 +487,16 @@ public class ConsolidatedDashboardService {
      * stale görünüyordu. Doğru davranış: remaining_amount kullan; null ise
      * (legacy data, parsiyel ödeme öncesi kayıt) amount fallback.
      */
-    private static BigDecimal sumDebt(List<Debt> debts) {
+    /**
+     * WP a9da4e9d (B): borç toplamı GÜNCEL kurla TL. TRY aynen; USD/GOLD çevrilir.
+     * remaining_amount baz (kısmi ödeme), null → amount.
+     */
+    private BigDecimal sumDebt(List<Debt> debts) {
         return debts.stream()
-                .map(d -> d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount())
+                .map(d -> {
+                    BigDecimal base = d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount();
+                    return amountConverter.toTry(d, base);
+                })
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }

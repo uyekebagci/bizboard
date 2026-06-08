@@ -22,12 +22,13 @@ import { useAppStore } from "@/lib/store";
 import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart, Business } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 import { NotesModule } from "@/components/business/NotesModule";
+import { ExchangeRateBar } from "@/components/debts/ExchangeRateBar";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
 
 export default function AlacaklarPage() {
   const router = useRouter();
-  const { refreshKey } = useAppStore();
+  const { refreshKey, triggerRefresh } = useAppStore();
   const [rows, setRows] = useState<ReceivableAggregate[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
@@ -130,6 +131,9 @@ export default function AlacaklarPage() {
           Alacak Ekle
         </button>
       </div>
+
+      {/* WP a9da4e9d (USD+Altın): güncel kur + "Anlık Güncelle". */}
+      <ExchangeRateBar onRefreshed={triggerRefresh} />
 
       {loading ? (
         <div className="flex items-center justify-center py-16">

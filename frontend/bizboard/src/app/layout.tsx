@@ -2,9 +2,16 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { ClientProviders } from "@/components/layout/ClientProviders";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { EnvironmentBanner } from "@/components/layout/EnvironmentBanner";
 import { PwaUpdatePrompt } from "@/components/layout/PwaUpdatePrompt";
 import { Toaster } from "react-hot-toast";
+
+// Çift tema FAZ 1: FOUC önleyici — ilk boyama ÖNCESİ <html> class'ını
+// localStorage'tan ayarla. Kayıt yoksa default "dark" (DGR mevcut görünüm).
+const THEME_INIT_SCRIPT = `
+(function(){try{var t=localStorage.getItem('cati-theme');if(t!=='light'&&t!=='dark')t='dark';var e=document.documentElement;if(t==='dark')e.classList.add('dark');else e.classList.remove('dark');e.style.colorScheme=t;}catch(e){document.documentElement.classList.add('dark');}})();
+`;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,33 +54,39 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
-      style={{ backgroundColor: "#212529", colorScheme: "dark" }}
+      // Çift tema FAZ 1: default "dark" class — FOUC script ilk boyamadan önce
+      // localStorage'a göre günceller. suppressHydrationWarning: class'ı script
+      // değiştirebileceği için hydration uyarısını bastır.
+      className={`dark ${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
     >
       <head>
-        <style>{`html,body{background-color:#212529!important;color-scheme:dark}`}</style>
+        {/* FOUC önleyici — render'dan önce çalışır. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="font-sans" style={{ backgroundColor: "#212529" }}>
-        <ClientProviders>
-          <EnvironmentBanner />
-          {children}
-          <PwaUpdatePrompt />
-          {/* WP 4f6baaa3: global toast — sağ üst, dark theme, aria-live="polite" yerleşik */}
-          <Toaster
-            position="top-right"
-            gutter={8}
-            containerStyle={{ top: 16, right: 16 }}
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "#1e293b",
-                color: "#e2e8f0",
-                fontSize: "13px",
-                borderRadius: "10px",
-              },
-            }}
-          />
-        </ClientProviders>
+      <body className="font-sans">
+        <ThemeProvider>
+          <ClientProviders>
+            <EnvironmentBanner />
+            {children}
+            <PwaUpdatePrompt />
+            {/* WP 4f6baaa3: global toast — sağ üst, aria-live="polite" yerleşik */}
+            <Toaster
+              position="top-right"
+              gutter={8}
+              containerStyle={{ top: 16, right: 16 }}
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: "#1e293b",
+                  color: "#e2e8f0",
+                  fontSize: "13px",
+                  borderRadius: "10px",
+                },
+              }}
+            />
+          </ClientProviders>
+        </ThemeProvider>
       </body>
     </html>
   );

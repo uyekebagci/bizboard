@@ -49,6 +49,21 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    /**
+     * WP 4b51cf42: Oturumun BAŞLANGIÇ anı. Rotation'da KORUNUR (değişmez) —
+     * absolute session cap (start + 12h) hesabı için. Login'de now, mevcut
+     * satırlarda backfill ile created_at.
+     */
+    @Column(name = "session_started_at")
+    private LocalDateTime sessionStartedAt;
+
+    /**
+     * WP 4b51cf42: Son kullanım (refresh) anı. Her refresh'te güncellenir —
+     * idle timeout (now - last_used > 30dk → reddet) hesabı için.
+     */
+    @Column(name = "last_used_at")
+    private LocalDateTime lastUsedAt;
+
     /** Manuel veya rotation sonucu revoke edildi mi? */
     @Column(nullable = false)
     @Builder.Default
