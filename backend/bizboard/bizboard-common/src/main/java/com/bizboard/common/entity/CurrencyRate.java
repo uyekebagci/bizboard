@@ -35,8 +35,8 @@ public class CurrencyRate {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    /** Kur kodu: "USD" veya "GOLD" (gram altın). TRY tutulmaz (her zaman 1). */
-    @Column(name = "code", nullable = false, length = 10, unique = true)
+    /** Kur kodu: USD, GOLD(gram), GOLD_QUARTER, GOLD_HALF, GOLD_FULL. TRY tutulmaz. */
+    @Column(name = "code", nullable = false, length = 20, unique = true)
     private String code;
 
     /** 1 birim bu para = rateToTry TL. precision yüksek (altın × usd türevi için). */

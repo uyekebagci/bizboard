@@ -46,7 +46,15 @@ public class ExchangeRateController {
 
     private List<ExchangeRateDto> collect() {
         List<ExchangeRateDto> out = new ArrayList<>();
-        for (String code : new String[]{ExchangeRateService.USD, ExchangeRateService.GOLD}) {
+        // WP a9da4e9d: USD + gram + çeyrek + yarım + tam altın.
+        String[] codes = {
+                ExchangeRateService.USD,
+                ExchangeRateService.GOLD,
+                ExchangeRateService.GOLD_QUARTER,
+                ExchangeRateService.GOLD_HALF,
+                ExchangeRateService.GOLD_FULL,
+        };
+        for (String code : codes) {
             exchangeRateService.getCached(code).map(ExchangeRateController::toDto).ifPresent(out::add);
         }
         return out;

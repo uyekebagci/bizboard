@@ -46,7 +46,16 @@ public class DebtCurrencyBackfill implements ApplicationRunner {
             log.warn("[debt-currency-backfill] schema/backfill atlandı: {}", e.getMessage());
         }
 
-        // İlk kur çekimi — cache boşsa USD/GOLD doldurulsun (force).
+        // WP a9da4e9d fix: currency_rates.code önceki deploy'da varchar(10) yaratıldıysa
+        // GOLD_QUARTER (12 char) sığmaz. Hibernate update kolon uzunluğunu büyütmez →
+        // idempotent ALTER ile 20'ye çıkar. Tablo henüz yoksa hata yutulur (sonra yaratılır).
+        try {
+            jdbc.execute("ALTER TABLE currency_rates ALTER COLUMN code TYPE varchar(20)");
+        } catch (Exception e) {
+            log.debug("[debt-currency-backfill] currency_rates.code ALTER atlandı: {}", e.getMessage());
+        }
+
+        // İlk kur çekimi — cache boşsa USD + altınlar doldurulsun (force).
         try {
             exchangeRateService.refresh(true);
         } catch (Exception e) {

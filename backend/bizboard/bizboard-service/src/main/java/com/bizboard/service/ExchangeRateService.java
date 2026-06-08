@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,14 +24,20 @@ import java.util.regex.Pattern;
  *
  * <p><b>Kaynaklar (API key YOK):</b></p>
  * <ul>
- *   <li>USD/TRY: TCMB {@code today.xml} (primary) → frankfurter.app (fallback)</li>
- *   <li>GOLD (gram altın TL): XAU/USD (frankfurter) × USD/TRY türevi.
- *       1 ons = 31.1035 gram → gram fiyatı = (USD/ons → TL) / 31.1035</li>
+ *   <li>USD/TRY: TCMB {@code today.xml} (primary) → frankfurter.app → truncgil (fallback)</li>
+ *   <li>Altın (TL): truncgil v4 {@code finans.truncgil.com/v4/today.json} — GERÇEK
+ *       piyasa fiyatları (milyem/prim dahil): gram (GRA), çeyrek (CEYREKALTIN),
+ *       yarım (YARIMALTIN), tam (TAMALTIN). frankfurter XAU desteklemediği için
+ *       (301) bırakıldı; ağırlıktan türetme YOK — gerçek coin fiyatı kullanılır.</li>
  * </ul>
  *
  * <p><b>Cache + min-interval + stale-ok:</b> kur DB'de cache'lenir. {@code refresh()}
  * min-interval (cooldown) içinde tekrar çağrılırsa dış API'ye GİTMEZ, cache döner.
- * Dış API down ise son değer {@code stale=true} ile servis edilir (asla patlamaz).</p>
+ * Dış API hatasında / değer bulunamazsa son değer {@code stale=true} ile servis edilir.</p>
+ *
+ * <p><b>truncgil yanıtı bazen sonu kesik (chunked) gelir;</b> bu yüzden full JSON
+ * parse YERİNE anahtar bazlı regex çıkarımı yapılır — hedef alanlar (USD/GRA/coin'ler)
+ * payload'ın başında olduğu için kesik gövdede bile okunur.</p>
  *
  * <p>Mimari: B (Master/shared) — multi-tenant değil.</p>
  */
@@ -42,8 +47,12 @@ import java.util.regex.Pattern;
 public class ExchangeRateService {
 
     public static final String USD = "USD";
-    public static final String GOLD = "GOLD";
-    private static final BigDecimal GRAMS_PER_OUNCE = new BigDecimal("31.1035");
+    public static final String GOLD = "GOLD";               // gram altın
+    public static final String GOLD_QUARTER = "GOLD_QUARTER"; // çeyrek
+    public static final String GOLD_HALF = "GOLD_HALF";       // yarım
+    public static final String GOLD_FULL = "GOLD_FULL";       // tam
+
+    private static final String TRUNCGIL_URL = "https://finans.truncgil.com/v4/today.json";
 
     private final CurrencyRateRepository repository;
 
@@ -80,21 +89,34 @@ public class ExchangeRateService {
             log.debug("[exchange] cooldown içinde — cache servis ediliyor, dış API atlandı.");
             return;
         }
-        BigDecimal usdTry = fetchUsdTry();
-        if (usdTry != null) {
-            upsert(USD, usdTry, "TCMB/FRANKFURTER");
-            BigDecimal goldGramTry = fetchGoldGramTry(usdTry);
-            if (goldGramTry != null) {
-                upsert(GOLD, goldGramTry, "FRANKFURTER(XAU)×USD/TRY");
-            } else {
-                markStale(GOLD);
-            }
+        // truncgil tek çağrı: hem altın (gram+coin) hem USD fallback aynı body'den.
+        String truncgil = safeGet(TRUNCGIL_URL);
+
+        // ── USD/TRY: TCMB primary → frankfurter → truncgil ──
+        BigDecimal usdTry = fetchUsdTryFromTcmb();
+        String usdSource = "TCMB";
+        if (usdTry == null) { usdTry = fetchUsdTryFromFrankfurter(); usdSource = "FRANKFURTER"; }
+        if (usdTry == null && truncgil != null) { usdTry = truncgilSelling(truncgil, "USD"); usdSource = "TRUNCGIL"; }
+        if (usdTry != null) upsert(USD, usdTry, usdSource);
+        else { markStale(USD); log.warn("[exchange] USD/TRY çekilemedi — stale."); }
+
+        // ── Altın (gram + çeyrek + yarım + tam): truncgil gerçek piyasa fiyatları ──
+        if (truncgil != null) {
+            applyTruncgilGold(truncgil, GOLD, "GRA");
+            applyTruncgilGold(truncgil, GOLD_QUARTER, "CEYREKALTIN");
+            applyTruncgilGold(truncgil, GOLD_HALF, "YARIMALTIN");
+            applyTruncgilGold(truncgil, GOLD_FULL, "TAMALTIN");
         } else {
-            // USD çekilemedi → her ikisini de bayat işaretle (son değer korunur).
-            markStale(USD);
-            markStale(GOLD);
-            log.warn("[exchange] USD/TRY çekilemedi — son değerler stale servis ediliyor.");
+            markStale(GOLD); markStale(GOLD_QUARTER); markStale(GOLD_HALF); markStale(GOLD_FULL);
+            log.warn("[exchange] truncgil çekilemedi — altın değerleri stale.");
         }
+    }
+
+    /** truncgil body'sinden bir altın anahtarını çıkar; bulunduysa upsert, yoksa stale. */
+    private void applyTruncgilGold(String body, String code, String truncgilKey) {
+        BigDecimal v = truncgilSelling(body, truncgilKey);
+        if (v != null && v.signum() > 0) upsert(code, v, "TRUNCGIL(" + truncgilKey + ")");
+        else markStale(code);
     }
 
     private boolean isWithinCooldown() {
@@ -106,23 +128,21 @@ public class ExchangeRateService {
 
     // ── Dış API çağrıları (best-effort; hata → null) ─────────────────────────
 
-    /** TCMB today.xml primary, frankfurter.app fallback. */
-    private BigDecimal fetchUsdTry() {
-        BigDecimal tcmb = fetchUsdTryFromTcmb();
-        if (tcmb != null) return tcmb;
-        return fetchUsdTryFromFrankfurter();
-    }
-
+    /**
+     * TCMB today.xml USD/TRY (ForexSelling). BUG A FIX: TCMB NOKTA=ondalık kullanır
+     * ("46.0973"). Eski kod tr-locale gibi noktayı binlik ayraç sanıp siliyordu
+     * (→ 460973). Artık locale-bağımsız {@code new BigDecimal(trimmed)} ile parse
+     * edilir (nokta = ondalık nokta). Olası binlik ayraçlar (virgül) temizlenir.
+     */
     private BigDecimal fetchUsdTryFromTcmb() {
         try {
-            String xml = get("https://www.tcmb.gov.tr/kurlar/today.xml");
+            String xml = safeGet("https://www.tcmb.gov.tr/kurlar/today.xml");
             if (xml == null) return null;
-            // <Currency Kod="USD" ...> ... <ForexSelling>34,1234</ForexSelling>
             Matcher block = Pattern.compile("Kod=\"USD\".*?</Currency>", Pattern.DOTALL).matcher(xml);
             if (!block.find()) return null;
             Matcher sell = Pattern.compile("<ForexSelling>([\\d.,]+)</ForexSelling>").matcher(block.group());
             if (!sell.find()) return null;
-            return parseTr(sell.group(1));
+            return parseDotDecimal(sell.group(1));
         } catch (Exception e) {
             log.warn("[exchange] TCMB USD/TRY hata: {}", e.getMessage());
             return null;
@@ -130,56 +150,46 @@ public class ExchangeRateService {
     }
 
     private BigDecimal fetchUsdTryFromFrankfurter() {
+        String json = safeGet("https://api.frankfurter.app/latest?from=USD&to=TRY");
+        if (json == null) return null;
+        Matcher m = Pattern.compile("\"TRY\"\\s*:\\s*([\\d.]+)").matcher(json);
+        return m.find() ? parseDotDecimal(m.group(1)) : null;
+    }
+
+    /**
+     * truncgil v4 body'sinden {@code "KEY":{... "Selling": NUM ...}} çıkarır.
+     * Full JSON parse YOK — body bazen sonu kesik gelir; hedef anahtarlar başta
+     * olduğu için regex çıkarımı kesik gövdede de çalışır. Değerler nokta=ondalık.
+     */
+    private static BigDecimal truncgilSelling(String body, String key) {
+        if (body == null) return null;
+        // "KEY":{ ... "Selling":1234.56 ... }  → Selling sayısını yakala (anahtar bloğu içinde).
+        Matcher m = Pattern.compile(
+                "\"" + Pattern.quote(key) + "\"\\s*:\\s*\\{[^}]*?\"Selling\"\\s*:\\s*([\\d.]+)",
+                Pattern.DOTALL).matcher(body);
+        return m.find() ? parseDotDecimal(m.group(1)) : null;
+    }
+
+    /** GET → 200 ise body, değilse null. Hata yutulur (best-effort, stale-ok). */
+    private String safeGet(String url) {
         try {
-            String json = get("https://api.frankfurter.app/latest?from=USD&to=TRY");
-            if (json == null) return null;
-            return parseJsonNumber(json, "TRY");
+            HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+                    .timeout(Duration.ofSeconds(8))
+                    .header("User-Agent", "Mozilla/5.0 (bizboard-exchange/1.0)")
+                    .header("Accept", "application/json,text/xml,*/*")
+                    .GET().build();
+            HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+            return resp.statusCode() == 200 ? resp.body() : null;
         } catch (Exception e) {
-            log.warn("[exchange] frankfurter USD/TRY hata: {}", e.getMessage());
+            log.warn("[exchange] GET hata {}: {}", url, e.getMessage());
             return null;
         }
     }
 
-    /** Gram altın TL = (XAU/USD → 1 ons USD) × USD/TRY / 31.1035. */
-    private BigDecimal fetchGoldGramTry(BigDecimal usdTry) {
+    /** Nokta=ondalık değer parse (locale-bağımsız). Virgül binlik ayraçsa atılır. */
+    private static BigDecimal parseDotDecimal(String raw) {
         try {
-            // frankfurter: from=XAU&to=USD → 1 XAU(ons) kaç USD.
-            String json = get("https://api.frankfurter.app/latest?from=XAU&to=USD");
-            if (json == null) return null;
-            BigDecimal ounceUsd = parseJsonNumber(json, "USD");
-            if (ounceUsd == null || ounceUsd.signum() <= 0) return null;
-            BigDecimal ounceTry = ounceUsd.multiply(usdTry);
-            return ounceTry.divide(GRAMS_PER_OUNCE, 6, RoundingMode.HALF_UP);
-        } catch (Exception e) {
-            log.warn("[exchange] gram altın türev hata: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    private String get(String url) throws Exception {
-        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
-                .timeout(Duration.ofSeconds(8))
-                .header("User-Agent", "bizboard-exchange/1.0")
-                .GET().build();
-        HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
-        return resp.statusCode() == 200 ? resp.body() : null;
-    }
-
-    /** "34,1234" (TR) → 34.1234. */
-    private static BigDecimal parseTr(String raw) {
-        try {
-            return new BigDecimal(raw.trim().replace(".", "").replace(",", "."));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /** Basit JSON sayı çıkarımı: "rates":{"KEY":value}. */
-    private static BigDecimal parseJsonNumber(String json, String key) {
-        Matcher m = Pattern.compile("\"" + key + "\"\\s*:\\s*([\\d.]+)").matcher(json);
-        if (!m.find()) return null;
-        try {
-            return new BigDecimal(m.group(1));
+            return new BigDecimal(raw.trim().replace(",", ""));
         } catch (Exception e) {
             return null;
         }

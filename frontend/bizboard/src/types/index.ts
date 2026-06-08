@@ -663,9 +663,9 @@ export interface ReceivableTypeBreakdown {
 /** WP a9da4e9d (USD+Altın): borç para birimi. */
 export type DebtCurrency = "TRY" | "USD" | "GOLD";
 
-/** WP a9da4e9d: GET /exchange-rates — güncel kur gösterimi. */
+/** WP a9da4e9d: GET /exchange-rates — güncel kur gösterimi (USD + gram/çeyrek/yarım/tam altın). */
 export interface ExchangeRate {
-  code: "USD" | "GOLD";
+  code: "USD" | "GOLD" | "GOLD_QUARTER" | "GOLD_HALF" | "GOLD_FULL";
   rate_to_try: number;
   source?: string | null;
   fetched_at?: string | null;

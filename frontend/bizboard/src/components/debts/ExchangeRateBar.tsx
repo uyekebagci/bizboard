@@ -61,10 +61,20 @@ export function ExchangeRateBar({ onRefreshed }: { onRefreshed?: () => void }) {
     }
   }
 
-  const usd = rates.find((x) => x.code === "USD");
-  const gold = rates.find((x) => x.code === "GOLD");
+  const byCode = (c: ExchangeRate["code"]) => rates.find((x) => x.code === c);
+  const usd = byCode("USD");
+  const gold = byCode("GOLD");
   const lastFetched = usd?.fetched_at || gold?.fetched_at;
-  const isStale = (usd?.stale || gold?.stale) ?? false;
+  const isStale = rates.some((r) => r.stale);
+
+  // USD + gram/çeyrek/yarım/tam altın — sırayla göster.
+  const items: { label: string; rate?: ExchangeRate }[] = [
+    { label: "USD/TRY", rate: usd },
+    { label: "Gram Altın", rate: gold },
+    { label: "Çeyrek", rate: byCode("GOLD_QUARTER") },
+    { label: "Yarım", rate: byCode("GOLD_HALF") },
+    { label: "Tam", rate: byCode("GOLD_FULL") },
+  ];
 
   return (
     <section className="card p-3 flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -73,19 +83,15 @@ export function ExchangeRateBar({ onRefreshed }: { onRefreshed?: () => void }) {
         <span className="text-xs font-medium">Güncel Kur</span>
       </div>
 
-      <div className="flex items-center gap-4 text-sm">
-        <span className="text-surface-200">
-          USD/TRY:{" "}
-          <span className="font-semibold text-white">
-            {usd ? formatCurrency(usd.rate_to_try, "TRY") : "—"}
+      <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm">
+        {items.map((it) => (
+          <span key={it.label} className="text-surface-200 whitespace-nowrap">
+            {it.label}:{" "}
+            <span className="font-semibold text-white">
+              {it.rate ? formatCurrency(it.rate.rate_to_try, "TRY") : "—"}
+            </span>
           </span>
-        </span>
-        <span className="text-surface-200">
-          Gram Altın:{" "}
-          <span className="font-semibold text-white">
-            {gold ? formatCurrency(gold.rate_to_try, "TRY") : "—"}
-          </span>
-        </span>
+        ))}
       </div>
 
       <span className="text-[11px] text-surface-400">
