@@ -117,7 +117,8 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
     <>
     <section
       onClick={() => setShowDetail(true)}
-      className="card p-4 bg-gradient-to-br from-brand-700 to-brand-900 text-white cursor-pointer hover:ring-1 hover:ring-brand-400 transition-all flex flex-col h-full"
+      className="sheen rounded-2xl p-5 text-white cursor-pointer hover:ring-1 hover:ring-brand-400 transition-all flex flex-col h-full relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg,#4263eb 0%,#4c6ef5 42%,#6741d9 100%)" }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowDetail(true); } }}
@@ -131,7 +132,7 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Konsolide Net</p>
-          <p className="text-2xl font-bold truncate" title={formatCurrency(c.net, "TRY")}>
+          <p className="num text-2xl font-bold truncate" title={formatCurrency(c.net, "TRY")}>
             {formatCurrency(c.net, "TRY")}
           </p>
           <div className="mt-1 flex items-center gap-1 text-[10px] text-brand-200">
@@ -142,7 +143,7 @@ function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
         </div>
         <div>
           <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Genel Kasa</p>
-          <p className="text-2xl font-bold truncate" title={formatCurrency(genelKasa, "TRY")}>
+          <p className="num text-2xl font-bold truncate" title={formatCurrency(genelKasa, "TRY")}>
             {formatCurrency(genelKasa, "TRY")}
           </p>
           <p className="mt-1 text-[10px] text-brand-200">nakit + banka</p>
@@ -360,7 +361,7 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
   const devs = d.pos_devices;
   if (devs.length === 0) {
     return (
-      <section className="card p-4">
+      <section className="glass-card p-4">
         <SectionTitle icon={CreditCard} label="POS Cihazları" />
         <p className="text-xs text-surface-400 py-2">Aktif POS cihazı yok.</p>
       </section>
@@ -378,7 +379,7 @@ function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: bo
     <>
     <section
       onClick={() => setShowDetail(true)}
-      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-indigo-500/40 transition-all"
+      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-indigo-500/40 transition-all"
     >
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <SectionTitle icon={CreditCard} label="POS Cihazları (Bugün)" inline />
@@ -544,7 +545,7 @@ function BankAccountsCard({
       <>
       <section
         onClick={() => { setShowDetail(true); setView("CREATE_ANY"); }}
-        className="card p-4 cursor-pointer hover:ring-1 hover:ring-blue-500/40 transition-all"
+        className="glass-card glass-hover p-4 cursor-pointer hover:ring-1 hover:ring-blue-500/40 transition-all"
       >
         <SectionTitle icon={Wallet} label="Para Bulunan Hesaplar" />
         <p className="text-xs text-surface-400 py-2">Henüz hesap eklenmemiş. + ekle</p>
@@ -621,7 +622,7 @@ function BankAccountsCard({
     <>
     <section
       onClick={() => setShowDetail(true)}
-      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-blue-500/40 transition-all"
+      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-blue-500/40 transition-all"
     >
       <div className="px-4 py-3 border-b border-surface-700">
         <SectionTitle icon={Wallet} label="Para Bulunan Hesaplar" inline />
@@ -837,7 +838,7 @@ function SubCashesCard({
     <>
     <section
       onClick={() => setShowModal(true)}
-      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-emerald-500/40 transition-all"
+      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-emerald-500/40 transition-all"
     >
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <SectionTitle icon={Banknote} label="Alt Kasalar" inline />
@@ -998,7 +999,7 @@ function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.payables;
   if (list.length === 0) {
     return (
-      <section className="card p-4">
+      <section className="glass-card p-4">
         <SectionTitle icon={TrendingDown} label="Verecekler" />
         <p className="text-xs text-surface-400 py-2">Açık veriniz yok.</p>
       </section>
@@ -1013,7 +1014,7 @@ function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
     <>
     <section
       onClick={() => setShowDetail(true)}
-      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-red-500/40 transition-all"
+      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-red-500/40 transition-all"
     >
       <div className="px-4 py-3 border-b border-surface-700">
         <SectionTitle icon={TrendingDown} label="Verecekler" inline />
@@ -1110,7 +1111,7 @@ function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
   const r = d.receivables;
   if (r.total_count === 0) {
     return (
-      <section className="card p-4">
+      <section className="glass-card p-4">
         <SectionTitle icon={HandCoins} label="Alacaklar" />
         <p className="text-xs text-surface-400 py-2">Açık alacak yok.</p>
       </section>
@@ -1121,7 +1122,7 @@ function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
     <>
     <section
       onClick={() => setShowDetail(true)}
-      className="card overflow-hidden cursor-pointer hover:ring-1 hover:ring-amber-500/40 transition-all"
+      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-amber-500/40 transition-all"
     >
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <SectionTitle icon={HandCoins} label="Alacaklar" inline />
@@ -1208,7 +1209,7 @@ function CashOutflowsTodayCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.cash_outflows_today;
   if (list.length === 0) {
     return (
-      <section className="card p-4">
+      <section className="glass-card p-4">
         <SectionTitle icon={Banknote} label="Hesaptan Harcama (Bugün)" />
         <p className="text-xs text-surface-400 py-2">Bugün nakit harcama yok.</p>
       </section>
@@ -1216,7 +1217,7 @@ function CashOutflowsTodayCard({ d }: { d: ConsolidatedDashboard }) {
   }
   const total = list.reduce((a, x) => a + x.amount, 0);
   return (
-    <section className="card overflow-hidden">
+    <section className="glass-card overflow-hidden">
       <div className="px-4 py-3 border-b border-surface-700">
         <SectionTitle icon={Banknote} label="Hesaptan Harcama (Bugün)" inline />
       </div>
@@ -1248,7 +1249,7 @@ function UpcomingChequesCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.upcoming_cheques;
   if (list.length === 0) {
     return (
-      <section className="card p-4">
+      <section className="glass-card p-4">
         <SectionTitle icon={CalendarClock} label="Yaklaşan Çekler" />
         <p className="text-xs text-surface-400 py-2">30 gün içinde çek yok.</p>
       </section>
@@ -1256,7 +1257,7 @@ function UpcomingChequesCard({ d }: { d: ConsolidatedDashboard }) {
   }
   const total = list.reduce((a, x) => a + x.amount, 0);
   return (
-    <section className="card overflow-hidden">
+    <section className="glass-card overflow-hidden">
       <div className="px-4 py-3 border-b border-surface-700">
         <SectionTitle icon={CalendarClock} label="Yaklaşan Çekler (30 gün)" inline />
       </div>
@@ -1288,14 +1289,14 @@ function UpcomingRemindersCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.upcoming_reminders;
   if (list.length === 0) {
     return (
-      <section className="card p-4">
+      <section className="glass-card p-4">
         <SectionTitle icon={Bell} label="Yaklaşan Hatırlatmalar" />
         <p className="text-xs text-surface-400 py-2">7 gün içinde hatırlatma yok.</p>
       </section>
     );
   }
   return (
-    <section className="card overflow-hidden">
+    <section className="glass-card overflow-hidden">
       <div className="px-4 py-3 border-b border-surface-700">
         <SectionTitle icon={Bell} label="Yaklaşan Hatırlatmalar (7 gün)" inline />
       </div>
@@ -1343,7 +1344,7 @@ function Stat({
     <div>
       <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
       <p className={cn(
-        "mt-0.5",
+        "num mt-0.5",
         bold ? "text-base font-bold text-white" : "text-sm font-medium",
         !bold && tone === "positive" && "text-emerald-300",
         !bold && tone === "negative" && "text-red-300",
@@ -1357,7 +1358,7 @@ function Stat({
 
 function Footer({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
   return (
-    <div className="px-4 py-2 border-t border-surface-700 flex items-center justify-between text-[11px] text-surface-400 bg-surface-800/50">
+    <div className="px-4 py-2 border-t border-surface-700/60 flex items-center justify-between text-[11px] text-surface-400 bg-surface-800/40">
       <span>{left}</span>
       <span>{right}</span>
     </div>

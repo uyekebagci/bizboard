@@ -248,9 +248,9 @@ function RecentTransactionsSection({
   const [showAddModal, setShowAddModal] = useState<null | "ALL" | "POS" | "TRANSFER">(null);
 
   return (
-    <section className="card overflow-hidden flex flex-col">
+    <section className="glass-card overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-white">Son İşlemler</h2>
+        <h2 className="text-sm font-bold h-display text-white">Son İşlemler</h2>
         <div className="flex items-center gap-1.5">
           <button
             type="button"

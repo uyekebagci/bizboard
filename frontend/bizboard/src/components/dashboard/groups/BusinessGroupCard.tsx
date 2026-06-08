@@ -61,7 +61,7 @@ export function BusinessGroupCard({
   return (
     <section
       className={cn(
-        "card relative overflow-hidden",
+        "glass-card relative overflow-hidden",
         isPinned && "sticky top-0 z-10 ring-1 ring-white/5",
         isHigh && "ring-1 ring-white/5",
       )}

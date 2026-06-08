@@ -73,7 +73,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
 
   return (
     <>
-      <section className="card overflow-hidden">
+      <section className="glass-card overflow-hidden">
         {/* Header */}
         <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
           <div className="flex items-center gap-2">

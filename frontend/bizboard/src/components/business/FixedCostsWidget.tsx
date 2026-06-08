@@ -75,7 +75,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
 
   return (
     <>
-      <div className="card overflow-hidden">
+      <div className="glass-card overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">

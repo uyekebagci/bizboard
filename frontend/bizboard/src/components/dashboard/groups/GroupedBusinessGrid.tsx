@@ -157,7 +157,7 @@ function UngroupedSection({
   onAddBusiness: () => void;
 }) {
   return (
-    <section className="card relative overflow-hidden">
+    <section className="glass-card relative overflow-hidden">
       <div className="absolute inset-y-0 left-0 w-[3px] bg-surface-600" aria-hidden />
       <header className="flex items-center justify-between px-4 py-3 border-b border-surface-700">
         <div className="flex items-center gap-2">
@@ -180,13 +180,15 @@ function UngroupedSection({
             />
           ))}
 
-          {/* Isletme Ekle */}
+          {/* Isletme Ekle — Redesign: transparan dashed glass kutu (mockup). */}
           <button
             onClick={onAddBusiness}
-            className="card p-4 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-surface-600 hover:border-brand-400 transition-all min-h-[140px]"
+            className="group rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-surface-600/70 hover:border-brand-500/60 hover:bg-brand-500/5 transition-all min-h-[140px]"
           >
-            <Plus size={24} className="text-surface-400" />
-            <span className="text-sm font-medium text-surface-400">Isletme Ekle</span>
+            <span className="w-11 h-11 rounded-2xl bg-surface-700/50 grid place-items-center group-hover:bg-brand-500/15 group-hover:scale-105 transition">
+              <Plus size={22} className="text-surface-400 group-hover:text-brand-300" />
+            </span>
+            <span className="text-sm font-semibold text-surface-400 group-hover:text-white">Isletme Ekle</span>
           </button>
         </div>
       </div>

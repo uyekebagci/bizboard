@@ -95,7 +95,7 @@ export function QuickActionsWidget({ businessId }: Props) {
   const visible = items.slice(0, MAX_VISIBLE);
 
   return (
-    <section className="card overflow-hidden">
+    <section className="glass-card overflow-hidden">
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap size={14} className="text-amber-400" />

@@ -19,27 +19,28 @@ export function FinanceSummary({ summary, currency }: Props) {
   return (
     <div className="space-y-2">
       {/* Ana kartlar */}
+      {/* Redesign Inc.2: glass + token-correct ikon renkleri + .num. */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="card p-3.5">
+        <div className="glass-card p-3.5">
           <div className="flex items-center gap-1.5 mb-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-green-50">
-              <TrendingUp size={14} className="text-green-600" />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-500/15">
+              <TrendingUp size={14} className="text-emerald-400" />
             </div>
           </div>
           <p className="text-[11px] text-surface-400 font-medium uppercase tracking-wide">Gelir</p>
-          <p className="text-base font-bold text-white mt-0.5 truncate">
+          <p className="num text-base font-bold text-white mt-0.5 truncate">
             {formatCurrency(income, currency)}
           </p>
         </div>
 
-        <div className="card p-3.5">
+        <div className="glass-card p-3.5">
           <div className="flex items-center gap-1.5 mb-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-50">
-              <TrendingDown size={14} className="text-red-600" />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-500/15">
+              <TrendingDown size={14} className="text-rose-400" />
             </div>
           </div>
           <p className="text-[11px] text-surface-400 font-medium uppercase tracking-wide">Gider</p>
-          <p className="text-base font-bold text-white mt-0.5 truncate">
+          <p className="num text-base font-bold text-white mt-0.5 truncate">
             {formatCurrency(totalExpense, currency)}
           </p>
           {fixedCost > 0 && (
@@ -49,19 +50,19 @@ export function FinanceSummary({ summary, currency }: Props) {
           )}
         </div>
 
-        <div className="card p-3.5">
+        <div className="glass-card p-3.5">
           <div className="flex items-center gap-1.5 mb-2">
             <div className={cn(
               "w-7 h-7 rounded-lg flex items-center justify-center",
-              profit >= 0 ? "bg-brand-50" : "bg-red-50"
+              profit >= 0 ? "bg-brand-500/15" : "bg-rose-500/15"
             )}>
-              <Wallet size={14} className={profit >= 0 ? "text-brand-600" : "text-red-600"} />
+              <Wallet size={14} className={profit >= 0 ? "text-brand-400" : "text-rose-400"} />
             </div>
           </div>
           <p className="text-[11px] text-surface-400 font-medium uppercase tracking-wide">Kar</p>
           <p className={cn(
-            "text-base font-bold mt-0.5 truncate",
-            profit >= 0 ? "text-white" : "text-red-600"
+            "num text-base font-bold mt-0.5 truncate",
+            profit >= 0 ? "text-white" : "text-rose-300"
           )}>
             {formatCurrency(profit, currency)}
           </p>
