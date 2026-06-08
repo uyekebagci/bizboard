@@ -151,7 +151,7 @@ export function ChequeAddModal({
   return (
     <>
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -159,7 +159,7 @@ export function ChequeAddModal({
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">

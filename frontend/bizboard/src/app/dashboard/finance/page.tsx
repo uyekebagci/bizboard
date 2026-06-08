@@ -876,7 +876,7 @@ function CategoryRingChart({
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-[10px] text-surface-400 font-medium">Toplam</p>
-            <p className="text-lg font-bold text-white">{formatCurrency(total)}</p>
+            <p className="num text-lg font-bold text-white">{formatCurrency(total)}</p>
           </div>
         </div>
 
@@ -891,7 +891,7 @@ function CategoryRingChart({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-surface-200 truncate">{cat.name}</span>
-                  <span className="text-xs font-bold text-white ml-2">{formatCurrency(cat.amount)}</span>
+                  <span className="num text-xs font-bold text-white ml-2">{formatCurrency(cat.amount)}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <div className="flex-1 h-1.5 rounded-full bg-surface-700 overflow-hidden">

@@ -154,7 +154,7 @@ export default function AdminMyCompaniesPage() {
         </div>
       )}
 
-      <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] overflow-hidden">
+      <div className="glass-card overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
           <div className="flex items-center gap-2.5">
             <h2 className="text-lg font-semibold text-white">Firmalar</h2>
@@ -267,7 +267,7 @@ export default function AdminMyCompaniesPage() {
       {/* Delete confirm */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6 max-w-md w-full">
+          <div className="glass-card p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-white mb-2">
               Firmayi Sil
             </h3>
@@ -360,7 +360,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <form
         onSubmit={handleSubmit}
-        className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
+        className="glass-card p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-white">{title}</h3>
