@@ -26,14 +26,24 @@ public class BusinessNoteService {
     private final UserRepository userRepository;
     private final BusinessAccessGuard accessGuard;
 
+    /** WP a9da4e9d fix: scope null/boş/geçersiz → BUSINESS (geriye uyum + savunma). */
+    private static String normalizeScope(String raw) {
+        if (raw == null || raw.isBlank()) return "BUSINESS";
+        String upper = raw.trim().toUpperCase(java.util.Locale.ENGLISH);
+        return "RECEIVABLES".equals(upper) ? "RECEIVABLES" : "BUSINESS";
+    }
+
     @Transactional(readOnly = true)
-    public List<BusinessNoteDto> getNotesForBusiness(UUID businessId, UUID actorUserId, boolean isAdmin) {
+    public List<BusinessNoteDto> getNotesForBusiness(UUID businessId, UUID actorUserId,
+                                                     boolean isAdmin, String scope) {
         accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        String s = normalizeScope(scope);
         List<BusinessNote> notes;
         if (isAdmin) {
-            notes = noteRepository.findByBusinessIdOrderByPinnedDescCreatedAtDesc(businessId);
+            notes = noteRepository.findByBusinessIdAndScopeOrderByPinnedDescCreatedAtDesc(businessId, s);
         } else {
-            notes = noteRepository.findByBusinessIdAndAdminOnlyFalseOrderByPinnedDescCreatedAtDesc(businessId);
+            notes = noteRepository
+                    .findByBusinessIdAndScopeAndAdminOnlyFalseOrderByPinnedDescCreatedAtDesc(businessId, s);
         }
         return notes.stream().map(this::toDto).toList();
     }
@@ -58,6 +68,7 @@ public class BusinessNoteService {
                 .pinned(request.getPinned() != null && request.getPinned())
                 .color(request.getColor())
                 .adminOnly(adminOnly)
+                .scope(normalizeScope(request.getScope()))
                 .createdBy(user)
                 .build();
 
@@ -116,6 +127,7 @@ public class BusinessNoteService {
                 .pinned(n.isPinned())
                 .color(n.getColor())
                 .adminOnly(n.isAdminOnly())
+                .scope(normalizeScope(n.getScope()))
                 .createdByName(n.getCreatedBy() != null ? n.getCreatedBy().getFullName() : null)
                 .createdAt(n.getCreatedAt())
                 .updatedAt(n.getUpdatedAt())

@@ -28,6 +28,20 @@ public class BusinessNote {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    /**
+     * WP a9da4e9d fix: Not kapsamı. "BUSINESS" = işletme detay sayfası notları
+     * (varsayılan, geriye uyumlu — mevcut tüm notlar bu kümede), "RECEIVABLES" =
+     * Alacaklar sayfasına özel notlar. İki küme tamamen ayrı listelenir.
+     *
+     * <p>{@code columnDefinition} ile NOT NULL DEFAULT 'BUSINESS' — Hibernate
+     * ddl-auto=update kolonu eklerken mevcut satırları DEFAULT ile BUSINESS'a
+     * doldurur. {@code BusinessNoteScopeBackfill} ayrıca idempotent garanti verir.</p>
+     */
+    @Column(name = "scope", nullable = false, length = 20,
+            columnDefinition = "varchar(20) default 'BUSINESS'")
+    @Builder.Default
+    private String scope = "BUSINESS";
+
     /** Sabitlenmiş not */
     @Column(name = "is_pinned")
     @Builder.Default

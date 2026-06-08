@@ -24,8 +24,10 @@ public class BusinessNoteController {
     @GetMapping
     public ResponseEntity<List<BusinessNoteDto>> getNotes(
             @PathVariable UUID businessId,
+            @RequestParam(name = "scope", defaultValue = "BUSINESS") String scope,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(noteService.getNotesForBusiness(businessId, principal.getId(), principal.isAdmin()));
+        return ResponseEntity.ok(
+                noteService.getNotesForBusiness(businessId, principal.getId(), principal.isAdmin(), scope));
     }
 
     @PostMapping

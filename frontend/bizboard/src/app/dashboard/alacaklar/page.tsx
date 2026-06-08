@@ -171,8 +171,9 @@ export default function AlacaklarPage() {
             </div>
           </section>
 
-          {/* WP a9da4e9d: Alacaklar notları — işletme detayındaki NotesModule reuse.
-              DGR tek işletme → selector görünmez; çoklu işletmede basit seçici. */}
+          {/* WP a9da4e9d fix: Alacaklara ÖZEL notlar (scope=RECEIVABLES) — işletme
+              detayındaki BUSINESS notlarından tamamen ayrı küme. DGR tek işletme →
+              selector görünmez; çoklu işletmede basit seçici. */}
           {notesBusinessId && (
             <section className="space-y-2">
               {businesses.length > 1 && (
@@ -189,7 +190,7 @@ export default function AlacaklarPage() {
                   </select>
                 </div>
               )}
-              <NotesModule businessId={notesBusinessId} />
+              <NotesModule businessId={notesBusinessId} scope="RECEIVABLES" />
             </section>
           )}
 

@@ -13,7 +13,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ChevronLeft, Plus, ArrowDownLeft, ArrowUpRight, TrendingUp, TrendingDown,
   FileText, Scroll, Check, AlertTriangle, RefreshCw, Loader2, Trash2,
-  Wallet, Banknote, Receipt, Scissors, Pencil,
+  Wallet, Banknote, Receipt, Scissors, Pencil, CheckCircle2, ArrowLeftRight,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -269,55 +269,29 @@ export default function CounterpartDetailPage() {
             active={tab === "transactions"} onClick={() => setTab("transactions")} />
         </div>
 
-        {/* Tab 1: Running balance history */}
+        {/* Tab 1: Cari Hesap — hareket geçmişi (WP a9da4e9d: redesign + borç düzenleme) */}
         {tab === "running" && (
-          <div className="card overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-800/50 text-surface-400 text-xs uppercase">
-                <tr>
-                  <th className="text-left px-4 py-2 font-medium">Tarih</th>
-                  <th className="text-left px-4 py-2 font-medium">Açıklama</th>
-                  <th className="text-right px-4 py-2 font-medium">Hareket</th>
-                  <th className="text-right px-4 py-2 font-medium">Bakiye</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface-700">
-                {statement.running_balance_history.length === 0 ? (
-                  <tr><td colSpan={4} className="px-4 py-8 text-center text-surface-400 text-xs">
-                    Henüz hareket yok.
-                  </td></tr>
-                ) : statement.running_balance_history.map((r, i) => {
-                  const isWriteoff = r.type === "WRITEOFF";
-                  return (
-                  <tr key={r.reference_id + "-" + i} className={isWriteoff ? "bg-rose-500/[0.03]" : ""}>
-                    <td className="px-4 py-2 text-surface-300 whitespace-nowrap text-xs">
-                      {formatDateTime(r.date)}
-                    </td>
-                    <td className="px-4 py-2 text-surface-200">
-                      <span className={cn(
-                        "inline-block text-[9px] uppercase mr-1 px-1.5 py-0.5 rounded border",
-                        isWriteoff
-                          ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
-                          : "bg-surface-700 text-surface-400 border-surface-600",
-                      )}>
-                        {isWriteoff ? "✂ Borç Silindi" : r.type}
-                      </span>
-                      {r.description}
-                    </td>
-                    <td className={cn("px-4 py-2 text-right font-semibold whitespace-nowrap",
-                      isWriteoff ? "text-rose-300" :
-                      r.amount > 0 ? "text-emerald-400" : r.amount < 0 ? "text-red-400" : "text-surface-400")}>
-                      {r.amount === 0 ? "—" : (r.amount > 0 ? "+" : "−") + formatCurrency(Math.abs(r.amount), "TRY")}
-                    </td>
-                    <td className="px-4 py-2 text-right text-white font-medium whitespace-nowrap">
-                      {formatCurrency(r.balance_after, "TRY")}
-                    </td>
-                  </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          statement.running_balance_history.length === 0 ? (
+            <div className="card p-8 text-center text-surface-400 text-xs">
+              Henüz hareket yok.
+            </div>
+          ) : (
+            <div className="card divide-y divide-surface-700/70">
+              {statement.running_balance_history.map((r, i) => {
+                // Sadece açık bir borca denk gelen DEBT_CREATED satırı düzenlenebilir.
+                const editable = r.type === "DEBT_CREATED"
+                  ? statement.open_debts.find((d) => d.id === r.reference_id) ?? null
+                  : null;
+                return (
+                  <RunningHistoryRow
+                    key={r.reference_id + "-" + i}
+                    row={r}
+                    onEdit={editable ? () => setEditingDebt(editable) : undefined}
+                  />
+                );
+              })}
+            </div>
+          )
         )}
 
         {/* Tab 2: Açık alacaklar */}
@@ -645,4 +619,99 @@ function DebtListTab({
 
 function CreditCardBadge() {
   return <span className="text-indigo-300">POS</span>;
+}
+
+// ── Cari Hesap hareket satırı (WP a9da4e9d: redesign + borç düzenleme) ──
+
+type HistoryRow = AccountStatement["running_balance_history"][number];
+
+/** Hareket tipi → Türkçe etiket + ikon + renk. Ham enum UI'da gösterilmez. */
+const HISTORY_TYPE_META: Record<HistoryRow["type"], {
+  label: string;
+  icon: React.ReactNode;
+  badge: string; // rozet arka plan + metin + border
+  iconWrap: string; // sol ikon kutusu arka planı
+}> = {
+  DEBT_CREATED: {
+    label: "Borç Eklendi",
+    icon: <Receipt size={14} className="text-indigo-300" />,
+    badge: "bg-indigo-500/10 text-indigo-300 border-indigo-500/30",
+    iconWrap: "bg-indigo-500/15",
+  },
+  PAYMENT: {
+    label: "Ödeme",
+    icon: <Banknote size={14} className="text-emerald-300" />,
+    badge: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+    iconWrap: "bg-emerald-500/15",
+  },
+  INSTRUMENT_CLEARED: {
+    label: "Çek/Senet Tahsil",
+    icon: <CheckCircle2 size={14} className="text-teal-300" />,
+    badge: "bg-teal-500/10 text-teal-300 border-teal-500/30",
+    iconWrap: "bg-teal-500/15",
+  },
+  INSTRUMENT_BOUNCED: {
+    label: "Karşılıksız",
+    icon: <AlertTriangle size={14} className="text-amber-300" />,
+    badge: "bg-amber-500/10 text-amber-300 border-amber-500/30",
+    iconWrap: "bg-amber-500/15",
+  },
+  TRANSACTION: {
+    label: "İşlem",
+    icon: <ArrowLeftRight size={14} className="text-surface-300" />,
+    badge: "bg-surface-700 text-surface-300 border-surface-600",
+    iconWrap: "bg-surface-700",
+  },
+  WRITEOFF: {
+    label: "Borç Silindi",
+    icon: <Scissors size={14} className="text-rose-300" />,
+    badge: "bg-rose-500/10 text-rose-300 border-rose-500/30",
+    iconWrap: "bg-rose-500/15",
+  },
+};
+
+function RunningHistoryRow({ row, onEdit }: { row: HistoryRow; onEdit?: () => void }) {
+  const meta = HISTORY_TYPE_META[row.type] ?? HISTORY_TYPE_META.TRANSACTION;
+  const isWriteoff = row.type === "WRITEOFF";
+  const amountCls = isWriteoff ? "text-rose-300"
+    : row.amount > 0 ? "text-emerald-400"
+    : row.amount < 0 ? "text-red-400" : "text-surface-400";
+  return (
+    <div className={cn("p-3 flex items-start gap-3", isWriteoff && "bg-rose-500/[0.03]")}>
+      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", meta.iconWrap)}>
+        {meta.icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={cn("inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border", meta.badge)}>
+            {meta.label}
+          </span>
+          <span className="text-[11px] text-surface-400 whitespace-nowrap">
+            {formatDateTime(row.date)}
+          </span>
+        </div>
+        {row.description && (
+          <p className="mt-1 text-sm text-surface-200 break-words leading-relaxed">
+            {row.description}
+          </p>
+        )}
+      </div>
+      <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
+        <span className={cn("text-sm font-semibold whitespace-nowrap", amountCls)}>
+          {row.amount === 0 ? "—" : (row.amount > 0 ? "+" : "−") + formatCurrency(Math.abs(row.amount), "TRY")}
+        </span>
+        <span className="text-[11px] text-surface-400 whitespace-nowrap">
+          Bakiye: <span className="text-white font-medium">{formatCurrency(row.balance_after, "TRY")}</span>
+        </span>
+      </div>
+      {onEdit && (
+        <button onClick={onEdit}
+          title="Borcu düzenle"
+          aria-label="Borcu düzenle"
+          className="shrink-0 self-center p-1.5 rounded-md bg-surface-700 hover:bg-surface-600 text-surface-300 border border-surface-600">
+          <Pencil size={12} />
+        </button>
+      )}
+    </div>
+  );
 }

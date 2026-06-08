@@ -26,6 +26,9 @@ public class BusinessNoteDto {
     @JsonProperty("admin_only")
     private boolean adminOnly;
 
+    /** WP a9da4e9d fix: "BUSINESS" veya "RECEIVABLES". */
+    private String scope;
+
     @JsonProperty("created_by_name")
     private String createdByName;
 

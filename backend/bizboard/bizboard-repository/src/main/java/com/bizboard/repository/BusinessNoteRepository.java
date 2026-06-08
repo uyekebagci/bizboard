@@ -13,4 +13,14 @@ public interface BusinessNoteRepository extends JpaRepository<BusinessNote, UUID
 
     /** Sadece herkese açık notlar — admin olmayan kullanıcılar için */
     List<BusinessNote> findByBusinessIdAndAdminOnlyFalseOrderByPinnedDescCreatedAtDesc(UUID businessId);
+
+    // ── WP a9da4e9d fix: scope-filtreli finder'lar (BUSINESS vs RECEIVABLES) ──
+
+    /** Belirli scope'taki tüm notlar (admin için) — pinned önce, sonra createdAt DESC. */
+    List<BusinessNote> findByBusinessIdAndScopeOrderByPinnedDescCreatedAtDesc(
+            UUID businessId, String scope);
+
+    /** Belirli scope'taki herkese açık notlar (admin olmayan için). */
+    List<BusinessNote> findByBusinessIdAndScopeAndAdminOnlyFalseOrderByPinnedDescCreatedAtDesc(
+            UUID businessId, String scope);
 }

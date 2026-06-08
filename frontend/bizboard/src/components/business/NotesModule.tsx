@@ -47,11 +47,16 @@ function timeAgo(dateStr: string) {
   return d.toLocaleDateString("tr-TR");
 }
 
+/** WP a9da4e9d fix: not kapsamı — işletme notları vs alacaklara özel notlar. */
+type NoteScope = "BUSINESS" | "RECEIVABLES";
+
 interface Props {
   businessId: string;
+  /** Hangi not kümesi gösterilsin/eklensin. Default "BUSINESS" (geriye uyum). */
+  scope?: NoteScope;
 }
 
-export function NotesModule({ businessId }: Props) {
+export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
   const [notes, setNotes] = useState<BusinessNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -62,13 +67,14 @@ export function NotesModule({ businessId }: Props) {
 
   useEffect(() => {
     fetchNotes();
-  }, [businessId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessId, scope]);
 
   async function fetchNotes() {
     setLoading(true);
     try {
       const data = await api.get<BusinessNote[]>(
-        `/businesses/${businessId}/notes`
+        `/businesses/${businessId}/notes?scope=${scope}`
       );
       setNotes(data || []);
     } catch (err) {
@@ -212,6 +218,7 @@ export function NotesModule({ businessId }: Props) {
         <NoteFormModal
           businessId={businessId}
           isAdmin={isAdmin}
+          scope={scope}
           onClose={() => setShowCreate(false)}
           onSuccess={() => {
             setShowCreate(false);
@@ -225,6 +232,7 @@ export function NotesModule({ businessId }: Props) {
         <NoteFormModal
           businessId={businessId}
           isAdmin={isAdmin}
+          scope={scope}
           note={editingNote}
           onClose={() => setEditingNote(null)}
           onSuccess={() => {
@@ -272,12 +280,14 @@ export function NotesModule({ businessId }: Props) {
 function NoteFormModal({
   businessId,
   isAdmin,
+  scope,
   note,
   onClose,
   onSuccess,
 }: {
   businessId: string;
   isAdmin: boolean;
+  scope: NoteScope;
   note?: BusinessNote;
   onClose: () => void;
   onSuccess: () => void;
@@ -314,9 +324,12 @@ function NoteFormModal({
       }
 
       if (isEdit) {
+        // Düzenleme scope'u değiştirmez — not yaratıldığı kümede kalır.
         await api.put(`/businesses/${businessId}/notes/${note!.id}`, body);
         toast.success("Not güncellendi");
       } else {
+        // WP a9da4e9d fix: yeni not oluşturulduğu sayfanın scope'unda kaydedilir.
+        body.scope = scope;
         await api.post(`/businesses/${businessId}/notes`, body);
         toast.success("Not eklendi");
       }

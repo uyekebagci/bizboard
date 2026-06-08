@@ -17,4 +17,10 @@ public class CreateNoteRequest {
 
     @JsonProperty("admin_only")
     private Boolean adminOnly;
+
+    /**
+     * WP a9da4e9d fix: not kapsamı — "BUSINESS" (varsayılan) veya "RECEIVABLES".
+     * Null/boş gelirse service BUSINESS'a normalize eder (geriye uyum).
+     */
+    private String scope;
 }

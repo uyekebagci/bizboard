@@ -89,7 +89,8 @@ export function ModuleTabs({ business }: Props) {
       case "inventory":
         return <InventoryModule businessId={business.id} currency={business.currency} />;
       case "notes":
-        return <NotesModule businessId={business.id} />;
+        // WP a9da4e9d fix: işletme detay = BUSINESS scope (alacaklar notlarından ayrı).
+        return <NotesModule businessId={business.id} scope="BUSINESS" />;
       case "fixed_costs":
         return <FixedCostsWidget businessId={business.id} currency={business.currency} />;
       default:
