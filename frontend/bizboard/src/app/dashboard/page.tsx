@@ -54,23 +54,26 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      {/* Greeting + period selector (v1.6.7+) */}
-      <section className="flex items-start justify-between gap-3">
+      {/* Greeting + period selector (v1.6.7+) — Redesign PR-2: glass + seg-active */}
+      <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 rise">
         <div>
-          <h1 className="text-2xl font-bold text-white">{getGreeting()} 👋</h1>
-          <p className="text-surface-400 mt-1">
-            Isletmelerinizin durumu — {periodLabel(period).toLowerCase()}
+          <p className="text-[13px] text-brand-300 font-semibold tracking-wide">{getGreeting()} 👋</p>
+          <h1 className="text-2xl sm:text-[28px] font-extrabold h-display mt-1 text-white">
+            Isletmeleriniz bir bakista
+          </h1>
+          <p className="text-surface-400 text-sm mt-1.5">
+            Durum — {periodLabel(period).toLowerCase()}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 bg-surface-800 rounded-xl p-1 border border-surface-700">
+        <div className="flex flex-wrap items-center gap-1 glass-card p-1 text-sm">
           {PERIODS.map((p) => (
             <button
               key={p}
               onClick={() => handlePeriodChange(p)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                 period === p
-                  ? "bg-brand-600 text-white"
-                  : "text-surface-300 hover:text-white"
+                  ? "seg-active font-semibold"
+                  : "text-surface-400 hover:text-white"
               }`}
               aria-pressed={period === p}
             >
@@ -109,7 +112,7 @@ export default function DashboardPage() {
       {/* Business Cards Grid */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-bold h-display text-white">
             Isletmeleriniz
           </h2>
           <span className="text-sm text-surface-400">
@@ -121,7 +124,7 @@ export default function DashboardPage() {
 
       {/* Recent Activity */}
       <section>
-        <h2 className="text-lg font-semibold text-white mb-3">
+        <h2 className="text-lg font-bold h-display text-white mb-3">
           Son Islemler
         </h2>
         <RecentActivity />

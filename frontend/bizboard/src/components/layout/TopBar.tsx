@@ -53,7 +53,8 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-surface-800/95 backdrop-blur-lg border-b border-surface-700">
+    /* Redesign PR-1: glass topbar — yarı saydam + blur, surface-token tabanlı. */
+    <header className="sticky top-0 z-40 bg-surface-900/70 backdrop-blur-xl border-b border-surface-700/60">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
         {/* Sol: yalnız mobile hamburger; desktop'ta sidebar zaten sabit görünür. */}
         <div className="flex items-center">
@@ -96,9 +97,11 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
           <NotificationDropdown />
 
           <div className="relative ml-1" ref={menuRef}>
+            {/* Redesign PR-1: gradient profil chip. */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 font-semibold text-sm flex items-center justify-center hover:bg-brand-200 transition-colors"
+              className="w-9 h-9 rounded-full text-white font-semibold text-sm flex items-center justify-center hover:opacity-90 transition-opacity ring-1 ring-surface-600/40"
+              style={{ background: "linear-gradient(135deg,#4263eb,#6741d9)" }}
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >

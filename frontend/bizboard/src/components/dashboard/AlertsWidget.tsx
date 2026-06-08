@@ -56,8 +56,8 @@ export function AlertsWidget({ businesses }: Props) {
         if (totalBroken > 0) {
           items.push({
             icon: Wrench,
-            color: "text-red-600",
-            bg: "bg-red-50",
+            color: "text-rose-400",
+            bg: "bg-rose-500/8 hover:bg-rose-500/12",
             title: `${totalBroken} arizali ekipman`,
             detail: "Onarim veya degisim gerekiyor",
           });
@@ -65,8 +65,8 @@ export function AlertsWidget({ businesses }: Props) {
         if (totalLowStock > 0) {
           items.push({
             icon: Package,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
+            color: "text-amber-400",
+            bg: "bg-amber-500/8 hover:bg-amber-500/12",
             title: `${totalLowStock} kalem dusuk stok`,
             detail: "Minimum stok seviyesinin altinda",
           });
@@ -74,8 +74,8 @@ export function AlertsWidget({ businesses }: Props) {
         if (totalWarranty > 0) {
           items.push({
             icon: Shield,
-            color: "text-orange-600",
-            bg: "bg-orange-50",
+            color: "text-orange-400",
+            bg: "bg-orange-500/8 hover:bg-orange-500/12",
             title: `${totalWarranty} garanti sona eriyor`,
             detail: "30 gun icinde garanti bitecek",
           });
@@ -96,8 +96,8 @@ export function AlertsWidget({ businesses }: Props) {
         if (totalInactive > 0) {
           items.push({
             icon: Users,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-sky-400",
+            bg: "bg-sky-500/8 hover:bg-sky-500/12",
             title: `${totalInactive} pasif personel`,
             detail: "Aktif olmayan personel kaydi",
           });
@@ -116,13 +116,14 @@ export function AlertsWidget({ businesses }: Props) {
   if (alerts.length === 0) return null;
 
   return (
-    <div className="card p-4">
+    /* Redesign PR-2: glass + token-correct uyarı renkleri. */
+    <div className="glass-card p-5">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
-          <AlertTriangle size={16} className="text-amber-600" />
+        <div className="w-9 h-9 rounded-xl bg-amber-500/15 grid place-items-center">
+          <AlertTriangle size={18} className="text-amber-400" />
         </div>
-        <h3 className="text-sm font-bold text-white">Dikkat Gerektiren</h3>
-        <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
+        <h3 className="text-[15px] font-bold h-display text-white">Dikkat Gerektiren</h3>
+        <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold">
           {alerts.length}
         </span>
       </div>
@@ -131,10 +132,10 @@ export function AlertsWidget({ businesses }: Props) {
         {alerts.map((alert, i) => {
           const Icon = alert.icon;
           return (
-            <div key={i} className={cn("flex items-start gap-3 p-2.5 rounded-xl", alert.bg)}>
+            <div key={i} className={cn("flex items-start gap-3 p-2.5 rounded-xl transition", alert.bg)}>
               <Icon size={16} className={cn("mt-0.5 shrink-0", alert.color)} />
               <div>
-                <p className="text-sm font-medium text-white">{alert.title}</p>
+                <p className="text-[13px] font-semibold text-white">{alert.title}</p>
                 <p className="text-[11px] text-surface-400">{alert.detail}</p>
               </div>
             </div>

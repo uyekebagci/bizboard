@@ -89,6 +89,130 @@
     @apply shadow-card-hover;
   }
 
+  /* ============================================================
+   * Modern UI Redesign — Increment 1 / PR-0 (paylaşılan altyapı)
+   * Mockup .glass mantığı surface-token TABANLI (light+dark).
+   * .dark token'ları DEĞİŞMEZ — bu yalnız yeni component class'ları.
+   * ============================================================ */
+
+  /* Glass kart: dark → yarı saydam + ince border + blur + iç gölge;
+     light → near-solid surface-800 + gerçek border + gölge, blur YOK. */
+  .glass-card {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--surface-800) / 0.55),
+      rgb(var(--surface-800) / 0.30)
+    );
+    border: 1px solid rgb(var(--surface-700) / 0.5);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow:
+      0 1px 0 rgb(var(--surface-0) / 0.05) inset,
+      0 18px 40px -22px rgba(0, 0, 0, 0.7);
+    border-radius: 1rem;
+  }
+  html:not(.dark) .glass-card {
+    background: rgb(var(--surface-800) / 1);
+    border: 1px solid rgb(var(--surface-600) / 0.7);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 14px 30px -22px rgba(15, 23, 42, 0.35);
+  }
+
+  /* Hover: hafif yükselme + brand glow. */
+  .glass-hover {
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.25s, border-color 0.25s;
+  }
+  .glass-hover:hover {
+    transform: translateY(-3px);
+    border-color: rgb(var(--color-brand) / 0.35);
+    box-shadow: 0 24px 50px -24px rgba(76, 110, 245, 0.45);
+  }
+  html:not(.dark) .glass-hover:hover {
+    border-color: rgba(76, 110, 245, 0.45);
+    box-shadow: 0 20px 40px -24px rgba(76, 110, 245, 0.35);
+  }
+
+  /* Başlık — sıkı tracking. */
+  .h-display {
+    letter-spacing: -0.02em;
+  }
+
+  /* Sayısal değerler — JetBrains Mono + tabular. */
+  .num {
+    font-family: var(--font-geist-mono), "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Ambient arka plan radial gradient — dark güçlü, light hafif. */
+  .app-bg {
+    position: relative;
+  }
+  .dark .app-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(900px 500px at 12% -8%, rgba(76, 110, 245, 0.2), transparent 60%),
+      radial-gradient(800px 500px at 92% 8%, rgba(64, 192, 87, 0.1), transparent 55%),
+      radial-gradient(700px 600px at 70% 110%, rgba(124, 77, 255, 0.12), transparent 60%);
+  }
+  html:not(.dark) .app-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(900px 500px at 12% -8%, rgba(76, 110, 245, 0.1), transparent 60%),
+      radial-gradient(800px 500px at 92% 8%, rgba(64, 192, 87, 0.06), transparent 55%);
+  }
+
+  /* Segmented kontrol — seçili sekme gradient + glow. */
+  .seg-active {
+    background: linear-gradient(90deg, #4263eb, #4c6ef5);
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(92, 124, 250, 0.25),
+      0 10px 24px -12px rgba(76, 110, 245, 0.6);
+  }
+
+  /* Sidebar nav aktif ray (sol kenarda dikey brand çubuk). */
+  .nav-rail {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .nav-item-active .nav-rail {
+    opacity: 1;
+  }
+
+  /* Hero sheen (gradient kartta ışık parıltısı). */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(700px 200px at 85% -40%, rgba(255, 255, 255, 0.18), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Giriş animasyonları. */
+  .rise {
+    animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .chart-bar {
+    transform-origin: bottom;
+    animation: grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
   .btn-primary {
     @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
            bg-brand-600 text-white font-medium
@@ -148,5 +272,41 @@
   body {
     -webkit-user-select: none;
     user-select: none;
+  }
+}
+
+/* Modern UI Redesign / PR-0 — animasyon keyframe'leri. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes dash {
+  from {
+    stroke-dashoffset: var(--len);
+  }
+  to {
+    stroke-dashoffset: var(--off);
+  }
+}
+
+/* prefers-reduced-motion: animasyonları kapat. */
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .chart-bar {
+    animation: none !important;
   }
 }

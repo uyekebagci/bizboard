@@ -1,9 +1,10 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Pin } from "lucide-react";
+import { TrendingUp, TrendingDown, Pin, Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { periodLabel, SYSTEM_DEFAULT_PERIOD, type Period } from "@/lib/preferences";
 import type { PortfolioSummary } from "@/types";
+import { AreaSparkline } from "@/components/shared/charts/AreaSparkline";
 
 interface Props {
   portfolio: PortfolioSummary | null;
@@ -35,19 +36,27 @@ export function PortfolioCard({ portfolio, period }: Props) {
   const activePeriod = period || SYSTEM_DEFAULT_PERIOD;
 
   return (
-    <div className="card p-5 bg-gradient-to-br from-brand-600 to-brand-800 text-white h-full flex flex-col justify-between">
+    /* Redesign PR-2: hero gradient + sheen + blur orb + AreaSparkline (görsel). */
+    <div
+      className="rise sheen rounded-3xl p-6 text-white h-full flex flex-col justify-between relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg,#4263eb 0%,#4c6ef5 38%,#6741d9 100%)" }}
+    >
+      <div className="absolute -right-10 -top-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
+
       {/* Net Profit */}
-      <div className="mb-4">
-        <p className="text-brand-200 text-sm font-medium">Toplam Net Kar</p>
-        <div className="flex items-baseline gap-3 mt-1">
-          <span className="text-3xl font-bold tracking-tight">
+      <div className="relative mb-1">
+        <p className="text-white/70 text-sm font-medium flex items-center gap-2">
+          <Wallet size={16} /> Toplam Net Kar
+        </p>
+        <div className="flex items-baseline gap-3 mt-2">
+          <span className="num text-[36px] sm:text-[42px] font-extrabold h-display leading-none">
             {formatCurrency(netProfit)}
           </span>
           <span
-            className={`flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full ${
+            className={`flex items-center gap-1 text-[13px] font-semibold px-2.5 py-1 rounded-full ${
               isPositive
-                ? "bg-green-500/20 text-green-200"
-                : "bg-red-500/20 text-red-200"
+                ? "bg-emerald-400/25 text-emerald-100"
+                : "bg-rose-400/25 text-rose-100"
             }`}
           >
             {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
@@ -56,25 +65,30 @@ export function PortfolioCard({ portfolio, period }: Props) {
         </div>
       </div>
 
+      {/* Görsel trend (salt-sunum sparkline). */}
+      <div className="relative mt-4">
+        <AreaSparkline stroke="#fff" className="w-full h-20" />
+      </div>
+
       {/* Income / Expense Row */}
-      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+      <div className="relative grid grid-cols-2 gap-4 pt-5 mt-1 border-t border-white/20">
         <div>
-          <p className="text-brand-200 text-xs font-medium uppercase tracking-wide">
+          <p className="text-white/60 text-[11px] font-semibold uppercase tracking-wider">
             Gelir
           </p>
-          <p className="text-xl font-bold mt-0.5">
+          <p className="num text-xl font-bold mt-0.5">
             {formatCurrency(total_income)}
           </p>
         </div>
         <div>
-          <p className="text-brand-200 text-xs font-medium uppercase tracking-wide">
+          <p className="text-white/60 text-[11px] font-semibold uppercase tracking-wider">
             Gider
           </p>
-          <p className="text-xl font-bold mt-0.5">
+          <p className="num text-xl font-bold mt-0.5">
             {formatCurrency(totalExpense)}
           </p>
           {fixedCost > 0 && (
-            <p className="text-brand-300 text-[10px] mt-0.5">
+            <p className="text-white/60 text-[10px] mt-0.5">
               Islem: {formatCurrency(total_expense)} + Sabit: {formatCurrency(fixedCost)}
             </p>
           )}
@@ -82,12 +96,12 @@ export function PortfolioCard({ portfolio, period }: Props) {
       </div>
 
       {/* Fixed cost info + business count */}
-      <div className="flex items-center justify-between mt-4">
-        <p className="text-brand-200 text-xs">
+      <div className="relative flex items-center justify-between mt-4">
+        <p className="text-white/60 text-xs">
           {portfolio.business_count} isletme genelinde
         </p>
         {fixedCost > 0 && (
-          <div className="flex items-center gap-1 text-brand-300 text-[10px]">
+          <div className="flex items-center gap-1 text-white/60 text-[10px]">
             <Pin size={10} />
             <span>Sabit giderler dahil</span>
           </div>

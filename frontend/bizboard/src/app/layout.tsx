@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { ClientProviders } from "@/components/layout/ClientProviders";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
@@ -13,7 +13,9 @@ const THEME_INIT_SCRIPT = `
 (function(){try{var t=localStorage.getItem('cati-theme');if(t!=='light'&&t!=='dark')t='dark';var e=document.documentElement;if(t==='dark')e.classList.add('dark');else e.classList.remove('dark');e.style.colorScheme=t;}catch(e){document.documentElement.classList.add('dark');}})();
 `;
 
-const inter = Inter({
+// Modern UI Redesign / PR-0: Plus Jakarta Sans (next/font, CDN değil) —
+// --font-geist-sans değişkenini besler, mevcut font-sans kullanımları otomatik alır.
+const inter = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-geist-sans",
   display: "swap",

@@ -40,11 +40,14 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
   const sc = statusColor(status);
   const color = business.color || "#4c6ef5";
 
+  // Redesign PR-2: gelir/gider bar oranı (mockup gibi). Salt görsel — veri portfolyodan.
+  const barMax = Math.max(income, expense + fixedCost, 1);
+
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "card p-4 group relative transition-all",
+        "glass-card glass-hover p-5 group relative",
         isDragging && "opacity-50 ring-2 ring-brand-400 rotate-1",
       )}
     >
@@ -97,31 +100,42 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
           <span className={cn("status-dot mt-1 shrink-0", sc.dot)} />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-3">
-          <div className="p-2 bg-green-500/10 rounded-lg">
-            <div className="flex items-center gap-1 mb-0.5">
-              <TrendingUp size={10} className="text-green-500" />
-              <span className="text-[10px] text-green-400 font-medium">Gelir</span>
+        {/* Redesign PR-2: gelir/gider gradient barları (mockup). */}
+        <div className="space-y-2.5 mt-4">
+          <div>
+            <div className="flex items-center justify-between text-[11px] mb-1">
+              <span className="text-emerald-300 font-semibold flex items-center gap-1">
+                <TrendingUp size={12} /> Gelir
+              </span>
+              <span className="num font-semibold text-emerald-300">{formatCurrency(income)}</span>
             </div>
-            <p className="text-xs font-bold text-green-400">{formatCurrency(income)}</p>
+            <div className="h-1.5 rounded-full bg-surface-700/60 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
+                style={{ width: `${(income / barMax) * 100}%` }} />
+            </div>
           </div>
-          <div className="p-2 bg-red-500/10 rounded-lg">
-            <div className="flex items-center gap-1 mb-0.5">
-              <TrendingDown size={10} className="text-red-500" />
-              <span className="text-[10px] text-red-400 font-medium">Gider</span>
+          <div>
+            <div className="flex items-center justify-between text-[11px] mb-1">
+              <span className="text-rose-300 font-semibold flex items-center gap-1">
+                <TrendingDown size={12} /> Gider
+              </span>
+              <span className="num font-semibold text-rose-300">{formatCurrency(expense + fixedCost)}</span>
             </div>
-            <p className="text-xs font-bold text-red-400">{formatCurrency(expense + fixedCost)}</p>
+            <div className="h-1.5 rounded-full bg-surface-700/60 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-rose-500 to-rose-400"
+                style={{ width: `${((expense + fixedCost) / barMax) * 100}%` }} />
+            </div>
           </div>
         </div>
 
-        <div className="mt-2 pt-2 border-t border-surface-700 flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-surface-700/60 flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <span className="text-[11px] text-surface-400">Net Kar</span>
+            <span className="text-[12px] text-surface-400">Net Kar</span>
             {fixedCost > 0 && <Pin size={8} className="text-surface-400" />}
           </div>
           <p className={cn(
-            "text-sm font-bold",
-            netProfit > 0 ? "text-green-600" : netProfit < 0 ? "text-red-600" : "text-white"
+            "num text-base font-bold",
+            netProfit > 0 ? "text-emerald-300" : netProfit < 0 ? "text-rose-300" : "text-white"
           )}>
             {formatCurrency(netProfit, business.currency)}
           </p>

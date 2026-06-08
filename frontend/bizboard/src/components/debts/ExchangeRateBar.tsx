@@ -13,10 +13,25 @@ import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Loader2, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { toast } from "@/lib/toast";
-import { formatCurrency } from "@/lib/utils";
 import type { ExchangeRate } from "@/types";
 
 const COOLDOWN_MS = 30_000;
+
+/**
+ * Kur değeri formatı — kaynaktaki küsüratı KORUR (formatCurrency kuruşu
+ * yuvarlıyordu: 46.0973 → ₺46). TCMB USD 4 ondalık (46,0973), gram/coin 2
+ * ondalık (6.418,71). min 2 / max 4 ondalık + tr binlik ayraç.
+ */
+function formatRate(v: number | string | null | undefined): string {
+  const n = typeof v === "number" ? v : Number(v);
+  if (v == null || !isFinite(n)) return "—";
+  return (
+    new Intl.NumberFormat("tr-TR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4,
+    }).format(n) + " ₺"
+  );
+}
 
 function formatWhen(iso?: string | null): string {
   if (!iso) return "—";
@@ -88,7 +103,7 @@ export function ExchangeRateBar({ onRefreshed }: { onRefreshed?: () => void }) {
           <span key={it.label} className="text-surface-200 whitespace-nowrap">
             {it.label}:{" "}
             <span className="font-semibold text-white">
-              {it.rate ? formatCurrency(it.rate.rate_to_try, "TRY") : "—"}
+              {it.rate ? formatRate(it.rate.rate_to_try) : "—"}
             </span>
           </span>
         ))}

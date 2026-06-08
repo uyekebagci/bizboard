@@ -201,11 +201,13 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
               className="flex items-center gap-2.5"
               aria-label="CATI ana sayfa"
             >
-              <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">C</span>
+              {/* Redesign PR-1: gradient logo kutusu + glow. */}
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-glow"
+                style={{ background: "linear-gradient(135deg,#4263eb,#4c6ef5 55%,#6741d9)" }}>
+                <span className="text-white font-bold text-sm">Ç</span>
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="font-bold text-lg text-white leading-none">CATI</span>
+                <span className="font-bold text-lg text-white leading-none h-display">ÇATI</span>
                 {versionLabel && (
                   <span
                     className="mt-0.5 text-[10px] italic text-yellow-400 font-mono leading-none tracking-tight"
@@ -292,14 +294,19 @@ function SidebarItem({
 }) {
   const Icon = item.icon;
   return (
-    <div className="relative flex items-stretch">
+    <div className={cn("relative flex items-stretch", active && "nav-item-active")}>
+      {/* Redesign PR-1: aktif ray (sol kenarda dikey brand çubuk). */}
+      <span
+        className="nav-rail absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-brand-500"
+        aria-hidden="true"
+      />
       <Link
         href={item.href}
         onClick={onClick}
         className={cn(
           "flex items-center gap-2.5 px-3 py-2 rounded-l-lg text-sm transition-colors flex-1 min-w-0",
           active
-            ? "bg-brand-700/30 text-white"
+            ? "bg-gradient-to-r from-brand-500/20 to-brand-500/[0.04] text-white font-semibold"
             : "text-surface-300 hover:bg-surface-800 hover:text-white",
           pinned && "border-l-2 border-brand-500 -ml-[2px] pl-[10px]"
         )}

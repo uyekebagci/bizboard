@@ -60,8 +60,8 @@ export function RecentActivity() {
 
   return (
     <>
-      {/* Clickable card */}
-      <div className="card divide-y divide-surface-700 w-full text-left">
+      {/* Clickable card — Redesign PR-2: glass */}
+      <div className="glass-card divide-y divide-surface-700/60 w-full text-left overflow-hidden">
         {transactions.slice(0, 5).map((tx) => (
           <TransactionRow
             key={tx.id}
