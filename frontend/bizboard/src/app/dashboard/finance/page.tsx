@@ -142,12 +142,12 @@ export default function FinancePage() {
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">Finans Merkezi</h1>
+            <h1 className="text-xl font-bold h-display text-white">Finans Merkezi</h1>
             <p className="text-surface-400 text-sm mt-0.5">Detayli finansal analiz ve raporlar</p>
           </div>
         </div>
-        {/* Dönem Seçici (v1.6.15+: 'Bugun' default) */}
-        <div className="flex bg-surface-800 rounded-xl p-1 gap-0.5">
+        {/* Dönem Seçici (v1.6.15+: 'Bugun' default) — Redesign Inc.3: glass + seg-active */}
+        <div className="flex glass-card p-1 gap-0.5">
           {([
             { value: "daily", label: "Bugun" },
             { value: "1m",    label: "1 Ay" },
@@ -162,7 +162,7 @@ export default function FinancePage() {
               className={cn(
                 "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
                 period === value
-                  ? "bg-brand-600 text-white"
+                  ? "seg-active font-semibold"
                   : "text-surface-400 hover:text-white"
               )}
             >
@@ -172,8 +172,8 @@ export default function FinancePage() {
         </div>
       </section>
 
-      {/* Tabs */}
-      <section className="flex bg-surface-800 rounded-xl p-1 gap-0.5">
+      {/* Tabs — Redesign Inc.3: glass + seg-active */}
+      <section className="flex glass-card p-1 gap-0.5">
         {([
           { key: "overview", label: "Genel Bakis", icon: BarChart3 },
           { key: "cashflow", label: "Nakit Akisi", icon: Activity },
@@ -186,7 +186,7 @@ export default function FinancePage() {
             className={cn(
               "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
               activeTab === key
-                ? "bg-brand-600 text-white"
+                ? "seg-active font-semibold"
                 : "text-surface-400 hover:text-white"
             )}
           >
@@ -289,7 +289,7 @@ function SummaryCard({
   const changeVal = invertChange && change != null ? -change : change;
 
   return (
-    <div className="card p-4">
+    <div className="glass-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", iconBg)}>
           <Icon size={18} className={iconColor} />
@@ -301,7 +301,7 @@ function SummaryCard({
         )}
       </div>
       <p className="text-[11px] text-surface-400 font-medium uppercase tracking-wider mb-0.5">{title}</p>
-      <p className={cn("text-lg font-bold", valueColor)}>
+      <p className={cn("num text-lg font-bold", valueColor)}>
         {isCurrency ? formatCurrency(value) : value}
       </p>
     </div>
@@ -361,7 +361,7 @@ function MonthlyTrendChart({ trend }: { trend: FinanceMonthData[] }) {
   );
 
   return (
-    <div className="card p-5">
+    <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-white">Aylik Gelir / Gider Trendi</h3>
         <div className="flex items-center gap-4 text-[10px] font-medium">
@@ -431,7 +431,7 @@ function MonthlyTrendChart({ trend }: { trend: FinanceMonthData[] }) {
 function DailyTrendChart({ cashFlow }: { cashFlow: DailyCashFlowData[] }) {
   if (cashFlow.length === 0) {
     return (
-      <div className="card p-5 text-center text-sm text-surface-400">
+      <div className="glass-card p-5 text-center text-sm text-surface-400">
         Henuz gunluk veri yok.
       </div>
     );
@@ -445,7 +445,7 @@ function DailyTrendChart({ cashFlow }: { cashFlow: DailyCashFlowData[] }) {
   );
 
   return (
-    <div className="card p-5">
+    <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-white">Gunluk Gelir / Gider (son 30 gun)</h3>
         <div className="flex items-center gap-4 text-[10px] font-medium">
@@ -516,7 +516,7 @@ function TopTransactionsList({
 }) {
   if (items.length === 0) {
     return (
-      <div className="card p-4">
+      <div className="glass-card p-4">
         <h3 className="text-sm font-bold text-white mb-3">{title}</h3>
         <p className="text-surface-400 text-xs text-center py-6">Henuz islem yok</p>
       </div>
@@ -524,7 +524,7 @@ function TopTransactionsList({
   }
 
   return (
-    <div className="card p-4">
+    <div className="glass-card p-4">
       <h3 className="text-sm font-bold text-white mb-3">{title}</h3>
       <div className="space-y-2">
         {items.map((item, idx) => (
@@ -566,7 +566,7 @@ function IncomeExpenseCompare({
   const variableExpense = expense - fixedCost;
 
   return (
-    <div className="card p-5">
+    <div className="glass-card p-5">
       <h3 className="text-sm font-bold text-white mb-4">Gelir / Gider Karsilastirmasi</h3>
 
       {/* Büyük bar */}
@@ -674,7 +674,7 @@ function CumulativeCashFlowChart({ data }: { data: DailyCashFlowData[] }) {
   const midY = 50; // middle of chart (percentage)
 
   return (
-    <div className="card p-5">
+    <div className="glass-card p-5">
       <h3 className="text-sm font-bold text-white mb-4">Kumulatif Nakit Akisi (Son 30 Gun)</h3>
       <div className="relative h-48 flex items-end gap-px">
         {/* Y-axis center line */}
@@ -743,7 +743,7 @@ function DailyCashFlowList({ data }: { data: DailyCashFlowData[] }) {
   const recent = [...data].reverse().slice(0, 7);
 
   return (
-    <div className="card p-4">
+    <div className="glass-card p-4">
       <h3 className="text-sm font-bold text-white mb-3">Son 7 Gunluk Nakit Akisi</h3>
       <div className="space-y-1.5">
         {recent.map((d) => (
@@ -843,7 +843,7 @@ function CategoryRingChart({
   let offset = 0;
 
   return (
-    <div className="card p-5">
+    <div className="glass-card p-5">
       <h3 className="text-sm font-bold text-white mb-4">
         {type === "expense" ? "Gider" : "Gelir"} Dagilimi
       </h3>
@@ -922,7 +922,7 @@ function CategoryList({
   type: "expense" | "income";
 }) {
   return (
-    <div className="card p-4">
+    <div className="glass-card p-4">
       <h3 className="text-sm font-bold text-white mb-3">Kategori Detaylari</h3>
       <div className="space-y-2">
         {categories.map((cat) => (
@@ -966,7 +966,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
   return (
     <div className="space-y-4">
       {/* İşletme Karşılaştırma */}
-      <div className="card p-5">
+      <div className="glass-card p-5">
         <h3 className="text-sm font-bold text-white mb-4">Isletme Karsilastirmasi</h3>
         <div className="space-y-4">
           {businesses.map((biz) => {
@@ -1047,7 +1047,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
       </div>
 
       {/* İşletme Performans Tablosu */}
-      <div className="card p-4 overflow-x-auto">
+      <div className="glass-card p-4 overflow-x-auto">
         <h3 className="text-sm font-bold text-white mb-3">Performans Tablosu</h3>
         <table className="w-full text-xs">
           <thead>
@@ -1120,7 +1120,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
 
 function MiniCard({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="card p-3 text-center">
+    <div className="glass-card p-3 text-center">
       <p className="text-[10px] text-surface-400 font-medium uppercase tracking-wider">{label}</p>
       <p className={cn("text-base font-bold mt-1", color)}>{value}</p>
     </div>
@@ -1129,7 +1129,7 @@ function MiniCard({ label, value, color }: { label: string; value: string; color
 
 function EmptySection({ text }: { text: string }) {
   return (
-    <div className="card p-8 text-center">
+    <div className="glass-card p-8 text-center">
       <Wallet size={32} className="text-surface-300 mx-auto mb-2" />
       <p className="text-surface-400 text-sm">{text}</p>
     </div>

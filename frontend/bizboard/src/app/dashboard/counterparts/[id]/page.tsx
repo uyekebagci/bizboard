@@ -180,12 +180,12 @@ export default function CounterpartDetailPage() {
         </button>
       </section>
 
-      {/* ── Balance + Action buttons ──────────────────────────── */}
-      <section className="card p-5 bg-gradient-to-br from-brand-700/30 to-brand-900/30">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
+      {/* ── Balance + Action buttons — Redesign Inc.3: glass hero + sheen + .num ── */}
+      <section className="glass-card sheen relative overflow-hidden p-5 bg-gradient-to-br from-brand-600/25 via-brand-700/15 to-violet-700/20">
+        <div className="relative flex items-start justify-between gap-3 flex-wrap">
           <div>
             <p className="text-xs text-surface-300 mb-1">Cari Bakiye</p>
-            <p className={cn("text-4xl font-bold",
+            <p className={cn("num text-4xl font-bold h-display",
               balance > 0 ? "text-emerald-300" : balance < 0 ? "text-red-300" : "text-white")}>
               {formatCurrency(balance, "TRY")}
             </p>
@@ -275,11 +275,11 @@ export default function CounterpartDetailPage() {
         {/* Tab 1: Cari Hesap — hareket geçmişi (WP a9da4e9d: redesign + borç düzenleme) */}
         {tab === "running" && (
           statement.running_balance_history.length === 0 ? (
-            <div className="card p-8 text-center text-surface-400 text-xs">
+            <div className="glass-card p-8 text-center text-surface-400 text-xs">
               Henüz hareket yok.
             </div>
           ) : (
-            <div className="card divide-y divide-surface-700/70">
+            <div className="glass-card divide-y divide-surface-700/70">
               {statement.running_balance_history.map((r, i) => {
                 // DEBT_CREATED açık borca denk geliyorsa düzenlenebilir; aksi halde kapanmış borç.
                 const openDebt = r.type === "DEBT_CREATED"
@@ -348,11 +348,11 @@ export default function CounterpartDetailPage() {
               ))}
             </div>
             {filteredInstruments.length === 0 ? (
-              <div className="card p-8 text-center text-surface-400 text-xs">
+              <div className="glass-card p-8 text-center text-surface-400 text-xs">
                 Bu filtrede çek/senet yok.
               </div>
             ) : (
-              <div className="card divide-y divide-surface-700">
+              <div className="glass-card divide-y divide-surface-700">
                 {filteredInstruments.map((p) => {
                   const isCheque = p.instrument_type === "CHEQUE";
                   const isIn = p.direction === "INCOMING";
@@ -417,7 +417,7 @@ export default function CounterpartDetailPage() {
 
         {/* Tab 5: Transactions */}
         {tab === "transactions" && (
-          <div className="card overflow-x-auto">
+          <div className="glass-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-surface-800/50 text-surface-400 text-xs uppercase">
                 <tr>
@@ -567,13 +567,13 @@ function DebtListTab({
 }) {
   if (debts.length === 0) {
     return (
-      <div className="card p-8 text-center text-surface-400 text-xs">
+      <div className="glass-card p-8 text-center text-surface-400 text-xs">
         Açık {tone === "positive" ? "alacak" : "verecek"} yok.
       </div>
     );
   }
   return (
-    <div className="card divide-y divide-surface-700">
+    <div className="glass-card divide-y divide-surface-700">
       {debts.map((d) => {
         const isPartial = d.remaining_amount < d.original_amount && d.remaining_amount > 0;
         return (

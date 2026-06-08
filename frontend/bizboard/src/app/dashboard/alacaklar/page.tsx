@@ -140,7 +140,7 @@ export default function AlacaklarPage() {
           <Loader2 size={28} className="animate-spin text-amber-400" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">Acik alacaginiz yok</p>
           <p className="text-surface-400 text-sm mt-1">
@@ -158,13 +158,13 @@ export default function AlacaklarPage() {
         <>
           {/* Totals */}
           <section className="grid grid-cols-2 gap-3">
-            <div className="card p-4">
+            <div className="glass-card p-4">
               <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
               <p className="mt-1 text-2xl font-bold text-amber-300">
                 {formatCurrency(total, "TRY")}
               </p>
             </div>
-            <div className="card p-4">
+            <div className="glass-card p-4">
               <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>
               <p className="mt-1 text-2xl font-bold text-white">
                 {totalCount}
@@ -223,7 +223,7 @@ export default function AlacaklarPage() {
           </section>
 
           {/* List */}
-          <section className="card divide-y divide-surface-700">
+          <section className="glass-card divide-y divide-surface-700">
             {sorted.map((r) => {
               const key = r.counterpart_id || `name:${r.counterpart_name}`;
               const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;

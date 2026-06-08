@@ -132,44 +132,39 @@ export default function AllTransactionsPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">Tum Islemler</h1>
+            <h1 className="text-xl font-bold h-display text-white">Tum Islemler</h1>
             <p className="text-xs text-surface-400">{filtered.length} islem</p>
           </div>
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards — Redesign Inc.3: glass + token-correct renkler + .num */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="p-3 bg-green-50 border border-green-200 rounded-xl text-center">
-          <p className="text-[10px] text-green-600 uppercase tracking-wider font-medium">Gelir</p>
-          <p className="text-sm font-bold text-green-700 mt-0.5">
+        <div className="glass-card p-3 text-center">
+          <p className="text-[10px] text-emerald-300 uppercase tracking-wider font-medium">Gelir</p>
+          <p className="num text-sm font-bold text-emerald-300 mt-0.5">
             {formatCurrency(totalIncome)}
           </p>
         </div>
-        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-center">
-          <p className="text-[10px] text-red-600 uppercase tracking-wider font-medium">Gider</p>
-          <p className="text-sm font-bold text-red-400 mt-0.5">
+        <div className="glass-card p-3 text-center">
+          <p className="text-[10px] text-rose-300 uppercase tracking-wider font-medium">Gider</p>
+          <p className="num text-sm font-bold text-rose-300 mt-0.5">
             {formatCurrency(totalWithFixed)}
           </p>
           {totalFixedCostMonthly > 0 && (
-            <p className="text-[9px] text-red-400 mt-0.5">
+            <p className="text-[9px] text-rose-300/80 mt-0.5">
               Islem: {formatCurrency(totalExpense)}
             </p>
           )}
         </div>
-        <div className={cn(
-          "p-3 border rounded-xl text-center",
-          totalIncome - totalWithFixed >= 0
-            ? "bg-emerald-50 border-emerald-200"
-            : "bg-orange-50 border-orange-200"
-        )}>
+        <div className="glass-card p-3 text-center">
           <p className={cn(
             "text-[10px] uppercase tracking-wider font-medium",
-            totalIncome - totalWithFixed >= 0 ? "text-emerald-600" : "text-orange-600"
+            totalIncome - totalWithFixed >= 0 ? "text-emerald-300" : "text-orange-300"
           )}>Net</p>
           <p className={cn(
-            "text-sm font-bold mt-0.5",
-            totalIncome - totalWithFixed >= 0 ? "text-emerald-700" : "text-orange-700"
+            "num text-sm font-bold mt-0.5",
+            totalIncome - totalWithFixed >= 0 ? "text-emerald-300" : "text-orange-300"
           )}>
             {formatCurrency(totalIncome - totalWithFixed)}
           </p>
@@ -233,8 +228,8 @@ export default function AllTransactionsPage() {
           />
         </div>
 
-        {/* Direction filter */}
-        <div className="flex rounded-xl border border-surface-600 overflow-hidden">
+        {/* Direction filter — Redesign Inc.3: segmented (.seg-active) */}
+        <div className="flex items-center gap-1 glass-card p-1">
           {([
             { key: "", label: "Tumu" },
             { key: "income", label: "Gelir" },
@@ -243,10 +238,10 @@ export default function AllTransactionsPage() {
             <button
               key={opt.key}
               onClick={() => setFilterDirection(opt.key as "" | "income" | "expense")}
-              className={`px-3 py-2 text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filterDirection === opt.key
-                  ? "bg-brand-600 text-white"
-                  : "bg-surface-800 text-surface-300 hover:bg-surface-700"
+                  ? "seg-active font-semibold"
+                  : "text-surface-400 hover:text-white"
               }`}
             >
               {opt.label}
@@ -273,7 +268,7 @@ export default function AllTransactionsPage() {
 
       {/* Transaction List */}
       {filtered.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <p className="text-surface-400 text-sm">
             {transactions.length === 0
               ? "Henuz islem yok"
@@ -281,7 +276,7 @@ export default function AllTransactionsPage() {
           </p>
         </div>
       ) : (
-        <div className="card divide-y divide-surface-700">
+        <div className="glass-card divide-y divide-surface-700/60 overflow-hidden">
           {filtered.map((tx) => {
             const isIncome = tx.direction === "income";
             return (
@@ -293,13 +288,13 @@ export default function AllTransactionsPage() {
                 <div
                   className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    isIncome ? "bg-green-500/10" : "bg-red-500/10"
+                    isIncome ? "bg-emerald-500/15" : "bg-rose-500/15"
                   )}
                 >
                   {isIncome ? (
-                    <ArrowDownLeft size={18} className="text-green-600" />
+                    <ArrowDownLeft size={18} className="text-emerald-400" />
                   ) : (
-                    <ArrowUpRight size={18} className="text-red-600" />
+                    <ArrowUpRight size={18} className="text-rose-400" />
                   )}
                 </div>
 
@@ -320,8 +315,8 @@ export default function AllTransactionsPage() {
 
                 <span
                   className={cn(
-                    "text-sm font-semibold flex-shrink-0 text-right",
-                    isIncome ? "text-green-600" : "text-red-600"
+                    "num text-sm font-semibold flex-shrink-0 text-right",
+                    isIncome ? "text-emerald-300" : "text-rose-300"
                   )}
                 >
                   {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net göster. */}

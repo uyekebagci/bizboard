@@ -171,7 +171,7 @@ export default function CounterpartsPage() {
       <div
         key={c.id}
         onClick={() => router.push(`/dashboard/counterparts/${c.id}`)}
-        className="card p-4 cursor-pointer hover:shadow-card-hover transition-all active:scale-[0.98] group"
+        className="glass-card glass-hover p-4 cursor-pointer transition-all active:scale-[0.98] group"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -273,7 +273,7 @@ export default function CounterpartsPage() {
       )}
 
       {/* Filters */}
-      <section className="card p-3 flex flex-col gap-3">
+      <section className="glass-card p-3 flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
@@ -352,7 +352,7 @@ export default function CounterpartsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card p-8 text-center text-surface-400 text-sm">
+        <div className="glass-card p-8 text-center text-surface-400 text-sm">
           {list.length === 0
             ? 'Henuz karsi firma yok. "Yeni" ile ilk kaydi ekleyebilirsin.'
             : "Aramaya uyan kayit bulunamadi."}

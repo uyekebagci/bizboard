@@ -43,7 +43,7 @@ export function TransactionList({
 
   if (visible.length === 0) {
     return (
-      <div className="card p-8 text-center">
+      <div className="p-8 text-center">
         <p className="text-surface-400">
           {paymentFilter === "POS"
             ? "POS ile odenmis islem yok"
@@ -60,7 +60,8 @@ export function TransactionList({
 
   return (
     <>
-      <div className="card divide-y divide-surface-700">
+      {/* Redesign Inc.3: container plain (parent zaten glass-card ile sarmalıyor). */}
+      <div className="divide-y divide-surface-700/60">
         {visible.map((tx) => {
           const isIncome = tx.direction === "income";
           const isPos = (tx.payment_method || "NAKIT") === "POS";
@@ -86,15 +87,15 @@ export function TransactionList({
                   "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
                   isTransfer
                     ? "bg-blue-500/15"
-                    : isIncome ? "bg-green-50" : "bg-red-50",
+                    : isIncome ? "bg-emerald-500/15" : "bg-rose-500/15",
                 )}
               >
                 {isTransfer ? (
                   <ArrowLeftRight size={18} className="text-blue-400" />
                 ) : isIncome ? (
-                  <ArrowDownLeft size={18} className="text-green-600" />
+                  <ArrowDownLeft size={18} className="text-emerald-400" />
                 ) : (
-                  <ArrowUpRight size={18} className="text-red-600" />
+                  <ArrowUpRight size={18} className="text-rose-400" />
                 )}
               </div>
 
@@ -132,8 +133,8 @@ export function TransactionList({
 
               <span
                 className={cn(
-                  "text-sm font-bold flex-shrink-0 text-right",
-                  isIncome ? "text-green-600" : "text-red-600",
+                  "num text-sm font-bold flex-shrink-0 text-right",
+                  isIncome ? "text-emerald-300" : "text-rose-300",
                 )}
               >
                 {/* Beta v1.1: POS komisyon UI kaldırıldı — sağdaki amount her
@@ -155,7 +156,7 @@ export function TransactionList({
               ) : (
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteTarget(tx); }}
-                  className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-50
+                  className="p-1.5 rounded-lg text-surface-300 hover:text-red-400 hover:bg-rose-500/10
                              opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                   title="Islemi sil"
                 >
