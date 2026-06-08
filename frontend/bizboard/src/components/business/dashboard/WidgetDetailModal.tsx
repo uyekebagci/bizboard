@@ -52,7 +52,7 @@ export function WidgetDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -60,13 +60,13 @@ export function WidgetDetailModal({
       <div
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "bg-surface-800 rounded-2xl shadow-xl border border-surface-600 w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "glass-card shadow-xl w-full max-h-[90vh] overflow-hidden flex flex-col",
           maxW
         )}
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700 shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-surface-700/60 shrink-0">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-white truncate">{title}</h3>
+            <h3 className="text-base font-bold h-display text-white truncate">{title}</h3>
             {subtitle && <p className="text-xs text-surface-400 truncate mt-0.5">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-2 shrink-0">

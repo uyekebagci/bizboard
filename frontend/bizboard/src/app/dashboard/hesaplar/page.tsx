@@ -185,15 +185,15 @@ export default function HesaplarPage() {
 
       {/* Stats */}
       <section className="grid grid-cols-3 gap-3">
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Aktif Hesap</p>
           <p className="mt-1 text-lg font-bold text-white">{physicalActive.length}</p>
         </div>
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Pasif Hesap</p>
           <p className="mt-1 text-lg font-bold text-surface-400">{physicalInactive.length}</p>
         </div>
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Toplam Bakiye</p>
           <p className="mt-1 text-lg font-bold text-emerald-300">
             {formatCurrency(totalActive, "TRY")}
@@ -295,7 +295,7 @@ export default function HesaplarPage() {
           <Loader2 size={28} className="animate-spin text-surface-400" />
         </div>
       ) : sortedFiltered.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <Wallet size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">
             {list.length === 0
@@ -312,7 +312,7 @@ export default function HesaplarPage() {
           )}
         </div>
       ) : (
-        <section className="card divide-y divide-surface-700">
+        <section className="glass-card divide-y divide-surface-700">
           {sortedFiltered.map((a) => {
             const isMain = a.is_main_cash || a.type === "MAIN_CASH";
             const isSystem = a.is_system === true;

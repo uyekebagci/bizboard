@@ -72,7 +72,7 @@ export default function NakitPage() {
       ) : (
         <>
           {/* Total */}
-          <section className="card p-5">
+          <section className="glass-card p-5">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
                 <Wallet size={22} className="text-emerald-300" />
@@ -90,7 +90,7 @@ export default function NakitPage() {
 
           {/* Per-business list */}
           {balances.length === 0 ? (
-            <div className="card p-8 text-center">
+            <div className="glass-card p-8 text-center">
               <Banknote size={32} className="mx-auto text-surface-500 mb-2" />
               <p className="text-surface-300 font-medium">Henuz nakit bakiye yok</p>
               <p className="text-surface-400 text-sm mt-1">
@@ -107,7 +107,7 @@ export default function NakitPage() {
           ) : (
             <section className="space-y-2">
               <h2 className="text-sm font-semibold text-surface-200">Isletme Bakiyeleri</h2>
-              <div className="card divide-y divide-surface-700">
+              <div className="glass-card divide-y divide-surface-700">
                 {balances.map((b) => (
                   <Link
                     key={b.business_id}

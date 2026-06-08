@@ -101,15 +101,15 @@ export default function ChequesPage() {
 
       {/* Stats */}
       <section className="grid grid-cols-3 gap-3">
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Toplam</p>
           <p className="mt-1 text-lg font-bold text-purple-300">{formatCurrency(total, "TRY")}</p>
         </div>
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Kayıt</p>
           <p className="mt-1 text-lg font-bold text-white">{list.length}</p>
         </div>
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Vadesi Geçen</p>
           <p className={cn("mt-1 text-lg font-bold", overdue.length > 0 ? "text-red-300" : "text-surface-400")}>
             {overdue.length}
@@ -147,7 +147,7 @@ export default function ChequesPage() {
           <Loader2 size={28} className="animate-spin text-purple-400" />
         </div>
       ) : list.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <CalendarClock size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">
             {days} gün içinde vadeli çek yok
@@ -161,7 +161,7 @@ export default function ChequesPage() {
           </button>
         </div>
       ) : (
-        <section className="card divide-y divide-surface-700">
+        <section className="glass-card divide-y divide-surface-700">
           {list.map((c) => {
             const dueStr = c.cheque_due_date;
             const isOverdue = dueStr && dueStr < today;

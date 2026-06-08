@@ -16,10 +16,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, HandCoins, Plus, CalendarClock,
+  ArrowLeft, Loader2, HandCoins, Plus, CalendarClock, Eye, EyeOff,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { Debt, Counterpart } from "@/types";
@@ -43,6 +43,19 @@ export default function VereceklerPage() {
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
   const [showAddModal, setShowAddModal] = useState(false);
+  // Sansür (privacy) — alacaklar ile aynı: ayrı localStorage anahtarı.
+  const [censored, setCensored] = useState(false);
+  useEffect(() => {
+    try { setCensored(localStorage.getItem("cati-verecekler-censor") === "1"); } catch { /* ignore */ }
+  }, []);
+  function toggleCensor() {
+    setCensored((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("cati-verecekler-censor", next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  }
+  const censorCls = censored ? "blur-[6px] select-none" : "";
 
   useEffect(() => {
     async function load() {
@@ -147,6 +160,16 @@ export default function VereceklerPage() {
             </p>
           </div>
         </div>
+        {/* Sansür toggle (privacy) — göz ikonu ile tutarları gizle/göster. */}
+        <button
+          onClick={toggleCensor}
+          aria-pressed={censored}
+          title={censored ? "Tutarları göster" : "Tutarları gizle"}
+          aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
+          className="p-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-white transition-colors"
+        >
+          {censored ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
@@ -181,7 +204,7 @@ export default function VereceklerPage() {
           <section className="grid grid-cols-2 gap-3">
             <div className="glass-card p-4">
               <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Verecek</p>
-              <p className="mt-1 text-2xl font-bold text-red-300">
+              <p className={cn("mt-1 text-2xl font-bold text-red-300 transition-[filter]", censorCls)}>
                 {formatCurrency(total, "TRY")}
               </p>
             </div>
@@ -239,7 +262,7 @@ export default function VereceklerPage() {
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-base font-semibold text-red-300">
+                    <p className={cn("text-base font-semibold text-red-300 transition-[filter]", censorCls)}>
                       {formatCurrency(r.total_amount, r.currency)}
                     </p>
                     <p className="text-[11px] text-surface-400">{r.count} kayıt</p>

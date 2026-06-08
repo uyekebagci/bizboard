@@ -145,13 +145,13 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
 
       {/* Vehicle List */}
       {filtered.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <Car size={32} className="mx-auto text-surface-300 mb-2" />
           <p className="text-surface-400 text-sm">Henuz arac eklenmemis</p>
           <p className="text-surface-400 text-xs mt-1">Ilk araci eklemek icin yukaridaki butonu kullanin</p>
         </div>
       ) : (
-        <div className="card divide-y divide-surface-700">
+        <div className="glass-card divide-y divide-surface-700">
           {filtered.map((v) => (
             <div
               key={v.id}

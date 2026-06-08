@@ -258,7 +258,7 @@ function ClosurePage() {
       </div>
 
       {businesses.length > 1 && (
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <label className="text-[10px] uppercase text-surface-400 mb-1 block">İşletme</label>
           <select
             value={businessId}
@@ -274,7 +274,7 @@ function ClosurePage() {
 
       {/* WP 08617251: session indicator banner — inline tx eklemeden sonra görünür */}
       {sessionTxCount > 0 && !isReadOnly && (
-        <div className="card p-3 border-amber-500/40 bg-amber-500/[0.06] flex items-center gap-3">
+        <div className="glass-card p-3 border-amber-500/40 bg-amber-500/[0.06] flex items-center gap-3">
           <Zap size={16} className="text-amber-400 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm text-amber-200">
@@ -302,7 +302,7 @@ function ClosurePage() {
           <Loader2 size={24} className="animate-spin text-surface-500" />
         </div>
       ) : !sectioned ? (
-        <div className="card p-6 text-center text-sm text-red-300">
+        <div className="glass-card p-6 text-center text-sm text-red-300">
           Veri yüklenemedi.
         </div>
       ) : (
@@ -449,7 +449,7 @@ function ClosurePage() {
           </Section>
 
           {/* SUMMARY */}
-          <section className="card p-5 space-y-3">
+          <section className="glass-card p-5 space-y-3">
             <h2 className="text-sm font-bold text-white flex items-center gap-2">
               <BarChart3 size={14} className="text-emerald-400" />
               Gün Özeti
@@ -579,7 +579,7 @@ function Section({ title, icon: Icon, color, count, total, action, children }: {
     rose: "text-rose-400",
   };
   return (
-    <section className="card overflow-hidden">
+    <section className="glass-card overflow-hidden">
       <div className="w-full px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
         <button
           type="button"

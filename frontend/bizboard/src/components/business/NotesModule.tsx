@@ -131,7 +131,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
 
       {/* Notes Grid */}
       {notes.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <p className="text-surface-400 text-sm">Henuz not eklenmemis</p>
           <p className="text-surface-400 text-xs mt-1">
             Bu isletmeyle ilgili notlarinizi buraya ekleyebilirsiniz.

@@ -36,7 +36,7 @@ export function InventoryModule({ businessId, currency }: Props) {
 
   if (loading) {
     return (
-      <div className="card p-6 flex items-center justify-center">
+      <div className="glass-card p-6 flex items-center justify-center">
         <Loader2 size={20} className="animate-spin text-surface-400" />
       </div>
     );
@@ -44,7 +44,7 @@ export function InventoryModule({ businessId, currency }: Props) {
 
   if (!summary || summary.total_items === 0) {
     return (
-      <div className="card p-6 text-center">
+      <div className="glass-card p-6 text-center">
         <Package size={32} className="text-surface-300 mx-auto mb-2" />
         <p className="text-surface-500 text-sm">Henuz envanter kalemi yok</p>
         <p className="text-surface-400 text-xs mt-1">

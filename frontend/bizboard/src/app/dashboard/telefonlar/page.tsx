@@ -160,7 +160,7 @@ export default function TelefonlarPage() {
           <Loader2 size={28} className="animate-spin text-cyan-400" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <Smartphone size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">Telefon yok</p>
           <p className="text-surface-400 text-sm mt-1">
@@ -168,7 +168,7 @@ export default function TelefonlarPage() {
           </p>
         </div>
       ) : (
-        <div className="card overflow-x-auto">
+        <div className="glass-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-surface-700 text-[11px] text-surface-300 uppercase tracking-wider">
               <tr>

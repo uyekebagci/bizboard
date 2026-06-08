@@ -88,7 +88,7 @@ export default function ClosuresListPage() {
       </div>
 
       {businesses.length > 1 && (
-        <div className="card p-3">
+        <div className="glass-card p-3">
           <label className="text-[10px] uppercase text-surface-400 mb-1 block">İşletme</label>
           <select
             value={businessId}
@@ -107,12 +107,12 @@ export default function ClosuresListPage() {
           <Loader2 size={24} className="animate-spin text-surface-500" />
         </div>
       ) : closings.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <CalendarClock size={28} className="mx-auto text-surface-500 mb-2" />
           <p className="text-sm text-surface-300">Henüz kapanış kaydı yok.</p>
         </div>
       ) : (
-        <ul className="card divide-y divide-surface-700">
+        <ul className="glass-card divide-y divide-surface-700">
           {closings.map((c) => {
             const diff = c.difference ?? 0;
             return (

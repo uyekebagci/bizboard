@@ -172,7 +172,7 @@ export default function PosCihazlariPage() {
           <Loader2 size={28} className="animate-spin text-indigo-400" />
         </div>
       ) : summaries.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <CreditCard size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">Henuz POS islemi yok</p>
           <p className="text-surface-400 text-sm mt-1">
@@ -190,7 +190,7 @@ export default function PosCihazlariPage() {
         <>
           {/* Totals */}
           <section className="grid grid-cols-3 gap-3">
-            <div className="card p-4">
+            <div className="glass-card p-4">
               <div className="flex items-center gap-2 text-[11px] text-surface-400 uppercase tracking-wider">
                 <TrendingUp size={12} /> Toplam
               </div>
@@ -198,7 +198,7 @@ export default function PosCihazlariPage() {
                 {formatCurrency(totalGross, "TRY")}
               </p>
             </div>
-            <div className="card p-4">
+            <div className="glass-card p-4">
               <div className="flex items-center gap-2 text-[11px] text-surface-400 uppercase tracking-wider">
                 <Percent size={12} /> Komisyon
               </div>
@@ -206,7 +206,7 @@ export default function PosCihazlariPage() {
                 -{formatCurrency(totalCommission, "TRY")}
               </p>
             </div>
-            <div className="card p-4">
+            <div className="glass-card p-4">
               <div className="flex items-center gap-2 text-[11px] text-surface-400 uppercase tracking-wider">
                 <Receipt size={12} /> Net
               </div>
@@ -250,7 +250,7 @@ export default function PosCihazlariPage() {
           {/* Per-business cards */}
           <section className="space-y-2">
             <h2 className="text-sm font-semibold text-surface-200">Isletme Bazli Ozet</h2>
-            <div className="card divide-y divide-surface-700">
+            <div className="glass-card divide-y divide-surface-700">
               {summaries.map((s) => (
                 <Link
                   key={s.business_id}
@@ -285,7 +285,7 @@ export default function PosCihazlariPage() {
               <span className="ml-2 text-xs font-normal text-surface-400">son 30 gun</span>
             </h2>
             {sortedDates.length === 0 ? (
-              <div className="card p-6 text-center">
+              <div className="glass-card p-6 text-center">
                 <p className="text-surface-400 text-sm">Bu filtre icin islem yok</p>
               </div>
             ) : (
@@ -361,7 +361,7 @@ function PosTrendChart({
   const t = analytics.totals;
 
   return (
-    <section className="card p-4 space-y-3">
+    <section className="glass-card p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-white">POS Hacmi (30 gün)</h2>
@@ -492,7 +492,7 @@ function PendingSettlementsCard() {
 
   if (loading) {
     return (
-      <section className="card p-4">
+      <section className="glass-card p-4">
         <div className="flex items-center gap-2 text-sm text-surface-400">
           <Loader2 size={14} className="animate-spin" />
           Bekleyen tahsilatlar yükleniyor…
@@ -518,7 +518,7 @@ function PendingSettlementsCard() {
   }
 
   return (
-    <section className="card overflow-hidden border-amber-500/30">
+    <section className="glass-card overflow-hidden border-amber-500/30">
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between bg-amber-500/5">
         <div className="flex items-center gap-2">
           <Receipt size={14} className="text-amber-400" />
@@ -772,7 +772,7 @@ function RegisteredDevicesCard({ devices }: { devices: PosDeviceListItem[] }) {
   const active = devices.filter((d) => d.is_active);
   const inactive = devices.filter((d) => !d.is_active);
   return (
-    <section className="card overflow-hidden">
+    <section className="glass-card overflow-hidden">
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CreditCard size={14} className="text-indigo-300" />

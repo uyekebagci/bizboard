@@ -77,10 +77,10 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
-          <h3 className="text-lg font-semibold text-white">Günü Kapat</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+      <div className="glass-card shadow-xl w-full max-w-md max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
+          <h3 className="text-lg font-bold h-display text-white">Günü Kapat</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700 transition-colors">
             <X size={18} className="text-surface-400" />
           </button>
@@ -95,9 +95,9 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
           )}
 
           {/* Computed (büyük, readonly) */}
-          <div className="card p-4 bg-surface-900 text-center">
+          <div className="rounded-2xl p-4 bg-surface-900/40 border border-surface-700/60 text-center">
             <p className="text-[11px] text-surface-400 uppercase tracking-wider">Hesaplanan Kapanış</p>
-            <p className="mt-1 text-3xl font-bold text-white">
+            <p className="num mt-1 text-3xl font-bold text-white">
               {formatCurrency(preview.computed_closing, "TRY")}
             </p>
             <p className="mt-1 text-[11px] text-surface-400">
@@ -125,8 +125,8 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
           {/* Difference (canlı) */}
           {actualInput !== "" && (
             <div className={cn(
-              "card p-3 flex items-center justify-between transition-colors",
-              difference === 0 && "bg-surface-700",
+              "rounded-2xl p-3 border border-surface-700/60 flex items-center justify-between transition-colors",
+              difference === 0 && "bg-surface-700/50",
               isNegative && "bg-red-500/10 border-red-500/30",
               isPositive && "bg-emerald-500/10 border-emerald-500/30",
             )}>

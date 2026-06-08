@@ -13,10 +13,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, HandCoins, Plus, CalendarClock,
+  ArrowLeft, Loader2, HandCoins, Plus, CalendarClock, Eye, EyeOff,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart, Business } from "@/types";
@@ -34,6 +34,20 @@ export default function AlacaklarPage() {
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
   // v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal
   const [showAddModal, setShowAddModal] = useState(false);
+  // Sansür (privacy): göz ikonu ile tutarları blur'la. localStorage persist, default GÖRÜNÜR.
+  const [censored, setCensored] = useState(false);
+  useEffect(() => {
+    try { setCensored(localStorage.getItem("cati-alacaklar-censor") === "1"); } catch { /* ignore */ }
+  }, []);
+  function toggleCensor() {
+    setCensored((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("cati-alacaklar-censor", next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  }
+  // Blur util — sayı yapısı korunur ama okunmaz (select-none ile kopyalama da engellenir).
+  const censorCls = censored ? "blur-[6px] select-none" : "";
   // WP a9da4e9d: Alacaklar sayfasına notlar — businessId resolve (tek işletme
   // ise direkt; çoklu ise selector). DGR tek işletme → selector görünmez.
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -123,6 +137,16 @@ export default function AlacaklarPage() {
             </p>
           </div>
         </div>
+        {/* Sansür toggle (privacy) — göz ikonu ile tutarları gizle/göster. */}
+        <button
+          onClick={toggleCensor}
+          aria-pressed={censored}
+          title={censored ? "Tutarları göster" : "Tutarları gizle"}
+          aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
+          className="p-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-white transition-colors"
+        >
+          {censored ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
@@ -160,7 +184,7 @@ export default function AlacaklarPage() {
           <section className="grid grid-cols-2 gap-3">
             <div className="glass-card p-4">
               <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
-              <p className="mt-1 text-2xl font-bold text-amber-300">
+              <p className={cn("mt-1 text-2xl font-bold text-amber-300 transition-[filter]", censorCls)}>
                 {formatCurrency(total, "TRY")}
               </p>
             </div>
@@ -235,7 +259,7 @@ export default function AlacaklarPage() {
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
                       {r.receivable_types.map((b, i) => (
-                        <TypeBadge key={`${b.type}-${i}`} breakdown={b} currency={r.currency} />
+                        <TypeBadge key={`${b.type}-${i}`} breakdown={b} currency={r.currency} censored={censored} />
                       ))}
                     </div>
                     {r.last_due_date && (
@@ -249,7 +273,7 @@ export default function AlacaklarPage() {
                   </div>
                   <div className="text-right shrink-0">
                     {/* total_amount güncel TL net toplam → her zaman ₺ (USD sembolü bug fix). */}
-                    <p className="text-base font-semibold text-amber-300">
+                    <p className={cn("text-base font-semibold text-amber-300 transition-[filter]", censorCls)}>
                       {formatCurrency(r.total_amount, "TRY")}
                     </p>
                     <p className="text-[11px] text-surface-400">
@@ -284,9 +308,11 @@ export default function AlacaklarPage() {
 function TypeBadge({
   breakdown,
   currency,
+  censored,
 }: {
   breakdown: ReceivableTypeBreakdown;
   currency: string;
+  censored?: boolean;
 }) {
   const labelMap: Record<string, string> = {
     SENET: "Senet",
@@ -311,11 +337,11 @@ function TypeBadge({
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${cls}`}
-      title={`${label}: ${formatCurrency(breakdown.amount, "TRY")} (${breakdown.count} kayit)`}
+      title={censored ? label : `${label}: ${formatCurrency(breakdown.amount, "TRY")} (${breakdown.count} kayit)`}
     >
       <span>{label}</span>
       <span className="opacity-70">·</span>
-      <span>{formatCurrency(breakdown.amount, "TRY")}</span>
+      <span className={censored ? "blur-[4px] select-none" : ""}>{formatCurrency(breakdown.amount, "TRY")}</span>
     </span>
   );
 }

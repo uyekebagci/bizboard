@@ -73,7 +73,7 @@ export default function KisilerPage() {
           <Loader2 size={28} className="animate-spin text-surface-400" />
         </div>
       ) : list.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <CircleUserRound size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">Henüz kişi yok</p>
           <p className="text-surface-400 text-sm mt-1">
@@ -81,7 +81,7 @@ export default function KisilerPage() {
           </p>
         </div>
       ) : (
-        <section className="card divide-y divide-surface-700">
+        <section className="glass-card divide-y divide-surface-700">
           {list.map((p) => (
             <Link
               key={p.id}

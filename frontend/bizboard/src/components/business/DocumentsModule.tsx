@@ -103,7 +103,7 @@ export function DocumentsModule({ businessId }: Props) {
 
       {/* File List */}
       {files.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <FileText size={32} className="text-surface-300 mx-auto mb-2" />
           <p className="text-surface-400 text-sm">Henuz belge yuklenmemis</p>
           <p className="text-surface-400 text-xs mt-1">

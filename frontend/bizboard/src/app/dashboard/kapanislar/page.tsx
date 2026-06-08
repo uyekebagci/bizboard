@@ -124,7 +124,7 @@ export default function KapanislarPage() {
           <Loader2 size={28} className="animate-spin text-surface-400" />
         </div>
       ) : closings.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <CalendarCheck size={32} className="mx-auto text-surface-500 mb-2" />
           <p className="text-surface-300 font-medium">Geçmiş kapanış kaydı yok</p>
         </div>
@@ -134,7 +134,7 @@ export default function KapanislarPage() {
             <div className="flex items-center justify-between text-xs text-surface-400">
               <span>Toplam {totalElements} kayıt</span>
             </div>
-            <div className="card divide-y divide-surface-700">
+            <div className="glass-card divide-y divide-surface-700">
               {closings.map((c) => <ClosingRow key={c.id} closing={c} isAdmin={profile?.role === "admin"} />)}
             </div>
           </section>
