@@ -265,6 +265,15 @@
   .safe-area-pb {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
+
+  /* WP a9da4e9d (#4): scrollbar gizle — sekme şeridi temiz, dikey bar çıkmaz. */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* PWA standalone mode */

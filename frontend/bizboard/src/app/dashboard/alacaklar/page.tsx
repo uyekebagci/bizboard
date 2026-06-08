@@ -248,8 +248,9 @@ export default function AlacaklarPage() {
                     )}
                   </div>
                   <div className="text-right shrink-0">
+                    {/* total_amount güncel TL net toplam → her zaman ₺ (USD sembolü bug fix). */}
                     <p className="text-base font-semibold text-amber-300">
-                      {formatCurrency(r.total_amount, r.currency)}
+                      {formatCurrency(r.total_amount, "TRY")}
                     </p>
                     <p className="text-[11px] text-surface-400">
                       {r.count} kayit
@@ -305,14 +306,16 @@ function TypeBadge({
   };
   const cls = colorMap[breakdown.type] || colorMap.UNSPECIFIED;
   const label = labelMap[breakdown.type] || breakdown.type;
+  // breakdown.amount güncel TL toplam → her zaman ₺ (USD sembolü bug fix).
+  void currency;
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${cls}`}
-      title={`${label}: ${formatCurrency(breakdown.amount, currency)} (${breakdown.count} kayit)`}
+      title={`${label}: ${formatCurrency(breakdown.amount, "TRY")} (${breakdown.count} kayit)`}
     >
       <span>{label}</span>
       <span className="opacity-70">·</span>
-      <span>{formatCurrency(breakdown.amount, currency)}</span>
+      <span>{formatCurrency(breakdown.amount, "TRY")}</span>
     </span>
   );
 }

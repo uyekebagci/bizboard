@@ -37,6 +37,16 @@ public class AccountStatementService {
     /** WP a9da4e9d: statement içinde writeoff log + WRITEOFF event. */
     private final DebtWriteoffRepository writeoffRepository;
     private final UserRepository userRepository;
+    /** WP a9da4e9d (USD+Altın fix): USD/GOLD borçları GÜNCEL kurla TL'ye çevirir.
+     *  Eski 460k-bug penceresinde kaydedilmiş amount/remaining (stale TL) yerine
+     *  original_amount × güncel kur kullanılır — recompute/sumDebt ile tutarlı. */
+    private final DebtAmountConverter amountConverter;
+
+    /** Borcun GÜNCEL TL kalan tutarı (remaining baz; null → amount). TRY aynen. */
+    private BigDecimal remainingTry(Debt d) {
+        BigDecimal base = d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount();
+        return amountConverter.toTry(d, base);
+    }
 
     @Transactional(readOnly = true)
     public AccountStatementDto getAccountStatement(UUID counterpartId, LocalDate from, LocalDate to,
@@ -58,7 +68,8 @@ public class AccountStatementService {
         BigDecimal openReceivablesTotal = BigDecimal.ZERO;
         BigDecimal openPayablesTotal = BigDecimal.ZERO;
         for (Debt d : openDebts) {
-            BigDecimal rem = d.getRemainingAmount() != null ? d.getRemainingAmount() : d.getAmount();
+            // USD/GOLD → güncel kurla TL (stale amount/remaining'i kullanma). TRY aynen.
+            BigDecimal rem = remainingTry(d);
             if (d.getDirection() == DebtDirection.RECEIVABLE) {
                 openReceivablesTotal = openReceivablesTotal.add(rem);
             } else {
@@ -124,8 +135,9 @@ public class AccountStatementService {
             openDebtDtos.add(AccountStatementDto.OpenDebt.builder()
                     .id(d.getId())
                     .direction(d.getDirection().name())
-                    .originalAmount(d.getAmount())
-                    .remainingAmount(d.getRemainingAmount())
+                    // USD/GOLD → güncel kurla TL (stale amount yerine). TRY aynen.
+                    .originalAmount(amountConverter.fullToTry(d))
+                    .remainingAmount(remainingTry(d))
                     .status(d.getStatus())
                     .dueDate(d.getDueDate())
                     .description(d.getDescription())
@@ -211,10 +223,10 @@ public class AccountStatementService {
             List<Transaction> txs, List<DebtWriteoff> writeoffs, LocalDate from, LocalDate to) {
 
         List<AccountStatementDto.RunningBalanceEntry> rows = new ArrayList<>();
-        // 1) DEBT_CREATED events
+        // 1) DEBT_CREATED events — USD/GOLD güncel kurla TL (stale amount yerine).
         for (Debt d : debts) {
-            BigDecimal amt = d.getDirection() == DebtDirection.RECEIVABLE
-                    ? d.getAmount() : d.getAmount().negate();
+            BigDecimal tl = amountConverter.fullToTry(d);
+            BigDecimal amt = d.getDirection() == DebtDirection.RECEIVABLE ? tl : tl.negate();
             rows.add(AccountStatementDto.RunningBalanceEntry.builder()
                     .date(d.getCreatedAt())
                     .type("DEBT_CREATED")

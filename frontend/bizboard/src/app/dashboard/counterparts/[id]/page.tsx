@@ -56,8 +56,8 @@ export default function CounterpartDetailPage() {
 
   const [cp, setCp] = useState<Counterpart | null>(null);
   const [statement, setStatement] = useState<AccountStatement | null>(null);
-  // Çek/Senet artık ilk sekme — default açılış da burası (açık çekler öne çıksın).
-  const [tab, setTab] = useState<TabKey>("instruments");
+  // Açık Alacaklar ilk sekme — default açılış burası (kullanıcı tercihi).
+  const [tab, setTab] = useState<TabKey>("receivables");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -258,14 +258,15 @@ export default function CounterpartDetailPage() {
 
       {/* ── Tabs ──────────────────────────────────────────────── */}
       <section>
-        {/* Sekme sırası: Çek/Senet (açık çekler öne) · Açık Alacaklar · Açık Verecekler · İşlemler · Cari Hesap (sona) */}
-        <div className="flex gap-1 overflow-x-auto border-b border-surface-700 mb-3">
-          <TabBtn label={`Çek/Senet (${statement.instruments_portfolio.length})`}
-            active={tab === "instruments"} onClick={() => setTab("instruments")} />
+        {/* Sekme sırası: Açık Alacaklar · Açık Verecekler · Çek/Senet · İşlemler · Cari Hesap (sona).
+            #4 fix: overflow-y-hidden + flex-nowrap + no-scrollbar → dikey scrollbar çıkmaz. */}
+        <div className="flex flex-nowrap gap-1 overflow-x-auto overflow-y-hidden no-scrollbar border-b border-surface-700 mb-3">
           <TabBtn label={`Açık Alacaklar (${statement.open_debts.filter((d) => d.direction === "RECEIVABLE").length})`}
             active={tab === "receivables"} onClick={() => setTab("receivables")} />
           <TabBtn label={`Açık Verecekler (${statement.open_debts.filter((d) => d.direction === "PAYABLE").length})`}
             active={tab === "payables"} onClick={() => setTab("payables")} />
+          <TabBtn label={`Çek/Senet (${statement.instruments_portfolio.length})`}
+            active={tab === "instruments"} onClick={() => setTab("instruments")} />
           <TabBtn label={`İşlemler (${statement.transactions.length})`}
             active={tab === "transactions"} onClick={() => setTab("transactions")} />
           <TabBtn label="Cari Hesap" active={tab === "running"} onClick={() => setTab("running")} />
