@@ -56,7 +56,8 @@ export default function CounterpartDetailPage() {
 
   const [cp, setCp] = useState<Counterpart | null>(null);
   const [statement, setStatement] = useState<AccountStatement | null>(null);
-  const [tab, setTab] = useState<TabKey>("running");
+  // Çek/Senet artık ilk sekme — default açılış da burası (açık çekler öne çıksın).
+  const [tab, setTab] = useState<TabKey>("instruments");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -257,16 +258,17 @@ export default function CounterpartDetailPage() {
 
       {/* ── Tabs ──────────────────────────────────────────────── */}
       <section>
+        {/* Sekme sırası: Çek/Senet (açık çekler öne) · Açık Alacaklar · Açık Verecekler · İşlemler · Cari Hesap (sona) */}
         <div className="flex gap-1 overflow-x-auto border-b border-surface-700 mb-3">
-          <TabBtn label="Cari Hesap" active={tab === "running"} onClick={() => setTab("running")} />
+          <TabBtn label={`Çek/Senet (${statement.instruments_portfolio.length})`}
+            active={tab === "instruments"} onClick={() => setTab("instruments")} />
           <TabBtn label={`Açık Alacaklar (${statement.open_debts.filter((d) => d.direction === "RECEIVABLE").length})`}
             active={tab === "receivables"} onClick={() => setTab("receivables")} />
           <TabBtn label={`Açık Verecekler (${statement.open_debts.filter((d) => d.direction === "PAYABLE").length})`}
             active={tab === "payables"} onClick={() => setTab("payables")} />
-          <TabBtn label={`Çek/Senet (${statement.instruments_portfolio.length})`}
-            active={tab === "instruments"} onClick={() => setTab("instruments")} />
           <TabBtn label={`İşlemler (${statement.transactions.length})`}
             active={tab === "transactions"} onClick={() => setTab("transactions")} />
+          <TabBtn label="Cari Hesap" active={tab === "running"} onClick={() => setTab("running")} />
         </div>
 
         {/* Tab 1: Cari Hesap — hareket geçmişi (WP a9da4e9d: redesign + borç düzenleme) */}
@@ -278,15 +280,17 @@ export default function CounterpartDetailPage() {
           ) : (
             <div className="card divide-y divide-surface-700/70">
               {statement.running_balance_history.map((r, i) => {
-                // Sadece açık bir borca denk gelen DEBT_CREATED satırı düzenlenebilir.
-                const editable = r.type === "DEBT_CREATED"
+                // DEBT_CREATED açık borca denk geliyorsa düzenlenebilir; aksi halde kapanmış borç.
+                const openDebt = r.type === "DEBT_CREATED"
                   ? statement.open_debts.find((d) => d.id === r.reference_id) ?? null
                   : null;
+                const isClosedDebt = r.type === "DEBT_CREATED" && !openDebt;
                 return (
                   <RunningHistoryRow
                     key={r.reference_id + "-" + i}
                     row={r}
-                    onEdit={editable ? () => setEditingDebt(editable) : undefined}
+                    isClosedDebt={isClosedDebt}
+                    onEdit={openDebt ? () => setEditingDebt(openDebt) : undefined}
                   />
                 );
               })}
@@ -670,14 +674,21 @@ const HISTORY_TYPE_META: Record<HistoryRow["type"], {
   },
 };
 
-function RunningHistoryRow({ row, onEdit }: { row: HistoryRow; onEdit?: () => void }) {
+function RunningHistoryRow({
+  row, onEdit, isClosedDebt = false,
+}: { row: HistoryRow; onEdit?: () => void; isClosedDebt?: boolean }) {
   const meta = HISTORY_TYPE_META[row.type] ?? HISTORY_TYPE_META.TRANSACTION;
   const isWriteoff = row.type === "WRITEOFF";
   const amountCls = isWriteoff ? "text-rose-300"
     : row.amount > 0 ? "text-emerald-400"
     : row.amount < 0 ? "text-red-400" : "text-surface-400";
   return (
-    <div className={cn("p-3 flex items-start gap-3", isWriteoff && "bg-rose-500/[0.03]")}>
+    <div className={cn(
+      "p-3 flex items-start gap-3",
+      isWriteoff && "bg-rose-500/[0.03]",
+      // Kapanmış borç: soluk (muted) — aktif hareketlerden görsel ayır, ama satırı koru.
+      isClosedDebt && "opacity-55",
+    )}>
       <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", meta.iconWrap)}>
         {meta.icon}
       </div>
@@ -686,6 +697,11 @@ function RunningHistoryRow({ row, onEdit }: { row: HistoryRow; onEdit?: () => vo
           <span className={cn("inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border", meta.badge)}>
             {meta.label}
           </span>
+          {isClosedDebt && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-surface-700 text-surface-400 border-surface-600">
+              <Check size={10} /> Kapandı
+            </span>
+          )}
           <span className="text-[11px] text-surface-400 whitespace-nowrap">
             {formatDateTime(row.date)}
           </span>
