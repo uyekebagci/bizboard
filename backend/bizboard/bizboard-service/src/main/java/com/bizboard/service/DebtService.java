@@ -4,6 +4,7 @@ import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.CreateDebtRequest;
 import com.bizboard.common.dto.DebtDto;
 import com.bizboard.common.dto.DebtSummaryDto;
+import com.bizboard.common.dto.UpdateDebtRequest;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Counterpart;
 import com.bizboard.common.entity.Debt;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +39,7 @@ public class DebtService {
     private final BusinessAccessGuard accessGuard;
     private final CounterpartRepository counterpartRepository;
     private final CounterpartLedgerService counterpartLedger;
+    private final DebtAuditMetaBuilder debtAuditMetaBuilder;
 
     // ─── İşletmeye ait borçları getir ──────────────────────────
 
@@ -197,6 +200,43 @@ public class DebtService {
             counterpartLedger.recomputeIfPresent(counterpart.getId());
         }
 
+        return toDto(debt);
+    }
+
+    // ─── Borç düzenle (WP a9da4e9d) ───────────────────────────
+    /** Bireysel borç düzenleme (partial update); değişen alanlar audit'e eski→yeni yazılır. */
+    @Transactional
+    public DebtDto updateDebt(UUID debtId, UpdateDebtRequest req, UUID userId) {
+        Debt debt = debtRepository.findById(debtId)
+                .orElseThrow(() -> new IllegalArgumentException("Borc bulunamadi"));
+        accessGuard.assertCanAccessBusiness(userId, debt.getBusiness().getId());
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (debt.isAdminOnly() && !"admin".equalsIgnoreCase(actor.getRole())) {
+            throw new SecurityException("Bu borcu sadece admin duzenleyebilir");
+        }
+        BigDecimal oldAmount = debt.getAmount(); // mutate öncesi — audit için
+        LocalDate oldDueDate = debt.getDueDate();
+        String oldDescription = debt.getDescription();
+        if (req.getAmount() != null) {
+            debt.setAmount(req.getAmount());
+            debtAuditMetaBuilder.recomputeRemainingForAmount(debt, req.getAmount());
+        }
+        if (req.getDueDate() != null) debt.setDueDate(req.getDueDate());
+        if (req.getDescription() != null) debt.setDescription(req.getDescription());
+        debt = debtRepository.save(debt);
+        log.info("Borc duzenlendi: {} - {} duzenleyen={}",
+                debt.getDirection(), debt.getCounterparty(), actor.getFullName());
+        if (debt.getCounterpartRef() != null) {
+            counterpartLedger.recomputeIfPresent(debt.getCounterpartRef().getId());
+        }
+        auditLogService.recordEntityAction(
+                AuditAction.DEBT_UPDATE,
+                actor.getId(), actor.getUsername(),
+                "DEBT", debt.getId(),
+                debt.getBusiness().getName() + " — " + debt.getDirection().name()
+                        + " (" + debt.getCounterparty() + ") duzenlendi",
+                debtAuditMetaBuilder.buildUpdateMeta(debt, oldAmount, oldDueDate, oldDescription, req));
         return toDto(debt);
     }
 

@@ -19,8 +19,9 @@ import { api } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
-import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart } from "@/types";
+import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart, Business } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
+import { NotesModule } from "@/components/business/NotesModule";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
 
@@ -32,6 +33,10 @@ export default function AlacaklarPage() {
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
   // v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal
   const [showAddModal, setShowAddModal] = useState(false);
+  // WP a9da4e9d: Alacaklar sayfasına notlar — businessId resolve (tek işletme
+  // ise direkt; çoklu ise selector). DGR tek işletme → selector görünmez.
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [notesBusinessId, setNotesBusinessId] = useState<string>("");
 
   useEffect(() => {
     async function load() {
@@ -65,6 +70,17 @@ export default function AlacaklarPage() {
     }
     load();
   }, [refreshKey]);
+
+  // WP a9da4e9d: notlar için işletme listesi (tek ise auto-select).
+  useEffect(() => {
+    api.get<Business[]>("/businesses")
+      .then((r) => {
+        const list = r || [];
+        setBusinesses(list);
+        if (list.length >= 1) setNotesBusinessId((prev) => prev || list[0].id);
+      })
+      .catch(() => { /* sessiz — notlar bölümü görünmez */ });
+  }, []);
 
   const total = rows.reduce((a, r) => a + (r.total_amount || 0), 0);
   const totalCount = rows.reduce((a, r) => a + (r.count || 0), 0);
@@ -154,6 +170,28 @@ export default function AlacaklarPage() {
               </p>
             </div>
           </section>
+
+          {/* WP a9da4e9d: Alacaklar notları — işletme detayındaki NotesModule reuse.
+              DGR tek işletme → selector görünmez; çoklu işletmede basit seçici. */}
+          {notesBusinessId && (
+            <section className="space-y-2">
+              {businesses.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-surface-400">Notlar — İşletme:</label>
+                  <select
+                    value={notesBusinessId}
+                    onChange={(e) => setNotesBusinessId(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg bg-surface-800 border border-surface-600 text-sm text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  >
+                    {businesses.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <NotesModule businessId={notesBusinessId} />
+            </section>
+          )}
 
           {/* Sort chips */}
           <section className="flex items-center justify-between gap-2">

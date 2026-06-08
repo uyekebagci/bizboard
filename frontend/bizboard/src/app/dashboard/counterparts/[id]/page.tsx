@@ -13,7 +13,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ChevronLeft, Plus, ArrowDownLeft, ArrowUpRight, TrendingUp, TrendingDown,
   FileText, Scroll, Check, AlertTriangle, RefreshCw, Loader2, Trash2,
-  Wallet, Banknote, Receipt, Scissors,
+  Wallet, Banknote, Receipt, Scissors, Pencil,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -28,6 +28,7 @@ import { ClearInstrumentModal } from "@/components/payments/ClearInstrumentModal
 import { BounceInstrumentModal } from "@/components/payments/BounceInstrumentModal";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 import { WriteoffModal } from "@/components/debts/WriteoffModal";
+import { EditDebtModal } from "@/components/debts/EditDebtModal";
 
 type TabKey = "running" | "receivables" | "payables" | "instruments" | "transactions";
 
@@ -65,6 +66,8 @@ export default function CounterpartDetailPage() {
     | null
   >(null);
   const [debtModal, setDebtModal] = useState<"RECEIVABLE" | "PAYABLE" | null>(null);
+  // WP a9da4e9d: bireysel borç düzenleme modal
+  const [editingDebt, setEditingDebt] = useState<AccountStatement["open_debts"][number] | null>(null);
   // WP a9da4e9d: borç silme modal
   const [showWriteoff, setShowWriteoff] = useState(false);
   const [clearInst, setClearInst] = useState<PaymentInstrumentDto | null>(null);
@@ -330,6 +333,7 @@ export default function CounterpartDetailPage() {
                 original_amount: d.original_amount, description: d.description,
               },
             })}
+            onEdit={(d) => setEditingDebt(d)}
           />
         )}
 
@@ -346,6 +350,7 @@ export default function CounterpartDetailPage() {
                 original_amount: d.original_amount, description: d.description,
               },
             })}
+            onEdit={(d) => setEditingDebt(d)}
           />
         )}
 
@@ -495,6 +500,19 @@ export default function CounterpartDetailPage() {
           onClose={() => setDebtModal(null)}
         />
       )}
+      {editingDebt && (
+        <EditDebtModal
+          debt={{
+            id: editingDebt.id,
+            original_amount: editingDebt.original_amount,
+            remaining_amount: editingDebt.remaining_amount,
+            due_date: editingDebt.due_date,
+            description: editingDebt.description,
+          }}
+          onClose={() => setEditingDebt(null)}
+          onSuccess={() => { setEditingDebt(null); triggerRefresh(); }}
+        />
+      )}
       {showWriteoff && (
         <WriteoffModal
           counterpartId={id!}
@@ -560,12 +578,13 @@ function BreakdownCard({
 }
 
 function DebtListTab({
-  debts, tone, actionLabel, onAction,
+  debts, tone, actionLabel, onAction, onEdit,
 }: {
   debts: AccountStatement["open_debts"];
   tone: "positive" | "negative";
   actionLabel: string;
   onAction: (d: AccountStatement["open_debts"][number]) => void;
+  onEdit: (d: AccountStatement["open_debts"][number]) => void;
 }) {
   if (debts.length === 0) {
     return (
@@ -601,14 +620,22 @@ function DebtListTab({
                 {d.due_date && ` · Vade ${formatDate(d.due_date)}`}
               </p>
             </div>
-            <button onClick={() => onAction(d)}
-              className={cn("text-[10px] px-3 py-1.5 rounded-md font-semibold inline-flex items-center gap-1",
-                tone === "positive"
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-red-600 hover:bg-red-700 text-white")}>
-              {tone === "positive" ? <ArrowDownLeft size={10} /> : <ArrowUpRight size={10} />}
-              {actionLabel}
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button onClick={() => onEdit(d)}
+                title="Düzenle"
+                aria-label="Borcu düzenle"
+                className="text-[10px] px-2 py-1.5 rounded-md font-semibold inline-flex items-center gap-1 bg-surface-700 hover:bg-surface-600 text-surface-200 border border-surface-600">
+                <Pencil size={10} />
+              </button>
+              <button onClick={() => onAction(d)}
+                className={cn("text-[10px] px-3 py-1.5 rounded-md font-semibold inline-flex items-center gap-1",
+                  tone === "positive"
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : "bg-red-600 hover:bg-red-700 text-white")}>
+                {tone === "positive" ? <ArrowDownLeft size={10} /> : <ArrowUpRight size={10} />}
+                {actionLabel}
+              </button>
+            </div>
           </div>
         );
       })}

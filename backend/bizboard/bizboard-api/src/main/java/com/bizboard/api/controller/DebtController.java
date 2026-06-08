@@ -3,6 +3,7 @@ package com.bizboard.api.controller;
 import com.bizboard.common.dto.CreateDebtRequest;
 import com.bizboard.common.dto.DebtDto;
 import com.bizboard.common.dto.DebtSummaryDto;
+import com.bizboard.common.dto.UpdateDebtRequest;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.DebtService;
 import jakarta.validation.Valid;
@@ -47,6 +48,14 @@ public class DebtController {
     }
 
     // ─── Tekil borç işlemleri ──────────────────────────────────
+
+    @PutMapping("/debts/{debtId}")
+    public ResponseEntity<DebtDto> updateDebt(
+            @PathVariable UUID debtId,
+            @Valid @RequestBody UpdateDebtRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(debtService.updateDebt(debtId, request, principal.getId()));
+    }
 
     @PatchMapping("/debts/{debtId}/settle")
     public ResponseEntity<DebtDto> settleDebt(

@@ -42,6 +42,8 @@ public final class AuditAction {
 
     // ── Debts / receivables ──────────────────────────────────────────────
     public static final String DEBT_CREATE        = "DEBT_CREATE";
+    /** WP a9da4e9d: bireysel borç düzenleme (amount/due_date/description). */
+    public static final String DEBT_UPDATE        = "DEBT_UPDATE";
     public static final String DEBT_DELETE        = "DEBT_DELETE";
     public static final String DEBT_SETTLED       = "DEBT_SETTLED";
     public static final String DEBT_MIGRATION     = "DEBT_MIGRATION";
