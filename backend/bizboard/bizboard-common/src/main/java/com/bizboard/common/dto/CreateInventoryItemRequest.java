@@ -59,6 +59,12 @@ public class CreateInventoryItemRequest {
     @JsonProperty("current_stock")
     private BigDecimal currentStock;
 
+    @JsonProperty("reorder_point")
+    private BigDecimal reorderPoint;
+
+    @JsonProperty("reorder_lead_days")
+    private Integer reorderLeadDays;
+
     @JsonProperty("warehouse_location")
     private String warehouseLocation;
 

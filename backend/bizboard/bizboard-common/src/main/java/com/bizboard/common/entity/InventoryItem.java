@@ -94,6 +94,21 @@ public class InventoryItem {
     @Column(name = "current_stock", precision = 15, scale = 2)
     private BigDecimal currentStock;
 
+    /**
+     * Manuel reorder eşiği (opsiyonel override). Boşsa {@code minimumStock} +
+     * lead-time tampon ile otomatik hesaplanır (ReorderCalculator).
+     */
+    @Column(name = "reorder_point", precision = 15, scale = 2)
+    private BigDecimal reorderPoint;
+
+    /**
+     * Tedarik temin süresi (gün). Reorder eşiği lead-time talebini bu süreyle
+     * tamponlar. Default 7. (WP f4fe6d82)
+     */
+    @Column(name = "reorder_lead_days")
+    @Builder.Default
+    private Integer reorderLeadDays = 7;
+
     @Column(name = "warehouse_location")
     private String warehouseLocation;
 

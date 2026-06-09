@@ -871,6 +871,11 @@ export interface InventoryItem {
   unit: string | null;
   minimum_stock: number | null;
   current_stock: number | null;
+  reorder_point: number | null;
+  reorder_lead_days: number | null;
+  effective_reorder_point: number | null;
+  needs_reorder: boolean;
+  suggested_order_quantity: number | null;
   warehouse_location: string | null;
   batch_number: string | null;
   expiry_date: string | null;

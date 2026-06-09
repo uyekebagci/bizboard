@@ -61,6 +61,26 @@ public class InventoryItemDto {
     @JsonProperty("current_stock")
     private BigDecimal currentStock;
 
+    /** Manuel reorder eşiği (opsiyonel). (WP f4fe6d82) */
+    @JsonProperty("reorder_point")
+    private BigDecimal reorderPoint;
+
+    /** Tedarik temin süresi (gün). */
+    @JsonProperty("reorder_lead_days")
+    private Integer reorderLeadDays;
+
+    /** Hesaplanan etkili reorder eşiği (manuel ya da minimum+lead tamponu). */
+    @JsonProperty("effective_reorder_point")
+    private BigDecimal effectiveReorderPoint;
+
+    /** {@code current_stock <= effective_reorder_point} → sipariş önerisi. */
+    @JsonProperty("needs_reorder")
+    private boolean needsReorder;
+
+    /** Önerilen sipariş miktarı (eşik üstüne çıkmak için), opsiyonel ipucu. */
+    @JsonProperty("suggested_order_quantity")
+    private BigDecimal suggestedOrderQuantity;
+
     @JsonProperty("warehouse_location")
     private String warehouseLocation;
 

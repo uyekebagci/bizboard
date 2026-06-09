@@ -11,6 +11,7 @@ import com.bizboard.repository.FuelLogRepository;
 import com.bizboard.repository.InventoryItemRepository;
 import com.bizboard.repository.MaintenanceLogRepository;
 import com.bizboard.repository.UserRepository;
+import com.bizboard.service.inventory.ReorderCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class InventoryService {
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
     private final BusinessAccessGuard accessGuard;
+    private final ReorderCalculator reorderCalculator;
 
     // ── Envanter Kalemleri ──
 
@@ -91,6 +93,8 @@ public class InventoryService {
                 .unit(request.getUnit())
                 .minimumStock(request.getMinimumStock())
                 .currentStock(request.getCurrentStock())
+                .reorderPoint(request.getReorderPoint())
+                .reorderLeadDays(request.getReorderLeadDays() != null ? request.getReorderLeadDays() : 7)
                 .warehouseLocation(request.getWarehouseLocation())
                 .batchNumber(request.getBatchNumber())
                 .expiryDate(request.getExpiryDate())
@@ -131,6 +135,8 @@ public class InventoryService {
         if (request.getUnit() != null) item.setUnit(request.getUnit());
         if (request.getMinimumStock() != null) item.setMinimumStock(request.getMinimumStock());
         if (request.getCurrentStock() != null) item.setCurrentStock(request.getCurrentStock());
+        if (request.getReorderPoint() != null) item.setReorderPoint(request.getReorderPoint());
+        if (request.getReorderLeadDays() != null) item.setReorderLeadDays(request.getReorderLeadDays());
         if (request.getWarehouseLocation() != null) item.setWarehouseLocation(request.getWarehouseLocation());
         if (request.getBatchNumber() != null) item.setBatchNumber(request.getBatchNumber());
         if (request.getExpiryDate() != null) item.setExpiryDate(request.getExpiryDate());
@@ -183,9 +189,8 @@ public class InventoryService {
                 case "IN_REPAIR" -> inRepair++;
             }
 
-            if ("CONSUMABLE".equals(item.getCategory())
-                    && item.getCurrentStock() != null && item.getMinimumStock() != null
-                    && item.getCurrentStock().compareTo(item.getMinimumStock()) <= 0) {
+            // Akıllı reorder eşiği (manuel ya da minimum+lead tamponu). (WP f4fe6d82)
+            if (reorderCalculator.compute(item).needsReorder()) {
                 lowStock++;
             }
 
@@ -332,6 +337,7 @@ public class InventoryService {
     // ── Mapper ──
 
     private InventoryItemDto toDto(InventoryItem item) {
+        ReorderCalculator.Result reorder = reorderCalculator.compute(item);
         return InventoryItemDto.builder()
                 .id(item.getId())
                 .businessId(item.getBusiness().getId())
@@ -352,6 +358,11 @@ public class InventoryService {
                 .unit(item.getUnit())
                 .minimumStock(item.getMinimumStock())
                 .currentStock(item.getCurrentStock())
+                .reorderPoint(item.getReorderPoint())
+                .reorderLeadDays(item.getReorderLeadDays())
+                .effectiveReorderPoint(reorder.effectiveReorderPoint())
+                .needsReorder(reorder.needsReorder())
+                .suggestedOrderQuantity(reorder.suggestedOrderQuantity())
                 .warehouseLocation(item.getWarehouseLocation())
                 .batchNumber(item.getBatchNumber())
                 .expiryDate(item.getExpiryDate())

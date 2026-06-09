@@ -231,10 +231,8 @@ function InventoryPage() {
 
   const totalCount = filtered.length;
   const brokenCount = filtered.filter((i) => i.status === "BROKEN").length;
-  const lowStockCount = filtered.filter((i) =>
-    i.category === "CONSUMABLE" && i.current_stock != null && i.minimum_stock != null
-    && i.current_stock <= i.minimum_stock
-  ).length;
+  // Akıllı reorder: backend needs_reorder (eşik = manuel ya da minimum+lead tamponu). (WP f4fe6d82)
+  const lowStockCount = filtered.filter((i) => i.needs_reorder).length;
 
   return (
     <div className="max-w-4xl mx-auto space-y-5 pb-24">
@@ -352,8 +350,8 @@ function InventoryRow({ item, onClick, showBusiness }: { item: InventoryItem; on
   const catDef = getCategoryDef(item.category);
   const Icon = catDef.icon;
   const statusCfg = STATUS_LABELS[item.status] || STATUS_LABELS.ACTIVE;
-  const isLowStock = item.category === "CONSUMABLE" && item.current_stock != null
-    && item.minimum_stock != null && item.current_stock <= item.minimum_stock;
+  // Akıllı reorder eşiği (backend hesabı). (WP f4fe6d82)
+  const isLowStock = item.needs_reorder;
 
   return (
     <div onClick={onClick} className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group">
@@ -367,7 +365,7 @@ function InventoryRow({ item, onClick, showBusiness }: { item: InventoryItem; on
             {statusCfg.label}
           </span>
           {isLowStock && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 border border-red-500/30 text-red-600">Dusuk Stok</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 border border-red-500/30 text-red-600">Siparis Gerekli</span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-surface-400 flex-wrap">
@@ -378,11 +376,17 @@ function InventoryRow({ item, onClick, showBusiness }: { item: InventoryItem; on
           {showBusiness && item.business_name && <span className="text-brand-500">· {item.business_name}</span>}
         </div>
         {item.category === "CONSUMABLE" && item.current_stock != null && (
-          <div className="flex items-center gap-1 mt-0.5">
+          <div className="flex items-center gap-1 mt-0.5 flex-wrap">
             <span className={cn("text-xs font-medium", isLowStock ? "text-red-600" : "text-surface-300")}>
               Stok: {item.current_stock} {UNIT_LABELS[item.unit || ""] || item.unit || ""}
             </span>
             {item.minimum_stock != null && <span className="text-[10px] text-surface-400">(min: {item.minimum_stock})</span>}
+            {item.effective_reorder_point != null && (
+              <span className="text-[10px] text-surface-400">· reorder: {item.effective_reorder_point}</span>
+            )}
+            {isLowStock && item.suggested_order_quantity != null && item.suggested_order_quantity > 0 && (
+              <span className="text-[10px] text-amber-500 font-medium">· oneri: +{item.suggested_order_quantity} siparis</span>
+            )}
           </div>
         )}
       </div>
@@ -423,6 +427,8 @@ function InventoryDetailModal({ item, onClose, onUpdated }: {
   const [editUnit, setEditUnit] = useState(item.unit || "KG");
   const [editCurrentStock, setEditCurrentStock] = useState(item.current_stock?.toString() || "");
   const [editMinimumStock, setEditMinimumStock] = useState(item.minimum_stock?.toString() || "");
+  const [editReorderPoint, setEditReorderPoint] = useState(item.reorder_point?.toString() || "");
+  const [editReorderLeadDays, setEditReorderLeadDays] = useState(item.reorder_lead_days?.toString() || "7");
   const [editSku, setEditSku] = useState(item.sku || "");
   const [editWarehouseLocation, setEditWarehouseLocation] = useState(item.warehouse_location || "");
   const [editStockCategory, setEditStockCategory] = useState(item.stock_category || "");
@@ -476,6 +482,8 @@ function InventoryDetailModal({ item, onClose, onUpdated }: {
         unit: editUnit || null,
         minimum_stock: editMinimumStock ? parseFloat(editMinimumStock) : null,
         current_stock: editCurrentStock ? parseFloat(editCurrentStock) : null,
+        reorder_point: editReorderPoint ? parseFloat(editReorderPoint) : null,
+        reorder_lead_days: editReorderLeadDays ? parseInt(editReorderLeadDays) : null,
         warehouse_location: editWarehouseLocation || null,
         stock_category: editStockCategory || null,
         assigned_to: editAssignedTo || null,
@@ -632,6 +640,13 @@ function InventoryDetailModal({ item, onClose, onUpdated }: {
                   <EditField label="Min. Stok" value={editMinimumStock} onChange={setEditMinimumStock} type="number" />
                 </div>
                 <div className="col-span-2 grid grid-cols-2 gap-2">
+                  <EditField label="Reorder Esigi (ops.)" value={editReorderPoint} onChange={setEditReorderPoint} type="number" />
+                  <EditField label="Temin Suresi (gun)" value={editReorderLeadDays} onChange={setEditReorderLeadDays} type="number" />
+                </div>
+                <p className="col-span-2 text-[10px] text-surface-400 -mt-1">
+                  Reorder esigi bos birakilirsa min. stok + temin suresi tamponuyla otomatik hesaplanir.
+                </p>
+                <div className="col-span-2 grid grid-cols-2 gap-2">
                   {hasField("sku") && <EditField label="SKU" value={editSku} onChange={setEditSku} />}
                   {hasField("warehouse_location") && <EditField label="Depo/Raf" value={editWarehouseLocation} onChange={setEditWarehouseLocation} />}
                   {hasField("stock_category") && (
@@ -650,6 +665,8 @@ function InventoryDetailModal({ item, onClose, onUpdated }: {
                 <DetailRow label="SKU" value={item.sku} />
                 <DetailRow label="Mevcut Stok" value={item.current_stock != null ? `${item.current_stock} ${UNIT_LABELS[item.unit || ""] || item.unit || ""}` : null} />
                 <DetailRow label="Minimum Stok" value={item.minimum_stock != null ? `${item.minimum_stock} ${UNIT_LABELS[item.unit || ""] || item.unit || ""}` : null} />
+                <DetailRow label="Reorder Esigi" value={item.effective_reorder_point != null ? `${item.effective_reorder_point}${item.reorder_point != null ? " (manuel)" : " (oto)"}` : null} />
+                <DetailRow label="Temin Suresi" value={item.reorder_lead_days != null ? `${item.reorder_lead_days} gun` : null} />
                 <DetailRow label="Malzeme Kategorisi" value={item.stock_category ? STOCK_CAT_LABELS[item.stock_category] || item.stock_category : null} />
                 <DetailRow label="Depo/Raf" value={item.warehouse_location} />
                 <DetailRow label="Parti No" value={item.batch_number} />
@@ -1194,6 +1211,8 @@ function CreateInventoryModal({ businesses, presetBusinessId, onClose, onCreated
   const [unit, setUnit] = useState("KG");
   const [minimumStock, setMinimumStock] = useState("");
   const [currentStock, setCurrentStock] = useState("");
+  const [reorderPoint, setReorderPoint] = useState("");
+  const [reorderLeadDays, setReorderLeadDays] = useState("7");
   const [warehouseLocation, setWarehouseLocation] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -1251,6 +1270,8 @@ function CreateInventoryModal({ businesses, presetBusinessId, onClose, onCreated
         unit: hasField("unit") || hasField("current_stock") ? unit : null,
         minimum_stock: hasField("minimum_stock") && minimumStock ? parseFloat(minimumStock) : null,
         current_stock: hasField("current_stock") && currentStock ? parseFloat(currentStock) : null,
+        reorder_point: hasField("current_stock") && reorderPoint ? parseFloat(reorderPoint) : null,
+        reorder_lead_days: hasField("current_stock") && reorderLeadDays ? parseInt(reorderLeadDays) : null,
         warehouse_location: hasField("warehouse_location") && warehouseLocation ? warehouseLocation : null,
         batch_number: hasField("batch_number") && batchNumber ? batchNumber : null,
         expiry_date: hasField("expiry_date") && expiryDate ? expiryDate : null,
@@ -1389,6 +1410,19 @@ function CreateInventoryModal({ businesses, presetBusinessId, onClose, onCreated
                   <input type="number" value={minimumStock} onChange={(e) => setMinimumStock(e.target.value)} step="0.01" className={inputCls} />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-surface-200 mb-1">Reorder Esigi (ops.)</label>
+                  <input type="number" value={reorderPoint} onChange={(e) => setReorderPoint(e.target.value)} step="0.01" className={inputCls} placeholder="Bos = otomatik" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-200 mb-1">Temin Suresi (gun)</label>
+                  <input type="number" value={reorderLeadDays} onChange={(e) => setReorderLeadDays(e.target.value)} step="1" className={inputCls} />
+                </div>
+              </div>
+              <p className="text-xs text-surface-400 -mt-1">
+                Reorder esigi bos birakilirsa min. stok + temin suresi tamponuyla otomatik hesaplanir; stok bu esigin altina dustugunde &quot;Siparis Gerekli&quot; uyarisi cikar.
+              </p>
               {hasField("sku") && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
