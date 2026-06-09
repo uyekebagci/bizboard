@@ -32,13 +32,14 @@ public class PortfolioService {
     }
 
     @Transactional(readOnly = true)
-    public PeriodSummaryDto getMonthlySummary(UUID businessId, int year, int month) {
+    public PeriodSummaryDto getMonthlySummary(UUID userId, UUID businessId, int year, int month) {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate today = LocalDate.now();
         LocalDate end = (year == today.getYear() && month == today.getMonthValue())
                 ? today
                 : start.withDayOfMonth(start.lengthOfMonth());
 
-        return summaryService.getBusinessSummary(businessId, "monthly", start, end);
+        // C-1: getBusinessSummary artık userId ile guard uyguluyor.
+        return summaryService.getBusinessSummary(userId, businessId, "monthly", start, end);
     }
 }

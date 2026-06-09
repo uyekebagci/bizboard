@@ -129,7 +129,11 @@ public class BusinessController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        // C-1 güvenlik fix: getConsolidated/getTransactions ile aynı — userId guard'a geçer.
+        UUID userId = principal.getId();
 
         // Geriye uyumluluk: year + month parametreleri gelirse aylık hesapla
         if (year != null && month != null && period == null && from == null) {
@@ -138,10 +142,10 @@ public class BusinessController {
             LocalDate end = (year == today.getYear() && month == today.getMonthValue())
                     ? today
                     : start.withDayOfMonth(start.lengthOfMonth());
-            return ResponseEntity.ok(summaryService.getBusinessSummary(id, "monthly", start, end));
+            return ResponseEntity.ok(summaryService.getBusinessSummary(userId, id, "monthly", start, end));
         }
 
-        return ResponseEntity.ok(summaryService.getBusinessSummary(id, period, from, to));
+        return ResponseEntity.ok(summaryService.getBusinessSummary(userId, id, period, from, to));
     }
 
     /**

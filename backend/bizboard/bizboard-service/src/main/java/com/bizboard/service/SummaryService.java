@@ -45,12 +45,16 @@ public class SummaryService {
     private final ClosedPeriodSummaryRepository closedPeriodSummaryRepository;
     private final FixedCostRepository fixedCostRepository;
     private final UserRepository userRepository;
+    // C-1 güvenlik fix: tek-işletme özetinde cross-tenant erişimi kapatmak için guard.
+    private final BusinessAccessGuard accessGuard;
 
     // ─── Tek İşletme Özeti (Esnek Dönem) ────────────────────────────────
 
     @Transactional(readOnly = true)
-    public PeriodSummaryDto getBusinessSummary(UUID businessId, String period,
+    public PeriodSummaryDto getBusinessSummary(UUID userId, UUID businessId, String period,
                                                LocalDate from, LocalDate to) {
+        // C-1: diğer guard'lı read'lerle aynı — ilk satırda erişim kontrolü.
+        accessGuard.assertCanAccessBusiness(userId, businessId);
         DateRange range = resolveDateRange(period, from, to);
 
         List<Transaction> transactions = transactionRepository
