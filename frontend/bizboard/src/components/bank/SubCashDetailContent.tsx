@@ -715,7 +715,7 @@ function AssignmentPicker({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
+        className="glass-card w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700 shrink-0">
           <h3 className="text-sm font-semibold text-white">Atama Ekle</h3>

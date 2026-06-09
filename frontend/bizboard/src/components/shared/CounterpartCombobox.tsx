@@ -264,7 +264,7 @@ function InlineCreateModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <form
         onSubmit={handleSubmit}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-md p-5"
+        className="glass-card w-full max-w-md p-5"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-white">Yeni Karsi Firma</h3>

@@ -404,7 +404,7 @@ function DeleteModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md">
+      <div className="glass-card shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">

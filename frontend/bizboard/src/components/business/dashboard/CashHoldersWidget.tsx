@@ -176,7 +176,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
           onClick={() => setShowCreate(false)}
         >
           <div
-            className="bg-surface-800 rounded-2xl border border-surface-600 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            className="glass-card max-w-md w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b border-surface-700 flex items-center gap-2">

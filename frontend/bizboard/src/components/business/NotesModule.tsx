@@ -245,7 +245,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-700 p-6 max-w-sm w-full">
+          <div className="glass-card shadow-xl p-6 max-w-sm w-full">
             <h3 className="text-lg font-semibold text-white mb-2">
               Notu Sil
             </h3>
@@ -344,7 +344,7 @@ function NoteFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-700 w-full max-w-lg">
+      <div className="glass-card shadow-xl w-full max-w-lg">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <h3 className="text-lg font-semibold text-white">

@@ -273,7 +273,7 @@ function PosDeviceFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md">
+      <div className="glass-card shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <h3 className="text-lg font-semibold text-white">
             {isEdit ? "POS Cihazini Duzenle" : "Yeni POS Cihazi"}
@@ -432,7 +432,7 @@ function DeleteConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-sm p-5">
+      <div className="glass-card w-full max-w-sm p-5">
         <h3 className="text-base font-semibold text-white mb-1">Cihazi pasif yap</h3>
         <p className="text-sm text-surface-300">
           <strong>{device.name}</strong> cihazı <strong>pasif</strong> yapılacak (fiziksel
