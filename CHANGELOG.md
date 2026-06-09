@@ -30,6 +30,39 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Security
+
+- **Cari liste/alt-firma artık aktif işletmeye scope'lanıyor (cross-business sızıntı fix'i).**
+  `CounterpartController.list()` ve `.children()` gönderilen `businessId`'yi yok
+  sayıyor, servis `findByBusinessIdIn(allAllowed)` ile filtreliyordu; birden çok
+  işletmeye erişimi olan kullanıcı FE'de aktif işletme seçili olsa bile TÜM
+  işletmelerin carilerini görüyordu (multi-tenant STRICT). Artık opsiyonel
+  `businessId` verildiğinde önce READ erişimi doğrulanıyor (erişilemezse 404 —
+  existence reveal kapalı), sonra sonuç o tek işletmeye indirgeniyor. `businessId`
+  yoksa eski all-allowed davranışı korunur (geriye-uyumlu overload'lar).
+  _Etki: çok-işletmeli kullanıcılarda cari listeleme; tek-işletme davranışı değişmez._
+- **Yakalanmamış exception'lar artık iç hata detayı SIZDIRMIYOR (M-6).**
+  `GlobalExceptionHandler.handleGeneric` istemciye `e.getMessage()` ve exception
+  sınıf adını döndürmüyor; generic mesaj döner, tam tip+stack yalnız sunucu
+  log'una yazılır.
+
+### Changed
+
+- **Hata yanıt gövdesi tek şekle birleştirildi: `{error}` → `{message}` (M-3).**
+  10 controller (BankAccount, Business, CashClosing, Counterpart, Firms, Phone,
+  Pos, PosDevice, SubCash, Transfer) `GlobalExceptionHandler`'ın zaten ürettiği
+  `{message}` şekliyle hizalandı — API tek dil konuşur. Ek olarak
+  `EntityNotFoundException → 404` handler'ı eklendi (M-4); validation hataları
+  `IllegalArgumentException` ile 400 kalmaya devam eder. _Servis tarafı ~148
+  "...bulunamadi" throw'unun migrasyonu (geniş FE-kontrat etkisi) ertelendi._
+- **İşletme-erişim mantığı `BusinessAccessGuard`'ta tek kaynağa toplandı (R2 DRY).**
+  ~9 serviste birebir kopyalanan "accessible_businesses CSV / admin / all / legacy
+  owner-member" predicate'i merkezîleştirildi (`accessibleBusinesses`, `isAdmin`).
+  TransactionService, FinanceService, SummaryService, CashService, PosService
+  guard'a delege ediyor; ölü repository/User alanları ve kullanılmayan import'lar
+  temizlendi. Davranış değişmedi. `ReceivableService` özelleşmiş erişim mantığı
+  nedeniyle bilinçli olarak kapsam dışı bırakıldı.
+
 ### Fixed
 
 - **POS Komisyon — oranlar artık tx OLUŞTURULURKEN snapshot ediliyor (tx-zinciri WP).**
