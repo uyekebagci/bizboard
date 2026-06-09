@@ -140,7 +140,7 @@ function TransactionRow({
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer"
+      className="row-hover flex items-center gap-3 p-4 transition-colors cursor-pointer"
     >
       <div
         className={cn(

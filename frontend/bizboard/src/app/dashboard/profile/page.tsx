@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="card p-8 text-center">
+      <div className="glass-card p-8 text-center">
         <Loader2 size={20} className="animate-spin mx-auto text-surface-400" />
       </div>
     );
@@ -45,7 +45,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-5">
       {/* Header card */}
-      <section className="card p-5">
+      <section className="glass-card p-5">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center text-white font-bold text-xl">
             {getInitials(profile.full_name)}
@@ -74,7 +74,7 @@ export default function ProfilePage() {
       </section>
 
       {/* Contact / preferences */}
-      <section className="card divide-y divide-surface-700">
+      <section className="glass-card divide-y divide-surface-700">
         <InfoRow icon={Mail} label="E-posta" value={profile.email ?? "—"} />
         <InfoRow icon={Phone} label="Telefon" value={profile.phone ?? "—"} />
         <InfoRow
@@ -89,7 +89,7 @@ export default function ProfilePage() {
       <TelegramLinkSection />
 
       {/* Actions */}
-      <section className="card divide-y divide-surface-700 overflow-hidden">
+      <section className="glass-card divide-y divide-surface-700 overflow-hidden">
         <ActionRow
           icon={Lock}
           label="Parola Degistir"
@@ -114,7 +114,7 @@ export default function ProfilePage() {
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="w-full card p-4 flex items-center justify-center gap-2 text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+          className="w-full glass-card p-4 flex items-center justify-center gap-2 text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
         >
           {loggingOut ? (
             <Loader2 size={16} className="animate-spin" />
@@ -155,7 +155,7 @@ function ActionRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-surface-700/40 transition-colors text-left"
+      className="row-hover w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left"
     >
       <Icon size={16} className="text-surface-400 shrink-0" />
       <span className="flex-1 text-sm text-white">{label}</span>

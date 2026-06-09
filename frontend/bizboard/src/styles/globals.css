@@ -214,10 +214,11 @@
   }
 
   .btn-primary {
+    /* Mockup-fidelity: hover'da brand glow (CTA parlar). */
     @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
            bg-brand-600 text-white font-medium
-           hover:bg-brand-700 active:bg-brand-800
-           transition-colors duration-150
+           hover:bg-brand-700 active:bg-brand-800 hover:shadow-glow
+           transition-all duration-150
            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
   }
 
@@ -274,6 +275,14 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Mockup-fidelity (styles.css:120-121): liste satırı hover — ince zemin. */
+  .row-hover:hover {
+    background: rgb(var(--surface-0) / 0.04);
+  }
+  html:not(.dark) .row-hover:hover {
+    background: rgba(15, 23, 42, 0.04);
+  }
 }
 
 /* PWA standalone mode */
@@ -282,6 +291,21 @@
     -webkit-user-select: none;
     user-select: none;
   }
+}
+
+/* Mockup-fidelity (styles.css:103-105): seçim rengi + özel scrollbar. Tema-bağımsız. */
+::selection {
+  background: rgba(92, 124, 250, 0.35);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 134, 159, 0.35);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 
 /* Modern UI Redesign / PR-0 — animasyon keyframe'leri. */

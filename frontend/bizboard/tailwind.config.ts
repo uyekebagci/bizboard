@@ -56,7 +56,8 @@ const config: Config = {
         card: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)",
         "card-hover":
           "0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04)",
-        glow: "0 0 20px rgba(92,124,250,0.15)",
+        // Mockup-fidelity (styles.css/tw.config): ring + güçlü brand drop-shadow.
+        glow: "0 0 0 1px rgba(92,124,250,.25), 0 18px 40px -12px rgba(76,110,245,.45)",
       },
       animation: {
         "fade-in": "fadeIn 0.15s ease-out",

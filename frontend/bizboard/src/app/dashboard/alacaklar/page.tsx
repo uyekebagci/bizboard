@@ -264,7 +264,7 @@ export default function AlacaklarPage() {
                   </div>
                 );
                 return href ? (
-                  <Link key={key} href={href} className="block hover:bg-surface-700 transition-colors">
+                  <Link key={key} href={href} className="row-hover block transition-colors">
                     {Inner}
                   </Link>
                 ) : (

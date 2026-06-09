@@ -71,10 +71,11 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Mockup-fidelity: ikon butonları glass-card glass-hover (düz hover yerine). */}
           <button
             type="button"
             aria-label="Ara"
-            className="p-2.5 rounded-xl hover:bg-surface-700 transition-colors"
+            className="glass-card glass-hover !rounded-xl p-2.5"
           >
             <Search size={20} className="text-surface-300" />
           </button>
@@ -85,7 +86,7 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
             onClick={toggleTheme}
             aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
             title={theme === "dark" ? "Açık tema" : "Koyu tema"}
-            className="p-2.5 rounded-xl hover:bg-surface-700 transition-colors"
+            className="glass-card glass-hover !rounded-xl p-2.5"
           >
             {theme === "dark" ? (
               <Sun size={20} className="text-surface-300" />

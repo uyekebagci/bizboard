@@ -206,6 +206,7 @@ export default function FinancePage() {
           iconBg="bg-green-500/10"
           iconColor="text-green-500"
           valueColor="text-green-500"
+          index={0}
         />
         <SummaryCard
           title="Toplam Gider"
@@ -216,6 +217,7 @@ export default function FinancePage() {
           iconColor="text-red-500"
           valueColor="text-red-500"
           invertChange
+          index={1}
         />
         <SummaryCard
           title="Net Kar"
@@ -237,6 +239,7 @@ export default function FinancePage() {
               ? "text-green-500"
               : "text-red-500"
           )}
+          index={2}
         />
         <SummaryCard
           title="Islem Sayisi"
@@ -246,6 +249,7 @@ export default function FinancePage() {
           iconColor="text-brand-400"
           valueColor="text-white"
           isCurrency={false}
+          index={3}
         />
       </section>
 
@@ -275,6 +279,7 @@ function SummaryCard({
   valueColor,
   invertChange,
   isCurrency = true,
+  index = 0,
 }: {
   title: string;
   value: number;
@@ -285,11 +290,13 @@ function SummaryCard({
   valueColor: string;
   invertChange?: boolean;
   isCurrency?: boolean;
+  index?: number;
 }) {
   const changeVal = invertChange && change != null ? -change : change;
 
   return (
-    <div className="glass-card p-4">
+    // Mockup-fidelity: rise stagger (kartlar sırayla belirir).
+    <div className="rise glass-card p-4" style={{ animationDelay: `${index * 0.05}s` }}>
       <div className="flex items-center justify-between mb-3">
         <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", iconBg)}>
           <Icon size={18} className={iconColor} />

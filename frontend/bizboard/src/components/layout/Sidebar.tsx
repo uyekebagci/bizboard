@@ -297,9 +297,9 @@ function SidebarItem({
   const Icon = item.icon;
   return (
     <div className={cn("relative flex items-stretch", active && "nav-item-active")}>
-      {/* Redesign PR-1: aktif ray (sol kenarda dikey brand çubuk). */}
+      {/* Redesign PR-1: aktif ray (sol kenarda dikey brand çubuk). Mockup quick-win. */}
       <span
-        className="nav-rail absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-brand-500"
+        className="nav-rail absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-brand-500"
         aria-hidden="true"
       />
       <Link
@@ -314,7 +314,7 @@ function SidebarItem({
         )}
         aria-current={active ? "page" : undefined}
       >
-        <Icon size={16} className={active ? "text-brand-300" : "text-surface-400"} />
+        <Icon size={16} className={active ? "text-brand-400" : "text-surface-400"} />
         <span className="flex-1 truncate">{item.label}</span>
         {item.count != null && item.count > 0 && (
           <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
@@ -426,7 +426,7 @@ function BusinessesSection({
       <button
         type="button"
         onClick={toggleOpen}
-        className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] uppercase tracking-wider text-surface-400 hover:text-white"
+        className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] uppercase tracking-[.14em] text-surface-400 hover:text-white"
         aria-expanded={open}
       >
         {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}

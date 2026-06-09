@@ -78,7 +78,7 @@ export function TransactionList({
                 }
               }}
               className={cn(
-                "flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors group cursor-pointer",
+                "row-hover flex items-center gap-3 p-4 transition-colors group cursor-pointer",
                 isTransfer && "bg-blue-500/[0.03]",
               )}
             >
