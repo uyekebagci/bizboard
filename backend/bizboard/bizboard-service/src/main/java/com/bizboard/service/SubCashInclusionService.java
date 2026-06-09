@@ -285,7 +285,7 @@ public class SubCashInclusionService {
         java.util.Map<UUID, java.math.BigDecimal> deltasBySubCash = new java.util.HashMap<>();
         if (contrib != null && contrib.signum() != 0) {
             List<UUID> manualSubCashIds = jdbcTemplate.queryForList(
-                    "SELECT sub_cash_id FROM sub_cash_tx_inclusion " +
+                    "SELECT sub_cash_bank_account_id FROM sub_cash_tx_inclusion " +
                     "WHERE transaction_id = ? AND scope = 'MANUAL'",
                     UUID.class, txId);
             java.math.BigDecimal reverseDelta = contrib.negate();
