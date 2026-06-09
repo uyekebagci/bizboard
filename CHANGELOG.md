@@ -30,7 +30,27 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
-_Henüz yayınlanmamış değişiklikler buraya gelir._
+### Fixed
+
+- **POS Komisyon — oranlar artık tx OLUŞTURULURKEN snapshot ediliyor (tx-zinciri WP).**
+  Önceden POS tahsilatı oluşturulurken `applied_pos_rate` (banka) ve
+  `applied_our_commission_rate` (bizim) NULL kaydediliyordu; bu yüzden yeni bir
+  POS işleminin gelir/net katkısı **0** görünüyor, ancak işlem **düzenlenince**
+  net (bizim − banka komisyonu) zinciri devreye giriyordu — tutarsızlık.
+  Artık create akışı da oranları **seçili POS cihazından** snapshot eder
+  (cihazın `default_rate` → banka, `our_commission_rate` → bizim); istek
+  gövdesinde açık oran verilirse o önceliklidir. `effectiveAmount` net-profit
+  zinciri böylece create anında doğru çalışır. Tutarlılık kontrolü
+  (`our_commission_rate >= pos_rate`) create'te de uygulanır. Eski (rate'i NULL)
+  POS tx'lerin davranışı korunur (legacy-aware, profit=0).
+  _Etki: yalnız yeni POS tahsilatları; mevcut kayıtlar değişmez. TRANSFER dışlama
+  ve magnitude-pozitif kuralları korunur._
+
+### Notes
+
+- **Banka Alt Kasa** (SUB_CASH altında BANK_ACCOUNT ilişkilendirme, eligibility,
+  cross-tenant guard, tx route + gelir özeti) bu WP'den önce zaten tam
+  uygulanmıştı; ek değişiklik gerekmedi.
 
 ---
 

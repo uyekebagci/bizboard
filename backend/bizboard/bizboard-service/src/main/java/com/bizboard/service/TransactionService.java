@@ -180,17 +180,28 @@ public class TransactionService {
                     .findById(request.getTargetCounterpartId())
                     .orElse(null);
         }
-        // Beta v1.1 (POS Komisyon Kaldırma): cihaz lookup hâlâ posDevice entity
-        // referansı için yapılır, ama rate snapshot YAPILMIYOR. applied_pos_rate /
-        // applied_our_commission_rate her zaman NULL kaydedilir — kullanıcı
-        // raporlama'da düz amount görmek istiyor.
+        // v1.7.x (POS Komisyon WP — tx-zinciri): POS tx oluşturulurken iki komisyon
+        // oranı SNAPSHOT edilir → effectiveAmount net (profit = our − bank) zinciri
+        // create anında tutarlı çalışır (eskiden yalnız UPDATE wire'lıydı; yeni POS
+        // tx'ler edit edilene dek profit=0 görünüyordu — tutarsızlık).
+        //
+        // Öncelik: request.posRate/ourCommissionRate; verilmezse seçili cihazın
+        // defaultRate (banka) / ourCommissionRate (bizim) snapshot'ı. Snapshot, cihaz
+        // sonradan değişse de sabit kalır (Transaction.appliedPosRate semantiği).
         com.bizboard.common.entity.PosDevice posDevice = null;
         java.math.BigDecimal appliedRate = null;
         java.math.BigDecimal appliedOurRate = null;
         if ("POS".equals(pm) && request.getPosDeviceId() != null) {
             posDevice = posDeviceRepository.findById(request.getPosDeviceId()).orElse(null);
         }
-        // validatePosCommissionRates: her iki oran NULL → no-op (Beta v1.1 davranışı).
+        if ("POS".equals(pm)) {
+            appliedRate = posRate != null ? posRate
+                    : (posDevice != null ? posDevice.getDefaultRate() : null);
+            appliedOurRate = request.getOurCommissionRate() != null ? request.getOurCommissionRate()
+                    : (posDevice != null ? posDevice.getOurCommissionRate() : null);
+            // Tutarlılık: bizim oran >= banka oranı (her ikisi de doluysa). NULL → no-op.
+            validatePosCommissionRates(appliedOurRate, appliedRate);
+        }
 
         // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı + extended NAKIT gider.
         // Hem POS+EXPENSE hem NAKIT+EXPENSE için pos_tx_subtype kabul (NAKIT/TRANSFER)
