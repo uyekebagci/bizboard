@@ -135,7 +135,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-2xl max-h-[92vh] flex flex-col shadow-xl"
+        className="glass-card w-full max-w-2xl max-h-[92vh] flex flex-col shadow-xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-surface-700">

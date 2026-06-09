@@ -81,7 +81,7 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl shadow-xl border border-surface-600 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+        className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">

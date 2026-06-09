@@ -99,7 +99,7 @@ export function WriteoffModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-rose-500/30 w-full max-w-lg max-h-[92vh] flex flex-col shadow-xl"
+        className="glass-card !border-rose-500/30 w-full max-w-lg max-h-[92vh] flex flex-col shadow-xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
@@ -270,12 +270,12 @@ export function WriteoffModal({
       {/* Confirm overlay */}
       {showConfirm && selectedDebt && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
           onClick={() => !submitting && setShowConfirm(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-surface-800 rounded-2xl border border-rose-500/40 max-w-sm w-full p-5"
+            className="glass-card !border-rose-500/40 max-w-sm w-full p-5"
           >
             <h4 className="text-base font-semibold text-white mb-2 flex items-center gap-2">
               <AlertTriangle size={18} className="text-rose-400" />

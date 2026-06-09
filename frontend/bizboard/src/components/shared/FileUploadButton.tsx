@@ -95,8 +95,8 @@ export function FileUploadButton({
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
         className={`flex items-center gap-1.5 rounded-xl border border-dashed transition-all
-          ${uploading ? "opacity-60 cursor-wait" : "hover:border-brand-400 hover:bg-brand-50/50 cursor-pointer"}
-          ${uploaded ? "border-green-400 bg-green-50/50" : "border-surface-300 bg-surface-50"}
+          ${uploading ? "opacity-60 cursor-wait" : "hover:border-brand-400 hover:bg-brand-500/10 cursor-pointer"}
+          ${uploaded ? "border-green-400 bg-green-500/10" : "border-surface-600 bg-surface-700"}
           ${isSmall ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"}
         `}
       >
@@ -228,8 +228,8 @@ export function InlineFileUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="flex items-center gap-1.5 px-3 py-2 w-full rounded-xl border border-dashed border-surface-300
-                   bg-surface-50 hover:border-brand-400 hover:bg-brand-50/50 transition-all text-xs"
+        className="flex items-center gap-1.5 px-3 py-2 w-full rounded-xl border border-dashed border-surface-600
+                   bg-surface-700 hover:border-brand-400 hover:bg-brand-500/10 transition-all text-xs"
       >
         {uploading ? (
           <Loader2 size={13} className="animate-spin text-brand-600" />

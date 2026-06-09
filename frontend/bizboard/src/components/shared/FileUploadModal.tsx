@@ -137,8 +137,8 @@ export function FileUploadModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+      <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <h3 className="text-lg font-semibold text-white">
@@ -179,7 +179,7 @@ export function FileUploadModal({
               Dosya *
             </label>
             <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed
-                              border-surface-300 bg-surface-700 cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition-all">
+                              border-surface-300 bg-surface-700 cursor-pointer hover:border-brand-400 hover:bg-brand-500/10 transition-all">
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv"

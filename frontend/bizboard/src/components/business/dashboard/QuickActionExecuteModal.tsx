@@ -115,7 +115,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
