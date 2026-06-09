@@ -64,24 +64,61 @@ export function getBusinessStatus(
 // Status to color mapping
 export function statusColor(status: "healthy" | "warning" | "critical") {
   const map = {
-    healthy: { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500" },
-    warning: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
-    critical: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
+    healthy: { bg: "bg-green-500/15", text: "text-green-300", dot: "bg-green-500" },
+    warning: { bg: "bg-amber-500/15", text: "text-amber-300", dot: "bg-amber-500" },
+    critical: { bg: "bg-red-500/15", text: "text-red-300", dot: "bg-red-500" },
   };
   return map[status];
 }
 
-// Format relative date
+/**
+ * Mutlak tarih + parantezde göreli ifade üretir.
+ * Örn: "05.06.2026 (4 gün önce)", "09.06.2026 (bugün)".
+ *
+ * <p>Göreli kısım takvim günü farkına göre hesaplanır (saat dilimi/saat
+ * etkisi olmadan): aynı gün → "bugün", 1 gün → "dün", <7 → "X gün önce",
+ * <30 → "X hafta önce", <365 → "X ay önce", sonrası → "X yıl önce".
+ * Gelecek tarihler için simetrik "sonra" eki kullanılır.</p>
+ */
 export function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (Number.isNaN(date.getTime())) return dateStr;
 
-  if (diffDays === 0) return "Bugun";
-  if (diffDays === 1) return "Dun";
-  if (diffDays < 7) return `${diffDays} gun once`;
-  return date.toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
+  const absolute = date.toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  return `${absolute} (${formatRelativeLabel(date)})`;
+}
+
+/**
+ * Yalnız göreli ifadeyi (parantezsiz, mutlak tarih olmadan) döndürür —
+ * Türkçe diacritic'leri doğru. Mutlak+göreli format için
+ * {@link formatRelativeDate} kullan.
+ */
+export function formatRelativeLabel(input: string | Date): string {
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) return "";
+
+  // Takvim günü farkı — saat bileşenini sıfırlayarak hesapla.
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round(
+    (startOfDay(new Date()) - startOfDay(date)) / (1000 * 60 * 60 * 24),
+  );
+
+  const suffix = diffDays >= 0 ? "önce" : "sonra";
+  const n = Math.abs(diffDays);
+
+  if (diffDays === 0) return "bugün";
+  if (diffDays === 1) return "dün";
+  if (diffDays === -1) return "yarın";
+  if (n < 7) return `${n} gün ${suffix}`;
+  if (n < 30) return `${Math.floor(n / 7)} hafta ${suffix}`;
+  if (n < 365) return `${Math.floor(n / 30)} ay ${suffix}`;
+  return `${Math.floor(n / 365)} yıl ${suffix}`;
 }
 
 // Generate initials from name
