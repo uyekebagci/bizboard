@@ -443,30 +443,8 @@ public class SummaryService {
 
     private record DateRange(LocalDate start, LocalDate end) {}
 
-    /**
-     * Kullanıcının accessible_businesses sütununa göre erişebildiği işletmeleri döndürür.
-     */
+    /** R2 DRY: erişilebilir işletmeler tek kaynaktan ({@link BusinessAccessGuard}). */
     private List<Business> getAccessibleBusinesses(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        String accessible = user.getAccessibleBusinesses();
-
-        if ("admin".equalsIgnoreCase(user.getRole())
-                || (accessible != null && "all".equalsIgnoreCase(accessible.trim()))) {
-            return businessRepository.findAll();
-        }
-
-        if (accessible != null && !accessible.isBlank()) {
-            List<UUID> ids = Arrays.stream(accessible.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(UUID::fromString)
-                    .toList();
-            return businessRepository.findByIdIn(ids);
-        }
-
-        // Fallback: eski owner/member ilişkisi
-        return businessRepository.findAllAccessibleByUser(userId);
+        return accessGuard.accessibleBusinesses(userId);
     }
 }

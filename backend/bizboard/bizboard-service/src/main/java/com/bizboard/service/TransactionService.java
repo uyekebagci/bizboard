@@ -23,7 +23,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1011,29 +1010,10 @@ public class TransactionService {
     }
 
     /**
-     * Kullanıcının accessible_businesses sütununa göre erişebildiği işletmeleri döndürür.
+     * R2 DRY: erişilebilir işletmeler tek kaynaktan ({@link BusinessAccessGuard}).
      */
     private List<Business> getAccessibleBusinesses(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        String accessible = user.getAccessibleBusinesses();
-
-        if ("admin".equalsIgnoreCase(user.getRole())
-                || (accessible != null && "all".equalsIgnoreCase(accessible.trim()))) {
-            return businessRepository.findAll();
-        }
-
-        if (accessible != null && !accessible.isBlank()) {
-            List<UUID> ids = Arrays.stream(accessible.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(UUID::fromString)
-                    .toList();
-            return businessRepository.findByIdIn(ids);
-        }
-
-        return businessRepository.findAllAccessibleByUser(userId);
+        return accessGuard.accessibleBusinesses(userId);
     }
 
     /**

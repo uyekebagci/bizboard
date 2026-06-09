@@ -2,12 +2,8 @@ package com.bizboard.service;
 
 import com.bizboard.common.dto.PosBusinessSummaryDto;
 import com.bizboard.common.dto.PosTransactionRowDto;
-import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Transaction;
-import com.bizboard.common.entity.User;
-import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.TransactionRepository;
-import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +12,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +28,7 @@ import java.util.UUID;
 public class PosService {
 
     private final TransactionRepository transactionRepository;
-    private final BusinessRepository businessRepository;
-    private final UserRepository userRepository;
+    private final BusinessAccessGuard accessGuard;
 
     @Transactional(readOnly = true)
     public List<PosBusinessSummaryDto> getBusinessSummaries(UUID userId) {
@@ -190,21 +184,8 @@ public class PosService {
         return out;
     }
 
+    /** R2 DRY: erişilebilir işletme id'leri tek kaynaktan ({@link BusinessAccessGuard}). */
     private List<UUID> accessibleBusinessIds(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        String accessible = user.getAccessibleBusinesses();
-        if ("admin".equalsIgnoreCase(user.getRole())
-                || (accessible != null && "all".equalsIgnoreCase(accessible.trim()))) {
-            return businessRepository.findAll().stream()
-                    .map(Business::getId).toList();
-        }
-        if (accessible != null && !accessible.isBlank()) {
-            return Arrays.stream(accessible.split(","))
-                    .map(String::trim).filter(s -> !s.isEmpty())
-                    .map(UUID::fromString).toList();
-        }
-        return businessRepository.findAllAccessibleByUser(userId).stream()
-                .map(Business::getId).toList();
+        return accessGuard.accessibleBusinessIds(userId);
     }
 }

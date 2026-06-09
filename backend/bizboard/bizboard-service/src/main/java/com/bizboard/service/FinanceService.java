@@ -5,12 +5,9 @@ import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Category;
 import com.bizboard.common.entity.FixedCost;
 import com.bizboard.common.entity.Transaction;
-import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.TransactionDirection;
-import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.FixedCostRepository;
 import com.bizboard.repository.TransactionRepository;
-import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,9 +32,8 @@ import java.util.stream.Collectors;
 public class FinanceService {
 
     private final TransactionRepository transactionRepository;
-    private final BusinessRepository businessRepository;
     private final FixedCostRepository fixedCostRepository;
-    private final UserRepository userRepository;
+    private final BusinessAccessGuard accessGuard;
 
     private static final String[] TURKISH_MONTHS = {
             "", "Ocak", "Subat", "Mart", "Nisan", "Mayis", "Haziran",
@@ -468,27 +464,9 @@ public class FinanceService {
         return totalMonthly;
     }
 
+    /** R2 DRY: erişilebilir işletmeler tek kaynaktan ({@link BusinessAccessGuard}). */
     private List<Business> getAccessibleBusinesses(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        String accessible = user.getAccessibleBusinesses();
-
-        if ("admin".equalsIgnoreCase(user.getRole())
-                || (accessible != null && "all".equalsIgnoreCase(accessible.trim()))) {
-            return businessRepository.findAll();
-        }
-
-        if (accessible != null && !accessible.isBlank()) {
-            List<UUID> ids = Arrays.stream(accessible.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(UUID::fromString)
-                    .toList();
-            return businessRepository.findByIdIn(ids);
-        }
-
-        return businessRepository.findAllAccessibleByUser(userId);
+        return accessGuard.accessibleBusinesses(userId);
     }
 
     private FinanceOverviewDto emptyOverview() {

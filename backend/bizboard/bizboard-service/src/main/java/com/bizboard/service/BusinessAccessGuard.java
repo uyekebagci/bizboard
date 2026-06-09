@@ -142,4 +142,52 @@ public class BusinessAccessGuard {
                 .map(Business::getId)
                 .toList();
     }
+
+    /**
+     * R2 DRY: kullanıcının erişebildiği {@link Business} entity'leri — tek
+     * kaynak. Daha önce ~9 serviste birebir kopyalanan
+     * "accessible_businesses CSV / admin / all / legacy owner-member" mantığını
+     * burada toplar. Davranış kopyalanan helper'larla AYNI:
+     * <ul>
+     *   <li>admin veya {@code accessibleBusinesses=all} → {@code findAll()}</li>
+     *   <li>CSV id listesi → {@code findByIdIn(ids)} (sadece mevcut olanlar)</li>
+     *   <li>legacy → {@code findAllAccessibleByUser(userId)}</li>
+     * </ul>
+     *
+     * @return boş liste = hiçbir işletme erişilebilir değil; null DÖNDÜRÜLMEZ.
+     */
+    public List<Business> accessibleBusinesses(UUID userId) {
+        if (userId == null) return List.of();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return List.of();
+
+        String accessible = user.getAccessibleBusinesses();
+        if ("admin".equalsIgnoreCase(user.getRole())
+                || (accessible != null && "all".equalsIgnoreCase(accessible.trim()))) {
+            return businessRepository.findAll();
+        }
+        if (accessible != null && !accessible.isBlank()) {
+            List<UUID> ids = Arrays.stream(accessible.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(s -> {
+                        try { return UUID.fromString(s); } catch (Exception e) { return null; }
+                    })
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+            return ids.isEmpty() ? List.of() : businessRepository.findByIdIn(ids);
+        }
+        return businessRepository.findAllAccessibleByUser(userId);
+    }
+
+    /**
+     * R2 DRY: kullanıcı admin mi? Admin-only yetki kontrolleri (örn. silinen/
+     * gizli borç, admin-only mutation) için tek kaynak. İşletme erişiminden
+     * AYRI bir karar olduğundan business-access metodlarından ayrı tutulur.
+     */
+    public boolean isAdmin(UUID userId) {
+        if (userId == null) return false;
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null && "admin".equalsIgnoreCase(user.getRole());
+    }
 }
