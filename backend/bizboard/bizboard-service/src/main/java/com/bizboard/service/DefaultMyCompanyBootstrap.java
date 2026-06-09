@@ -63,7 +63,12 @@ public class DefaultMyCompanyBootstrap implements ApplicationRunner {
                     .companyType(CompanyType.OTHER)
                     .isDefault(true)
                     .build();
-            c = myCompanyRepository.save(c);
+            // saveAndFlush: aşağıdaki raw JDBC UPDATE (businesses.my_company_id = c.id)
+            // bu satıra FK ile referans veriyor. Düz save() JPA insert'ini aynı tx
+            // içinde geciktirebilir → Postgres FK hedefini göremez → FK violation +
+            // "current transaction is aborted" (25P02) → startup fatal olur. Flush ile
+            // insert'i JDBC çağrısından ÖNCE DB'ye yazmayı garanti ederiz.
+            c = myCompanyRepository.saveAndFlush(c);
             log.warn("[my-company-bootstrap] created default company '{}' (id={}). "
                     + "Admin panelinden gercek tuzel kisi olusturup isletmeleri yeniden atayabilirsin.",
                     c.getLegalName(), c.getId());
