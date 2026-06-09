@@ -179,31 +179,106 @@ export default function AlacaklarPage() {
           </button>
         </div>
       ) : (
-        <>
-          {/* Totals */}
-          <section className="grid grid-cols-2 gap-3">
-            <div className="glass-card p-4">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
-              <p className={cn("mt-1 text-2xl font-bold text-amber-300 transition-[filter]", censorCls)}>
-                {formatCurrency(total, "TRY")}
-              </p>
-            </div>
-            <div className="glass-card p-4">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>
-              <p className="mt-1 text-2xl font-bold text-white">
-                {totalCount}
-              </p>
-              <p className="text-[11px] text-surface-400 mt-0.5">
-                {rows.length} farkli kisi/firma
-              </p>
-            </div>
-          </section>
+        // UI: lg+ iki kolon — SOL toplam+liste, SAĞ notlar (sticky, kendi içinde scroll).
+        // <lg tek kolon: notlar listenin altına iner (DOM sırası: sol → sağ).
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-start">
+          {/* SOL kolon: toplamlar + sıralama + borç listesi */}
+          <div className="space-y-5 min-w-0">
+            {/* Totals */}
+            <section className="grid grid-cols-2 gap-3">
+              <div className="glass-card p-4">
+                <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
+                <p className={cn("mt-1 text-2xl font-bold text-amber-300 transition-[filter]", censorCls)}>
+                  {formatCurrency(total, "TRY")}
+                </p>
+              </div>
+              <div className="glass-card p-4">
+                <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>
+                <p className="mt-1 text-2xl font-bold text-white">
+                  {totalCount}
+                </p>
+                <p className="text-[11px] text-surface-400 mt-0.5">
+                  {rows.length} farkli kisi/firma
+                </p>
+              </div>
+            </section>
 
-          {/* WP a9da4e9d fix: Alacaklara ÖZEL notlar (scope=RECEIVABLES) — işletme
-              detayındaki BUSINESS notlarından tamamen ayrı küme. DGR tek işletme →
-              selector görünmez; çoklu işletmede basit seçici. */}
+            {/* Sort chips */}
+            <section className="flex items-center justify-between gap-2">
+              <span className="text-xs text-surface-400">Sirala:</span>
+              <div className="flex gap-2">
+                {([
+                  { v: "amount_desc", label: "Tutar (cok→az)" },
+                  { v: "due_asc", label: "Vade (yakin→uzak)" },
+                  { v: "name_asc", label: "Isim (A-Z)" },
+                ] as { v: SortMode; label: string }[]).map((opt) => (
+                  <button
+                    key={opt.v}
+                    onClick={() => setSortMode(opt.v)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      sortMode === opt.v
+                        ? "bg-amber-500/20 border-amber-400 text-amber-200"
+                        : "bg-surface-700 border-surface-600 text-surface-300"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* List */}
+            <section className="glass-card divide-y divide-surface-700">
+              {sorted.map((r) => {
+                const key = r.counterpart_id || `name:${r.counterpart_name}`;
+                const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
+                const Inner = (
+                  <div className="p-4 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-white truncate">
+                        {r.counterpart_name || "Bilinmiyor"}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {r.receivable_types.map((b, i) => (
+                          <TypeBadge key={`${b.type}-${i}`} breakdown={b} currency={r.currency} censored={censored} />
+                        ))}
+                      </div>
+                      {r.last_due_date && (
+                        <p className="mt-1.5 text-[11px] text-surface-400 flex items-center gap-1">
+                          <CalendarClock size={11} />
+                          Son vade: {new Date(r.last_due_date).toLocaleDateString("tr-TR", {
+                            day: "numeric", month: "short", year: "numeric",
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      {/* total_amount güncel TL net toplam → her zaman ₺ (USD sembolü bug fix). */}
+                      <p className={cn("text-base font-semibold text-amber-300 transition-[filter]", censorCls)}>
+                        {formatCurrency(r.total_amount, "TRY")}
+                      </p>
+                      <p className="text-[11px] text-surface-400">
+                        {r.count} kayit
+                      </p>
+                    </div>
+                  </div>
+                );
+                return href ? (
+                  <Link key={key} href={href} className="block hover:bg-surface-700 transition-colors">
+                    {Inner}
+                  </Link>
+                ) : (
+                  <div key={key}>{Inner}</div>
+                );
+              })}
+            </section>
+          </div>
+
+          {/* SAĞ kolon: Alacaklara ÖZEL notlar (scope=RECEIVABLES). lg+ sticky +
+              kendi içinde scroll → ne kadar not olursa olsun sayfa aşağı uzamaz.
+              DGR tek işletme → seçici gizli; çoklu işletmede basit seçici. */}
           {notesBusinessId && (
-            <section className="space-y-2">
+            <section className="space-y-2 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto no-scrollbar">
               {businesses.length > 1 && (
                 <div className="flex items-center gap-2">
                   <label className="text-xs text-surface-400">Notlar — İşletme:</label>
@@ -221,77 +296,7 @@ export default function AlacaklarPage() {
               <NotesModule businessId={notesBusinessId} scope="RECEIVABLES" />
             </section>
           )}
-
-          {/* Sort chips */}
-          <section className="flex items-center justify-between gap-2">
-            <span className="text-xs text-surface-400">Sirala:</span>
-            <div className="flex gap-2">
-              {([
-                { v: "amount_desc", label: "Tutar (cok→az)" },
-                { v: "due_asc", label: "Vade (yakin→uzak)" },
-                { v: "name_asc", label: "Isim (A-Z)" },
-              ] as { v: SortMode; label: string }[]).map((opt) => (
-                <button
-                  key={opt.v}
-                  onClick={() => setSortMode(opt.v)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    sortMode === opt.v
-                      ? "bg-amber-500/20 border-amber-400 text-amber-200"
-                      : "bg-surface-700 border-surface-600 text-surface-300"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* List */}
-          <section className="glass-card divide-y divide-surface-700">
-            {sorted.map((r) => {
-              const key = r.counterpart_id || `name:${r.counterpart_name}`;
-              const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
-              const Inner = (
-                <div className="p-4 flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white truncate">
-                      {r.counterpart_name || "Bilinmiyor"}
-                    </p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {r.receivable_types.map((b, i) => (
-                        <TypeBadge key={`${b.type}-${i}`} breakdown={b} currency={r.currency} censored={censored} />
-                      ))}
-                    </div>
-                    {r.last_due_date && (
-                      <p className="mt-1.5 text-[11px] text-surface-400 flex items-center gap-1">
-                        <CalendarClock size={11} />
-                        Son vade: {new Date(r.last_due_date).toLocaleDateString("tr-TR", {
-                          day: "numeric", month: "short", year: "numeric",
-                        })}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right shrink-0">
-                    {/* total_amount güncel TL net toplam → her zaman ₺ (USD sembolü bug fix). */}
-                    <p className={cn("text-base font-semibold text-amber-300 transition-[filter]", censorCls)}>
-                      {formatCurrency(r.total_amount, "TRY")}
-                    </p>
-                    <p className="text-[11px] text-surface-400">
-                      {r.count} kayit
-                    </p>
-                  </div>
-                </div>
-              );
-              return href ? (
-                <Link key={key} href={href} className="block hover:bg-surface-700 transition-colors">
-                  {Inner}
-                </Link>
-              ) : (
-                <div key={key}>{Inner}</div>
-              );
-            })}
-          </section>
-        </>
+        </div>
       )}
 
       {/* v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal */}
