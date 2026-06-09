@@ -53,6 +53,9 @@ public class SecurityConfig {
                                           "/actuator/prometheus").permitAll()
                         // Beta v1.1: deploy doğrulama endpoint'i (public).
                         .requestMatchers("/version").permitAll()
+                        // Telegram bot webhook: public route ama controller'da
+                        // X-Telegram-Bot-Api-Secret-Token env secret'ı ile doğrulanır.
+                        .requestMatchers("/telegram/webhook").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

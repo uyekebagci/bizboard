@@ -10,6 +10,7 @@ import { logout } from "@/lib/api/client";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
 import { BETA_LABEL } from "@/lib/version";
+import { TelegramLinkSection } from "@/components/notifications/TelegramLinkSection";
 
 /**
  * Mobile bottom-nav "Profil" sayfasi — kullanici bilgileri + parola degisikligi
@@ -83,6 +84,9 @@ export default function ProfilePage() {
         />
         <InfoRow icon={Globe} label="Dil" value={profile.preferred_language} />
       </section>
+
+      {/* Telegram bot MVP: bildirim bağlama bölümü (bot yapılandırılıysa görünür). */}
+      <TelegramLinkSection />
 
       {/* Actions */}
       <section className="card divide-y divide-surface-700 overflow-hidden">

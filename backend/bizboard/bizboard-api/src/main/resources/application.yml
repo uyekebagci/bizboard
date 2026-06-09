@@ -62,6 +62,15 @@ auth:
   absolute-session-hours: ${AUTH_ABSOLUTE_SESSION_HOURS:12}
 
 app:
+  # Telegram bot MVP — SECRET REPO'DA TUTULMAZ; yalnız env placeholder'ları.
+  # Token boşsa kanal devre dışı (dispatch sessizce atlar); webhook secret boşsa
+  # webhook 403 döner (kapalı). Yönetici Sevalla env'lerinden set eder.
+  notifications:
+    telegram:
+      bot-token: ${APP_NOTIFICATIONS_TELEGRAM_BOT_TOKEN:}
+      bot-username: ${APP_NOTIFICATIONS_TELEGRAM_BOT_USERNAME:}
+      webhook-secret: ${APP_NOTIFICATIONS_TELEGRAM_WEBHOOK_SECRET:}
+
   jwt:
     secret: ${JWT_SECRET:bizboard-super-secret-key-that-is-at-least-256-bits-long-for-hs256}
     # Access token TTL — 30 dakika. Refresh akışı eklendi (v1.1.0); access kısa
