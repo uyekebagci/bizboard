@@ -132,8 +132,8 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
   const totalFuelLiters = fuelLogs.reduce((sum, l) => sum + (l.amount || 0), 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <div className="flex items-center gap-2 min-w-0">
@@ -149,7 +149,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {!editing && (
-              <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg hover:bg-brand-50 transition-colors">
+              <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg hover:bg-brand-500/15 transition-colors">
                 <Pencil size={16} className="text-brand-600" />
               </button>
             )}

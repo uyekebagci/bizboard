@@ -66,7 +66,7 @@ export function CreateGroupModal({ onClose, onCreated }: Props) {
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-md shadow-xl"
+        className="glass-card w-full max-w-md shadow-xl"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <h3 className="text-base font-semibold text-white">Yeni Grup Oluştur</h3>

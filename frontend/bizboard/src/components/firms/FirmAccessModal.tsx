@@ -110,7 +110,7 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
@@ -208,10 +208,10 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
     )}
 
     {confirmClear && (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4"
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
            onClick={() => setConfirmClear(false)}>
         <div onClick={(e) => e.stopPropagation()}
-             className="bg-surface-800 rounded-2xl border border-red-500/30 max-w-sm w-full p-5">
+             className="glass-card !border-red-500/30 max-w-sm w-full p-5">
           <h4 className="text-base font-semibold text-white mb-2">Tüm erişimleri temizle</h4>
           <p className="text-sm text-surface-300 mb-4">
             <strong>{firm.legal_name}</strong> firmasının {access.length} kullanıcı erişimi tamamen
@@ -312,7 +312,7 @@ function AddUsersSubmodal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
          onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
-           className="bg-surface-800 rounded-2xl border border-surface-600 w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl">
+           className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <h4 className="text-base font-semibold text-white flex items-center gap-2">
             <Users size={16} className="text-brand-300" /> Kullanıcı Ekle

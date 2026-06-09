@@ -189,13 +189,13 @@ function InventoryPage() {
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 bg-surface-600 rounded-xl" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <p className="text-surface-400 text-sm">
             {items.length === 0 ? "Henuz envanter kalemi yok" : "Filtreye uygun kalem bulunamadi"}
           </p>
         </div>
       ) : (
-        <div className="card divide-y divide-surface-700">
+        <div className="glass-card divide-y divide-surface-700 overflow-hidden">
           {filtered.map((item) => (
             <InventoryRow key={item.id} item={item} onClick={() => setDetailItem(item)} showBusiness={!filterBusiness} />
           ))}
