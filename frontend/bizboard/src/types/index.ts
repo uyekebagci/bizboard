@@ -1402,3 +1402,27 @@ export interface ExecuteQuickActionResponse {
   /** TRANSFER kind sonucu */
   transfer?: TransferDto;
 }
+
+// ---- Vergi Takvimi Modülü ----
+// Backend: GET /tax-calendar?from=&to= → TaxDeadlineDto[]
+export type TaxObligationType =
+  | "KDV"
+  | "MUHTASAR"
+  | "BA_BS"
+  | "GECICI_VERGI"
+  | "KURUMLAR_VERGISI"
+  | "GELIR_VERGISI";
+
+export interface TaxDeadline {
+  obligation_type: TaxObligationType;
+  /** Kullanıcıya gösterilecek TR başlık. */
+  label: string;
+  /** TR açıklama (dönem dahil). */
+  description: string;
+  /** ISO tarih (yyyy-MM-dd). */
+  due_date: string;
+  /** Dönem etiketi (ör. "2026-03", "2026-Q1", "2025"). */
+  period: string;
+  /** Bugünden son tarihe kalan gün (negatif → geçmiş). */
+  days_until: number;
+}

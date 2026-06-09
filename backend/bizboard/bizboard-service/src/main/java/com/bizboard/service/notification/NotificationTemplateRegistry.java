@@ -43,6 +43,10 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "Kasa kapanışı hatırlatması",
                     "{date} günü için kasa kapanışını henüz yapmadınız."),
+            NotificationEvent.TAX_DEADLINE_DUE_SOON, new Template(
+                    NotificationType.WARNING,
+                    "Vergi son tarihi yaklaşıyor: {tax}",
+                    "{tax} — {period} dönemi — son tarih {when} ({dueDate})."),
             NotificationEvent.OTP, new Template(
                     NotificationType.INFO,
                     "Doğrulama kodu",

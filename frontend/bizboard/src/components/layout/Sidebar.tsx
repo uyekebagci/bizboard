@@ -23,7 +23,7 @@ import {
   LayoutDashboard, Building2, Plus, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
-  Search, X, Smartphone, ChevronDown, ChevronRight, Pin,
+  Search, X, Smartphone, ChevronDown, ChevronRight, Pin, Landmark,
 } from "lucide-react";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import type { LucideIcon } from "lucide-react";
@@ -64,6 +64,8 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/add-transaction",  label: "Islem Ekle",    icon: Receipt },
   { href: "/dashboard/transactions",     label: "Islemler",      icon: Receipt },
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote },
+  // Vergi Takvimi Modülü (WP 57481770): TR vergi son tarihleri + bildirim.
+  { href: "/dashboard/vergi-takvimi",    label: "Vergi Takvimi", icon: Landmark },
   { href: "/dashboard/pos-cihazlari",    label: "POS",           icon: CreditCard },
   { href: "/dashboard/profile",          label: "Profil",        icon: User },
   // v1.6.23.12 (WP 3c8401f6): Telefon takibi (DGR'nin fiziki telefonları)

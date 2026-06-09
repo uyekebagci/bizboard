@@ -25,6 +25,9 @@ public enum NotificationEvent {
     /** Günlük kasa kapanışı hatırlatması. */
     CASH_CLOSING_REMINDER,
 
+    /** Vergi son tarihi yaklaştı (Vergi Takvimi Modülü; gün sayısı template değişkeni). */
+    TAX_DEADLINE_DUE_SOON,
+
     /** Tek kullanımlık doğrulama kodu (OTP) — ileride 2FA/login için. */
     OTP,
 
