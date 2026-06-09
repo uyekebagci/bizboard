@@ -9,7 +9,9 @@ import com.bizboard.common.entity.Category;
 import com.bizboard.common.entity.DeletedTransactionLog;
 import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.entity.User;
+import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.common.enums.TransactionDirection;
+import com.bizboard.service.notification.NotificationDispatchService;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CategoryRepository;
 import com.bizboard.repository.DeletedTransactionLogRepository;
@@ -47,6 +49,8 @@ public class TransactionService {
     private final com.bizboard.repository.BankAccountRepository bankAccountRepository;
     /** WP Sub-Cash Retroactive Inclusion: tx create/update sonrası auto-include hook. */
     private final SubCashInclusionService subCashInclusionService;
+    // WP f1fa3cd5 (otomasyon): yeni işlem → NEW_TRANSACTION dispatch (in-app default açık).
+    private final NotificationDispatchService dispatchService;
 
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
@@ -326,6 +330,27 @@ public class TransactionService {
             // yine de defansif assertion.)
             subCashInclusionService.addManualInclusion(
                     request.getManualSubCashId(), transaction.getId(), userId);
+        }
+
+        // WP f1fa3cd5: yeni işlem → NEW_TRANSACTION dispatch (admin'lere; in-app default açık,
+        // Telegram opt-in). Best-effort — dispatch katmanı hatayı yutar.
+        List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
+                .stream().map(com.bizboard.common.entity.User::getId).toList();
+        if (!recipients.isEmpty()) {
+            String desc = transaction.getDescription() != null && !transaction.getDescription().isBlank()
+                    ? " · " + transaction.getDescription() : "";
+            dispatchService.dispatch(
+                    NotificationEvent.NEW_TRANSACTION,
+                    recipients,
+                    Map.of(
+                            "business", business.getName() != null ? business.getName() : "",
+                            "direction", transaction.getDirection() == TransactionDirection.INCOME ? "gelir" : "gider",
+                            "amount", transaction.getAmount() != null ? transaction.getAmount().toPlainString() : "",
+                            "currency", transaction.getCurrency() != null ? transaction.getCurrency() : "TRY",
+                            "description", desc
+                    ),
+                    "/dashboard/transactions",
+                    business.getId());
         }
 
         return DtoMapper.toTransactionDto(transaction);

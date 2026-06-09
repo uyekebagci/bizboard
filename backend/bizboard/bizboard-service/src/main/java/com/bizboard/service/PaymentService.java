@@ -5,9 +5,11 @@ import com.bizboard.common.dto.PaymentResponseDto;
 import com.bizboard.common.entity.*;
 import com.bizboard.common.enums.BankAccountType;
 import com.bizboard.common.enums.DebtDirection;
+import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.common.enums.TransactionDirection;
 import com.bizboard.common.enums.TransactionKind;
 import com.bizboard.repository.*;
+import com.bizboard.service.notification.NotificationDispatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,8 @@ public class PaymentService {
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
     private final CounterpartLedgerService counterpartLedger;
+    // WP f1fa3cd5 (otomasyon): ödeme alındı → PAYMENT_RECEIVED dispatch.
+    private final NotificationDispatchService dispatchService;
 
     private static final EnumSet<BankAccountType> ELIGIBLE_BANK_TYPES =
             EnumSet.of(BankAccountType.CHECKING, BankAccountType.SAVINGS, BankAccountType.CASH_HOLDER);
@@ -339,6 +343,24 @@ public class PaymentService {
                         "txId", linkedTx != null ? linkedTx.getId() : "null",
                         "instrumentId", linkedInstrument != null ? linkedInstrument.getId() : "null",
                         "overpayment", overpayInfo != null));
+
+        // WP f1fa3cd5: yalnız RECEIVED (tahsilat) → "Ödeme alındı" dispatch (in-app + Telegram).
+        if ("RECEIVED".equals(dir)) {
+            List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
+                    .stream().map(User::getId).toList();
+            if (!recipients.isEmpty()) {
+                dispatchService.dispatch(
+                        NotificationEvent.PAYMENT_RECEIVED,
+                        recipients,
+                        Map.of(
+                                "counterparty", counterpart.getName() != null ? counterpart.getName() : "",
+                                "amount", req.getAmount().toPlainString(),
+                                "currency", business.getCurrency() != null ? business.getCurrency() : "TRY"
+                        ),
+                        "/dashboard/counterparts/" + counterpartId,
+                        business.getId());
+            }
+        }
 
         return PaymentResponseDto.builder()
                 .paymentId(auditRef) // first debt_payment id de olabilir; basit tutuyoruz

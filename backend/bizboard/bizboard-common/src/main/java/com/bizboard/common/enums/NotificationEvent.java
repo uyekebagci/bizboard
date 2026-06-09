@@ -31,6 +31,18 @@ public enum NotificationEvent {
     /** Tek kullanımlık doğrulama kodu (OTP) — ileride 2FA/login için. */
     OTP,
 
+    /** WP f1fa3cd5: Envanter kalemi düşük stok (reorder eşiği altı). */
+    LOW_STOCK,
+
+    /** WP f1fa3cd5: Envanter kalemi garanti bitişi yaklaşıyor. */
+    WARRANTY_EXPIRING,
+
+    /** WP f1fa3cd5: Yeni işlem eklendi (düşük öncelik; in-app default açık). */
+    NEW_TRANSACTION,
+
+    /** WP f1fa3cd5: Bir kullanıcıya firma erişimi verildi. */
+    FIRM_ACCESS_GRANTED,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

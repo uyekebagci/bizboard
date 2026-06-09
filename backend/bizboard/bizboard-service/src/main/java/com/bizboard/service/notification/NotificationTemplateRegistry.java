@@ -26,35 +26,52 @@ public class NotificationTemplateRegistry {
     /** Render edilmiş sonuç. */
     public record Rendered(NotificationType type, String title, String body) {}
 
-    private final Map<NotificationEvent, Template> templates = Map.of(
-            NotificationEvent.DEBT_DUE_SOON, new Template(
+    // Map.ofEntries: 10'dan fazla event olduğu için Map.of yerine (11+).
+    private final Map<NotificationEvent, Template> templates = Map.ofEntries(
+            Map.entry(NotificationEvent.DEBT_DUE_SOON, new Template(
                     NotificationType.WARNING,
                     "Borç vadesi yaklaşıyor: {counterparty}",
-                    "{counterparty} — {amount} {currency} — vadesi {when} doluyor."),
-            NotificationEvent.CHEQUE_DUE_SOON, new Template(
+                    "{counterparty} — {amount} {currency} — vadesi {when} doluyor.")),
+            Map.entry(NotificationEvent.CHEQUE_DUE_SOON, new Template(
                     NotificationType.WARNING,
                     "Çek/senet vadesi yaklaşıyor: {counterparty}",
-                    "{counterparty} — {amount} {currency} — vade {when}{chequeNo}."),
-            NotificationEvent.PAYMENT_RECEIVED, new Template(
+                    "{counterparty} — {amount} {currency} — vade {when}{chequeNo}.")),
+            Map.entry(NotificationEvent.PAYMENT_RECEIVED, new Template(
                     NotificationType.SUCCESS,
                     "Ödeme alındı: {counterparty}",
-                    "{counterparty} tarafından {amount} {currency} ödeme alındı."),
-            NotificationEvent.CASH_CLOSING_REMINDER, new Template(
+                    "{counterparty} tarafından {amount} {currency} ödeme alındı.")),
+            Map.entry(NotificationEvent.CASH_CLOSING_REMINDER, new Template(
                     NotificationType.INFO,
                     "Kasa kapanışı hatırlatması",
-                    "{date} günü için kasa kapanışını henüz yapmadınız."),
-            NotificationEvent.TAX_DEADLINE_DUE_SOON, new Template(
+                    "{date} günü için kasa kapanışını henüz yapmadınız.")),
+            Map.entry(NotificationEvent.TAX_DEADLINE_DUE_SOON, new Template(
                     NotificationType.WARNING,
                     "Vergi son tarihi yaklaşıyor: {tax}",
-                    "{tax} — {period} dönemi — son tarih {when} ({dueDate})."),
-            NotificationEvent.OTP, new Template(
+                    "{tax} — {period} dönemi — son tarih {when} ({dueDate}).")),
+            Map.entry(NotificationEvent.LOW_STOCK, new Template(
+                    NotificationType.WARNING,
+                    "Düşük stok: {item}",
+                    "{item} — kalan {quantity}, reorder eşiği {threshold}. Sipariş gerekebilir.")),
+            Map.entry(NotificationEvent.WARRANTY_EXPIRING, new Template(
+                    NotificationType.WARNING,
+                    "Garanti bitiyor: {item}",
+                    "{item} — garanti {when} ({warrantyDate}) sona eriyor.")),
+            Map.entry(NotificationEvent.NEW_TRANSACTION, new Template(
+                    NotificationType.INFO,
+                    "Yeni işlem: {business}",
+                    "{business} — {direction} {amount} {currency}{description}.")),
+            Map.entry(NotificationEvent.FIRM_ACCESS_GRANTED, new Template(
+                    NotificationType.INFO,
+                    "Firma erişimi verildi: {business}",
+                    "{business} işletmesine erişiminiz tanımlandı.")),
+            Map.entry(NotificationEvent.OTP, new Template(
                     NotificationType.INFO,
                     "Doğrulama kodu",
-                    "Doğrulama kodunuz: {code}. {ttl} dakika geçerlidir."),
-            NotificationEvent.GENERIC, new Template(
+                    "Doğrulama kodunuz: {code}. {ttl} dakika geçerlidir.")),
+            Map.entry(NotificationEvent.GENERIC, new Template(
                     NotificationType.INFO,
                     "{title}",
-                    "{body}")
+                    "{body}"))
     );
 
     /**

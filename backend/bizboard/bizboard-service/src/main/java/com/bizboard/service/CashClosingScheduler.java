@@ -3,9 +3,10 @@ package com.bizboard.service;
 import com.bizboard.common.entity.CashClosing;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.CashClosingStatus;
-import com.bizboard.common.enums.NotificationType;
+import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.repository.CashClosingRepository;
 import com.bizboard.repository.UserRepository;
+import com.bizboard.service.notification.NotificationDispatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * v1.6.19 (WP-2): Günlük kasa kapanışı scheduler'ı.
@@ -36,7 +39,9 @@ public class CashClosingScheduler {
 
     private final CashClosingRepository repository;
     private final CashClosingService closingService;
-    private final NotificationService notificationService;
+    // WP f1fa3cd5 (otomasyon): NotificationService.create yerine dispatch →
+    // in-app + (opt-in) Telegram. Önceden dispatch bypass ediliyordu.
+    private final NotificationDispatchService dispatchService;
     private final UserRepository userRepository;
 
     /**
@@ -52,25 +57,16 @@ public class CashClosingScheduler {
             return;
         }
 
-        List<User> admins = userRepository.findByRoleIgnoreCase("admin");
-        int sent = 0;
-        for (User admin : admins) {
-            try {
-                notificationService.create(
-                        admin.getId(),
-                        NotificationType.WARNING,
-                        "Kapanış hatırlatması",
-                        "Günü henüz kapatmadın. 20:00'de sistem otomatik kapatacak.",
-                        "/dashboard/kapanislar",
-                        null,
-                        "closing-reminder");
-                sent++;
-            } catch (Exception e) {
-                log.warn("[closing-reminder] admin {} bildirim hatası: {}",
-                        admin.getId(), e.getMessage());
-            }
-        }
-        log.info("[closing-reminder] {} admin'e gönderildi (date={})", sent, today);
+        List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
+                .stream().map(User::getId).toList();
+        if (recipients.isEmpty()) return;
+        dispatchService.dispatch(
+                NotificationEvent.CASH_CLOSING_REMINDER,
+                recipients,
+                Map.of("date", today.toString()),
+                "/dashboard/kapanislar",
+                null);
+        log.info("[closing-reminder] {} admin'e dispatch (date={})", recipients.size(), today);
     }
 
     /**
@@ -87,25 +83,20 @@ public class CashClosingScheduler {
             return;
         }
 
-        // Bildirim
-        List<User> admins = userRepository.findByRoleIgnoreCase("admin");
-        int sent = 0;
-        for (User admin : admins) {
-            try {
-                notificationService.create(
-                        admin.getId(),
-                        NotificationType.INFO,
-                        "Gün otomatik kapatıldı",
-                        "Manuel kapanış yapılmadığı için sistem 20:00'de günü otomatik kapattı.",
-                        "/dashboard/kapanislar",
-                        null,
-                        "auto-closed");
-                sent++;
-            } catch (Exception e) {
-                log.warn("[auto-close] admin {} bildirim hatası: {}",
-                        admin.getId(), e.getMessage());
-            }
+        // Bildirim — GENERIC event (title+body) ile dispatch → in-app + Telegram.
+        List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
+                .stream().map(User::getId).toList();
+        if (!recipients.isEmpty()) {
+            dispatchService.dispatch(
+                    NotificationEvent.GENERIC,
+                    recipients,
+                    Map.of(
+                            "title", "Gün otomatik kapatıldı",
+                            "body", "Manuel kapanış yapılmadığı için sistem 20:00'de günü otomatik kapattı."
+                    ),
+                    "/dashboard/kapanislar",
+                    null);
         }
-        log.info("[auto-close] {} otomatik kapatıldı + {} admin'e bildirim", today, sent);
+        log.info("[auto-close] {} otomatik kapatıldı + {} admin'e dispatch", today, recipients.size());
     }
 }

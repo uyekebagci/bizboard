@@ -10,7 +10,7 @@ import { logout } from "@/lib/api/client";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
 import { BETA_LABEL } from "@/lib/version";
-import { TelegramLinkSection } from "@/components/notifications/TelegramLinkSection";
+import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 
 /**
  * Mobile bottom-nav "Profil" sayfasi — kullanici bilgileri + parola degisikligi
@@ -85,8 +85,8 @@ export default function ProfilePage() {
         <InfoRow icon={Globe} label="Dil" value={profile.preferred_language} />
       </section>
 
-      {/* Telegram bot MVP: bildirim bağlama bölümü (bot yapılandırılıysa görünür). */}
-      <TelegramLinkSection />
+      {/* WP f1fa3cd5: Bildirim Ayarları — Telegram bağlama + per-event tercih matrisi. */}
+      <NotificationPreferences />
 
       {/* Actions */}
       <section className="glass-card divide-y divide-surface-700 overflow-hidden">
