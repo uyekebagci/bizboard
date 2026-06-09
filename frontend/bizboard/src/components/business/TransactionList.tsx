@@ -401,7 +401,7 @@ export function TransactionDetailModal({
                     className={cn(
                       "flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all border",
                       editPaymentMethod === "NAKIT"
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
                         : "bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-300",
                     )}
                   >
@@ -414,7 +414,7 @@ export function TransactionDetailModal({
                     className={cn(
                       "flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all border",
                       editPaymentMethod === "POS"
-                        ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                        ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-300"
                         : "bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-300",
                     )}
                   >
@@ -570,8 +570,8 @@ export function TransactionDetailModal({
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                  <p className="text-red-600 text-sm">{error}</p>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                  <p className="text-red-300 text-sm">{error}</p>
                 </div>
               )}
 
@@ -603,24 +603,24 @@ export function TransactionDetailModal({
               {/* Amount Banner */}
               <div className={cn(
                 "rounded-xl p-5 text-center",
-                isIncome ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
+                isIncome ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"
               )}>
                 <div className="flex items-center justify-center gap-2 mb-1">
                   {isIncome ? (
-                    <ArrowDownLeft size={20} className="text-green-600" />
+                    <ArrowDownLeft size={20} className="text-green-300" />
                   ) : (
-                    <ArrowUpRight size={20} className="text-red-600" />
+                    <ArrowUpRight size={20} className="text-red-300" />
                   )}
                   <span className={cn(
                     "text-sm font-medium",
-                    isIncome ? "text-green-700" : "text-red-700"
+                    isIncome ? "text-green-300" : "text-red-300"
                   )}>
                     {isIncome ? "Gelir" : "Gider"}
                   </span>
                 </div>
                 <p className={cn(
                   "text-3xl font-bold",
-                  isIncome ? "text-green-700" : "text-red-700"
+                  isIncome ? "text-green-300" : "text-red-300"
                 )}>
                   {/* Beta v1.1 (WP 4f6baaa3 follow-up): POS komisyon UI tamamen kaldırıldı —
                       tx tutarı her zaman amount (POS Hacmi mantığı). */}
@@ -753,7 +753,7 @@ export function TransactionDetailModal({
                         {transaction.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-0.5 bg-brand-50 text-brand-700 text-xs font-medium rounded-full"
+                            className="px-2 py-0.5 bg-brand-500/15 text-brand-300 text-xs font-medium rounded-full"
                           >
                             {tag}
                           </span>
@@ -801,7 +801,7 @@ export function TransactionDetailModal({
                 </button>
                 <button
                   onClick={() => setEditing(true)}
-                  className="px-4 py-2.5 bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+                  className="px-4 py-2.5 bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Pencil size={14} />
                   Duzenle
@@ -809,7 +809,7 @@ export function TransactionDetailModal({
                 {onDelete && (
                   <button
                     onClick={onDelete}
-                    className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+                    className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
                   >
                     <Trash2 size={14} />
                     Sil
@@ -874,8 +874,8 @@ function DeleteTransactionModal({
       <div className="relative bg-surface-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl z-10 animate-slide-up">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-              <AlertTriangle size={16} className="text-red-600" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <AlertTriangle size={16} className="text-red-300" />
             </div>
             <h3 className="text-lg font-bold text-white">Islemi Sil</h3>
           </div>
@@ -897,7 +897,7 @@ function DeleteTransactionModal({
                   })}
                 </p>
               </div>
-              <span className={cn("text-base font-bold", isIncome ? "text-green-600" : "text-red-600")}>
+              <span className={cn("text-base font-bold", isIncome ? "text-green-300" : "text-red-300")}>
                 {isIncome ? "+" : "-"}{formatCurrency(transaction.amount, currency)}
               </span>
             </div>
@@ -905,7 +905,7 @@ function DeleteTransactionModal({
 
           <div>
             <label className="block text-sm font-medium text-surface-200 mb-1.5">
-              Silme Sebebi <span className="text-red-500">*</span>
+              Silme Sebebi <span className="text-red-300">*</span>
             </label>
             <textarea
               value={reason}
@@ -923,8 +923,8 @@ function DeleteTransactionModal({
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mt-3">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mt-3">
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 

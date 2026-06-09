@@ -22,9 +22,9 @@ function formatMoney(n: number) {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Home; color: string; bg: string }> = {
-  RENT: { label: "Kira", icon: Home, color: "text-orange-600", bg: "bg-orange-50" },
-  PERSONNEL: { label: "Personel", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-  VEHICLE_RENTAL: { label: "Arac Kiralama", icon: TrendingDown, color: "text-teal-600", bg: "bg-teal-50" },
+  RENT: { label: "Kira", icon: Home, color: "text-orange-300", bg: "bg-orange-500/10" },
+  PERSONNEL: { label: "Personel", icon: Users, color: "text-blue-300", bg: "bg-blue-500/15" },
+  VEHICLE_RENTAL: { label: "Arac Kiralama", icon: TrendingDown, color: "text-teal-300", bg: "bg-teal-500/15" },
   UTILITY: { label: "Fatura", icon: Zap, color: "text-yellow-600", bg: "bg-yellow-50" },
   OTHER: { label: "Diger", icon: MoreHorizontal, color: "text-surface-300", bg: "bg-surface-700" },
 };
@@ -79,16 +79,16 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <TrendingDown size={18} className="text-red-500" />
+            <TrendingDown size={18} className="text-red-300" />
             <h3 className="text-sm font-bold text-white">Sabit Masraflar</h3>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-red-600">
+            <span className="text-sm font-bold text-red-300">
               {formatMoney(summary.total_monthly_cost)} {currency}/ay
             </span>
             <button
               onClick={() => setShowCreate(true)}
-              className="p-1.5 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 transition-colors"
+              className="p-1.5 rounded-lg bg-brand-500/15 text-brand-300 hover:bg-brand-500/25 transition-colors"
             >
               <Plus size={16} />
             </button>
@@ -120,12 +120,12 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
             </div>
             <div className="flex gap-3 mt-2 text-[10px]">
               {summary.rent_cost > 0 && (
-                <span className="flex items-center gap-1 text-orange-600">
+                <span className="flex items-center gap-1 text-orange-300">
                   <span className="w-2 h-2 rounded-full bg-orange-400" /> Kira
                 </span>
               )}
               {summary.personnel_cost > 0 && (
-                <span className="flex items-center gap-1 text-blue-600">
+                <span className="flex items-center gap-1 text-blue-300">
                   <span className="w-2 h-2 rounded-full bg-blue-400" /> Personel
                 </span>
               )}
@@ -162,7 +162,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-medium text-white truncate">{fc.name}</p>
                       {fc.is_auto && (
-                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-500 text-[9px] rounded-full font-medium">
+                        <span className="px-1.5 py-0.5 bg-blue-500/15 text-blue-300 text-[9px] rounded-full font-medium">
                           Otomatik
                         </span>
                       )}
@@ -182,7 +182,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
                     )}
                   </div>
 
-                  <span className="text-sm font-semibold text-red-600 flex-shrink-0">
+                  <span className="text-sm font-semibold text-red-300 flex-shrink-0">
                     {formatMoney(fc.amount)} {currency}
                   </span>
 
@@ -190,13 +190,13 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
                       <button
                         onClick={() => setEditTarget(fc)}
-                        className="p-1 rounded-lg text-surface-400 hover:text-brand-500 hover:bg-brand-50"
+                        className="p-1 rounded-lg text-surface-400 hover:text-brand-300 hover:bg-brand-500/15"
                       >
                         <Edit3 size={14} />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(fc)}
-                        className="p-1 rounded-lg text-surface-400 hover:text-red-500 hover:bg-red-50"
+                        className="p-1 rounded-lg text-surface-400 hover:text-red-300 hover:bg-red-500/10"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -360,7 +360,7 @@ function CreateFixedCostModal({
               }`}
             />
             {fieldErrors.name && (
-              <p className="mt-1 text-xs text-red-500">{fieldErrors.name}</p>
+              <p className="mt-1 text-xs text-red-300">{fieldErrors.name}</p>
             )}
           </div>
 
@@ -393,7 +393,7 @@ function CreateFixedCostModal({
                 }`}
               />
               {fieldErrors.amount && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.amount}</p>
+                <p className="mt-1 text-xs text-red-300">{fieldErrors.amount}</p>
               )}
             </div>
           </div>
@@ -458,8 +458,8 @@ function CreateFixedCostModal({
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 
@@ -522,8 +522,8 @@ function DeleteFixedCostModal({
       <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-              <AlertTriangle size={16} className="text-red-600" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <AlertTriangle size={16} className="text-red-300" />
             </div>
             <h3 className="text-lg font-bold text-white">Sabit Gideri Sil</h3>
           </div>
@@ -538,8 +538,8 @@ function DeleteFixedCostModal({
           </p>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-3">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3">
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 

@@ -143,7 +143,7 @@ export function DocumentsModule({ businessId }: Props) {
                       {file.original_name}
                     </p>
                     {file.admin_only && isAdmin && (
-                      <EyeOff size={11} className="text-amber-500 shrink-0" />
+                      <EyeOff size={11} className="text-amber-300 shrink-0" />
                     )}
                   </div>
                   <p className="text-[10px] text-surface-400">
@@ -330,7 +330,7 @@ function FileDetailModal({
             {/* Gizli badge */}
             {file.admin_only && isAdmin && (
               <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                <EyeOff size={14} className="text-amber-600" />
+                <EyeOff size={14} className="text-amber-300" />
                 <span className="text-sm text-amber-400 font-medium">Gizli Belge — Sadece admin gorebilir</span>
               </div>
             )}
@@ -349,7 +349,7 @@ function FileDetailModal({
             </a>
             <button
               onClick={onDelete}
-              className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-medium transition-colors"
+              className="px-4 py-2.5 bg-red-500/15 hover:bg-red-500/20 text-red-300 rounded-xl text-sm font-medium transition-colors"
             >
               <Trash2 size={14} />
             </button>

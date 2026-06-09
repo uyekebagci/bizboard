@@ -141,7 +141,7 @@ export function DebtModule({ businessId, currency }: Props) {
         <div className="grid grid-cols-3 gap-3">
           <div className="glass-card p-3">
             <p className="text-xs text-surface-400 mb-1">Alacak</p>
-            <p className="text-base font-bold text-emerald-600">
+            <p className="text-base font-bold text-emerald-300">
               {currency === "TRY" ? "₺" : currency}
               {formatMoney(summary.pending_receivable)}
             </p>
@@ -151,7 +151,7 @@ export function DebtModule({ businessId, currency }: Props) {
           </div>
           <div className="glass-card p-3">
             <p className="text-xs text-surface-400 mb-1">Verecek</p>
-            <p className="text-base font-bold text-red-500">
+            <p className="text-base font-bold text-red-300">
               {currency === "TRY" ? "₺" : currency}
               {formatMoney(summary.pending_payable)}
             </p>
@@ -163,7 +163,7 @@ export function DebtModule({ businessId, currency }: Props) {
             <p className="text-xs text-surface-400 mb-1">Net</p>
             <p
               className={`text-base font-bold ${
-                summary.net_balance >= 0 ? "text-emerald-600" : "text-red-500"
+                summary.net_balance >= 0 ? "text-emerald-300" : "text-red-300"
               }`}
             >
               {summary.net_balance >= 0 ? "+" : ""}
@@ -238,8 +238,8 @@ export function DebtModule({ businessId, currency }: Props) {
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
                       debt.direction === "RECEIVABLE"
-                        ? "bg-emerald-100 text-emerald-600"
-                        : "bg-red-100 text-red-500"
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : "bg-red-500/20 text-red-300"
                     }`}
                   >
                     {debt.direction === "RECEIVABLE" ? (
@@ -255,7 +255,7 @@ export function DebtModule({ businessId, currency }: Props) {
                         {debt.counterparty}
                       </p>
                       {debt.is_settled && (
-                        <span className="px-1.5 py-0.5 text-[10px] bg-emerald-100 text-emerald-700 rounded-full font-medium">
+                        <span className="px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 rounded-full font-medium">
                           Kapatildi
                         </span>
                       )}
@@ -289,8 +289,8 @@ export function DebtModule({ businessId, currency }: Props) {
                   <p
                     className={`font-bold text-sm whitespace-nowrap ${
                       debt.direction === "RECEIVABLE"
-                        ? "text-emerald-600"
-                        : "text-red-500"
+                        ? "text-emerald-300"
+                        : "text-red-300"
                     }`}
                   >
                     {debt.direction === "RECEIVABLE" ? "+" : "-"}
@@ -303,22 +303,22 @@ export function DebtModule({ businessId, currency }: Props) {
                     {!debt.is_settled && (
                       <button
                         onClick={() => setSettleConfirm(debt)}
-                        className="p-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-emerald-500/15 transition-colors"
                         title={
                           debt.direction === "RECEIVABLE"
                             ? "Tahsil edildi"
                             : "Odendi"
                         }
                       >
-                        <Check size={14} className="text-emerald-600" />
+                        <Check size={14} className="text-emerald-300" />
                       </button>
                     )}
                     <button
                       onClick={() => setDeleteConfirm(debt)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-red-500/15 transition-colors"
                       title="Sil"
                     >
-                      <Trash2 size={14} className="text-red-500" />
+                      <Trash2 size={14} className="text-red-300" />
                     </button>
                   </div>
                 </div>
@@ -574,7 +574,7 @@ function CreateDebtModal({
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 text-sm">
               {error}
             </div>
           )}
@@ -603,7 +603,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                 onClick={() => setDirection("RECEIVABLE")}
                 className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
                   direction === "RECEIVABLE"
-                    ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
                     : "bg-surface-700 border-surface-600 text-surface-400"
                 }`}
               >
@@ -615,7 +615,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                 onClick={() => setDirection("PAYABLE")}
                 className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
                   direction === "PAYABLE"
-                    ? "bg-red-50 border-red-300 text-red-700"
+                    ? "bg-red-500/15 border-red-500/40 text-red-300"
                     : "bg-surface-700 border-surface-600 text-surface-400"
                 }`}
               >
@@ -667,7 +667,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                     onClick={() => setReceivableType(opt)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
                       receivableType === opt
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
                         : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300"
                     }`}
                   >
@@ -697,7 +697,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                     onClick={() => setInstrumentType(opt)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
                       instrumentType === opt
-                        ? "bg-brand-50 border-brand-300 text-brand-700"
+                        ? "bg-brand-500/15 border-brand-500/40 text-brand-300"
                         : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300"
                     }`}
                   >

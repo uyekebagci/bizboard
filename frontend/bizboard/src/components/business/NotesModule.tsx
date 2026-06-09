@@ -22,10 +22,10 @@ import type { BusinessNote } from "@/types";
 const NOTE_COLORS = [
   { value: null, label: "Varsayilan", bg: "bg-surface-800", border: "border-surface-600" },
   { value: "yellow", label: "Sari", bg: "bg-yellow-50", border: "border-yellow-200" },
-  { value: "blue", label: "Mavi", bg: "bg-blue-50", border: "border-blue-200" },
-  { value: "green", label: "Yesil", bg: "bg-emerald-50", border: "border-emerald-200" },
-  { value: "red", label: "Kirmizi", bg: "bg-red-50", border: "border-red-200" },
-  { value: "purple", label: "Mor", bg: "bg-purple-50", border: "border-purple-200" },
+  { value: "blue", label: "Mavi", bg: "bg-blue-500/15", border: "border-blue-500/30" },
+  { value: "green", label: "Yesil", bg: "bg-emerald-500/15", border: "border-emerald-500/30" },
+  { value: "red", label: "Kirmizi", bg: "bg-red-500/15", border: "border-red-500/30" },
+  { value: "purple", label: "Mor", bg: "bg-purple-500/15", border: "border-purple-500/30" },
 ];
 
 function getColorClasses(color: string | null) {
@@ -200,10 +200,10 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(note)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-red-500/15 transition-colors"
                       title="Sil"
                     >
-                      <Trash2 size={13} className="text-red-500" />
+                      <Trash2 size={13} className="text-red-300" />
                     </button>
                   </div>
                 </div>
@@ -360,7 +360,7 @@ function NoteFormModal({
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 text-sm">
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm">
               {error}
             </div>
           )}
@@ -394,7 +394,7 @@ function NoteFormModal({
                   title={c.label}
                 >
                   {color === c.value && (
-                    <Check size={12} className="text-brand-600" />
+                    <Check size={12} className="text-brand-300" />
                   )}
                 </button>
               ))}
@@ -426,7 +426,7 @@ function NoteFormModal({
           {isAdmin && (
             <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
               <div className="flex items-center gap-2">
-                <EyeOff size={14} className="text-amber-600" />
+                <EyeOff size={14} className="text-amber-300" />
                 <div>
                   <span className="text-sm text-surface-200">Gizli Not</span>
                   <p className="text-[10px] text-surface-400">Sadece admin gorebilir</p>

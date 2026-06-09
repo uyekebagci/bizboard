@@ -88,9 +88,9 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-center">
-            <p className="text-[10px] text-blue-600 uppercase tracking-wider font-medium">Personel</p>
-            <p className="text-lg font-bold text-blue-700 mt-0.5">
+          <div className="p-3 bg-blue-500/15 border border-blue-500/30 rounded-xl text-center">
+            <p className="text-[10px] text-blue-300 uppercase tracking-wider font-medium">Personel</p>
+            <p className="text-lg font-bold text-blue-300 mt-0.5">
               {summary.active_employees}
               {summary.total_employees !== summary.active_employees && (
                 <span className="text-xs font-normal text-blue-400">
@@ -100,13 +100,13 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
             </p>
           </div>
           <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
-            <p className="text-[10px] text-amber-600 uppercase tracking-wider font-medium">Maas</p>
+            <p className="text-[10px] text-amber-300 uppercase tracking-wider font-medium">Maas</p>
             <p className="text-sm font-bold text-amber-400 mt-0.5">
               {formatMoney(summary.total_salary)} {currency}
             </p>
           </div>
           <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-center">
-            <p className="text-[10px] text-red-600 uppercase tracking-wider font-medium">Toplam</p>
+            <p className="text-[10px] text-red-300 uppercase tracking-wider font-medium">Toplam</p>
             <p className="text-sm font-bold text-red-400 mt-0.5">
               {formatMoney(summary.total_cost)} {currency}
             </p>
@@ -155,9 +155,9 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
               className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group"
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                emp.is_active ? "bg-blue-50" : "bg-surface-700"
+                emp.is_active ? "bg-blue-500/15" : "bg-surface-700"
               }`}>
-                <Users size={18} className={emp.is_active ? "text-blue-600" : "text-surface-400"} />
+                <Users size={18} className={emp.is_active ? "text-blue-300" : "text-surface-400"} />
               </div>
 
               <div className="flex-1 min-w-0">
@@ -279,10 +279,10 @@ function EmployeeDetailModal({
           {/* Name & Status Banner */}
           <div className={`rounded-xl p-5 text-center ${
             employee.is_active
-              ? "bg-blue-50 border border-blue-200"
+              ? "bg-blue-500/15 border border-blue-500/30"
               : "bg-surface-700 border border-surface-600"
           }`}>
-            <p className={`text-xl font-bold ${employee.is_active ? "text-blue-700" : "text-surface-400"}`}>
+            <p className={`text-xl font-bold ${employee.is_active ? "text-blue-300" : "text-surface-400"}`}>
               {employee.full_name}
             </p>
             <p className="text-sm text-surface-400 mt-1">
@@ -298,19 +298,19 @@ function EmployeeDetailModal({
           {/* Cost Breakdown */}
           <div className="grid grid-cols-3 gap-2">
             <div className="p-3 bg-amber-500/10 rounded-xl text-center">
-              <p className="text-[10px] text-amber-600 uppercase tracking-wider font-medium">Maas (Brut)</p>
+              <p className="text-[10px] text-amber-300 uppercase tracking-wider font-medium">Maas (Brut)</p>
               <p className="text-sm font-bold text-amber-400 mt-0.5">
                 {formatMoney(employee.salary)} {currency}
               </p>
             </div>
-            <div className="p-3 bg-purple-50 rounded-xl text-center">
-              <p className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">SGK</p>
-              <p className="text-sm font-bold text-purple-700 mt-0.5">
+            <div className="p-3 bg-purple-500/10 rounded-xl text-center">
+              <p className="text-[10px] text-purple-300 uppercase tracking-wider font-medium">SGK</p>
+              <p className="text-sm font-bold text-purple-300 mt-0.5">
                 {formatMoney(employee.insurance_cost)} {currency}
               </p>
             </div>
             <div className="p-3 bg-red-500/10 rounded-xl text-center">
-              <p className="text-[10px] text-red-600 uppercase tracking-wider font-medium">Toplam</p>
+              <p className="text-[10px] text-red-300 uppercase tracking-wider font-medium">Toplam</p>
               <p className="text-sm font-bold text-red-400 mt-0.5">
                 {formatMoney(employee.total_cost)} {currency}
               </p>
@@ -376,7 +376,7 @@ function EmployeeDetailModal({
             <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors">
               Kapat
             </button>
-            <button onClick={onEdit} className="px-4 py-2.5 bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
+            <button onClick={onEdit} className="px-4 py-2.5 bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
               <Edit3 size={14} />
               Duzenle
             </button>
@@ -384,14 +384,14 @@ function EmployeeDetailModal({
               onClick={onToggleActive}
               className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5 ${
                 employee.is_active
-                  ? "bg-orange-50 hover:bg-orange-100 text-orange-600"
-                  : "bg-green-50 hover:bg-green-100 text-green-600"
+                  ? "bg-orange-500/10 hover:bg-orange-500/20 text-orange-300"
+                  : "bg-green-500/10 hover:bg-green-500/20 text-green-300"
               }`}
             >
               {employee.is_active ? <UserMinus size={14} /> : <UserCheck size={14} />}
               {employee.is_active ? "Pasif Yap" : "Aktif Yap"}
             </button>
-            <button onClick={onDelete} className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
+            <button onClick={onDelete} className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
               <Trash2 size={14} />
             </button>
           </div>
@@ -622,7 +622,7 @@ function CreateEmployeeModal({
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 
@@ -688,8 +688,8 @@ function DeleteEmployeeModal({
       <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-              <AlertTriangle size={16} className="text-red-600" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <AlertTriangle size={16} className="text-red-300" />
             </div>
             <h3 className="text-lg font-bold text-white">Personeli Sil</h3>
           </div>
@@ -713,7 +713,7 @@ function DeleteEmployeeModal({
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 

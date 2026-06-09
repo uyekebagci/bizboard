@@ -16,10 +16,10 @@ interface Props {
 }
 
 const CATEGORY_CONFIG = [
-  { key: "heavy_vehicle_count", label: "Agir Arac / Is Makinesi", icon: Truck, color: "text-orange-600", bg: "bg-orange-50" },
-  { key: "light_equipment_count", label: "Hafif Ekipman", icon: Wrench, color: "text-blue-600", bg: "bg-blue-50" },
-  { key: "site_setup_count", label: "Santiye Kurulum", icon: Building, color: "text-teal-600", bg: "bg-teal-50" },
-  { key: "consumable_count", label: "Sarf Malzeme", icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
+  { key: "heavy_vehicle_count", label: "Agir Arac / Is Makinesi", icon: Truck, color: "text-orange-300", bg: "bg-orange-500/15" },
+  { key: "light_equipment_count", label: "Hafif Ekipman", icon: Wrench, color: "text-blue-300", bg: "bg-blue-500/15" },
+  { key: "site_setup_count", label: "Santiye Kurulum", icon: Building, color: "text-teal-300", bg: "bg-teal-500/15" },
+  { key: "consumable_count", label: "Sarf Malzeme", icon: Package, color: "text-purple-300", bg: "bg-purple-500/15" },
 ] as const;
 
 export function InventoryModule({ businessId, currency }: Props) {
@@ -86,30 +86,30 @@ export function InventoryModule({ businessId, currency }: Props) {
       {alerts > 0 && (
         <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle size={14} className="text-amber-600" />
+            <AlertTriangle size={14} className="text-amber-300" />
             <span className="text-xs font-bold text-amber-400">Dikkat Gerektiren</span>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             {summary.broken_count > 0 && (
-              <span className="text-xs text-amber-600">
+              <span className="text-xs text-amber-300">
                 <ShieldAlert size={12} className="inline mr-1" />
                 {summary.broken_count} arizali
               </span>
             )}
             {summary.in_repair_count > 0 && (
-              <span className="text-xs text-amber-600">
+              <span className="text-xs text-amber-300">
                 <Wrench size={12} className="inline mr-1" />
                 {summary.in_repair_count} tamirde
               </span>
             )}
             {summary.low_stock_count > 0 && (
-              <span className="text-xs text-red-600">
+              <span className="text-xs text-red-300">
                 <Package size={12} className="inline mr-1" />
                 {summary.low_stock_count} dusuk stok
               </span>
             )}
             {summary.warranty_expiring_count > 0 && (
-              <span className="text-xs text-amber-600">
+              <span className="text-xs text-amber-300">
                 {summary.warranty_expiring_count} garanti bitmek uzere
               </span>
             )}
@@ -127,7 +127,7 @@ export function InventoryModule({ businessId, currency }: Props) {
         </div>
         <button
           onClick={() => router.push(`/dashboard/inventory?business=${businessId}`)}
-          className="flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+          className="flex items-center gap-1 text-sm font-medium text-brand-300 hover:text-brand-300 transition-colors"
         >
           Tum Envanter
           <ExternalLink size={14} />

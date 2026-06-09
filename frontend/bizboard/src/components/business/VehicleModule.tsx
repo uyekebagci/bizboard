@@ -34,7 +34,7 @@ const OWNERSHIP_LABELS: Record<string, string> = {
   OWNED: "Firma Mali", RENTED: "Kiralik", LEASED: "Leasing",
 };
 const OWNERSHIP_COLORS: Record<string, string> = {
-  OWNED: "text-green-600 bg-green-50", RENTED: "text-orange-600 bg-orange-50", LEASED: "text-purple-600 bg-purple-50",
+  OWNED: "text-green-300 bg-green-500/10", RENTED: "text-orange-300 bg-orange-500/10", LEASED: "text-purple-300 bg-purple-500/10",
 };
 const VEHICLE_TYPE_LABELS: Record<string, string> = {
   BINEK: "Binek", HAFIF_TICARI: "Hafif Ticari", AGIR_TICARI: "Agir Ticari", MOTOSIKLET: "Motosiklet", DIGER: "Diger",
@@ -98,25 +98,25 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-center">
-            <p className="text-[10px] text-teal-600 uppercase tracking-wider font-medium">Arac</p>
-            <p className="text-lg font-bold text-teal-700 mt-0.5">
+          <div className="p-3 bg-teal-500/15 border border-teal-500/30 rounded-xl text-center">
+            <p className="text-[10px] text-teal-300 uppercase tracking-wider font-medium">Arac</p>
+            <p className="text-lg font-bold text-teal-300 mt-0.5">
               {summary.active_vehicles}
               {summary.total_vehicles !== summary.active_vehicles && (
                 <span className="text-xs font-normal text-teal-400">/{summary.total_vehicles}</span>
               )}
             </p>
           </div>
-          <div className="p-3 bg-green-50 border border-green-200 rounded-xl text-center">
-            <p className="text-[10px] text-green-600 uppercase tracking-wider font-medium">Firma Mali</p>
-            <p className="text-lg font-bold text-green-700 mt-0.5">{summary.owned_count}</p>
+          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl text-center">
+            <p className="text-[10px] text-green-300 uppercase tracking-wider font-medium">Firma Mali</p>
+            <p className="text-lg font-bold text-green-300 mt-0.5">{summary.owned_count}</p>
           </div>
-          <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl text-center">
-            <p className="text-[10px] text-orange-600 uppercase tracking-wider font-medium">Kiralik</p>
-            <p className="text-sm font-bold text-orange-700 mt-0.5">
+          <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-xl text-center">
+            <p className="text-[10px] text-orange-300 uppercase tracking-wider font-medium">Kiralik</p>
+            <p className="text-sm font-bold text-orange-300 mt-0.5">
               {summary.rented_count + summary.leased_count}
               {summary.total_monthly_rental_cost > 0 && (
-                <span className="block text-[10px] font-normal text-orange-500 mt-0.5">
+                <span className="block text-[10px] font-normal text-orange-300 mt-0.5">
                   {formatMoney(summary.total_monthly_rental_cost)} {currency}/ay
                 </span>
               )}
@@ -159,9 +159,9 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
               className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group"
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                v.is_active ? "bg-teal-50" : "bg-surface-700"
+                v.is_active ? "bg-teal-500/15" : "bg-surface-700"
               }`}>
-                <Car size={18} className={v.is_active ? "text-teal-600" : "text-surface-400"} />
+                <Car size={18} className={v.is_active ? "text-teal-300" : "text-surface-400"} />
               </div>
 
               <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
               <div className="text-right flex-shrink-0">
                 {v.ownership_type !== "OWNED" && v.monthly_rental_cost > 0 ? (
                   <>
-                    <p className="text-sm font-semibold text-orange-600">{formatMoney(v.monthly_rental_cost)} {currency}/ay</p>
+                    <p className="text-sm font-semibold text-orange-300">{formatMoney(v.monthly_rental_cost)} {currency}/ay</p>
                     <p className="text-[10px] text-surface-400">{RENTAL_PERIOD_LABELS[v.rental_period || ""] || ""} kiralama</p>
                   </>
                 ) : (
@@ -257,13 +257,13 @@ function VehicleDetailModal({
       <div className={`flex items-start gap-2 p-3 rounded-xl ${
         isExpired ? "bg-red-500/10 border border-red-500/30" : isWarn ? "bg-amber-500/10 border border-amber-500/30" : "bg-surface-700"
       }`}>
-        <Calendar size={14} className={`mt-0.5 shrink-0 ${isExpired ? "text-red-500" : isWarn ? "text-amber-500" : "text-surface-400"}`} />
+        <Calendar size={14} className={`mt-0.5 shrink-0 ${isExpired ? "text-red-300" : isWarn ? "text-amber-300" : "text-surface-400"}`} />
         <div>
           <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
           <p className={`text-sm font-medium ${isExpired ? "text-red-400" : isWarn ? "text-amber-400" : "text-white"}`}>
             {formatDate(date)}
-            {isExpired && <span className="ml-1 text-[10px] text-red-500 font-normal">SURESI DOLDU</span>}
-            {isWarn && !isExpired && <span className="ml-1 text-[10px] text-amber-500 font-normal">YAKLASAN</span>}
+            {isExpired && <span className="ml-1 text-[10px] text-red-300 font-normal">SURESI DOLDU</span>}
+            {isWarn && !isExpired && <span className="ml-1 text-[10px] text-amber-300 font-normal">YAKLASAN</span>}
           </p>
         </div>
       </div>
@@ -283,7 +283,7 @@ function VehicleDetailModal({
 
         <div className="p-5 space-y-4">
           {/* Plate & Status Banner */}
-          <div className={`rounded-xl p-5 text-center ${v.is_active ? "bg-teal-50 border border-teal-200" : "bg-surface-700 border border-surface-600"}`}>
+          <div className={`rounded-xl p-5 text-center ${v.is_active ? "bg-teal-500/15 border border-teal-500/30" : "bg-surface-700 border border-surface-600"}`}>
             <p className={`text-2xl font-black tracking-widest ${v.is_active ? "text-teal-800" : "text-surface-400"}`}>
               {v.plate_number}
             </p>
@@ -307,25 +307,25 @@ function VehicleDetailModal({
 
           {/* Kiralama Bilgileri */}
           {v.ownership_type !== "OWNED" && (
-            <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl space-y-2">
-              <p className="text-xs font-bold text-orange-700 uppercase tracking-wider">Kiralama Bilgileri</p>
+            <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl space-y-2">
+              <p className="text-xs font-bold text-orange-300 uppercase tracking-wider">Kiralama Bilgileri</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <p className="text-[10px] text-orange-500">Kiralama Bedeli</p>
-                  <p className="font-bold text-orange-700">{formatMoney(v.rental_cost)} {currency}/{RENTAL_PERIOD_LABELS[v.rental_period || "MONTHLY"]?.toLowerCase() || "ay"}</p>
+                  <p className="text-[10px] text-orange-300">Kiralama Bedeli</p>
+                  <p className="font-bold text-orange-300">{formatMoney(v.rental_cost)} {currency}/{RENTAL_PERIOD_LABELS[v.rental_period || "MONTHLY"]?.toLowerCase() || "ay"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-orange-500">Aylik Maliyet</p>
-                  <p className="font-bold text-orange-700">{formatMoney(v.monthly_rental_cost)} {currency}/ay</p>
+                  <p className="text-[10px] text-orange-300">Aylik Maliyet</p>
+                  <p className="font-bold text-orange-300">{formatMoney(v.monthly_rental_cost)} {currency}/ay</p>
                 </div>
                 {v.rental_company && (
                   <div className="col-span-2">
-                    <p className="text-[10px] text-orange-500">Kiralayan</p>
+                    <p className="text-[10px] text-orange-300">Kiralayan</p>
                     <p className="font-medium text-orange-800">{v.rental_company}</p>
                   </div>
                 )}
                 {(v.rental_start_date || v.rental_end_date) && (
-                  <div className="col-span-2 flex gap-2 text-xs text-orange-600">
+                  <div className="col-span-2 flex gap-2 text-xs text-orange-300">
                     {v.rental_start_date && <span>Baslangic: {formatDate(v.rental_start_date)}</span>}
                     {v.rental_end_date && <span>· Bitis: {formatDate(v.rental_end_date)}</span>}
                   </div>
@@ -475,15 +475,15 @@ function VehicleDetailModal({
             <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors">
               Kapat
             </button>
-            <button onClick={onEdit} className="px-4 py-2.5 bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
+            <button onClick={onEdit} className="px-4 py-2.5 bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
               <Edit3 size={14} /> Duzenle
             </button>
             <button onClick={onToggleActive} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              v.is_active ? "bg-orange-50 hover:bg-orange-100 text-orange-600" : "bg-green-50 hover:bg-green-100 text-green-600"
+              v.is_active ? "bg-orange-500/10 hover:bg-orange-500/20 text-orange-300" : "bg-green-500/10 hover:bg-green-500/20 text-green-300"
             }`}>
               {v.is_active ? "Pasif Yap" : "Aktif Yap"}
             </button>
-            <button onClick={onDelete} className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
+            <button onClick={onDelete} className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
               <Trash2 size={14} />
             </button>
           </div>
@@ -624,7 +624,7 @@ function CreateVehicleModal({
           {sections.map((s) => (
             <button key={s.key} onClick={() => setActiveSection(s.key)}
               className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                activeSection === s.key ? "text-brand-600 border-b-2 border-brand-600" : "text-surface-400 hover:text-surface-200"
+                activeSection === s.key ? "text-brand-300 border-b-2 border-brand-600" : "text-surface-400 hover:text-surface-200"
               }`}>
               {s.label}
             </button>
@@ -636,7 +636,7 @@ function CreateVehicleModal({
           {activeSection === "basic" && (
             <>
               <div>
-                <label className={labelCls}>Plaka <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Plaka <span className="text-red-300">*</span></label>
                 <input type="text" value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)}
                   placeholder="34 ABC 123" className={inputCls} />
               </div>
@@ -743,7 +743,7 @@ function CreateVehicleModal({
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 
@@ -789,8 +789,8 @@ function DeleteVehicleModal({
       <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-              <AlertTriangle size={16} className="text-red-600" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <AlertTriangle size={16} className="text-red-300" />
             </div>
             <h3 className="text-lg font-bold text-white">Araci Sil</h3>
           </div>
@@ -810,7 +810,7 @@ function DeleteVehicleModal({
           </p>
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
           <div className="flex gap-3">
