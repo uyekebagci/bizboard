@@ -215,15 +215,7 @@ export default function AdminAuditPage() {
           </div>
         )}
 
-        <div className="border border-surface-700 rounded-xl overflow-hidden">
-          <div className="bg-surface-800 text-[11px] text-surface-400 uppercase grid grid-cols-12 gap-2 px-3 py-2 border-b border-surface-700">
-            <div className="col-span-3">Tarih</div>
-            <div className="col-span-2">Aktör</div>
-            <div className="col-span-3">Aksiyon</div>
-            <div className="col-span-2">Hedef</div>
-            <div className="col-span-2">IP</div>
-          </div>
-
+        <div className="glass-card overflow-hidden divide-y divide-surface-700/60">
           {loading && (
             <div className="flex items-center justify-center py-10 text-surface-400">
               <Loader2 size={18} className="animate-spin" />
@@ -237,37 +229,60 @@ export default function AdminAuditPage() {
           )}
 
           {!loading &&
-            data?.items.map((r) => (
+            data?.items.map((r) => {
+              const badge = r.highlight_type ? HIGHLIGHT_BADGES[r.highlight_type] : null;
+              return (
               <div key={r.id}>
+                {/* A1+A3: timeline satırı — ikon + Türkçe aksiyon/detail + aktör + göreli zaman */}
                 <button
                   type="button"
                   onClick={() => setExpanded((p) => (p === r.id ? null : r.id))}
-                  className="w-full text-left grid grid-cols-12 gap-2 px-3 py-2 text-xs text-surface-200 hover:bg-surface-800 border-b border-surface-700"
+                  className="w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-surface-800/60 transition-colors"
                 >
-                  <div className="col-span-3 flex items-center gap-1.5">
-                    <Clock size={12} className="text-surface-400" />
-                    <span className="font-mono">{formatDt(r.occurred_at)}</span>
+                  <div className="w-8 h-8 rounded-lg bg-surface-700/60 grid place-items-center shrink-0 mt-0.5">
+                    <Clock size={14} className="text-surface-400" />
                   </div>
-                  <div className="col-span-2 flex items-center gap-1.5 truncate">
-                    <UserIcon size={12} className="text-surface-400" />
-                    <span className="truncate">{r.actor_username ?? "—"}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-white">{actionLabel(r.action)}</span>
+                      {badge && (
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${badge.cls}`}>
+                          {badge.label}
+                        </span>
+                      )}
+                    </div>
+                    {/* A1: backend'in insan-okunur detail'ı ana açıklama */}
+                    {r.detail && (
+                      <p className="text-[13px] text-surface-300 mt-0.5 break-words">{r.detail}</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1 text-[11px] text-surface-400">
+                      <span className="inline-flex items-center gap-1">
+                        <UserIcon size={11} /> {r.actor_username ?? "Sistem"}
+                      </span>
+                      <span className="opacity-50">·</span>
+                      <span title={formatDt(r.occurred_at)}>{relativeTime(r.occurred_at)}</span>
+                      {r.entity_type && (
+                        <>
+                          <span className="opacity-50">·</span>
+                          <span className="truncate">{r.entity_type}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="col-span-3 font-mono truncate">{r.action}</div>
-                  <div className="col-span-2 truncate">
-                    {r.entity_type ? `${r.entity_type}` : "—"}
-                    {r.entity_id ? ` / ${shortId(r.entity_id)}` : ""}
-                  </div>
-                  <div className="col-span-2 font-mono text-surface-400 truncate">{r.ip ?? "—"}</div>
                 </button>
                 {expanded === r.id && (
-                  <div className="bg-surface-800/60 border-b border-surface-700 px-4 py-3 text-xs">
+                  <div className="bg-surface-800/60 px-4 py-3 text-xs">
                     <pre className="whitespace-pre-wrap break-all text-surface-300">
                       {JSON.stringify(
                         {
                           id: r.id,
+                          action: r.action,
+                          occurred_at: formatDt(r.occurred_at),
                           trace_id: r.trace_id,
                           actor_user_id: r.actor_user_id,
                           business_id: r.business_id,
+                          entity_id: r.entity_id,
+                          ip: r.ip,
                           user_agent: r.user_agent,
                           metadata: r.metadata,
                         },
@@ -278,7 +293,8 @@ export default function AdminAuditPage() {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
         </div>
 
         {data && data.total_pages > 1 && (
@@ -327,8 +343,72 @@ function formatDt(iso: string): string {
   }
 }
 
-function shortId(id: string): string {
-  return id.length > 8 ? `${id.slice(0, 8)}...` : id;
+// A3: Aksiyon enum → Türkçe etiket. Bilinmeyen → enum'u Title-Case'e çevir.
+const ACTION_LABELS: Record<string, string> = {
+  TRANSACTION_CREATE: "İşlem eklendi",
+  TRANSACTION_UPDATE: "İşlem güncellendi",
+  TRANSACTION_DELETE: "İşlem silindi",
+  DEBT_CREATE: "Borç/alacak eklendi",
+  DEBT_UPDATE: "Borç/alacak güncellendi",
+  DEBT_DELETE: "Borç/alacak silindi",
+  DEBT_SETTLED: "Borç/alacak kapatıldı",
+  DEBT_WRITEOFF: "Borç silindi (düşüm)",
+  DEBT_WRITEOFF_REVERSE: "Borç düşümü geri alındı",
+  PAYMENT_CREATE: "Ödeme alındı/yapıldı",
+  PAYMENT_DELETE: "Ödeme silindi",
+  CASH_CLOSING_CREATE: "Günsonu kapatıldı",
+  CASH_CLOSING_REOPEN: "Günsonu yeniden açıldı",
+  CASH_CLOSING_BACKDATE: "Geçmiş tarihli kapanış",
+  BUSINESS_CREATE: "İşletme oluşturuldu",
+  BUSINESS_UPDATE: "İşletme güncellendi",
+  BUSINESS_DELETE: "İşletme silindi",
+  USER_CREATE: "Kullanıcı oluşturuldu",
+  USER_UPDATE: "Kullanıcı güncellendi",
+  USER_DELETE: "Kullanıcı silindi",
+  USER_LOGIN: "Giriş yapıldı",
+  PASSWORD_CHANGE: "Parola değiştirildi",
+  COUNTERPART_CREATE: "Cari eklendi",
+  COUNTERPART_UPDATE: "Cari güncellendi",
+  COUNTERPART_DELETE: "Cari silindi",
+  BANK_ACCOUNT_CREATE: "Hesap/kasa oluşturuldu",
+  BANK_ACCOUNT_UPDATE: "Hesap/kasa güncellendi",
+  BANK_ACCOUNT_DELETE: "Hesap/kasa silindi",
+  POS_SETTLE: "POS tahsilatı işlendi",
+  TRANSFER_CREATE: "Transfer yapıldı",
+  NOTIFICATION_SENT: "Bildirim gönderildi",
+};
+
+function actionLabel(action: string): string {
+  if (ACTION_LABELS[action]) return ACTION_LABELS[action];
+  // Fallback: SNAKE_CASE → "Snake case"
+  const t = action.toLowerCase().replace(/_/g, " ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+// A3: highlight_type → Türkçe rozet etiketi + renk.
+const HIGHLIGHT_BADGES: Record<string, { label: string; cls: string }> = {
+  BACKDATED: { label: "Geçmiş tarihli", cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+  CORRECTION: { label: "Düzeltme", cls: "bg-sky-500/15 text-sky-300 border-sky-500/30" },
+  CLOSING_REOPEN: { label: "Yeniden açma", cls: "bg-violet-500/15 text-violet-300 border-violet-500/30" },
+  POS_RATE_OVERRIDE: { label: "POS oran override", cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
+};
+
+// A3: göreli zaman ("2 saat önce") — Intl.RelativeTimeFormat tr.
+const RTF = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
+function relativeTime(iso: string): string {
+  try {
+    const diffMs = new Date(iso).getTime() - Date.now();
+    const sec = Math.round(diffMs / 1000);
+    const abs = Math.abs(sec);
+    if (abs < 60) return RTF.format(Math.round(sec), "second");
+    if (abs < 3600) return RTF.format(Math.round(sec / 60), "minute");
+    if (abs < 86400) return RTF.format(Math.round(sec / 3600), "hour");
+    if (abs < 2592000) return RTF.format(Math.round(sec / 86400), "day");
+    if (abs < 31536000) return RTF.format(Math.round(sec / 2592000), "month");
+    return RTF.format(Math.round(sec / 31536000), "year");
+  } catch {
+    return "";
+  }
 }
 
 function csvEscape(v: string): string {

@@ -273,6 +273,10 @@ export interface AuditLog {
   business_id: string | null;
   ip: string | null;
   user_agent: string | null;
+  /** Backend'in ürettiği insan-okunur özet — listede ana metin. */
+  detail: string | null;
+  /** BACKDATED / CORRECTION / CLOSING_REOPEN / POS_RATE_OVERRIDE / null — UI rozeti. */
+  highlight_type: string | null;
   metadata: Record<string, unknown> | null;
 }
 

@@ -55,5 +55,9 @@ public class AuditLogDto {
 
     private String detail;
 
+    /** WP audit-friendly: BACKDATED / CORRECTION / CLOSING_REOPEN / POS_RATE_OVERRIDE / null. UI rozeti. */
+    @JsonProperty("highlight_type")
+    private String highlightType;
+
     private Map<String, Object> metadata;
 }

@@ -28,10 +28,13 @@ public class AuditLogQueryService {
     public Page<AuditLogDto> search(UUID userId,
                                     String action,
                                     String resourceType,
+                                    UUID businessId,
                                     LocalDateTime from,
                                     LocalDateTime to,
                                     Pageable pageable) {
-        return repository.search(userId, action, resourceType, from, to, pageable)
+        // A2: businessId metadata JSONB'de text olarak tutulur → string karşılaştırma.
+        String businessIdStr = businessId != null ? businessId.toString() : null;
+        return repository.search(userId, action, resourceType, businessIdStr, from, to, pageable)
                 .map(this::toDto);
     }
 
@@ -58,6 +61,7 @@ public class AuditLogQueryService {
                 .ip(a.getIpAddress())
                 .userAgent(a.getUserAgent())
                 .detail(a.getDetail())
+                .highlightType(a.getHighlightType())
                 .metadata(a.getMetadata())
                 .build();
     }

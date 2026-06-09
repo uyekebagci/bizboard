@@ -49,6 +49,8 @@ public class AdminAuditController {
             @RequestParam(name = "actor_id", required = false) UUID actorId,
             @RequestParam(required = false) String action,
             @RequestParam(name = "entity_type", required = false) String entityType,
+            // A2: business_id filtresi — metadata.businessId üzerinden (frontend zaten gönderiyor).
+            @RequestParam(name = "business_id", required = false) UUID businessId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @RequestParam(defaultValue = "0") int page,
@@ -59,6 +61,6 @@ public class AdminAuditController {
         Pageable pageable = PageRequest.of(safePage, safeSize);
 
         return ResponseEntity.ok(PagedResponseDto.of(
-                auditLogQueryService.search(actorId, action, entityType, from, to, pageable)));
+                auditLogQueryService.search(actorId, action, entityType, businessId, from, to, pageable)));
     }
 }

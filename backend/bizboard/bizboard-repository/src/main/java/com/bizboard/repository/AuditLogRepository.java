@@ -45,6 +45,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
                     WHERE (CAST(:userId AS uuid) IS NULL OR user_id = CAST(:userId AS uuid))
                       AND (CAST(:action AS text) IS NULL OR action = CAST(:action AS text))
                       AND (CAST(:resourceType AS text) IS NULL OR resource_type = CAST(:resourceType AS text))
+                      AND (CAST(:businessId AS text) IS NULL OR metadata->>'businessId' = CAST(:businessId AS text))
                       AND (CAST(:fromTs AS timestamp) IS NULL OR created_at >= CAST(:fromTs AS timestamp))
                       AND (CAST(:toTs AS timestamp) IS NULL OR created_at < CAST(:toTs AS timestamp))
                     ORDER BY created_at DESC
@@ -54,6 +55,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
                     WHERE (CAST(:userId AS uuid) IS NULL OR user_id = CAST(:userId AS uuid))
                       AND (CAST(:action AS text) IS NULL OR action = CAST(:action AS text))
                       AND (CAST(:resourceType AS text) IS NULL OR resource_type = CAST(:resourceType AS text))
+                      AND (CAST(:businessId AS text) IS NULL OR metadata->>'businessId' = CAST(:businessId AS text))
                       AND (CAST(:fromTs AS timestamp) IS NULL OR created_at >= CAST(:fromTs AS timestamp))
                       AND (CAST(:toTs AS timestamp) IS NULL OR created_at < CAST(:toTs AS timestamp))
                     """,
@@ -62,6 +64,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
             @Param("userId") UUID userId,
             @Param("action") String action,
             @Param("resourceType") String resourceType,
+            @Param("businessId") String businessId,
             @Param("fromTs") LocalDateTime from,
             @Param("toTs") LocalDateTime to,
             Pageable pageable);
