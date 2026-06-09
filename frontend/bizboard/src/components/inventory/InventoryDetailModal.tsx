@@ -125,7 +125,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
     }
   }
 
-  const inputCls = "w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
+  const inputCls = "field field-sm py-2";
 
   // Toplam yakıt maliyeti
   const totalFuelCost = fuelLogs.reduce((sum, l) => sum + (l.cost || 0), 0);

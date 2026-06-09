@@ -188,15 +188,15 @@ export function CounterpartDebtModal({
         onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+        <div className="modal-header">
+          <h3 className="modal-title flex items-center gap-2">
             <HandCoins size={16} className={isReceivable ? "text-amber-300" : "text-red-300"} />
             Yeni {label} Ekle
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400"
+            className="modal-close"
             aria-label="Kapat"
           >
             <X size={16} />
@@ -271,7 +271,7 @@ export function CounterpartDebtModal({
               Karşı Taraf{!counterpartLocked && ` (${kind === "FIRM" ? "Firma" : "Kişi"})`} *
             </label>
             {counterpartLocked && preselectedCounterpart ? (
-              <div className="px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-700/40 text-sm text-surface-200">
+              <div className="px-3 py-2.5 rounded-xl border border-surface-600/70 bg-surface-700/40 text-sm text-surface-200">
                 {preselectedCounterpart.name}
               </div>
             ) : loadingCps ? (
@@ -309,13 +309,13 @@ export function CounterpartDebtModal({
                 value={amount}
                 onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                 placeholder="0"
-                className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-lg font-bold text-white placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="field field-sm py-2.5 flex-1 min-w-0 text-lg font-bold"
               />
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value as "TRY" | "USD" | "GOLD")}
                 aria-label="Para birimi"
-                className="px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="field field-sm py-2.5 w-auto text-sm font-medium"
               >
                 <option value="TRY">TRY</option>
                 <option value="USD">USD</option>
@@ -340,7 +340,7 @@ export function CounterpartDebtModal({
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               disabled={dueDateUnknown}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="field field-sm py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <label className="mt-2 flex items-center gap-2 text-xs text-surface-300 cursor-pointer select-none">
               <input
@@ -350,7 +350,7 @@ export function CounterpartDebtModal({
                   setDueDateUnknown(e.target.checked);
                   if (e.target.checked) setDueDate("");
                 }}
-                className="w-4 h-4 rounded border-surface-500 bg-surface-700 text-brand-500 focus:ring-brand-500"
+                className="checkbox"
               />
               Henüz belli değil
             </label>
@@ -365,18 +365,18 @@ export function CounterpartDebtModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+              className="field field-sm py-2.5 resize-none"
               placeholder={`${label} ile ilgili not...`}
             />
           </div>
         </div>
 
-        <div className="flex gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer">
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="flex-1 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium border border-surface-600 disabled:opacity-50"
+            className="btn-secondary flex-1 py-2.5 text-sm"
           >
             Vazgeç
           </button>
@@ -384,8 +384,12 @@ export function CounterpartDebtModal({
             type="submit"
             disabled={submitting || !businessId || !counterpartId || !amount}
             className={cn(
-              "flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
-              isReceivable ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700",
+              "flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2",
+              "transition-all duration-150 active:translate-y-0 hover:-translate-y-px",
+              "disabled:opacity-50 disabled:pointer-events-none",
+              isReceivable
+                ? "bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-600 shadow-[0_10px_22px_-12px_rgba(245,159,0,0.7)]"
+                : "bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-600 shadow-[0_10px_22px_-12px_rgba(224,49,49,0.7)]",
             )}
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}

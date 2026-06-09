@@ -35,7 +35,7 @@ export function EditField({ label, value, onChange, type = "text", money = false
       <input type={money ? "text" : type} inputMode={money ? "numeric" : undefined} value={value}
         onChange={(e) => onChange(money ? formatMoneyInput(e.target.value) : e.target.value)}
         step={!money && type === "number" ? "0.01" : undefined}
-        className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        className="field field-sm py-2" />
     </div>
   );
 }

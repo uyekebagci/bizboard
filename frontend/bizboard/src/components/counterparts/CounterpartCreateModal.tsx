@@ -109,7 +109,7 @@ export function CounterpartCreateModal({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field field-sm py-2.5"
               placeholder={isFirm ? "Firma adı" : "Kişinin adı soyadı"}
             />
           </div>
@@ -122,7 +122,7 @@ export function CounterpartCreateModal({
               value={taxId}
               onChange={(e) => setTaxId(e.target.value.replace(/[^0-9]/g, ""))}
               maxLength={isFirm ? 10 : 11}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field field-sm py-2.5"
               placeholder={isFirm ? "10 hane" : "11 hane"}
             />
           </div>
@@ -135,7 +135,7 @@ export function CounterpartCreateModal({
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field field-sm py-2.5"
               placeholder="05XX XXX XX XX"
             />
           </div>
@@ -148,7 +148,7 @@ export function CounterpartCreateModal({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field field-sm py-2.5"
               placeholder="ornek@firma.com"
             />
           </div>
@@ -162,7 +162,7 @@ export function CounterpartCreateModal({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+                className="field field-sm py-2.5 resize-none"
                 placeholder="Şehir / İlçe / Mahalle..."
               />
             </div>

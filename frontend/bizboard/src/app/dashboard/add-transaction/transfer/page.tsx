@@ -551,7 +551,7 @@ function AmountDateDesc({ amount, setAmount, date, setDate, description, setDesc
             onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
             placeholder="0"
             required
-            className="w-full px-3 py-3 rounded-xl border border-surface-600 bg-surface-800 text-2xl font-bold text-white placeholder:text-surface-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="field py-3 text-2xl font-bold"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 font-medium">
             {currency}
@@ -566,7 +566,7 @@ function AmountDateDesc({ amount, setAmount, date, setDate, description, setDesc
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="field field-sm py-2.5"
           />
         </div>
         <div>
@@ -576,7 +576,7 @@ function AmountDateDesc({ amount, setAmount, date, setDate, description, setDesc
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Not, referans no..."
-            className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="field field-sm py-2.5"
           />
         </div>
       </div>

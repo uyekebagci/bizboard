@@ -539,11 +539,11 @@ function Row({
       ) : textarea ? (
         <textarea required={required} value={value}
           onChange={(e) => onChange(e.target.value)} rows={2}
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none" />
+          className="field field-sm py-2.5 resize-none" />
       ) : (
         <input type={type} required={required} value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          className="field field-sm py-2.5" />
       )}
     </div>
   );

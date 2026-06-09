@@ -277,7 +277,7 @@ export default function FirmalarimPage() {
         <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" />
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Firma, VKN veya vergi dairesi ara…"
-          className="w-full pl-7 pr-2 py-2 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          className="field field-sm py-2 pl-7 pr-2" />
       </div>
 
       {/* Body */}

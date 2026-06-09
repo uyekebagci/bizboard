@@ -535,7 +535,7 @@ export function AddTransactionForm({
             onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
             placeholder="0"
             required
-            className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-2xl font-bold text-white placeholder:text-surface-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="field py-3 text-2xl font-bold pr-14"
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 font-medium">TRY</span>
         </div>
@@ -634,7 +634,7 @@ export function AddTransactionForm({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="field field-sm py-2.5"
           />
         </div>
         <div>
@@ -646,7 +646,7 @@ export function AddTransactionForm({
             value={time}
             onChange={(e) => setTime(e.target.value)}
             required
-            className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
+            className="field field-sm py-2.5 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
           />
         </div>
       </div>
@@ -661,7 +661,7 @@ export function AddTransactionForm({
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Islem aciklamasi..."
           rows={2}
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+          className="field field-sm py-2.5 resize-none"
         />
       </div>
 
@@ -673,7 +673,7 @@ export function AddTransactionForm({
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           placeholder="Virgul ile ayirin: malzeme, ofis, fatura"
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="field field-sm py-2.5"
         />
       </div>
 
@@ -694,14 +694,14 @@ export function AddTransactionForm({
       </div>
 
       {/* Beta v1.1: Bir alt kasaya da ekle (tx-time manuel atama) */}
-      <div className="rounded-xl border border-surface-600 bg-surface-700/40 p-3 space-y-2">
+      <div className="rounded-xl border border-surface-600/70 bg-surface-700/40 p-3 space-y-2">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={addToSubCash}
             onChange={(e) => setAddToSubCash(e.target.checked)}
             disabled={subCashList.length === 0}
-            className="w-4 h-4 rounded border-surface-500 bg-surface-800 accent-brand-500 cursor-pointer"
+            className="checkbox cursor-pointer"
           />
           <span className="text-sm font-medium text-surface-200">
             🏦 Bir alt kasaya da ekle (manuel)
@@ -715,7 +715,7 @@ export function AddTransactionForm({
             <select
               value={manualSubCashId}
               onChange={(e) => setManualSubCashId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field-sm"
             >
               <option value="">— Alt kasa seç —</option>
               {subCashList.map((s) => (
@@ -730,13 +730,13 @@ export function AddTransactionForm({
       </div>
 
       {/* WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet */}
-      <div className="rounded-xl border border-surface-600 bg-surface-700/40 p-3 space-y-2">
+      <div className="rounded-xl border border-surface-600/70 bg-surface-700/40 p-3 space-y-2">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={saveAsQuickAction}
             onChange={(e) => setSaveAsQuickAction(e.target.checked)}
-            className="w-4 h-4 rounded border-surface-500 bg-surface-800 accent-brand-500 cursor-pointer"
+            className="checkbox cursor-pointer"
           />
           <span className="text-sm font-medium text-surface-200">
             ⚡ Bu işlemi hızlı işlemlere kaydet
@@ -750,7 +750,7 @@ export function AddTransactionForm({
               onChange={(e) => setQuickActionName(e.target.value)}
               placeholder='Örn: "Bi Dünya 300K POS", "Aylık Kira"'
               maxLength={100}
-              className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field-sm"
             />
             <p className="text-[10px] text-surface-400">
               Dashboard widget&apos;ından tek tıkla tekrar oluşturulabilir. Limit: 12/işletme.
@@ -774,7 +774,7 @@ export function AddTransactionForm({
             onClick={onCancel}
             disabled={isSubmitting}
             className={cn(
-              "py-3 rounded-2xl font-semibold border border-surface-600 bg-surface-700 hover:bg-surface-600 text-surface-200 disabled:opacity-50",
+              "btn-secondary py-3 rounded-2xl",
               compact ? "flex-1" : "w-full order-2",
             )}
           >
@@ -789,10 +789,12 @@ export function AddTransactionForm({
             (saveAsQuickAction && !quickActionName.trim())
           }
           className={cn(
-            "py-3 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50",
+            "py-3 rounded-2xl font-semibold text-white flex items-center justify-center gap-2",
+            "transition-all duration-150 hover:-translate-y-px active:translate-y-0",
+            "disabled:opacity-50 disabled:pointer-events-none",
             direction === "income"
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-red-600 hover:bg-red-700",
+              ? "bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-600 shadow-[0_10px_22px_-12px_rgba(64,192,87,0.7)]"
+              : "bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-600 shadow-[0_10px_22px_-12px_rgba(224,49,49,0.7)]",
             compact ? "flex-1" : "w-full order-1",
           )}
         >

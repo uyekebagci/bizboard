@@ -214,40 +214,231 @@
   }
 
   .btn-primary {
-    /* Mockup-fidelity: hover'da brand glow (CTA parlar). */
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
-           bg-brand-600 text-white font-medium
-           hover:bg-brand-700 active:bg-brand-800 hover:shadow-glow
+    /* Premium CTA: brand gradient + sheen + yumuşak kalkış (hover/active).
+       Mockup-fidelity glow korunur, gradient ile derinlik kazanır. */
+    @apply relative inline-flex items-center justify-center px-6 py-3 rounded-xl
+           text-white font-semibold
            transition-all duration-150
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+           focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:ring-offset-2
+           focus:ring-offset-transparent
+           disabled:opacity-50 disabled:pointer-events-none;
+    background: linear-gradient(180deg, #5c7cfa, #4263eb);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.18) inset,
+      0 10px 22px -12px rgba(76, 110, 245, 0.7);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(180deg, #6b8afc, #3b5bdb);
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.22) inset,
+      0 0 0 1px rgba(92, 124, 250, 0.25),
+      0 16px 34px -12px rgba(76, 110, 245, 0.65);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+    background: linear-gradient(180deg, #4263eb, #364fc7);
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
-           bg-surface-700 text-surface-200 font-medium
-           hover:bg-surface-600 active:bg-surface-500
+           bg-surface-700/70 text-surface-200 font-medium
+           border border-surface-600/70
+           hover:bg-surface-600/70 hover:border-surface-500
+           active:bg-surface-600
            transition-colors duration-150
-           focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-offset-2;
+           focus:outline-none focus:ring-2 focus:ring-surface-400/60 focus:ring-offset-2
+           focus:ring-offset-transparent
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  .input {
-    @apply w-full px-4 py-3 rounded-xl border border-surface-600
-           bg-surface-700 text-surface-100 placeholder:text-surface-400
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500
-           transition-colors duration-150;
+  /* Premium tehlike butonu (sil/iptal-yıkıcı) — danger gradient + glow. */
+  .btn-danger {
+    @apply relative inline-flex items-center justify-center px-6 py-3 rounded-xl
+           text-white font-semibold
+           transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-red-500/60 focus:ring-offset-2
+           focus:ring-offset-transparent
+           disabled:opacity-50 disabled:pointer-events-none;
+    background: linear-gradient(180deg, #fa5252, #e03131);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.15) inset,
+      0 10px 22px -12px rgba(224, 49, 49, 0.7);
+  }
+  .btn-danger:hover {
+    background: linear-gradient(180deg, #ff6b6b, #c92a2a);
+    transform: translateY(-1px);
+  }
+  .btn-danger:active {
+    transform: translateY(0);
+  }
+
+  /* ============================================================
+   * Premium form-control katmanı (modal iç öğeleri — tek kaynak).
+   * Tüm modallar bu sınıfları paylaşır: tutarlı zemin/border/focus.
+   * Light+dark token-tabanlı; davranış değişmez, yalnız görsel.
+   * ============================================================ */
+
+  /* Premium input/textarea/select tabanı — subtle iç gradient, yumuşak
+     ama net border, belirgin marka focus ring + glow. */
+  .input,
+  .field {
+    @apply w-full px-4 py-3 rounded-xl
+           text-surface-100 placeholder:text-surface-400
+           transition-all duration-150
+           focus:outline-none;
+    background: linear-gradient(
+      180deg,
+      rgb(var(--surface-700) / 0.65),
+      rgb(var(--surface-700) / 0.4)
+    );
+    border: 1px solid rgb(var(--surface-600) / 0.9);
+    box-shadow: 0 1px 0 rgb(var(--surface-0) / 0.04) inset;
+  }
+  html:not(.dark) .input,
+  html:not(.dark) .field {
+    background: rgb(var(--surface-900) / 1);
+    border: 1px solid rgb(var(--surface-600) / 0.9);
+  }
+  .input:hover:not(:focus),
+  .field:hover:not(:focus) {
+    border-color: rgb(var(--surface-500) / 0.9);
+  }
+  .input:focus,
+  .field:focus {
+    border-color: rgb(var(--color-brand) / 0.9);
+    box-shadow:
+      0 0 0 3px rgb(var(--color-brand) / 0.25),
+      0 1px 0 rgb(var(--surface-0) / 0.04) inset;
+  }
+  /* Hatalı durum — kırmızı border + ring (form validasyonu). */
+  .field-error,
+  .input.field-error {
+    border-color: rgb(250 82 82 / 0.7) !important;
+  }
+  .field-error:focus,
+  .input.field-error:focus {
+    box-shadow: 0 0 0 3px rgb(250 82 82 / 0.22) !important;
   }
 
   /* Compact input for dense forms (audit filters, table editors). */
-  .input-sm {
-    @apply w-full px-3 py-2 rounded-lg border border-surface-600
-           bg-surface-700 text-surface-100 placeholder:text-surface-400
+  .input-sm,
+  .field-sm {
+    @apply w-full px-3 py-2 rounded-lg
+           text-surface-100 placeholder:text-surface-400
            text-sm
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500
-           transition-colors duration-150;
+           transition-all duration-150
+           focus:outline-none;
+    background: linear-gradient(
+      180deg,
+      rgb(var(--surface-700) / 0.65),
+      rgb(var(--surface-700) / 0.4)
+    );
+    border: 1px solid rgb(var(--surface-600) / 0.9);
+  }
+  html:not(.dark) .input-sm,
+  html:not(.dark) .field-sm {
+    background: rgb(var(--surface-900) / 1);
+  }
+  .input-sm:focus,
+  .field-sm:focus {
+    border-color: rgb(var(--color-brand) / 0.9);
+    box-shadow: 0 0 0 3px rgb(var(--color-brand) / 0.25);
   }
 
   .label {
     @apply block text-sm font-medium text-surface-300 mb-1.5;
+  }
+
+  /* ── Premium modal yapısı ───────────────────────────────────
+     Header: ince gradient divider + zarif kapat butonu.
+     Footer: üst divider + hafif zemin. İçerik nefes alanı korunur. */
+  .modal-header {
+    @apply flex items-center justify-between px-5 py-4;
+    border-bottom: 1px solid rgb(var(--surface-700) / 0.7);
+    background: linear-gradient(
+      180deg,
+      rgb(var(--surface-0) / 0.03),
+      transparent
+    );
+  }
+  html:not(.dark) .modal-header {
+    border-bottom-color: rgb(var(--surface-600) / 0.6);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.02), transparent);
+  }
+  .modal-title {
+    @apply text-base sm:text-lg font-semibold text-surface-100 h-display;
+  }
+  .modal-close {
+    @apply inline-flex items-center justify-center p-1.5 rounded-lg
+           text-surface-400
+           hover:text-surface-100 hover:bg-surface-700/70
+           transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-surface-400/50;
+  }
+  .modal-footer {
+    @apply flex items-center gap-3 px-5 py-4;
+    border-top: 1px solid rgb(var(--surface-700) / 0.7);
+    background: rgb(var(--surface-0) / 0.02);
+  }
+  html:not(.dark) .modal-footer {
+    border-top-color: rgb(var(--surface-600) / 0.6);
+    background: rgba(15, 23, 42, 0.015);
+  }
+
+  /* ── Premium toggle / switch ────────────────────────────────
+     Track + knob; on-state marka gradient + glow. Amber varyantı
+     (.toggle-track--warn) "Gizli Not" gibi uyarı tonları için. */
+  .toggle-track {
+    @apply relative inline-flex shrink-0 w-11 h-6 rounded-full
+           transition-all duration-200 cursor-pointer
+           focus:outline-none focus:ring-2 focus:ring-brand-500/40;
+    background: rgb(var(--surface-600) / 0.9);
+  }
+  .toggle-track[data-on="true"] {
+    background: linear-gradient(180deg, #5c7cfa, #4263eb);
+    box-shadow: 0 0 0 1px rgba(92, 124, 250, 0.3),
+      0 6px 14px -6px rgba(76, 110, 245, 0.6);
+  }
+  .toggle-track--warn[data-on="true"] {
+    background: linear-gradient(180deg, #fcc419, #f59f00);
+    box-shadow: 0 0 0 1px rgba(245, 159, 0, 0.3),
+      0 6px 14px -6px rgba(245, 159, 0, 0.55);
+  }
+  .toggle-knob {
+    @apply absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white
+           transition-transform duration-200;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .toggle-track[data-on="true"] .toggle-knob {
+    transform: translateX(20px);
+  }
+
+  /* ── Premium renk seçici swatch ─────────────────────────────
+     Hizalı, hover'da büyür, seçili olana net çift ring. */
+  .color-swatch {
+    @apply relative w-8 h-8 rounded-full
+           flex items-center justify-center
+           transition-all duration-150 cursor-pointer
+           focus:outline-none;
+    border: 2px solid rgb(var(--surface-600) / 0.9);
+  }
+  .color-swatch:hover {
+    transform: scale(1.08);
+    border-color: rgb(var(--surface-400) / 0.9);
+  }
+  .color-swatch[data-selected="true"] {
+    border-color: rgb(var(--color-brand) / 1);
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px rgb(var(--color-brand) / 0.3);
+  }
+
+  /* ── Premium checkbox (native checkbox aksanı) ──────────────── */
+  .checkbox {
+    @apply w-4 h-4 rounded border-surface-500 bg-surface-700
+           text-brand-500
+           focus:ring-2 focus:ring-brand-500/40 focus:ring-offset-0;
+    accent-color: #4c6ef5;
   }
 
   /* Status indicator dot */

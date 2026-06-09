@@ -280,7 +280,7 @@ export function PaymentModal({
                   value={amount}
                   onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                   placeholder="0"
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-lg font-bold text-white placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="field field-sm py-2.5 text-lg font-bold"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">TRY</span>
               </div>
@@ -290,7 +290,7 @@ export function PaymentModal({
               <input
                 type="date" required value={paymentDate}
                 onChange={(e) => setPaymentDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="field field-sm py-2.5"
               />
             </div>
           </div>
@@ -342,28 +342,28 @@ export function PaymentModal({
                 <label className="block text-xs font-medium text-surface-200 mb-1.5">Çek No *</label>
                 <input type="text" required value={chequeNo}
                   onChange={(e) => setChequeNo(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="field field-sm py-2.5"
                   placeholder="orn. 123456" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-surface-200 mb-1.5">Banka *</label>
                 <input type="text" required value={drawerBank}
                   onChange={(e) => setDrawerBank(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="field field-sm py-2.5"
                   placeholder="orn. Yapı Kredi" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-surface-200 mb-1.5">Şube</label>
                 <input type="text" value={drawerBranch}
                   onChange={(e) => setDrawerBranch(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="field field-sm py-2.5"
                   placeholder="opsiyonel" />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-surface-200 mb-1.5">Vade Tarihi *</label>
                 <input type="date" required value={chequeDueDate}
                   onChange={(e) => setChequeDueDate(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                  className="field field-sm py-2.5" />
               </div>
             </div>
           )}
@@ -374,14 +374,14 @@ export function PaymentModal({
                 <label className="block text-xs font-medium text-surface-200 mb-1.5">Seri No *</label>
                 <input type="text" required value={noteSerial}
                   onChange={(e) => setNoteSerial(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="field field-sm py-2.5"
                   placeholder="orn. S-001" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-surface-200 mb-1.5">Vade Tarihi *</label>
                 <input type="date" required value={noteDueDate}
                   onChange={(e) => setNoteDueDate(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                  className="field field-sm py-2.5" />
               </div>
             </div>
           )}
@@ -451,7 +451,7 @@ export function PaymentModal({
             </label>
             <textarea value={description}
               onChange={(e) => setDescription(e.target.value)} rows={2}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+              className="field field-sm py-2.5 resize-none"
               placeholder="Ödeme notu..." />
           </div>
         </div>

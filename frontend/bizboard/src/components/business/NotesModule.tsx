@@ -258,13 +258,13 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors"
+                className="btn-secondary flex-1 px-4 py-2.5 text-sm"
               >
                 Iptal
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
-                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-medium transition-colors"
+                className="btn-danger flex-1 px-4 py-2.5 text-sm"
               >
                 Sil
               </button>
@@ -346,15 +346,12 @@ function NoteFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-lg">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
-          <h3 className="text-lg font-semibold text-white">
+        <div className="modal-header">
+          <h3 className="modal-title">
             {isEdit ? "Notu Duzenle" : "Yeni Not"}
           </h3>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 transition-colors"
-          >
-            <X size={18} className="text-surface-400" />
+          <button onClick={onClose} className="modal-close" aria-label="Kapat">
+            <X size={18} />
           </button>
         </div>
 
@@ -380,21 +377,18 @@ function NoteFormModal({
           {/* Color */}
           <div>
             <label className="label">Renk</label>
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               {NOTE_COLORS.map((c) => (
                 <button
                   key={c.value || "default"}
                   type="button"
                   onClick={() => setColor(c.value)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${c.bg} ${
-                    color === c.value
-                      ? "border-brand-500 scale-110"
-                      : "border-surface-600 hover:border-surface-300"
-                  }`}
+                  data-selected={color === c.value}
+                  className={`color-swatch ${c.bg}`}
                   title={c.label}
                 >
                   {color === c.value && (
-                    <Check size={12} className="text-brand-300" />
+                    <Check size={13} className="text-brand-300" />
                   )}
                 </button>
               ))}
@@ -402,48 +396,40 @@ function NoteFormModal({
           </div>
 
           {/* Pin toggle */}
-          <div className="flex items-center justify-between p-3 bg-surface-700 border border-surface-600 rounded-xl">
-            <div className="flex items-center gap-2">
-              <Pin size={14} className="text-surface-400" />
-              <span className="text-sm text-surface-200">Sabitle</span>
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-surface-600/70 bg-surface-700/40">
+            <div className="flex items-center gap-2.5">
+              <Pin size={15} className="text-surface-400" />
+              <span className="text-sm font-medium text-surface-200">Sabitle</span>
             </div>
             <button
               type="button"
               onClick={() => setPinned(!pinned)}
-              className={`relative w-11 h-6 rounded-full transition-colors ${
-                pinned ? "bg-brand-600" : "bg-surface-600"
-              }`}
+              data-on={pinned}
+              aria-pressed={pinned}
+              className="toggle-track"
             >
-              <span
-                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${
-                  pinned ? "left-[22px]" : "left-0.5"
-                }`}
-              />
+              <span className="toggle-knob" />
             </button>
           </div>
 
           {/* Admin Only toggle — sadece admin görür */}
           {isAdmin && (
-            <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-              <div className="flex items-center gap-2">
-                <EyeOff size={14} className="text-amber-300" />
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <div className="flex items-center gap-2.5">
+                <EyeOff size={15} className="text-amber-300" />
                 <div>
-                  <span className="text-sm text-surface-200">Gizli Not</span>
+                  <span className="text-sm font-medium text-surface-200">Gizli Not</span>
                   <p className="text-[10px] text-surface-400">Sadece admin gorebilir</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setAdminOnly(!adminOnly)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  adminOnly ? "bg-amber-500" : "bg-surface-600"
-                }`}
+                data-on={adminOnly}
+                aria-pressed={adminOnly}
+                className="toggle-track toggle-track--warn"
               >
-                <span
-                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${
-                    adminOnly ? "left-[22px]" : "left-0.5"
-                  }`}
-                />
+                <span className="toggle-knob" />
               </button>
             </div>
           )}

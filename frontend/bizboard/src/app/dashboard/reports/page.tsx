@@ -126,7 +126,7 @@ export default function ReportsPage() {
           <select
             value={businessId}
             onChange={(e) => setBusinessId(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-surface-800 border border-surface-600 text-sm text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="field-sm py-1.5 w-auto"
           >
             <option value="">Tüm İşletmeler</option>
             {businesses.map((b) => (

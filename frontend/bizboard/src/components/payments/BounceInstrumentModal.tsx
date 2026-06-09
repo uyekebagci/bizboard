@@ -93,7 +93,7 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
             <label className="block text-xs font-medium text-surface-200 mb-1.5">Karşılıksız Tarihi *</label>
             <input type="date" required value={bouncedDate}
               onChange={(e) => setBouncedDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              className="field field-sm py-2.5" />
           </div>
 
           <div>
@@ -102,7 +102,7 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
             </label>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
               placeholder="orn. Yetersiz bakiye"
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none" />
+              className="field field-sm py-2.5 resize-none" />
           </div>
         </div>
 

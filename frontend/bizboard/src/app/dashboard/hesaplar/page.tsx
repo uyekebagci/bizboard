@@ -210,7 +210,7 @@ export default function HesaplarPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Hesap adı, banka, IBAN, kişi veya işletme ara…"
-            className="w-full pl-9 pr-3 py-2 text-sm bg-surface-800 border border-surface-600 rounded-xl text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+            className="field field-sm py-2 pl-9 pr-3"
           />
           {query && (
             <button

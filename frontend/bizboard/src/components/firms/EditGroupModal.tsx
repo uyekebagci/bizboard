@@ -100,7 +100,7 @@ export function EditGroupModal({ group, onClose, onUpdated, onDeleted }: Props) 
             <label className="block text-xs font-medium text-surface-200 mb-1.5">Grup Adı *</label>
             <input required value={name} onChange={(e) => setName(e.target.value)}
               maxLength={120}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              className="field field-sm py-2.5" />
           </div>
 
           <div>

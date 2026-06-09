@@ -90,7 +90,7 @@ export function CreateGroupModal({ onClose, onCreated }: Props) {
               onChange={(e) => setName(e.target.value)}
               placeholder="örn. Elektrik Şirketleri"
               maxLength={120}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field field-sm py-2.5"
             />
           </div>
 

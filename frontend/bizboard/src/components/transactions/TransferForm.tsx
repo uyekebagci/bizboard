@@ -202,7 +202,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
           placeholder="Kişi adı, IBAN veya banka hesabı"
           required
           maxLength={200}
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="field field-sm py-2.5"
         />
         <p className="mt-1 text-[10px] text-surface-400">
           Sistem dışı hedef — yalnız bakiye hareketi olarak kaydedilir.
@@ -220,7 +220,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
             onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
             placeholder="0"
             required
-            className="w-full px-3 py-3 rounded-xl border border-surface-600 bg-surface-800 text-2xl font-bold text-white placeholder:text-surface-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="field py-3 text-2xl font-bold pr-16"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 font-medium">
             {fromAcc?.currency || "TRY"}
@@ -242,7 +242,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="field field-sm py-2.5"
         />
       </div>
 
@@ -254,18 +254,18 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Opsiyonel — iki tx'in de aynı açıklaması olur"
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="field field-sm py-2.5"
         />
       </div>
 
       {/* WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet */}
-      <div className="rounded-xl border border-surface-600 bg-surface-700/40 p-3 space-y-2">
+      <div className="rounded-xl border border-surface-600/70 bg-surface-700/40 p-3 space-y-2">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={saveAsQuickAction}
             onChange={(e) => setSaveAsQuickAction(e.target.checked)}
-            className="w-4 h-4 rounded border-surface-500 bg-surface-800 accent-brand-500 cursor-pointer"
+            className="checkbox cursor-pointer"
           />
           <span className="text-sm font-medium text-surface-200">
             ⚡ Bu transferi hızlı işlemlere kaydet
@@ -279,7 +279,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
               onChange={(e) => setQuickActionName(e.target.value)}
               placeholder='Örn: "Aylık Kira Ödemesi"'
               maxLength={100}
-              className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field-sm"
             />
             <p className="text-[10px] text-surface-400">
               Sonraki sefer tek tıkla aynı transferi tekrar oluştur.
@@ -305,7 +305,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="flex-1 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-semibold border border-surface-600 disabled:opacity-50"
+            className="btn-secondary flex-1 py-2.5 text-sm"
           >
             Vazgeç
           </button>
@@ -313,7 +313,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         <button
           type="submit"
           disabled={submitting || (saveAsQuickAction && !quickActionName.trim())}
-          className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
+          className="btn-primary flex-1 py-2.5 text-sm gap-2"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
           <ArrowLeftRight size={14} />

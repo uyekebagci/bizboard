@@ -79,7 +79,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
   const fields = getFieldsForCategory(category);
   const hasField = (f: string) => fields.includes(f);
 
-  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent";
+  const inputCls = "field field-sm py-2.5";
 
   async function handleSave() {
     if (!businessId || !name || !category) return;
@@ -130,9 +130,9 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
-          <h3 className="text-lg font-bold text-white">Envanter Ekle</h3>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600"><X size={20} className="text-surface-400" /></button>
+        <div className="modal-header">
+          <h3 className="modal-title">Envanter Ekle</h3>
+          <button onClick={onClose} className="modal-close" aria-label="Kapat"><X size={20} /></button>
         </div>
 
         <div className="p-4 space-y-3">
@@ -404,9 +404,9 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           )}
 
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">Vazgec</button>
+            <button onClick={onClose} className="btn-secondary flex-1 py-2.5 text-sm">Vazgec</button>
             <button onClick={handleSave} disabled={saving || !name || !businessId}
-              className="flex-1 py-2.5 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 transition-colors flex items-center justify-center gap-2">
+              className="btn-primary flex-1 py-2.5 text-sm gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Kaydet
             </button>
           </div>

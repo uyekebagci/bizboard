@@ -102,10 +102,9 @@ export function CreateFirmModal({
         onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
-          <h3 className="text-base font-semibold text-white">Yeni Firma</h3>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400">
+        <div className="modal-header">
+          <h3 className="modal-title">Yeni Firma</h3>
+          <button type="button" onClick={onClose} className="modal-close" aria-label="Kapat">
             <X size={16} />
           </button>
         </div>
@@ -201,13 +200,13 @@ export function CreateFirmModal({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer">
           <button type="button" onClick={onClose} disabled={submitting}
-            className="px-4 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium border border-surface-600 disabled:opacity-50">
+            className="btn-secondary px-4 py-2.5 text-sm">
             İptal
           </button>
           <button type="submit" disabled={submitting || !form.legal_name.trim() || taxIdInvalid}
-            className="ml-auto px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50">
+            className="btn-primary ml-auto px-4 py-2.5 text-sm gap-2">
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             Oluştur
           </button>
@@ -248,14 +247,11 @@ function Row({
       {textarea ? (
         <textarea required={required} value={value}
           onChange={(e) => onChange(e.target.value)} rows={2}
-          className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none" />
+          className="field field-sm py-2.5 resize-none" />
       ) : (
         <input type={type} required={required} value={value} autoFocus={autoFocus}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full px-3 py-2.5 rounded-xl bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 ${
-            invalid ? "border border-red-500/50 focus:ring-red-500"
-                    : "border border-surface-600 focus:ring-brand-500"
-          }`} />
+          className={`field field-sm py-2.5 ${invalid ? "field-error" : ""}`} />
       )}
     </div>
   );

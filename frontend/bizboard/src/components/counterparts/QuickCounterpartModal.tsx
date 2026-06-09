@@ -114,7 +114,7 @@ export function QuickCounterpartModal({ businessId, onClose, onCreated }: Props)
               autoFocus required value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={isFirm ? "Firma adı" : "Ad Soyad"}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field field-sm py-2.5"
             />
           </div>
 
@@ -127,7 +127,7 @@ export function QuickCounterpartModal({ businessId, onClose, onCreated }: Props)
               onChange={(e) => setTaxId(e.target.value.replace(/[^0-9]/g, ""))}
               maxLength={isFirm ? 10 : 11}
               placeholder={isFirm ? "10 hane" : "11 hane"}
-              className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="field field-sm py-2.5"
             />
           </div>
 
@@ -137,7 +137,7 @@ export function QuickCounterpartModal({ businessId, onClose, onCreated }: Props)
               <input type="tel" value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="05XX..."
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="field field-sm py-2.5"
               />
             </div>
             <div>
@@ -145,7 +145,7 @@ export function QuickCounterpartModal({ businessId, onClose, onCreated }: Props)
               <input type="email" value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ornek@..."
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="field field-sm py-2.5"
               />
             </div>
           </div>

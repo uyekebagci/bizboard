@@ -476,7 +476,7 @@ function ClosurePage() {
                     step="0.01"
                     value={actualBalanceStr}
                     onChange={(e) => setActualBalanceStr(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="field-sm"
                   />
                 </div>
                 <div>
@@ -485,7 +485,7 @@ function ClosurePage() {
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="field-sm"
                   />
                 </div>
                 {error && (

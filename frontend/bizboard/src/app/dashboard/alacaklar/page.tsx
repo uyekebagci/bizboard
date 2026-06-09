@@ -285,7 +285,7 @@ export default function AlacaklarPage() {
                   <select
                     value={notesBusinessId}
                     onChange={(e) => setNotesBusinessId(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg bg-surface-800 border border-surface-600 text-sm text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="field-sm py-1.5 w-auto"
                   >
                     {businesses.map((b) => (
                       <option key={b.id} value={b.id}>{b.name}</option>
