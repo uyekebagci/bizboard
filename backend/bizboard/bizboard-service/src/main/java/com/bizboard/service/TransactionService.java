@@ -8,10 +8,7 @@ import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Category;
 import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.entity.User;
-import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.common.enums.TransactionDirection;
-import com.bizboard.service.notification.NotificationDispatchService;
-import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CategoryRepository;
 import com.bizboard.repository.TransactionRepository;
 import com.bizboard.repository.UserRepository;
@@ -31,21 +28,15 @@ import java.util.UUID;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final BusinessRepository businessRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final LedgerService ledgerService;
     private final AuditLogService auditLogService;
     private final BusinessAccessGuard accessGuard;
-    // v1.6.20 (WP-3): counterpart + pos_device wiring
-    private final com.bizboard.repository.CounterpartRepository counterpartRepository;
-    private final com.bizboard.repository.PosDeviceRepository posDeviceRepository;
-    // v1.6.23.4 (sandbox-test): HESAPDAN ödemeleri için bank_account binding
+    // v1.6.23.4 (sandbox-test): HESAPDAN ödemeleri için bank_account binding (update'te kullanılır)
     private final com.bizboard.repository.BankAccountRepository bankAccountRepository;
-    /** WP Sub-Cash Retroactive Inclusion: tx create/update sonrası auto-include hook. */
+    /** WP Sub-Cash Retroactive Inclusion: tx update sonrası inclusion hook. */
     private final SubCashInclusionService subCashInclusionService;
-    // WP f1fa3cd5 (otomasyon): yeni işlem → NEW_TRANSACTION dispatch (in-app default açık).
-    private final NotificationDispatchService dispatchService;
     // R3 (god-component split): POS settle/unsettle/bulk akışı ayrı serviste; buradan delege edilir.
     private final PosSettlementService posSettlementService;
     // R3 (god-component split): salt-okunur read/list akışı ayrı serviste; buradan delege edilir.
@@ -70,254 +61,9 @@ public class TransactionService {
         return transactionQueryService.getAllTransactionsForUser(userId, filterBusinessId, filterDirection);
     }
 
-    @Transactional
+    /** R3: bkz. {@link TransactionMutationService#createTransaction}. */
     public TransactionDto createTransaction(UUID businessId, CreateTransactionRequest request, UUID userId) {
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        accessGuard.assertCanAccessBusiness(userId, businessId);
-
-        Category category = null;
-        if (request.getCategoryId() != null) {
-            category = categoryRepository.findById(request.getCategoryId()).orElse(null);
-        }
-
-        // v1.6.3: payment_method normalize (POS/NAKIT)
-        // v1.6.23.4: HESAPDAN da geçerli — banka hesabından yapılan ödeme
-        String pm = normalizePaymentMethod(request.getPaymentMethod());
-        java.math.BigDecimal posRate = "POS".equals(pm) ? request.getPosRate() : null;
-
-        // v1.6.23.4: HESAPDAN için bank_account zorunlu + bakiye güncelleme
-        // v1.6.23.27 (UI Fix WP TODO 8764a6a4 + 7e0c5333): NAKIT için
-        // bank_account_id verilmezse business'ın system "Genel Nakit"
-        // CASH_HOLDER hesabına otomatik route. Bu sayede her tx mutlaka bir
-        // bank_account'a bağlıdır → MAIN aggregate formülü (Σ ba.balance)
-        // çift sayım yapmadan doğru çalışır.
-        com.bizboard.common.entity.BankAccount bankAccount = null;
-        if (request.getBankAccountId() != null) {
-            bankAccount = bankAccountRepository.findById(request.getBankAccountId())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Bank account bulunamadi: " + request.getBankAccountId()));
-        }
-        if ("HESAPDAN".equals(pm) && bankAccount == null) {
-            throw new IllegalArgumentException(
-                    "HESAPDAN payment_method icin bank_account_id zorunlu");
-        }
-        if ("NAKIT".equals(pm) && bankAccount == null) {
-            // Default "Genel Nakit" (is_system=true CASH_HOLDER) bul.
-            bankAccount = bankAccountRepository
-                    .findByActiveTrueAndBusinessIdInOrderByNameAsc(java.util.List.of(businessId))
-                    .stream()
-                    .filter(ba -> ba.isSystem()
-                            && ba.getType() == com.bizboard.common.enums.BankAccountType.CASH_HOLDER)
-                    .findFirst()
-                    .orElse(null);
-            if (bankAccount == null) {
-                log.warn("[tx-create] NAKIT tx — business={} icin 'Genel Nakit' sistem hesabi bulunamadi; " +
-                        "tx bank_account NULL kayit ediliyor (legacy fallback)", businessId);
-            }
-        }
-
-        // v1.6.19 (WP-2): backdated tespiti — tx tarihi bugünden önce ise işaretle.
-        // Audit log highlight=BACKDATED ile rapor edilir.
-        boolean backdated = request.getDate() != null
-                && request.getDate().isBefore(java.time.LocalDate.now());
-
-        // v1.6.20 (WP-3): karşı taraf + pos cihazı wiring
-        com.bizboard.common.entity.Counterpart targetCounterpart = null;
-        if (request.getTargetCounterpartId() != null) {
-            targetCounterpart = counterpartRepository
-                    .findById(request.getTargetCounterpartId())
-                    .orElse(null);
-        }
-        // v1.7.x (POS Komisyon WP — tx-zinciri): POS tx oluşturulurken iki komisyon
-        // oranı SNAPSHOT edilir → effectiveAmount net (profit = our − bank) zinciri
-        // create anında tutarlı çalışır (eskiden yalnız UPDATE wire'lıydı; yeni POS
-        // tx'ler edit edilene dek profit=0 görünüyordu — tutarsızlık).
-        //
-        // Öncelik: request.posRate/ourCommissionRate; verilmezse seçili cihazın
-        // defaultRate (banka) / ourCommissionRate (bizim) snapshot'ı. Snapshot, cihaz
-        // sonradan değişse de sabit kalır (Transaction.appliedPosRate semantiği).
-        com.bizboard.common.entity.PosDevice posDevice = null;
-        java.math.BigDecimal appliedRate = null;
-        java.math.BigDecimal appliedOurRate = null;
-        if ("POS".equals(pm) && request.getPosDeviceId() != null) {
-            posDevice = posDeviceRepository.findById(request.getPosDeviceId()).orElse(null);
-        }
-        if ("POS".equals(pm)) {
-            appliedRate = posRate != null ? posRate
-                    : (posDevice != null ? posDevice.getDefaultRate() : null);
-            appliedOurRate = request.getOurCommissionRate() != null ? request.getOurCommissionRate()
-                    : (posDevice != null ? posDevice.getOurCommissionRate() : null);
-            // Tutarlılık: bizim oran >= banka oranı (her ikisi de doluysa). NULL → no-op.
-            validatePosCommissionRates(appliedOurRate, appliedRate);
-        }
-
-        // WP b446c696 (Beta v1.1 Hotfix): POS gider akışı + extended NAKIT gider.
-        // Hem POS+EXPENSE hem NAKIT+EXPENSE için pos_tx_subtype kabul (NAKIT/TRANSFER)
-        // ve related_bank_account_id (TRANSFER subtype'ta) guard'lı atanır.
-        boolean isPosExpense = "POS".equals(pm)
-                && "EXPENSE".equalsIgnoreCase(request.getDirection());
-        boolean isNakitExpense = "NAKIT".equals(pm)
-                && "EXPENSE".equalsIgnoreCase(request.getDirection());
-        boolean acceptsSubtype = isPosExpense || isNakitExpense;
-        String posTxSubtype = null;
-        com.bizboard.common.entity.BankAccount relatedBankAccount = null;
-        if (isPosExpense && (request.getPosDeviceId() == null || posDevice == null)) {
-            throw new IllegalArgumentException("POS gider için cihaz seçimi zorunlu");
-        }
-        if (acceptsSubtype) {
-            posTxSubtype = request.getPosTxSubtype();
-            if (posTxSubtype != null) {
-                posTxSubtype = posTxSubtype.toUpperCase(java.util.Locale.ENGLISH);
-                if (!"NAKIT".equals(posTxSubtype) && !"TRANSFER".equals(posTxSubtype)) {
-                    throw new IllegalArgumentException(
-                            "Geçersiz pos_tx_subtype (NAKIT veya TRANSFER olmalı)");
-                }
-            }
-            if (request.getRelatedBankAccountId() != null && "TRANSFER".equals(posTxSubtype)) {
-                relatedBankAccount = bankAccountRepository
-                        .findById(request.getRelatedBankAccountId())
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "İlgili banka hesabı bulunamadı"));
-                if (!relatedBankAccount.getBusiness().getId().equals(business.getId())) {
-                    throw new IllegalArgumentException(
-                            "İlgili banka hesabı bu işletmeye ait değil");
-                }
-                if (!relatedBankAccount.isActive()) {
-                    throw new IllegalArgumentException(
-                            "Pasif banka hesabı atanamaz: " + relatedBankAccount.getName());
-                }
-                String type = relatedBankAccount.getType() != null
-                        ? relatedBankAccount.getType().name() : "";
-                if (!java.util.Set.of("CHECKING", "SAVINGS", "CASH_HOLDER", "MAIN_CASH", "SUB_CASH")
-                        .contains(type)) {
-                    throw new IllegalArgumentException(
-                            "Geçersiz hesap tipi: " + type);
-                }
-            }
-            // NAKIT subtype'da related_bank_account_id ignore edilir (silent).
-        }
-
-        // v1.6.23.5 (BUG-V3 fix): POS tx için pos_settled default=false (NULL değil).
-        // Önceki davranış: pos_settled NULL → analytics settled/unsettled count'ları
-        // 0 dönüyordu çünkü Boolean.FALSE.equals(NULL) = false. Şimdi default false
-        // veriyoruz ki "henüz hesaba düşmedi" durumu doğru sayılsın. NAKIT/HESAPDAN
-        // için null (anlamsız) kalır.
-        Boolean posSettledDefault = "POS".equals(pm) ? Boolean.FALSE : null;
-
-        Transaction transaction = Transaction.builder()
-                .business(business)
-                .direction(TransactionDirection.valueOf(request.getDirection().toUpperCase(java.util.Locale.ENGLISH)))
-                .amount(request.getAmount())
-                .currency(request.getCurrency() != null ? request.getCurrency() : business.getCurrency())
-                .description(request.getDescription())
-                .date(request.getDate())
-                .category(category)
-                .paymentMethod(pm)
-                .posRate(posRate)
-                .targetCounterpart(targetCounterpart)
-                .posDevice(posDevice)
-                .appliedPosRate(appliedRate)
-                .appliedOurCommissionRate(appliedOurRate)
-                .posSettled(posSettledDefault)
-                .bankAccount(bankAccount)
-                .backdated(backdated)
-                .tags(request.getTags())
-                .metadata(request.getMetadata())
-                .createdBy(user)
-                // WP 08617251: closure session etiketi (NULL = normal tx)
-                .closureSessionId(request.getClosureSessionId())
-                // WP b446c696: POS gider akışı alanları (income veya non-POS için NULL).
-                .posTxSubtype(posTxSubtype)
-                .relatedBankAccount(relatedBankAccount)
-                .build();
-
-        transaction = transactionRepository.save(transaction);
-
-        // v1.6.23.4: HESAPDAN tx kaydedildikten sonra banka hesap bakiyesini güncelle.
-        // v1.6.23.27 (TODO 8764a6a4): NAKIT tx de artık bir bank_account'a route
-        // edildiği için aynı kuralla balance güncellenir. Aggregate formülü
-        // Σ ba.current_balance üzerinden hesaplandığı için bu güncelleme MAIN
-        // ve sub-cash aggregate'lerine doğru yansır.
-        if (bankAccount != null && ("HESAPDAN".equals(pm) || "NAKIT".equals(pm))) {
-            java.math.BigDecimal delta = transaction.getAmount();
-            if (transaction.getDirection() == TransactionDirection.EXPENSE) {
-                delta = delta.negate();
-            }
-            bankAccount.setCurrentBalance(
-                    (bankAccount.getCurrentBalance() != null
-                            ? bankAccount.getCurrentBalance() : java.math.BigDecimal.ZERO).add(delta));
-            bankAccountRepository.save(bankAccount);
-        }
-
-        // Geriye dönük bir işlem mi? (kapanmış döneme ait)
-        if (ledgerService.isClosedPeriod(request.getDate())) {
-            int year = request.getDate().getYear();
-            int month = request.getDate().getMonthValue();
-            ledgerService.addToWaitList(businessId, year, month, transaction.getId(), "ADD");
-            log.info("Geriye donuk islem tespit edildi: {} {}/{} -> wait list'e eklendi",
-                    business.getName(), year, month);
-        }
-
-        auditLogService.recordEntityAction(
-                AuditAction.TRANSACTION_CREATE,
-                user.getId(), user.getUsername(),
-                "TRANSACTION", transaction.getId(),
-                business.getName() + " — " + transaction.getDirection() + " " + transaction.getAmount() + " " + transaction.getCurrency()
-                        + (backdated ? " [BACKDATED " + request.getDate() + "]" : ""),
-                Map.of(
-                        "businessId", businessId,
-                        "amount", transaction.getAmount(),
-                        "direction", transaction.getDirection().name(),
-                        "currency", transaction.getCurrency(),
-                        "date", transaction.getDate().toString(),
-                        "categoryId", transaction.getCategory() != null ? transaction.getCategory().getId() : "null",
-                        "backdated", backdated
-                ),
-                // v1.6.19 (WP-2): backdated tx için UI rozet/renk için highlight set.
-                backdated ? AuditAction.HIGHLIGHT_BACKDATED : null);
-
-        // WP Sub-Cash Retroactive Inclusion: tx oluşturulduktan sonra
-        // entity'leri (counterpart/POS/bank) sub-cash assignment'la match'lerse
-        // her bir sub-cash için AUTOMATIC inclusion kaydı eklenir. Spec:
-        // mevcut tx'ler için backfill YOK; sadece yeni tx'ler auto-include.
-        subCashInclusionService.autoIncludeIfApplicable(transaction);
-
-        // Beta v1.1: manual_sub_cash_id verilirse MANUAL scope'lu inclusion ekle.
-        // Transfer tx'lerinde reject (front'da da gizlendi ama defansif).
-        if (request.getManualSubCashId() != null) {
-            // (kind=TRANSFER bu endpoint'te zaten oluşmaz — transfer ayrı endpoint;
-            // yine de defansif assertion.)
-            subCashInclusionService.addManualInclusion(
-                    request.getManualSubCashId(), transaction.getId(), userId);
-        }
-
-        // WP f1fa3cd5: yeni işlem → NEW_TRANSACTION dispatch (admin'lere; in-app default açık,
-        // Telegram opt-in). Best-effort — dispatch katmanı hatayı yutar.
-        List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
-                .stream().map(com.bizboard.common.entity.User::getId).toList();
-        if (!recipients.isEmpty()) {
-            String desc = transaction.getDescription() != null && !transaction.getDescription().isBlank()
-                    ? " · " + transaction.getDescription() : "";
-            dispatchService.dispatch(
-                    NotificationEvent.NEW_TRANSACTION,
-                    recipients,
-                    Map.of(
-                            "business", business.getName() != null ? business.getName() : "",
-                            "direction", transaction.getDirection() == TransactionDirection.INCOME ? "gelir" : "gider",
-                            "amount", transaction.getAmount() != null ? transaction.getAmount().toPlainString() : "",
-                            "currency", transaction.getCurrency() != null ? transaction.getCurrency() : "TRY",
-                            "description", desc
-                    ),
-                    "/dashboard/transactions",
-                    business.getId());
-        }
-
-        return DtoMapper.toTransactionDto(transaction);
+        return transactionMutationService.createTransaction(businessId, request, userId);
     }
 
     @Transactional
@@ -412,7 +158,7 @@ public class TransactionService {
         }
         // v1.6.3: payment_method + pos_rate update
         if (request.getPaymentMethod() != null) {
-            String newPm = normalizePaymentMethod(request.getPaymentMethod());
+            String newPm = TransactionMutationService.normalizePaymentMethod(request.getPaymentMethod());
             if (!newPm.equals(transaction.getPaymentMethod())) {
                 changes.put("paymentMethod", Map.of(
                         "from", transaction.getPaymentMethod() != null ? transaction.getPaymentMethod() : "NAKIT",
@@ -464,7 +210,7 @@ public class TransactionService {
         // v1.7.x (TODO fc3ed50f): POS tx için her iki oran zorunlu + our >= bank.
         // Validation update'in en sonunda — diğer field değişiklikleri ile karışmasın.
         if ("POS".equals(transaction.getPaymentMethod())) {
-            validatePosCommissionRates(
+            TransactionMutationService.validatePosCommissionRates(
                     transaction.getAppliedOurCommissionRate(),
                     transaction.getAppliedPosRate());
         }
@@ -694,42 +440,13 @@ public class TransactionService {
     }
 
     /**
-     * v1.6.3: payment_method normalize.
-     * v1.6.23.4: HESAPDAN eklendi — banka hesabından yapılan ödeme.
-     *
-     * <p>Geçerli değerler: {@code POS}, {@code NAKIT}, {@code HESAPDAN}.
-     * Null/blank/diğer her şey {@code NAKIT} fallback'ine düşer.</p>
-     */
-    private static String normalizePaymentMethod(String raw) {
-        if (raw == null || raw.isBlank()) return "NAKIT";
-        String upper = raw.trim().toUpperCase(java.util.Locale.ENGLISH);
-        if ("POS".equals(upper)) return "POS";
-        if ("HESAPDAN".equals(upper)) return "HESAPDAN";
-        return "NAKIT";
-    }
-
-    /**
-     * v1.7.x (POS Komisyon WP TODO fc3ed50f): "our >= bank" validation.
-     * Hata mesajı BİREBİR — user spec'i: değiştirme.
+     * v1.7.x (POS Komisyon WP TODO fc3ed50f): "our >= bank" validation hata mesajı.
+     * Hata mesajı BİREBİR — user spec'i: değiştirme. R3: validation helper'ı
+     * {@link TransactionMutationService}'e taşındı ama bu sabit DIŞ referanslar
+     * (PosDeviceManagementService) tarafından {@code TransactionService.MSG_OUR_LT_BANK}
+     * olarak kullanıldığından burada kalır.
      */
     static final String MSG_OUR_LT_BANK =
             "Bizim komisyonumuz banka komisyonundan düşük olamaz";
-
-    /**
-     * v1.7.x: POS tx için iki oran validation.
-     *
-     * <p>Beta v1.1: Oran alanları artık ZORUNLU DEĞİL. Verilirse tutarlılık
-     * kontrolü yapılır (bizim >= banka). Hiç verilmezse no-op — KONSOLİDE NET
-     * formülü legacy-aware (rate dolu→profit, NULL→tam tutar).</p>
-     */
-    static void validatePosCommissionRates(java.math.BigDecimal ourRate,
-                                            java.math.BigDecimal bankRate) {
-        if (ourRate == null || bankRate == null) {
-            return; // Beta v1.1: opsiyonel — bir tarafı NULL ise check skipped
-        }
-        if (ourRate.compareTo(bankRate) < 0) {
-            throw new IllegalArgumentException(MSG_OUR_LT_BANK);
-        }
-    }
 
 }
