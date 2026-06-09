@@ -34,8 +34,9 @@ public class CounterpartController {
     public ResponseEntity<List<CounterpartDto>> list(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) String role,
-            @RequestParam(required = false) String kind) {
-        return ResponseEntity.ok(service.list(role, kind, principal.getId()));
+            @RequestParam(required = false) String kind,
+            @RequestParam(required = false) UUID businessId) {
+        return ResponseEntity.ok(service.list(role, kind, businessId, principal.getId()));
     }
 
     @GetMapping("/{id}")
@@ -60,8 +61,9 @@ public class CounterpartController {
     @GetMapping("/{id}/children")
     public ResponseEntity<List<CounterpartDto>> children(
             @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable UUID id) {
-        return ResponseEntity.ok(service.children(id, principal.getId()));
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID businessId) {
+        return ResponseEntity.ok(service.children(id, businessId, principal.getId()));
     }
 
     @PostMapping

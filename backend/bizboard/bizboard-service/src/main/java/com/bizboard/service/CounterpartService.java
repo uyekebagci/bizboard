@@ -46,10 +46,27 @@ public class CounterpartService {
 
     /**
      * v1.6.23.20 (Security WP / arch-rules §1.3.B): tenant-aware list.
+     *
+     * <p>Geriye-uyumlu overload: businessId verilmeden çağrılır → kullanıcının
+     * erişebildiği TÜM işletmelerin carileri döner.</p>
      */
     @Transactional(readOnly = true)
     public List<CounterpartDto> list(String role, String kind, UUID actorUserId) {
-        List<UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        return list(role, kind, null, actorUserId);
+    }
+
+    /**
+     * Tenant-aware list — opsiyonel {@code businessId} filtresi ile.
+     *
+     * <p>Cross-business sızıntı fix'i: aktif işletme seçiliyken FE businessId
+     * gönderdiğinde sadece o işletmenin carileri dönmeli. businessId verilirse
+     * önce READ erişimi doğrulanır (erişilemezse 404), sonra sonuç o tek
+     * işletmeye indirgenir. businessId {@code null} ise eski all-allowed
+     * davranışı korunur.</p>
+     */
+    @Transactional(readOnly = true)
+    public List<CounterpartDto> list(String role, String kind, UUID businessId, UUID actorUserId) {
+        List<UUID> allowed = resolveAllowedBusinessIds(businessId, actorUserId);
         if (allowed.isEmpty()) return List.of();
 
         java.util.stream.Stream<Counterpart> base;
@@ -76,7 +93,13 @@ public class CounterpartService {
     /** v1.6.20 (WP-3) + v1.6.23.20: Alt firmalar — tenant filtreli. */
     @Transactional(readOnly = true)
     public List<CounterpartDto> children(UUID parentId, UUID actorUserId) {
-        List<UUID> allowed = accessGuard.accessibleBusinessIds(actorUserId);
+        return children(parentId, null, actorUserId);
+    }
+
+    /** Alt firmalar — opsiyonel {@code businessId} ile tek-işletmeye daraltılır. */
+    @Transactional(readOnly = true)
+    public List<CounterpartDto> children(UUID parentId, UUID businessId, UUID actorUserId) {
+        List<UUID> allowed = resolveAllowedBusinessIds(businessId, actorUserId);
         if (allowed.isEmpty()) return List.of();
         return repository.findByBusinessIdInAndParentIdOrderByNameAsc(allowed, parentId).stream()
                 .map(this::toDto).toList();
@@ -269,6 +292,21 @@ public class CounterpartService {
     }
 
     // ── helpers ──────────────────────────────────────────────
+
+    /**
+     * Tenant filtresi çözümü. {@code businessId} verilirse önce READ erişimi
+     * doğrulanır (erişilemezse {@link ResourceNotAccessibleException} → 404),
+     * sonra izinli liste yalnızca o işletmeye indirgenir — başka işletmelerin
+     * carileri sızmaz. {@code null} ise kullanıcının erişebildiği tüm
+     * işletmeler döner (eski davranış).
+     */
+    private List<UUID> resolveAllowedBusinessIds(UUID businessId, UUID actorUserId) {
+        if (businessId != null) {
+            accessGuard.assertCanReadBusiness(actorUserId, businessId);
+            return List.of(businessId);
+        }
+        return accessGuard.accessibleBusinessIds(actorUserId);
+    }
 
     private static void validateTaxId(String taxId) {
         if (taxId == null || taxId.isBlank()) return;
