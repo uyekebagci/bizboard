@@ -47,10 +47,10 @@ public class CounterpartController {
             return ResponseEntity.ok(service.get(id, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+                    .body(java.util.Map.of("message", "Karsi firma bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -75,7 +75,7 @@ public class CounterpartController {
                     .body(service.create(request, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(java.util.Map.of("error", "Access denied"));
+                    .body(java.util.Map.of("message", "Access denied"));
         }
     }
 
@@ -88,7 +88,7 @@ public class CounterpartController {
             return ResponseEntity.ok(service.update(id, request, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+                    .body(java.util.Map.of("message", "Karsi firma bulunamadi"));
         }
     }
 
@@ -101,7 +101,7 @@ public class CounterpartController {
             return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+                    .body(java.util.Map.of("message", "Karsi firma bulunamadi"));
         }
     }
 
@@ -121,10 +121,10 @@ public class CounterpartController {
             service.get(id, principal.getId());
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Karsi firma bulunamadi"));
+                    .body(java.util.Map.of("message", "Karsi firma bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
         return ResponseEntity.ok(ledgerService.getStatement(id, from, to));
     }

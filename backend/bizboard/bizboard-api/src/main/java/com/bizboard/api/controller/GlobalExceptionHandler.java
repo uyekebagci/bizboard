@@ -21,6 +21,19 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * M-4 (R1): "kayıt bulunamadı" → 400 yerine <b>404</b>. Servisler bir
+     * kaynağı bulamadığında {@link jakarta.persistence.EntityNotFoundException}
+     * fırlatır; validation hataları {@link IllegalArgumentException} ile 400
+     * kalmaya devam eder.
+     */
+    @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleEntityNotFound(
+            jakarta.persistence.EntityNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Kayit bulunamadi"));
+    }
+
+    /**
      * 409 Conflict — "Talep geçerli ama mevcut state izin vermiyor". Örnekler:
      * varsayılan firma silinemez, bağlı borç olan karşı firma silinemez, otomatik
      * hesaplanan sabit gider manuel güncellenemez, vb.
@@ -49,17 +62,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Beta v1.1 hotfix: tüm yakalanmamış exception'ları log et ki 403/500
-     * cause'unu Sevalla log'undan görebilelim.
+     * M-6 (R1): yakalanmamış exception'lar → 500. İç hata mesajı / sınıf adı
+     * istemciye SIZMAZ; tam stack trace + tip yalnızca sunucu log'una yazılır
+     * (Sevalla log'undan teşhis için). İstemci generic mesaj alır.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneric(Exception e) {
         log.error("[unhandled exception -> 500] type={} message={}",
                 e.getClass().getName(), e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of(
-                        "message", e.getMessage() != null ? e.getMessage() : "Sunucu hatasi",
-                        "type", e.getClass().getSimpleName()));
+                .body(Map.of("message", "Beklenmeyen bir sunucu hatasi olustu"));
     }
 
     @ExceptionHandler(BadCredentialsException.class)

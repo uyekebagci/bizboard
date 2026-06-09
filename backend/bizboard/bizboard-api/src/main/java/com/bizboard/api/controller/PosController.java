@@ -65,10 +65,10 @@ public class PosController {
                     req.getBankAccountId(), req.getSettledAt()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

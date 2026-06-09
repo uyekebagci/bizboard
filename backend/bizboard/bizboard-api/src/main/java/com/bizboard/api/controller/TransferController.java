@@ -43,9 +43,9 @@ public class TransferController {
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied"));
+                    .body(Map.of("message", "Access denied"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -57,10 +57,10 @@ public class TransferController {
             return ResponseEntity.ok(service.getByPairId(pairId, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Transfer bulunamadi"));
+                    .body(Map.of("message", "Transfer bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -73,10 +73,10 @@ public class TransferController {
             return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Transfer bulunamadi"));
+                    .body(Map.of("message", "Transfer bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 }

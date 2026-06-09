@@ -246,10 +246,10 @@ public class BusinessController {
                     txId, principal.getId(), request.getBankAccountId(), request.getSettledAt()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -266,13 +266,13 @@ public class BusinessController {
             return ResponseEntity.ok(transactionService.unsettlePosTransaction(txId, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

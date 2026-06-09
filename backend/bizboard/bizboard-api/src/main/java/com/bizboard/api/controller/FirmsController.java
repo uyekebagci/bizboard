@@ -63,7 +63,7 @@ public class FirmsController {
             @Valid @RequestBody CreateMyCompanyRequest req,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(service.create(req, principal.getId()));
@@ -75,7 +75,7 @@ public class FirmsController {
             @RequestBody CreateMyCompanyRequest req,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         return ResponseEntity.ok(service.update(id, req, principal.getId()));
     }
@@ -85,7 +85,7 @@ public class FirmsController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         service.delete(id, principal.getId());
         return ResponseEntity.noContent().build();
@@ -103,7 +103,7 @@ public class FirmsController {
             @Valid @RequestBody CreateMyCompanyGroupRequest req,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(groupService.create(req, principal.getId()));
@@ -115,7 +115,7 @@ public class FirmsController {
             @RequestBody CreateMyCompanyGroupRequest req,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         return ResponseEntity.ok(groupService.update(id, req, principal.getId()));
     }
@@ -125,7 +125,7 @@ public class FirmsController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         groupService.delete(id, principal.getId());
         return ResponseEntity.noContent().build();
@@ -138,7 +138,7 @@ public class FirmsController {
             @PathVariable UUID firmId,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         return ResponseEntity.ok(accessService.list(firmId));
     }
@@ -149,7 +149,7 @@ public class FirmsController {
             @PathVariable UUID firmId,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         return ResponseEntity.ok(Map.of("user_ids", accessService.listUserIds(firmId)));
     }
@@ -160,11 +160,11 @@ public class FirmsController {
             @RequestBody Map<String, List<UUID>> body,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         List<UUID> userIds = body.get("user_ids");
         if (userIds == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "user_ids zorunlu"));
+            return ResponseEntity.badRequest().body(Map.of("message", "user_ids zorunlu"));
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(accessService.grantBulk(firmId, userIds, principal.getId()));
@@ -176,7 +176,7 @@ public class FirmsController {
             @PathVariable UUID userId,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         accessService.revoke(firmId, userId, principal.getId());
         return ResponseEntity.noContent().build();
@@ -188,11 +188,11 @@ public class FirmsController {
             @RequestBody Map<String, List<UUID>> body,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         List<UUID> userIds = body.get("user_ids");
         if (userIds == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "user_ids zorunlu"));
+            return ResponseEntity.badRequest().body(Map.of("message", "user_ids zorunlu"));
         }
         int removed = accessService.revokeBulk(firmId, userIds, principal.getId());
         return ResponseEntity.ok(Map.of("removed", removed));
@@ -203,7 +203,7 @@ public class FirmsController {
             @PathVariable UUID firmId,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin yetkisi gerekli"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Admin yetkisi gerekli"));
         }
         int removed = accessService.clearAll(firmId, principal.getId());
         return ResponseEntity.ok(Map.of("removed", removed));

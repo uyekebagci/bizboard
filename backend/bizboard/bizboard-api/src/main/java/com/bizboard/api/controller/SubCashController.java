@@ -62,10 +62,10 @@ public class SubCashController {
             return ResponseEntity.ok(subCashService.incomeForSubCash(subCashId, from, to, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Sub-cash bulunamadi"));
+                    .body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -130,10 +130,10 @@ public class SubCashController {
             return ResponseEntity.ok(detail);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Sub-cash bulunamadi"));
+                    .body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -149,16 +149,16 @@ public class SubCashController {
                 type = SubCashEntityType.valueOf(req.getEntityType().trim().toUpperCase(Locale.ENGLISH));
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Gecersiz entity_type — COUNTERPART/POS_DEVICE/BANK_ACCOUNT olmali"));
+                        .body(Map.of("message", "Gecersiz entity_type — COUNTERPART/POS_DEVICE/BANK_ACCOUNT olmali"));
             }
             SubCashAssignment a = subCashService.assign(subCashId, type, req.getEntityId(), principal.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(toAssignmentDto(a));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Sub-cash bulunamadi"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -172,9 +172,9 @@ public class SubCashController {
             subCashService.unassign(assignmentId, principal.getId());
             return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Atama bulunamadi"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Atama bulunamadi"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -255,10 +255,10 @@ public class SubCashController {
                     "items", items));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Sub-cash bulunamadi"));
+                    .body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -276,7 +276,7 @@ public class SubCashController {
             Object raw = body == null ? null : body.get("transaction_ids");
             if (!(raw instanceof List<?> list) || list.isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "transaction_ids zorunlu (boş olamaz)"));
+                        .body(Map.of("message", "transaction_ids zorunlu (boş olamaz)"));
             }
             List<UUID> txIds = new java.util.ArrayList<>();
             for (Object o : list) {
@@ -290,10 +290,10 @@ public class SubCashController {
                     .body(Map.of("added", r.added, "skipped", r.skipped, "failed", r.failed));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Sub-cash bulunamadi"));
+                    .body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -310,15 +310,15 @@ public class SubCashController {
             boolean removed = inclusionService.removeInclusion(subCashId, transactionId, principal.getId());
             if (!removed) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Inclusion bulunamadi"));
+                        .body(Map.of("message", "Inclusion bulunamadi"));
             }
             return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Sub-cash bulunamadi"));
+                    .body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -339,10 +339,10 @@ public class SubCashController {
                     "current_balance", newBalance));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Sub-cash bulunamadi"));
+                    .body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -393,10 +393,10 @@ public class SubCashController {
                     "has_more", end < total));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Sub-cash bulunamadi"));
+                    .body(Map.of("message", "Sub-cash bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 }

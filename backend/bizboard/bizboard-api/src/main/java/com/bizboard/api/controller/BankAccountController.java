@@ -105,11 +105,11 @@ public class BankAccountController {
         } catch (IllegalArgumentException e) {
             // Hesap bulunamadı
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (SecurityException e) {
             // Erişim yok — info sızdırmamak için 404 dönüyoruz (existence reveal kapalı).
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
+                    .body(java.util.Map.of("message", "Hesap bulunamadi"));
         }
     }
 
@@ -131,11 +131,11 @@ public class BankAccountController {
         } catch (IllegalStateException e) {
             // Bakiye 0 değil ve force=false → 409
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (SecurityException e) {
             // Cross-tenant — existence reveal kapalı.
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
+                    .body(java.util.Map.of("message", "Hesap bulunamadi"));
         }
     }
 
@@ -163,10 +163,10 @@ public class BankAccountController {
                     .body(service.create(req, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(java.util.Map.of("error", "Access denied"));
+                    .body(java.util.Map.of("message", "Access denied"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -190,10 +190,10 @@ public class BankAccountController {
             return ResponseEntity.ok(service.update(id, req, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
+                    .body(java.util.Map.of("message", "Hesap bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -214,13 +214,13 @@ public class BankAccountController {
             return ResponseEntity.noContent().build();
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "Hesap bulunamadi"));
+                    .body(java.util.Map.of("message", "Hesap bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 }

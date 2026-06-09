@@ -48,7 +48,7 @@ public class CashClosingController {
                     service.list(principal.getId(), businessId, page, size)));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Kapanışlar bulunamadi"));
+                    .body(Map.of("message", "Kapanışlar bulunamadi"));
         }
     }
 
@@ -62,7 +62,7 @@ public class CashClosingController {
                     .orElseGet(() -> ResponseEntity.noContent().build());
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Kapanış bulunamadi"));
+                    .body(Map.of("message", "Kapanış bulunamadi"));
         }
     }
 
@@ -76,7 +76,7 @@ public class CashClosingController {
                     .orElseGet(() -> ResponseEntity.noContent().build());
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Kapanış bulunamadi"));
+                    .body(Map.of("message", "Kapanış bulunamadi"));
         }
     }
 
@@ -88,7 +88,7 @@ public class CashClosingController {
             return ResponseEntity.ok(service.getTodayPreview(principal.getId(), businessId));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "İşletme bulunamadi"));
+                    .body(Map.of("message", "İşletme bulunamadi"));
         }
     }
 
@@ -112,9 +112,9 @@ public class CashClosingController {
             return ResponseEntity.ok(sectionService.sectioned(businessId, d, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "İşletme bulunamadi"));
+                    .body(Map.of("message", "İşletme bulunamadi"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -130,7 +130,7 @@ public class CashClosingController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "İşletme bulunamadi"));
+                    .body(Map.of("message", "İşletme bulunamadi"));
         }
     }
 
@@ -155,13 +155,13 @@ public class CashClosingController {
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "İşletme bulunamadi"));
+                    .body(Map.of("message", "İşletme bulunamadi"));
         }
     }
 
@@ -189,7 +189,7 @@ public class CashClosingController {
             return ResponseEntity.ok(Map.of("deleted_count", deleted));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -206,7 +206,7 @@ public class CashClosingController {
             return ResponseEntity.ok(Map.of("deleted_count", deleted));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -223,7 +223,7 @@ public class CashClosingController {
             return ResponseEntity.ok(Map.of("kept_count", kept));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 }

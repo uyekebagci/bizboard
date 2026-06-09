@@ -50,10 +50,10 @@ public class PosDeviceController {
             return ResponseEntity.ok(service.get(id, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+                    .body(java.util.Map.of("message", "POS cihazi bulunamadi"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", e.getMessage()));
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -66,7 +66,7 @@ public class PosDeviceController {
                     .body(service.create(req, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(java.util.Map.of("error", "Access denied"));
+                    .body(java.util.Map.of("message", "Access denied"));
         }
     }
 
@@ -79,7 +79,7 @@ public class PosDeviceController {
             return ResponseEntity.ok(service.update(id, req, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+                    .body(java.util.Map.of("message", "POS cihazi bulunamadi"));
         }
     }
 
@@ -93,7 +93,7 @@ public class PosDeviceController {
             return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+                    .body(java.util.Map.of("message", "POS cihazi bulunamadi"));
         }
     }
 
@@ -109,7 +109,7 @@ public class PosDeviceController {
             return ResponseEntity.ok(service.getDeviceTransactions(id, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+                    .body(java.util.Map.of("message", "POS cihazi bulunamadi"));
         }
     }
 
@@ -128,7 +128,7 @@ public class PosDeviceController {
             return ResponseEntity.ok(analyticsService.analytics(from, to, deviceId, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", "POS cihazi bulunamadi"));
+                    .body(java.util.Map.of("message", "POS cihazi bulunamadi"));
         }
     }
 }

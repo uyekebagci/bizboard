@@ -78,9 +78,9 @@ public class PhoneController {
                     .body(service.create(req, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied"));
+                    .body(Map.of("message", "Access denied"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -94,9 +94,9 @@ public class PhoneController {
         } catch (SecurityException e) {
             // Existence reveal kapalı — 404 dön.
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Phone device bulunamadi"));
+                    .body(Map.of("message", "Phone device bulunamadi"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -109,7 +109,7 @@ public class PhoneController {
             return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Phone device bulunamadi"));
+                    .body(Map.of("message", "Phone device bulunamadi"));
         }
     }
 
@@ -124,9 +124,9 @@ public class PhoneController {
             return ResponseEntity.ok(service.addBank(id, req, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Phone device bulunamadi"));
+                    .body(Map.of("message", "Phone device bulunamadi"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -139,7 +139,7 @@ public class PhoneController {
             return ResponseEntity.ok(service.removeBank(id, bankName, principal.getId()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Phone device bulunamadi"));
+                    .body(Map.of("message", "Phone device bulunamadi"));
         }
     }
 
@@ -158,7 +158,7 @@ public class PhoneController {
     public ResponseEntity<?> reloadMasterData(@AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Sadece admin reload edebilir"));
+                    .body(Map.of("message", "Sadece admin reload edebilir"));
         }
         masterLoader.reload();
         return ResponseEntity.ok(Map.of("status", "reloaded"));
