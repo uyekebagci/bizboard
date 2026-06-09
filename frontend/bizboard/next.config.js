@@ -78,6 +78,33 @@ const nextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      {
+        // HTML SHELL / doküman yanıtları — no-cache.
+        //
+        // Sorun: Next.js `next start` prerender edilmiş sayfa HTML'ini agresif
+        // `Cache-Control: s-maxage=…, stale-while-revalidate` ile servis eder.
+        // Tarayıcı/CDN eski HTML'i (eski asset hash referanslarını) yeniden
+        // kullandığı için deploy sonrası yeni UI görünmez (hard-refresh gerekir).
+        //
+        // Çözüm: doküman route'larını no-store yap → tarayıcı her seferinde taze
+        // HTML çeker, içindeki content-hash'li `/_next/static/*` asset'leri zaten
+        // immutable cache'lenir (Next.js varsayılanı; onlara DOKUNMUYORUZ).
+        // Negatif lookahead: hash'li asset, API, statik dosya uzantıları hariç
+        // kalan her yol = HTML shell. Böylece deploy'lar anında yansır.
+        source:
+          "/:path((?!_next/static|_next/image|api/).*\\.(?:js|css|woff2?|png|jpe?g|gif|svg|webp|avif|ico|json|txt|xml|map|webmanifest))",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        // Yukarıdaki uzantılı dosyalar HARİÇ tüm yollar (HTML doküman) → no-store.
+        source: "/:path((?!_next/static|_next/image|api/).*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate, max-age=0",
+          },
+        ],
+      },
     ];
   },
 };
