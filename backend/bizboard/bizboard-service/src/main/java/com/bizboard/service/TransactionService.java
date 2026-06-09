@@ -19,7 +19,6 @@ import com.bizboard.repository.TransactionRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,70 +51,24 @@ public class TransactionService {
     private final NotificationDispatchService dispatchService;
     // R3 (god-component split): POS settle/unsettle/bulk akışı ayrı serviste; buradan delege edilir.
     private final PosSettlementService posSettlementService;
+    // R3 (god-component split): salt-okunur read/list akışı ayrı serviste; buradan delege edilir.
+    private final TransactionQueryService transactionQueryService;
 
-    @Transactional(readOnly = true)
+    // ───────── READ/LIST (R3: TransactionQueryService'e delege — facade) ─────────
+
+    /** R3: bkz. {@link TransactionQueryService#getTransactions}. */
     public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
-        accessGuard.assertCanReadBusiness(actorUserId, businessId);
-        // Beta v1.1: date DESC + createdAt DESC — aynı gün eklenen tx'ler
-        // arasında en son insert üstte (Son İşlemler widget'ı için).
-        List<Transaction> transactions = transactionRepository
-                .findByBusinessIdOrderByDateDescCreatedAtDesc(businessId, PageRequest.of(0, limit));
-        return transactions.stream()
-                .map(DtoMapper::toTransactionDto)
-                .toList();
+        return transactionQueryService.getTransactions(businessId, limit, actorUserId);
     }
 
-    @Transactional(readOnly = true)
+    /** R3: bkz. {@link TransactionQueryService#getRecentTransactionsForUser}. */
     public List<TransactionDto> getRecentTransactionsForUser(UUID userId, int limit) {
-        List<Business> businesses = getAccessibleBusinesses(userId);
-        if (businesses.isEmpty()) {
-            return List.of();
-        }
-        List<UUID> businessIds = businesses.stream().map(Business::getId).toList();
-        List<Transaction> transactions = transactionRepository
-                .findByBusinessIdInOrderByCreatedAtDesc(businessIds, PageRequest.of(0, limit));
-        return transactions.stream()
-                .map(t -> {
-                    TransactionDto dto = DtoMapper.toTransactionDto(t);
-                    dto.setBusinessName(t.getBusiness().getName());
-                    return dto;
-                })
-                .toList();
+        return transactionQueryService.getRecentTransactionsForUser(userId, limit);
     }
 
-    /**
-     * Kullanicinin erisebilecehi tum islemleri dondurur.
-     * Opsiyonel businessId ve direction filtresi.
-     */
-    @Transactional(readOnly = true)
+    /** R3: bkz. {@link TransactionQueryService#getAllTransactionsForUser}. */
     public List<TransactionDto> getAllTransactionsForUser(UUID userId, UUID filterBusinessId, String filterDirection) {
-        List<Business> businesses = getAccessibleBusinesses(userId);
-        if (businesses.isEmpty()) return List.of();
-
-        List<Transaction> transactions;
-        if (filterBusinessId != null) {
-            // Belirli isletme filtresi
-            boolean hasAccess = businesses.stream().anyMatch(b -> b.getId().equals(filterBusinessId));
-            if (!hasAccess) return List.of();
-            transactions = transactionRepository.findByBusinessIdOrderByDateDesc(filterBusinessId);
-        } else {
-            List<UUID> businessIds = businesses.stream().map(Business::getId).toList();
-            transactions = transactionRepository.findByBusinessIdInOrderByDateDesc(businessIds);
-        }
-
-        return transactions.stream()
-                .filter(t -> {
-                    if (filterDirection != null && !filterDirection.isEmpty()) {
-                        return t.getDirection().name().equalsIgnoreCase(filterDirection);
-                    }
-                    return true;
-                })
-                .map(t -> {
-                    TransactionDto dto = DtoMapper.toTransactionDto(t);
-                    dto.setBusinessName(t.getBusiness().getName());
-                    return dto;
-                })
-                .toList();
+        return transactionQueryService.getAllTransactionsForUser(userId, filterBusinessId, filterDirection);
     }
 
     @Transactional
@@ -866,13 +819,6 @@ public class TransactionService {
                 "TRANSACTION", transactionId,
                 business.getName() + " — islem silindi: " + deleteLog.getAmount() + " " + deleteLog.getCurrency() + " (sebep: " + reason + ")",
                 meta);
-    }
-
-    /**
-     * R2 DRY: erişilebilir işletmeler tek kaynaktan ({@link BusinessAccessGuard}).
-     */
-    private List<Business> getAccessibleBusinesses(UUID userId) {
-        return accessGuard.accessibleBusinesses(userId);
     }
 
     /**
