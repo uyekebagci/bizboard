@@ -195,8 +195,16 @@ public class ConsolidatedDashboardService {
         // v1.6.23.21: business-scoped.
         List<PosDevice> activeDevices = posDeviceRepository
                 .findByActiveTrueAndBusinessIdInOrderByNameAsc(List.of(businessId));
+        // M-2 (R3): cihaz-başı findByPosDeviceIdAndDate yerine TEK toplu sorgu +
+        // bellek-içi gruplama (N+1 fix).
+        List<UUID> activeDeviceIds = activeDevices.stream().map(PosDevice::getId).toList();
+        Map<UUID, List<Transaction>> txByDevice = activeDeviceIds.isEmpty()
+                ? Map.of()
+                : transactionRepository.findByPosDeviceIdInAndDate(activeDeviceIds, today).stream()
+                        .filter(t -> t.getPosDevice() != null && t.getPosDevice().getId() != null)
+                        .collect(Collectors.groupingBy(t -> t.getPosDevice().getId()));
         List<ConsolidatedDashboardDto.PosDeviceToday> posRows = activeDevices.stream()
-                .map(d -> buildPosDeviceToday(d, today))
+                .map(d -> buildPosDeviceToday(d, txByDevice.getOrDefault(d.getId(), List.of())))
                 .toList();
 
         // ── PAYABLES rows ────────────────────────────────────────────
@@ -397,8 +405,11 @@ public class ConsolidatedDashboardService {
                 .build();
     }
 
-    private ConsolidatedDashboardDto.PosDeviceToday buildPosDeviceToday(PosDevice d, LocalDate date) {
-        List<Transaction> txs = transactionRepository.findByPosDeviceIdAndDate(d.getId(), date);
+    /**
+     * M-2 (R3): tx listesi artık çağıran tarafça toplu çekilip geçiliyor —
+     * cihaz-başı sorgu yok.
+     */
+    private ConsolidatedDashboardDto.PosDeviceToday buildPosDeviceToday(PosDevice d, List<Transaction> txs) {
         BigDecimal gross = BigDecimal.ZERO;
         // WP b446c696 (Beta v1.1 Hotfix): income/expense ayrı toplamlar.
         BigDecimal incomeGross = BigDecimal.ZERO;

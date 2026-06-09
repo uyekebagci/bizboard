@@ -67,36 +67,32 @@ public class PosAnalyticsService {
             acc.put(d, new DailyAcc());
         }
 
-        // Gün-gün tx'leri çek — basit loop (DGR ölçeği için yeterli).
-        // Cihaz filtresi varsa per-day per-device fetch; yoksa tüm POS tx'ler.
-        for (LocalDate d = fromDate; !d.isAfter(toDate); d = d.plusDays(1)) {
-            List<Transaction> txs;
-            if (deviceId != null) {
-                txs = transactionRepository.findByPosDeviceIdAndDate(deviceId, d);
-            } else {
-                // Tüm POS tx'ler (paymentMethod=POS) o gün — actor'ın erişebildiği tenant'lar.
-                final java.util.List<java.util.UUID> filterBiz = allowed;
-                txs = transactionRepository.findByDate(d).stream()
-                        .filter(t -> "POS".equalsIgnoreCase(t.getPaymentMethod()))
-                        .filter(t -> t.getBusiness() != null
-                                && filterBiz.contains(t.getBusiness().getId()))
-                        .toList();
-            }
-            DailyAcc a = acc.get(d);
-            for (Transaction t : txs) {
-                if (t.getAmount() == null) continue;
-                BigDecimal rate = t.getAppliedPosRate() != null
-                        ? t.getAppliedPosRate()
-                        : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
-                BigDecimal comm = t.getAmount().multiply(rate)
-                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-                a.gross = a.gross.add(t.getAmount());
-                a.commission = a.commission.add(comm);
-                a.txCount++;
-                if (Boolean.TRUE.equals(t.getPosSettled())) a.settled++;
-                else if (Boolean.FALSE.equals(t.getPosSettled())) a.unsettled++;
-                // null = nakit/non-POS (anlamsız) — sayma
-            }
+        // M-2 (R3): gün-gün sorgu yerine tüm aralığı TEK sorguda çek, tarihe
+        // göre akümüle et (N+1 fix). Cihaz filtresi varsa cihaz-aralığı; yoksa
+        // tenant-scoped POS aralığı.
+        List<Transaction> rangeTxs;
+        if (deviceId != null) {
+            rangeTxs = transactionRepository.findByPosDeviceIdAndDateBetween(deviceId, fromDate, toDate);
+        } else {
+            rangeTxs = transactionRepository
+                    .findByBusinessIdInAndPaymentMethodAndDateBetween(allowed, "POS", fromDate, toDate);
+        }
+        for (Transaction t : rangeTxs) {
+            if (t.getDate() == null) continue;
+            DailyAcc a = acc.get(t.getDate());
+            if (a == null) continue; // aralık dışı (savunmacı)
+            if (t.getAmount() == null) continue;
+            BigDecimal rate = t.getAppliedPosRate() != null
+                    ? t.getAppliedPosRate()
+                    : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
+            BigDecimal comm = t.getAmount().multiply(rate)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            a.gross = a.gross.add(t.getAmount());
+            a.commission = a.commission.add(comm);
+            a.txCount++;
+            if (Boolean.TRUE.equals(t.getPosSettled())) a.settled++;
+            else if (Boolean.FALSE.equals(t.getPosSettled())) a.unsettled++;
+            // null = nakit/non-POS (anlamsız) — sayma
         }
 
         // Series + totals

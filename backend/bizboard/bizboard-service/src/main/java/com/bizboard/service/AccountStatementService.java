@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * v1.7.x WP fbb2ef55: Counterpart detay sayfasını tek endpoint ile besler.
@@ -179,10 +180,19 @@ public class AccountStatementService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         breakdown.setTotalWriteoffsAmount(totalWriteoffs);
+        // M-2 (R3): N+1 fix — tüm written_off_by user'larını tek sorguda çek.
+        Set<UUID> writeoffUserIds = writeoffs.stream()
+                .map(DebtWriteoff::getWrittenOffBy)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<UUID, String> usernameById = writeoffUserIds.isEmpty()
+                ? Map.of()
+                : userRepository.findAllById(writeoffUserIds).stream()
+                        .collect(Collectors.toMap(User::getId, User::getUsername, (a, b) -> a));
         List<com.bizboard.common.dto.DebtWriteoffDto> writeoffDtos = new ArrayList<>();
         for (DebtWriteoff w : writeoffs) {
             String byName = w.getWrittenOffBy() != null
-                    ? userRepository.findById(w.getWrittenOffBy()).map(User::getUsername).orElse(null)
+                    ? usernameById.get(w.getWrittenOffBy())
                     : null;
             writeoffDtos.add(com.bizboard.common.dto.DebtWriteoffDto.builder()
                     .id(w.getId())

@@ -135,6 +135,31 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("deviceId") UUID deviceId,
             @Param("date") LocalDate date);
 
+    /**
+     * M-2 (R3): birden çok POS cihazının bugünkü tx'lerini TEK sorguda çek
+     * (consolidated dashboard'daki cihaz-başı N+1 fix'i). Çağıran tarafta
+     * posDevice.id'ye göre gruplanır.
+     */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.posDevice.id IN :deviceIds AND t.date = :date " +
+            "ORDER BY t.createdAt DESC")
+    List<Transaction> findByPosDeviceIdInAndDate(
+            @Param("deviceIds") java.util.Collection<UUID> deviceIds,
+            @Param("date") LocalDate date);
+
+    /**
+     * M-2 (R3): tek POS cihazının tarih-aralığı tx'leri — gün-gün döngüde
+     * tekrar tekrar sorgulamak yerine TEK sorgu (PosAnalytics N+1 fix'i).
+     * Çağıran tarafta tarihe göre gruplanır.
+     */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.posDevice.id = :deviceId AND t.date BETWEEN :from AND :to " +
+            "ORDER BY t.date DESC, t.createdAt DESC")
+    List<Transaction> findByPosDeviceIdAndDateBetween(
+            @Param("deviceId") UUID deviceId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
     // ── v1.7.0-beta (Bankalar WP TODO abb90050): Transfer pair queries ──
 
     /** Transfer pair'in iki tarafını döner (boyut = 2 olmalı, deviation log'lanmalı). */
