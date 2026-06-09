@@ -95,7 +95,7 @@ export function ModuleTabs({ business }: Props) {
         return <FixedCostsWidget businessId={business.id} currency={business.currency} />;
       default:
         return (
-          <div className="card p-6 text-center">
+          <div className="glass-card p-6 text-center">
             <p className="text-surface-400 text-sm">
               {moduleConfig[activeTab]?.label} modul icerigi burada gorunecek.
             </p>
@@ -141,7 +141,7 @@ export function ModuleTabs({ business }: Props) {
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap
                        border-2 border-dashed border-surface-300 text-surface-400
-                       hover:border-brand-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
+                       hover:border-brand-400 hover:text-brand-400 hover:bg-brand-500/10 transition-all"
           >
             <Plus size={16} />
             Modul Ekle
@@ -152,7 +152,7 @@ export function ModuleTabs({ business }: Props) {
       {/* Tab Content */}
       <div className="mt-4">
         {enabledModules.length > 0 ? renderContent() : (
-          <div className="card p-6 text-center">
+          <div className="glass-card p-6 text-center">
             <p className="text-surface-400 text-sm">Henuz aktif modul yok.</p>
             <p className="text-surface-400 text-xs mt-1">Modul eklemek icin + butonuna tiklayın.</p>
           </div>
@@ -225,13 +225,13 @@ function ModuleManagerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+      <div className="glass-card shadow-xl w-full max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center">
-              <Plus size={16} className="text-brand-600" />
+            <div className="w-8 h-8 rounded-lg bg-brand-500/15 flex items-center justify-center">
+              <Plus size={16} className="text-brand-400" />
             </div>
             <h3 className="text-lg font-bold text-white">Modul Yonetimi</h3>
           </div>
@@ -260,20 +260,20 @@ function ModuleManagerModal({
                 className={cn(
                   "w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
                   isEnabled
-                    ? "bg-brand-50 border-brand-200 hover:bg-brand-100"
+                    ? "bg-brand-500/15 border-brand-500/40 hover:bg-brand-500/25"
                     : "bg-surface-700 border-surface-600 hover:bg-surface-700"
                 )}
               >
                 <div className={cn(
                   "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0",
-                  isEnabled ? "bg-brand-100" : "bg-surface-600"
+                  isEnabled ? "bg-brand-500/20" : "bg-surface-600"
                 )}>
-                  <Icon size={18} className={isEnabled ? "text-brand-600" : "text-surface-400"} />
+                  <Icon size={18} className={isEnabled ? "text-brand-300" : "text-surface-400"} />
                 </div>
 
                 <span className={cn(
                   "text-sm font-medium flex-1",
-                  isEnabled ? "text-brand-700" : "text-surface-300"
+                  isEnabled ? "text-brand-200" : "text-surface-300"
                 )}>
                   {config.label}
                 </span>
@@ -281,7 +281,7 @@ function ModuleManagerModal({
                 {isLoading ? (
                   <Loader2 size={18} className="animate-spin text-surface-400" />
                 ) : isEnabled ? (
-                  <Check size={18} className="text-brand-600" />
+                  <Check size={18} className="text-brand-300" />
                 ) : (
                   <Plus size={18} className="text-surface-400" />
                 )}

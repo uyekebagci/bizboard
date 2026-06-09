@@ -139,7 +139,7 @@ export function DebtModule({ businessId, currency }: Props) {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="card p-3">
+          <div className="glass-card p-3">
             <p className="text-xs text-surface-400 mb-1">Alacak</p>
             <p className="text-base font-bold text-emerald-600">
               {currency === "TRY" ? "₺" : currency}
@@ -149,7 +149,7 @@ export function DebtModule({ businessId, currency }: Props) {
               {summary.receivable_count} kayit
             </p>
           </div>
-          <div className="card p-3">
+          <div className="glass-card p-3">
             <p className="text-xs text-surface-400 mb-1">Verecek</p>
             <p className="text-base font-bold text-red-500">
               {currency === "TRY" ? "₺" : currency}
@@ -159,7 +159,7 @@ export function DebtModule({ businessId, currency }: Props) {
               {summary.payable_count} kayit
             </p>
           </div>
-          <div className="card p-3">
+          <div className="glass-card p-3">
             <p className="text-xs text-surface-400 mb-1">Net</p>
             <p
               className={`text-base font-bold ${
@@ -222,7 +222,7 @@ export function DebtModule({ businessId, currency }: Props) {
 
       {/* Debt List */}
       {filteredDebts.length === 0 ? (
-        <div className="card p-6 text-center">
+        <div className="glass-card p-6 text-center">
           <p className="text-surface-400 text-sm">Kayit bulunamadi</p>
         </div>
       ) : (
@@ -230,7 +230,7 @@ export function DebtModule({ businessId, currency }: Props) {
           {filteredDebts.map((debt) => (
             <div
               key={debt.id}
-              className={`card p-3.5 group ${debt.is_settled ? "opacity-60" : ""}`}
+              className={`glass-card p-3.5 group ${debt.is_settled ? "opacity-60" : ""}`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3 min-w-0">

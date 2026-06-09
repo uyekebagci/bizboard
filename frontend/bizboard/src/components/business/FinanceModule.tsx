@@ -123,7 +123,7 @@ export function FinanceModule({ businessId, currency }: Props) {
     <div className="space-y-4">
 
       {/* ─── Gelir/Gider Oranı Barı ─────────────────────────── */}
-      <div className="card p-4">
+      <div className="glass-card p-4">
         <h4 className="text-xs font-semibold text-surface-300 mb-3">Gelir / Gider Orani</h4>
         <div className="relative h-7 rounded-full overflow-hidden flex bg-surface-700">
           <div
@@ -182,7 +182,7 @@ export function FinanceModule({ businessId, currency }: Props) {
 
       {/* ─── Mini Aylık Trend (Son 4 Ay) ─────────────────────── */}
       {monthlyTrend.length > 0 && (
-        <div className="card p-4">
+        <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-semibold text-surface-300">Aylik Trend</h4>
             <div className="flex items-center gap-3 text-[9px] font-medium">
@@ -221,7 +221,7 @@ export function FinanceModule({ businessId, currency }: Props) {
       {/* v1.7.x (POS Komisyon WP TODO c0998274): backend artık POS kategorilerini
           profit olarak verir; UI buna göre hint gösterir. */}
       {categories.length > 0 && (
-        <div className="card p-4">
+        <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-semibold text-surface-300">Kategori Kirilimi</h4>
             <span className="text-[9px] text-surface-400" title="POS kategorileri için kâr (= bizim komisyon − banka komisyon) baz alınır.">
@@ -268,7 +268,7 @@ export function FinanceModule({ businessId, currency }: Props) {
 
       {/* ─── Sabit Gider Özeti ───────────────────────────────── */}
       {fixedCosts && fixedCosts.total_monthly_cost > 0 && (
-        <div className="card p-4">
+        <div className="glass-card p-4">
           <h4 className="text-xs font-semibold text-surface-300 mb-3">Aylik Sabit Giderler</h4>
           <div className="grid grid-cols-3 gap-2">
             {fixedCosts.rent_cost > 0 && (
@@ -290,7 +290,7 @@ export function FinanceModule({ businessId, currency }: Props) {
 
       {/* ─── Son İşlemler ────────────────────────────────────── */}
       {recentTx.length > 0 && (
-        <div className="card p-4">
+        <div className="glass-card p-4">
           <h4 className="text-xs font-semibold text-surface-300 mb-3">Son Islemler</h4>
           <div className="space-y-1.5">
             {recentTx.map((tx) => {
@@ -376,7 +376,7 @@ function FinanceModuleSkeleton() {
 
 function EmptyFinance() {
   return (
-    <div className="card p-8 text-center">
+    <div className="glass-card p-8 text-center">
       <div className="w-12 h-12 rounded-xl bg-surface-700 flex items-center justify-center mx-auto mb-3">
         <Wallet size={24} className="text-surface-400" />
       </div>

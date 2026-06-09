@@ -92,7 +92,7 @@ export function ExchangeRateBar({ onRefreshed }: { onRefreshed?: () => void }) {
   ];
 
   return (
-    <section className="card p-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+    <section className="glass-card p-3 flex flex-wrap items-center gap-x-5 gap-y-2">
       <div className="flex items-center gap-1.5 text-surface-300">
         <TrendingUp size={15} className="text-brand-300" />
         <span className="text-xs font-medium">Güncel Kur</span>

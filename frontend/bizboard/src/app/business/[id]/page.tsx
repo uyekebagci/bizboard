@@ -127,8 +127,8 @@ export default function BusinessDetailPage() {
 
       {/* v1.6.2: Admin delete confirm modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="card p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-card p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-white mb-2">
               Isletmeyi Sil
             </h3>
