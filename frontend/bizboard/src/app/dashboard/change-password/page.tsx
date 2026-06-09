@@ -76,8 +76,8 @@ export default function ChangePasswordPage() {
   if (success) {
     return (
       <div className="min-h-[60dvh] flex flex-col items-center justify-center px-6">
-        <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center mb-4">
-          <ShieldCheck size={36} className="text-green-600" />
+        <div className="w-16 h-16 rounded-2xl bg-green-500/15 flex items-center justify-center mb-4">
+          <ShieldCheck size={36} className="text-green-300" />
         </div>
         <h1 className="text-xl font-bold text-white mb-1">Sifre Degistirildi</h1>
         <p className="text-surface-400 text-sm">

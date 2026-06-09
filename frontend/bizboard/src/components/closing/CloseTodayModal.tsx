@@ -156,7 +156,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
                       className={cn(
                         "px-3 py-2.5 rounded-xl text-sm font-medium border transition-colors",
                         reason === r.value
-                          ? "bg-brand-50 border-brand-300 text-brand-700"
+                          ? "bg-brand-500/15 border-brand-500/40 text-brand-300"
                           : "bg-surface-700 border-surface-600 text-surface-300 hover:border-surface-300",
                       )}
                     >

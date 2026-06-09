@@ -29,7 +29,7 @@ export function InventoryRow({ item, onClick, showBusiness }: { item: InventoryI
             {statusCfg.label}
           </span>
           {isLowStock && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 border border-red-500/30 text-red-600">Siparis Gerekli</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 border border-red-500/30 text-red-300">Siparis Gerekli</span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-surface-400 flex-wrap">
@@ -37,11 +37,11 @@ export function InventoryRow({ item, onClick, showBusiness }: { item: InventoryI
           {item.serial_number && <span>· SN: {item.serial_number}</span>}
           {item.location && <span>· <MapPin size={10} className="inline" /> {item.location}</span>}
           {item.assigned_to && <span>· <User size={10} className="inline" /> {item.assigned_to}</span>}
-          {showBusiness && item.business_name && <span className="text-brand-500">· {item.business_name}</span>}
+          {showBusiness && item.business_name && <span className="text-brand-300">· {item.business_name}</span>}
         </div>
         {item.category === "CONSUMABLE" && item.current_stock != null && (
           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-            <span className={cn("text-xs font-medium", isLowStock ? "text-red-600" : "text-surface-300")}>
+            <span className={cn("text-xs font-medium", isLowStock ? "text-red-300" : "text-surface-300")}>
               Stok: {item.current_stock} {UNIT_LABELS[item.unit || ""] || item.unit || ""}
             </span>
             {item.minimum_stock != null && <span className="text-[10px] text-surface-400">(min: {item.minimum_stock})</span>}

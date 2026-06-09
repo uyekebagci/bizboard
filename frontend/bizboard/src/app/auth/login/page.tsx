@@ -101,7 +101,7 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         {error && (
           <div
-            className="p-3 rounded-xl bg-red-50 text-red-700 text-sm"
+            className="p-3 rounded-xl bg-red-500/15 text-red-300 text-sm"
             role="alert"
             aria-live="polite"
           >

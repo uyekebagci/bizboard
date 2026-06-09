@@ -175,7 +175,7 @@ export default function AllTransactionsPage() {
       {totalFixedCostMonthly > 0 && (
         <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
           <div className="flex items-center gap-2 mb-2">
-            <Pin size={14} className="text-amber-600" />
+            <Pin size={14} className="text-amber-300" />
             <p className="text-xs font-bold text-amber-400">Aylik Sabit Giderler</p>
             <span className="ml-auto text-sm font-bold text-amber-400">
               {formatCurrency(totalFixedCostMonthly)}/ay
@@ -192,7 +192,7 @@ export default function AllTransactionsPage() {
               )
               .filter((c) => c.amount > 0)
               .map((c, i) => (
-                <span key={i} className="text-[10px] text-amber-600">
+                <span key={i} className="text-[10px] text-amber-300">
                   {c.name}
                   {!filterBusiness && <span className="text-amber-400"> ({c.bizName})</span>}
                   : <span className="font-medium">{formatCurrency(c.amount)}</span>
@@ -259,7 +259,7 @@ export default function AllTransactionsPage() {
         {filterMonth && (
           <button
             onClick={() => setFilterMonth("")}
-            className="px-2 py-2 text-xs text-red-500 hover:text-red-700"
+            className="px-2 py-2 text-xs text-red-500 hover:text-red-300"
           >
             <X size={14} />
           </button>
@@ -407,8 +407,8 @@ function DeleteModal({
       <div className="bg-surface-800 rounded-2xl shadow-card-hover border border-surface-600 w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-              <AlertTriangle size={16} className="text-red-600" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
+              <AlertTriangle size={16} className="text-red-300" />
             </div>
             <h3 className="text-lg font-bold text-white">Islemi Sil</h3>
           </div>
@@ -430,7 +430,7 @@ function DeleteModal({
                   })}
                 </p>
               </div>
-              <span className={cn("text-base font-bold text-right", isIncome ? "text-green-600" : "text-red-600")}>
+              <span className={cn("text-base font-bold text-right", isIncome ? "text-green-300" : "text-red-300")}>
                 {/* v1.6.23.8 (TODO ad8afc6f): POS net göster. */}
                 {isIncome ? "+" : "-"}
                 {formatCurrency(
@@ -465,7 +465,7 @@ function DeleteModal({
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mt-3">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 

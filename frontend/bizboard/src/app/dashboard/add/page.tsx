@@ -418,19 +418,19 @@ export default function AddBusinessPage() {
           className={cn(
             "w-full card p-4 flex items-center gap-3 transition-all",
             form.isMockup
-              ? "border-2 border-amber-400 bg-amber-50"
+              ? "border-2 border-amber-400 bg-amber-500/15"
               : "border-2 border-transparent hover:border-surface-600"
           )}
         >
           <div
             className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center",
-              form.isMockup ? "bg-amber-100" : "bg-surface-700"
+              form.isMockup ? "bg-amber-500/20" : "bg-surface-700"
             )}
           >
             <FlaskConical
               size={20}
-              className={form.isMockup ? "text-amber-600" : "text-surface-400"}
+              className={form.isMockup ? "text-amber-300" : "text-surface-400"}
             />
           </div>
           <div className="flex-1 text-left">
@@ -456,7 +456,7 @@ export default function AddBusinessPage() {
 
       {/* Error */}
       {error && (
-        <div className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">
+        <div className="p-3 rounded-xl bg-red-500/15 text-red-300 text-sm">
           {error}
         </div>
       )}
@@ -831,20 +831,20 @@ function StepModules({
               className={cn(
                 "w-full card p-3.5 flex items-center gap-3 transition-all",
                 isActive
-                  ? "ring-2 ring-brand-600 bg-brand-50"
+                  ? "ring-2 ring-brand-600 bg-brand-500/15"
                   : "hover:bg-surface-700"
               )}
             >
               <div
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center",
-                  isActive ? "bg-brand-100" : "bg-surface-700"
+                  isActive ? "bg-brand-500/20" : "bg-surface-700"
                 )}
               >
                 <Icon
                   size={20}
                   className={
-                    isActive ? "text-brand-600" : "text-surface-400"
+                    isActive ? "text-brand-300" : "text-surface-400"
                   }
                 />
               </div>
@@ -910,7 +910,7 @@ function StepPreview({
                 {form.name || "Isimsiz Isletme"}
               </h2>
               {form.isMockup && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium">
                   Mock-up
                 </span>
               )}
@@ -938,7 +938,7 @@ function StepPreview({
             return (
               <span
                 key={mod}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 text-xs font-medium"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500/15 text-brand-300 text-xs font-medium"
               >
                 <ModIcon size={14} />
                 {moduleLabelMap[mod] || mod}
@@ -1038,9 +1038,9 @@ function StepPreview({
 
       {/* Mockup Analysis Preview */}
       {form.isMockup && (
-        <div className="card p-5 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
+        <div className="glass-card p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/10 !border-amber-500/30">
           <div className="flex items-center gap-2 mb-4">
-            <Calculator size={18} className="text-amber-600" />
+            <Calculator size={18} className="text-amber-300" />
             <p className="text-sm font-bold text-white">
               Fizibilite Ozeti
             </p>
@@ -1049,13 +1049,13 @@ function StepPreview({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-surface-400">Tahmini Aylik Gelir</p>
-              <p className="text-lg font-bold text-green-600 mt-0.5">
+              <p className="text-lg font-bold text-green-300 mt-0.5">
                 {formatCurrency(form.mockupEstimatedRevenue, form.currency)}
               </p>
             </div>
             <div>
               <p className="text-xs text-surface-400">Tahmini Aylik Gider</p>
-              <p className="text-lg font-bold text-red-600 mt-0.5">
+              <p className="text-lg font-bold text-red-300 mt-0.5">
                 {formatCurrency(form.mockupEstimatedExpense, form.currency)}
               </p>
             </div>
@@ -1064,7 +1064,7 @@ function StepPreview({
               <p
                 className={cn(
                   "text-lg font-bold mt-0.5",
-                  estimatedProfit >= 0 ? "text-brand-600" : "text-red-600"
+                  estimatedProfit >= 0 ? "text-brand-300" : "text-red-300"
                 )}
               >
                 {formatCurrency(estimatedProfit, form.currency)}
@@ -1080,9 +1080,9 @@ function StepPreview({
 
           {/* ROI Calculation */}
           {roiMonths !== null && (
-            <div className="mt-4 pt-4 border-t border-amber-200">
+            <div className="mt-4 pt-4 border-t border-amber-500/30">
               <div className="flex items-center gap-2">
-                <Sparkles size={16} className="text-amber-600" />
+                <Sparkles size={16} className="text-amber-300" />
                 <p className="text-sm text-surface-200">
                   Tahmini geri donus suresi:{" "}
                   <span className="font-bold text-white">
@@ -1091,18 +1091,18 @@ function StepPreview({
                 </p>
               </div>
               {roiMonths <= 6 && (
-                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                <p className="text-xs text-green-300 mt-1 flex items-center gap-1">
                   <TrendingUp size={12} />
                   Hizli geri donus — iyi bir yatirim firsati olabilir
                 </p>
               )}
               {roiMonths > 6 && roiMonths <= 18 && (
-                <p className="text-xs text-amber-600 mt-1">
+                <p className="text-xs text-amber-300 mt-1">
                   Orta vadeli geri donus — detayli planlama onerilir
                 </p>
               )}
               {roiMonths > 18 && (
-                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <p className="text-xs text-red-300 mt-1 flex items-center gap-1">
                   <TrendingDown size={12} />
                   Uzun vadeli geri donus — risk analizi yapmaniz onerilir
                 </p>
@@ -1112,7 +1112,7 @@ function StepPreview({
 
           {/* Notes */}
           {form.mockupNotes && (
-            <div className="mt-4 pt-4 border-t border-amber-200">
+            <div className="mt-4 pt-4 border-t border-amber-500/30">
               <p className="text-xs text-surface-400 mb-1">Notlar</p>
               <p className="text-sm text-surface-200 leading-relaxed">
                 {form.mockupNotes}

@@ -242,7 +242,7 @@ export function FileUploadModal({
           {isAdmin && (
             <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
               <div className="flex items-center gap-2">
-                <EyeOff size={14} className="text-amber-600" />
+                <EyeOff size={14} className="text-amber-300" />
                 <div>
                   <span className="text-sm text-surface-200">Gizli Belge</span>
                   <p className="text-[10px] text-surface-400">Sadece admin gorebilir</p>
@@ -266,16 +266,16 @@ export function FileUploadModal({
 
           {/* Success */}
           {uploaded && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
-              <Check size={16} className="text-green-600" />
-              <span className="text-sm text-green-700 font-medium">Dosya basariyla yuklendi!</span>
+            <div className="flex items-center gap-2 p-3 bg-green-500/15 border border-green-500/30 rounded-xl">
+              <Check size={16} className="text-green-300" />
+              <span className="text-sm text-green-300 font-medium">Dosya basariyla yuklendi!</span>
             </div>
           )}
 
           {/* Error */}
           {error && (
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-300 text-sm">{error}</p>
               {errorRequestId && (
                 <p className="mt-1 text-[10px] font-mono text-red-400/80">
                   Destek icin referans: {errorRequestId}

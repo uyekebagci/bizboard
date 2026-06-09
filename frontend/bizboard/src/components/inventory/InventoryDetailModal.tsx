@@ -150,7 +150,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           <div className="flex items-center gap-1 shrink-0">
             {!editing && (
               <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg hover:bg-brand-500/15 transition-colors">
-                <Pencil size={16} className="text-brand-600" />
+                <Pencil size={16} className="text-brand-300" />
               </button>
             )}
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-600">
@@ -375,7 +375,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-bold text-surface-200 flex items-center gap-1"><Activity size={14} /> Bakim Gecmisi</h4>
                 <button onClick={() => setShowAddMaint(true)}
-                  className="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                  className="text-xs font-medium text-brand-300 hover:text-brand-300 flex items-center gap-1">
                   <Plus size={12} /> Kayit Ekle
                 </button>
               </div>
@@ -414,7 +414,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                   )}
                 </h4>
                 <button onClick={() => setShowAddFuel(true)}
-                  className="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                  className="text-xs font-medium text-brand-300 hover:text-brand-300 flex items-center gap-1">
                   <Plus size={12} /> Kayit Ekle
                 </button>
               </div>
@@ -423,7 +423,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
               ) : (
                 <div className="space-y-1.5">
                   {fuelLogs.map((log) => (
-                    <div key={log.id} className="p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
+                    <div key={log.id} className="p-3 bg-orange-500/15 border border-orange-500/20 rounded-xl">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-surface-200">
                           {FUEL_TYPE_LABELS[log.fuel_type] || log.fuel_type} — {log.amount} L
@@ -431,7 +431,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                         <span className="text-[10px] text-surface-400">{log.date}</span>
                       </div>
                       <div className="flex gap-3 mt-0.5 text-[10px] text-surface-400 flex-wrap">
-                        <span className="text-orange-600 font-medium">{formatCurrency(log.cost)}</span>
+                        <span className="text-orange-300 font-medium">{formatCurrency(log.cost)}</span>
                         {log.amount > 0 && <span>{formatCurrency(log.cost / log.amount)}/L</span>}
                         {log.odometer_km != null && <span>KM: {log.odometer_km}</span>}
                         {log.station && <span>Istasyon: {log.station}</span>}
@@ -439,7 +439,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                       {log.notes && <p className="text-xs text-surface-400 mt-0.5">{log.notes}</p>}
                       {log.receipt_url && (
                         <a href={log.receipt_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1 text-[10px] text-brand-600 hover:text-brand-700">
+                          className="inline-flex items-center gap-1 mt-1 text-[10px] text-brand-300 hover:text-brand-300">
                           <Camera size={10} /> Fis Goruntule
                         </a>
                       )}
@@ -464,7 +464,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
               <>
                 <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors">Kapat</button>
                 <button onClick={handleDelete} disabled={deleting}
-                  className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+                  className="px-4 py-2.5 bg-red-500/15 hover:bg-red-500/20 text-red-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
                   {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Sil
                 </button>
               </>

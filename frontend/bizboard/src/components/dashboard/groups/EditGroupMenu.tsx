@@ -136,7 +136,7 @@ export function EditGroupMenu({
                     key={p}
                     onClick={async () => { await onChangePriority(p); setSubmenu(null); setOpen(false); }}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg ${
-                      active ? "bg-brand-50 text-brand-700" : "text-surface-200 hover:bg-surface-700"
+                      active ? "bg-brand-500/15 text-brand-300" : "text-surface-200 hover:bg-surface-700"
                     } transition-colors`}
                   >
                     {priorityIcon(p) || <span className="w-3" />}

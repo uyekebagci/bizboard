@@ -60,7 +60,7 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 text-sm">
               {error}
             </div>
           )}
@@ -116,7 +116,7 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
                     onClick={() => setPriority(p)}
                     className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                       active
-                        ? "bg-brand-50 border-brand-300 text-brand-700"
+                        ? "bg-brand-500/15 border-brand-500/40 text-brand-300"
                         : "bg-surface-700 border-surface-600 text-surface-300 hover:border-surface-300"
                     }`}
                   >

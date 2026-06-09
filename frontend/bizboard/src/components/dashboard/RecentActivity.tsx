@@ -74,7 +74,7 @@ export function RecentActivity() {
             onClick={() => setShowModal(true)}
             className="p-3 text-center w-full hover:bg-surface-700 transition-colors"
           >
-            <span className="text-sm text-brand-600 font-medium flex items-center justify-center gap-1">
+            <span className="text-sm text-brand-300 font-medium flex items-center justify-center gap-1">
               Tumunu Gor ({transactions.length} islem)
               <ExternalLink size={14} />
             </span>
@@ -145,15 +145,15 @@ function TransactionRow({
       <div
         className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-          isPos ? "bg-indigo-500/15" : isIncome ? "bg-green-50" : "bg-red-50"
+          isPos ? "bg-indigo-500/15" : isIncome ? "bg-green-500/15" : "bg-red-500/15"
         )}
       >
         {isPos ? (
           <CreditCard size={18} className="text-indigo-300" />
         ) : isIncome ? (
-          <ArrowDownLeft size={18} className="text-green-600" />
+          <ArrowDownLeft size={18} className="text-green-300" />
         ) : (
-          <ArrowUpRight size={18} className="text-red-600" />
+          <ArrowUpRight size={18} className="text-red-300" />
         )}
       </div>
 
@@ -176,7 +176,7 @@ function TransactionRow({
       <span
         className={cn(
           "text-sm font-bold flex-shrink-0",
-          isIncome ? "text-green-600" : "text-red-600",
+          isIncome ? "text-green-300" : "text-red-300",
         )}
       >
         {/* Beta v1.1: POS Hacmi mantığı — sağdaki tutar her zaman tx.amount. */}

@@ -103,7 +103,7 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
               </div>
               <p className={cn(
                 "text-sm font-bold",
-                netProfit > 0 ? "text-green-600" : netProfit < 0 ? "text-red-600" : "text-white"
+                netProfit > 0 ? "text-green-300" : netProfit < 0 ? "text-red-300" : "text-white"
               )}>
                 {formatCurrency(netProfit, biz.currency)}
               </p>
@@ -117,7 +117,7 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
         onClick={() => router.push("/dashboard/add")}
         className="card p-4 flex flex-col items-center justify-center gap-2
                    border-2 border-dashed border-surface-600 hover:border-brand-400
-                   hover:bg-brand-50 transition-all duration-200 min-h-[140px]"
+                   hover:bg-brand-500/15 transition-all duration-200 min-h-[140px]"
       >
         <Plus size={24} className="text-surface-400" />
         <span className="text-sm font-medium text-surface-400">

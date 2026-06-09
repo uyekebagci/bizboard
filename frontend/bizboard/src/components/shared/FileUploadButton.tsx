@@ -101,13 +101,13 @@ export function FileUploadButton({
         `}
       >
         {uploading ? (
-          <Loader2 size={isSmall ? 12 : 14} className="animate-spin text-brand-600" />
+          <Loader2 size={isSmall ? 12 : 14} className="animate-spin text-brand-300" />
         ) : uploaded ? (
-          <Check size={isSmall ? 12 : 14} className="text-green-600" />
+          <Check size={isSmall ? 12 : 14} className="text-green-300" />
         ) : (
           <Upload size={isSmall ? 12 : 14} className="text-surface-500" />
         )}
-        <span className={`font-medium ${uploaded ? "text-green-700" : "text-surface-600"}`}>
+        <span className={`font-medium ${uploaded ? "text-green-300" : "text-surface-600"}`}>
           {uploading ? "Yukleniyor..." : uploaded ? "Yuklendi!" : label}
         </span>
       </button>
@@ -213,7 +213,7 @@ export function InlineFileUpload({
                 <button
                   type="button"
                   onClick={() => onRemoveFile(f.id)}
-                  className="p-0.5 hover:bg-red-50 rounded transition-colors shrink-0"
+                  className="p-0.5 hover:bg-red-500/15 rounded transition-colors shrink-0"
                 >
                   <X size={12} className="text-red-500" />
                 </button>
@@ -232,7 +232,7 @@ export function InlineFileUpload({
                    bg-surface-700 hover:border-brand-400 hover:bg-brand-500/10 transition-all text-xs"
       >
         {uploading ? (
-          <Loader2 size={13} className="animate-spin text-brand-600" />
+          <Loader2 size={13} className="animate-spin text-brand-300" />
         ) : (
           <Upload size={13} className="text-surface-500" />
         )}

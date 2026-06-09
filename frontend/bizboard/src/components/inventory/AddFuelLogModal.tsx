@@ -108,8 +108,8 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
       <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-              <Fuel size={16} className="text-orange-600" />
+            <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center">
+              <Fuel size={16} className="text-orange-300" />
             </div>
             <h3 className="text-lg font-bold text-white">Yakit Kaydi Ekle</h3>
           </div>
@@ -162,9 +162,9 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
 
           {/* Otomatik hesaplanan toplam */}
           {totalCost > 0 && (
-            <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between">
+            <div className="p-3 bg-orange-500/15 border border-orange-500/30 rounded-xl flex items-center justify-between">
               <span className="text-sm font-medium text-surface-200">Toplam Tutar</span>
-              <span className="text-lg font-bold text-orange-600">{formatCurrency(totalCost)}</span>
+              <span className="text-lg font-bold text-orange-300">{formatCurrency(totalCost)}</span>
             </div>
           )}
 
