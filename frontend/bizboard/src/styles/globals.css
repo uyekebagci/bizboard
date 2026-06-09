@@ -191,6 +191,55 @@
     opacity: 1;
   }
 
+  /* ── Premium sidebar (mockup hizası) ────────────────────────
+     Glass aside zemini + ince divider; aktif öğe yatay brand
+     gradient pill + rail; hover'da subtle overlay. Light+dark. */
+  .sidebar-glass {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--surface-900) / 0.92),
+      rgb(var(--surface-900) / 0.82)
+    );
+    border-right: 1px solid rgb(var(--surface-0) / 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  html:not(.dark) .sidebar-glass {
+    background: rgb(var(--surface-900) / 1);
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .sidebar-divider {
+    border-bottom: 1px solid rgb(var(--surface-0) / 0.06);
+  }
+  html:not(.dark) .sidebar-divider {
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  /* Aktif nav öğesi — mockup: 90deg brand gradient pill. */
+  .nav-item-active {
+    background: linear-gradient(
+      90deg,
+      rgba(76, 110, 245, 0.22),
+      rgba(76, 110, 245, 0.04)
+    );
+  }
+  html:not(.dark) .nav-item-active {
+    background: linear-gradient(
+      90deg,
+      rgba(76, 110, 245, 0.14),
+      rgba(76, 110, 245, 0.02)
+    );
+  }
+  /* Hover overlay — mockup hover:bg-white/5 eşdeğeri (token-tabanlı). */
+  .nav-hover:hover {
+    background: rgb(var(--surface-0) / 0.05);
+  }
+  html:not(.dark) .nav-hover:hover {
+    background: rgba(15, 23, 42, 0.04);
+  }
+
   /* Hero sheen (gradient kartta ışık parıltısı). */
   .sheen {
     position: relative;

@@ -207,7 +207,7 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
       {/* Sidebar panel */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-[100dvh] w-60 bg-surface-900 border-r border-surface-700 transition-transform duration-200 ease-out",
+          "sidebar-glass fixed top-0 left-0 z-50 h-[100dvh] w-60 transition-transform duration-200 ease-out",
           // mobile/tablet (<lg): hamburger ile aç-kapat
           mobileOpen ? "translate-x-0" : "-translate-x-full",
           // desktop (≥lg): her zaman sabit
@@ -217,20 +217,20 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header — logo + marka adı + version badge (herkes görür) */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-surface-700 shrink-0">
+          <div className="flex items-center justify-between px-4 py-4 shrink-0 sidebar-divider">
             <Link
               href="/dashboard"
               onClick={() => onMobileOpenChange(false)}
-              className="flex items-center gap-2.5"
+              className="flex items-center gap-3"
               aria-label="CATI ana sayfa"
             >
-              {/* Redesign PR-1: gradient logo kutusu + glow. */}
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-glow"
+              {/* Mockup hizası: w-10 h-10 rounded-2xl gradient logo + glow. */}
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-glow"
                 style={{ background: "linear-gradient(135deg,#4263eb,#4c6ef5 55%,#6741d9)" }}>
-                <span className="text-white font-bold text-sm">Ç</span>
+                <span className="text-white font-extrabold text-base">Ç</span>
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="font-bold text-lg text-white leading-none h-display">ÇATI</span>
+                <span className="font-extrabold text-[17px] tracking-tight text-surface-100 leading-none h-display">ÇATI</span>
                 {versionLabel && (
                   <span
                     className="mt-0.5 text-[10px] italic text-yellow-400 font-mono leading-none tracking-tight"
@@ -245,10 +245,10 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
             <button
               type="button"
               onClick={() => onMobileOpenChange(false)}
-              className="p-1.5 rounded-lg hover:bg-surface-700 transition-colors lg:hidden"
+              className="modal-close lg:hidden"
               aria-label="Kapat"
             >
-              <X size={16} className="text-surface-300" />
+              <X size={16} />
             </button>
           </div>
 
@@ -340,8 +340,8 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
 /** Gruplu bölüm: küçük büyük-harf başlık + item listesi. */
 function NavSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-3 first:mt-0">
-      <p className="px-3 mb-1 text-[10px] uppercase tracking-[.14em] text-surface-400">{title}</p>
+    <div className="mt-4 first:mt-0">
+      <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[.14em] text-surface-500">{title}</p>
       <ul className="space-y-0.5">{children}</ul>
     </div>
   );
@@ -359,26 +359,25 @@ function SidebarItem({
 }) {
   const Icon = item.icon;
   return (
-    <div className={cn("relative flex items-stretch", active && "nav-item-active")}>
-      {/* Redesign PR-1: aktif ray (sol kenarda dikey brand çubuk). Mockup quick-win. */}
+    <div className={cn("nav-item group relative flex items-stretch rounded-xl", active && "nav-item-active")}>
+      {/* Mockup nav-rail: sol kenarda dikey brand çubuk (aktifte görünür). */}
       <span
-        className="nav-rail absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-brand-500"
+        className="nav-rail absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-brand-500"
         aria-hidden="true"
       />
       <Link
         href={item.href}
         onClick={onClick}
         className={cn(
-          "flex items-center gap-2.5 px-3 py-2 rounded-l-lg text-sm transition-colors flex-1 min-w-0",
+          "flex items-center gap-3 px-3 py-2.5 rounded-l-xl text-sm transition-colors flex-1 min-w-0",
           active
-            ? "bg-gradient-to-r from-brand-500/20 to-brand-500/[0.04] text-white font-semibold"
-            : "text-surface-300 hover:bg-surface-800 hover:text-white",
-          pinned && "border-l-2 border-brand-500 -ml-[2px] pl-[10px]"
+            ? "text-surface-100 font-semibold"
+            : "text-surface-300 nav-hover hover:text-surface-100",
         )}
         aria-current={active ? "page" : undefined}
       >
-        <Icon size={16} className={active ? "text-brand-400" : "text-surface-400"} />
-        <span className="flex-1 truncate">{item.label}</span>
+        <Icon size={18} className={cn("nav-ico shrink-0", active ? "text-brand-400" : "text-surface-400")} />
+        <span className="flex-1 truncate nav-label">{item.label}</span>
         {item.count != null && item.count > 0 && (
           <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
             {item.count > 99 ? "99+" : item.count}
@@ -390,10 +389,10 @@ function SidebarItem({
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTogglePin(); }}
           className={cn(
-            "shrink-0 px-2 rounded-r-lg flex items-center justify-center transition-colors",
+            "shrink-0 px-2 rounded-r-xl flex items-center justify-center transition-all",
             pinned
-              ? "text-brand-400 hover:text-brand-300 hover:bg-surface-700"
-              : "text-surface-500 hover:text-white hover:bg-surface-700"
+              ? "text-brand-400 hover:text-brand-300"
+              : "text-surface-500 opacity-0 group-hover:opacity-100 hover:text-surface-100",
           )}
           aria-label={pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
           title={pinned ? "Sabitlemeyi kaldır" : "Sabitle (üste taşı)"}
