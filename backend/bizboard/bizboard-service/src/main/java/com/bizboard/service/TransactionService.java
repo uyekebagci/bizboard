@@ -50,6 +50,8 @@ public class TransactionService {
     private final SubCashInclusionService subCashInclusionService;
     // WP f1fa3cd5 (otomasyon): yeni işlem → NEW_TRANSACTION dispatch (in-app default açık).
     private final NotificationDispatchService dispatchService;
+    // R3 (god-component split): POS settle/unsettle/bulk akışı ayrı serviste; buradan delege edilir.
+    private final PosSettlementService posSettlementService;
 
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactions(UUID businessId, int limit, UUID actorUserId) {
@@ -711,170 +713,27 @@ public class TransactionService {
         return dto;
     }
 
-    /**
-     * v1.6.23.9 (TODO ddda6029): Bulk POS settle.
-     * Tüm tx'ler aynı transaction içinde işaretlenir; biri fail olursa hepsi rollback.
-     */
-    @Transactional
+    // ───────────────────────── POS SETTLE (R3: PosSettlementService'e delege) ─────────────────────────
+    // Facade: controller imzaları korunsun diye public metodlar burada kalır,
+    // gövde PosSettlementService'e taşındı. Davranış birebir aynı.
+
+    /** R3: bkz. {@link PosSettlementService#bulkSettlePosTransactions}. */
     public List<TransactionDto> bulkSettlePosTransactions(List<UUID> txIds, UUID userId,
                                                           UUID bankAccountId,
                                                           java.time.LocalDateTime settledAt) {
-        List<TransactionDto> results = new java.util.ArrayList<>();
-        for (UUID txId : txIds) {
-            results.add(settlePosTransaction(txId, userId, bankAccountId, settledAt));
-        }
-        return results;
+        return posSettlementService.bulkSettlePosTransactions(txIds, userId, bankAccountId, settledAt);
     }
 
-    // ───────────────────────── POS SETTLE (v1.6.23.9 TODO 6ee7a9f1) ─────────────────────────
-
-    /**
-     * POS tx'i "hesaba düştü" işaretle. {@code bank_account.current_balance}'a
-     * net tutar (= amount − commission) eklenir.
-     *
-     * <p>Validation:
-     * <ul>
-     *   <li>tx.payment_method = POS</li>
-     *   <li>tx.pos_settled != true (zaten true ise IllegalStateException → 409)</li>
-     *   <li>bank_account aktif + CHECKING/SAVINGS (CASH_HOLDER reddedilir)</li>
-     *   <li>currency uyumu</li>
-     * </ul></p>
-     */
-    @Transactional
+    /** R3: bkz. {@link PosSettlementService#settlePosTransaction}. */
     public TransactionDto settlePosTransaction(UUID transactionId, UUID userId,
                                                 java.util.UUID bankAccountId,
                                                 java.time.LocalDateTime settledAt) {
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        accessGuard.assertCanAccessBusiness(userId, transaction.getBusiness().getId());
-
-        if (!"POS".equalsIgnoreCase(transaction.getPaymentMethod())) {
-            throw new IllegalArgumentException(
-                    "settle yalniz POS tx icin gecerli (tx.payment_method=" + transaction.getPaymentMethod() + ")");
-        }
-        if (Boolean.TRUE.equals(transaction.getPosSettled())) {
-            throw new IllegalStateException(
-                    "Bu tx zaten 'hesaba dustu' isaretli; once unsettle gerekli.");
-        }
-        if (bankAccountId == null) {
-            throw new IllegalArgumentException("bank_account_id zorunlu");
-        }
-        com.bizboard.common.entity.BankAccount bank = bankAccountRepository.findById(bankAccountId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Bank account bulunamadi: " + bankAccountId));
-        if (!bank.isActive()) {
-            throw new IllegalArgumentException("Pasif banka hesabina POS settle yapilamaz: " + bank.getName());
-        }
-        String bankType = bank.getType() != null ? bank.getType().name() : "";
-        if (!"CHECKING".equals(bankType) && !"SAVINGS".equals(bankType)) {
-            throw new IllegalArgumentException(
-                    "POS settle yalniz CHECKING/SAVINGS hesabina yapilabilir (gonderilen: " + bankType + ")");
-        }
-        if (transaction.getCurrency() != null && bank.getCurrency() != null
-                && !transaction.getCurrency().equalsIgnoreCase(bank.getCurrency())) {
-            throw new IllegalArgumentException(
-                    "Currency uyusmuyor: tx=" + transaction.getCurrency() + " bank=" + bank.getCurrency());
-        }
-
-        // Net = amount × (1 − rate/100). applied_pos_rate snapshot kullanilir.
-        java.math.BigDecimal amount = transaction.getAmount();
-        java.math.BigDecimal rate = transaction.getAppliedPosRate() != null
-                ? transaction.getAppliedPosRate()
-                : (transaction.getPosRate() != null ? transaction.getPosRate() : java.math.BigDecimal.ZERO);
-        java.math.BigDecimal commission = amount.multiply(rate)
-                .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-        java.math.BigDecimal net = amount.subtract(commission);
-
-        transaction.setPosSettled(true);
-        transaction.setBankAccount(bank);
-        transaction.setSettledAt(settledAt != null ? settledAt : java.time.LocalDateTime.now());
-        transactionRepository.save(transaction);
-
-        bank.setCurrentBalance(
-                (bank.getCurrentBalance() == null ? java.math.BigDecimal.ZERO : bank.getCurrentBalance())
-                        .add(net));
-        bankAccountRepository.save(bank);
-
-        auditLogService.recordEntityAction(
-                AuditAction.POS_SETTLED,
-                user.getId(), user.getUsername(),
-                "TRANSACTION", transaction.getId(),
-                "POS settled: " + amount + " " + transaction.getCurrency()
-                        + " → " + bank.getName() + " (+net " + net + ")",
-                Map.of(
-                        "transactionId", transaction.getId(),
-                        "bankAccountId", bank.getId(),
-                        "bankName", bank.getName(),
-                        "amount", amount,
-                        "commission", commission,
-                        "net", net,
-                        "settledAt", transaction.getSettledAt().toString()),
-                AuditAction.HIGHLIGHT_POS_SETTLED);
-
-        log.info("[pos-settle] tx={} → bank={} (+net {})", transaction.getId(), bank.getName(), net);
-        return DtoMapper.toTransactionDto(transaction);
+        return posSettlementService.settlePosTransaction(transactionId, userId, bankAccountId, settledAt);
     }
 
-    /**
-     * POS tx settle iptali. Admin-only.
-     * Bank balance'tan net düşülür, pos_settled=false set edilir.
-     */
-    @Transactional
+    /** R3: bkz. {@link PosSettlementService#unsettlePosTransaction}. */
     public TransactionDto unsettlePosTransaction(UUID transactionId, UUID userId) {
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        if (!"admin".equalsIgnoreCase(user.getRole())) {
-            throw new SecurityException("Sadece admin POS settle iptali yapabilir");
-        }
-        accessGuard.assertCanAccessBusiness(userId, transaction.getBusiness().getId());
-
-        if (!"POS".equalsIgnoreCase(transaction.getPaymentMethod())) {
-            throw new IllegalArgumentException("unsettle yalniz POS tx icin");
-        }
-        if (!Boolean.TRUE.equals(transaction.getPosSettled())) {
-            throw new IllegalStateException("Bu tx zaten settled degil; iptal anlamsiz.");
-        }
-        com.bizboard.common.entity.BankAccount bank = transaction.getBankAccount();
-        java.math.BigDecimal amount = transaction.getAmount();
-        java.math.BigDecimal rate = transaction.getAppliedPosRate() != null
-                ? transaction.getAppliedPosRate()
-                : (transaction.getPosRate() != null ? transaction.getPosRate() : java.math.BigDecimal.ZERO);
-        java.math.BigDecimal commission = amount.multiply(rate)
-                .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-        java.math.BigDecimal net = amount.subtract(commission);
-
-        // Bank balance'tan net düş (eski bank reference'i kayıt için saklanır).
-        if (bank != null) {
-            bank.setCurrentBalance(
-                    (bank.getCurrentBalance() == null ? java.math.BigDecimal.ZERO : bank.getCurrentBalance())
-                            .subtract(net));
-            bankAccountRepository.save(bank);
-        }
-
-        transaction.setPosSettled(false);
-        transaction.setSettledAt(null);
-        transaction.setBankAccount(null);
-        transactionRepository.save(transaction);
-
-        auditLogService.recordEntityAction(
-                AuditAction.POS_UNSETTLED,
-                user.getId(), user.getUsername(),
-                "TRANSACTION", transaction.getId(),
-                "POS unsettled: " + amount + " " + transaction.getCurrency()
-                        + (bank != null ? " from " + bank.getName() : ""),
-                Map.of(
-                        "transactionId", transaction.getId(),
-                        "bankAccountId", bank != null ? bank.getId() : "null",
-                        "amount", amount,
-                        "net_reversed", net),
-                AuditAction.HIGHLIGHT_POS_UNSETTLED);
-
-        log.info("[pos-unsettle] tx={} → bank balance -{}", transaction.getId(), net);
-        return DtoMapper.toTransactionDto(transaction);
+        return posSettlementService.unsettlePosTransaction(transactionId, userId);
     }
 
     @Transactional
