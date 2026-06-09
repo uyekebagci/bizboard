@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, LogOut, Shield, Menu, Sun, Moon } from "lucide-react";
+import { Search, LogOut, Shield, Menu, Sun, Moon, UserCircle, KeyRound } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { getInitials } from "@/lib/utils";
 import { logout } from "@/lib/api/client";
@@ -112,9 +112,9 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
             {menuOpen && (
               <div
                 role="menu"
-                className="absolute right-0 mt-2 w-52 bg-surface-800 rounded-xl shadow-card-hover border border-surface-700 py-2 animate-fade-in z-50"
+                className="glass-card absolute right-0 mt-2 w-52 !rounded-xl shadow-card-hover py-2 animate-fade-in z-50"
               >
-                <div className="px-4 py-2.5 border-b border-surface-700">
+                <div className="px-4 py-2.5 border-b border-surface-700/60">
                   <p className="font-semibold text-white text-sm truncate">
                     {profile?.full_name || "Kullanici"}
                   </p>
@@ -125,12 +125,22 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
                   )}
                 </div>
 
+                {/* Profil + Şifre Değiştir Sidebar'dan buraya taşındı. */}
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="row-hover w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 transition-colors"
+                >
+                  <UserCircle size={16} />
+                  <span>Profil</span>
+                </Link>
+
                 <Link
                   href="/dashboard/change-password"
                   onClick={() => setMenuOpen(false)}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 hover:bg-surface-700 transition-colors"
+                  className="row-hover w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 transition-colors"
                 >
-                  <Shield size={16} />
+                  <KeyRound size={16} />
                   <span>Sifre Degistir</span>
                 </Link>
 
@@ -138,7 +148,7 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
                   <Link
                     href="/admin"
                     onClick={() => setMenuOpen(false)}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 hover:bg-surface-700 transition-colors"
+                    className="row-hover w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 transition-colors"
                   >
                     <Shield size={16} />
                     <span>Admin Paneli</span>
