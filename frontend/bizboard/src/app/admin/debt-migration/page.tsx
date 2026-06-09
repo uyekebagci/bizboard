@@ -79,12 +79,12 @@ export default function DebtMigrationPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-[#2a2a2a] hover:bg-[#333] transition-colors"
+          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
         >
-          <ChevronLeft size={20} className="text-yellow-400" />
+          <ChevronLeft size={20} className="text-amber-400" />
         </button>
         <div className="flex items-center gap-2.5">
-          <GitMerge size={24} className="text-yellow-400" />
+          <GitMerge size={24} className="text-amber-400" />
           <h1 className="text-2xl font-bold text-white">Borc Counterpart Migration</h1>
         </div>
       </div>
@@ -111,13 +111,13 @@ export default function DebtMigrationPage() {
       </div>
 
       {/* Options */}
-      <div className="mb-6 p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl">
+      <div className="mb-6 p-4 bg-surface-900 border border-surface-700 rounded-xl">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={autoCreate}
             onChange={(e) => setAutoCreate(e.target.checked)}
-            className="w-4 h-4 rounded accent-yellow-500"
+            className="w-4 h-4 rounded accent-amber-500"
           />
           <div>
             <span className="text-sm text-white font-medium">Auto-create</span>
@@ -134,7 +134,7 @@ export default function DebtMigrationPage() {
         <button
           onClick={runDry}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-white text-sm font-semibold disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-white text-sm font-semibold disabled:opacity-50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Info size={16} />}
           Dry-run (test)
@@ -142,7 +142,7 @@ export default function DebtMigrationPage() {
         <button
           onClick={() => setConfirmApply(true)}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-semibold disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold disabled:opacity-50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
           Calistir (apply)
@@ -161,8 +161,8 @@ export default function DebtMigrationPage() {
       {applyResult && <ResultPanel title="Apply sonucu" result={applyResult} variant="success" />}
 
       {confirmApply && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-card p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-white mb-2">
               Migration'i Calistir
             </h3>
@@ -171,7 +171,7 @@ export default function DebtMigrationPage() {
             </p>
             <p className="text-sm text-gray-400 mb-6">
               Auto-create:{" "}
-              <strong className={autoCreate ? "text-yellow-400" : "text-gray-500"}>
+              <strong className={autoCreate ? "text-amber-400" : "text-gray-500"}>
                 {autoCreate ? "ACIK" : "Kapali"}
               </strong>
               . Devam edilsin mi?
@@ -179,13 +179,13 @@ export default function DebtMigrationPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmApply(false)}
-                className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 text-sm"
+                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 text-sm"
               >
                 Iptal
               </button>
               <button
                 onClick={runApply}
-                className="px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-semibold text-sm"
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm"
               >
                 Evet, Calistir
               </button>
@@ -203,7 +203,7 @@ function ResultPanel({
   const baseClass =
     variant === "success"
       ? "bg-green-900/20 border-green-800/40 text-green-200"
-      : "bg-[#1a1a1a] border-[#2a2a2a] text-white";
+      : "bg-surface-900 border-surface-700 text-white";
 
   return (
     <div className={`p-5 border rounded-xl ${baseClass}`}>
@@ -211,7 +211,7 @@ function ResultPanel({
         {variant === "success" && <CheckCircle2 size={18} />}
         {title}
         {result.dry_run && (
-          <span className="ml-2 px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-[10px] font-medium">
+          <span className="ml-2 px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-medium">
             DRY-RUN
           </span>
         )}

@@ -93,12 +93,12 @@ export default function AdminPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push("/dashboard")}
-          className="p-2 rounded-lg bg-[#2a2a2a] hover:bg-[#333] transition-colors"
+          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
         >
-          <ChevronLeft size={20} className="text-yellow-400" />
+          <ChevronLeft size={20} className="text-amber-400" />
         </button>
         <div className="flex items-center gap-2.5">
-          <Shield size={24} className="text-yellow-400" />
+          <Shield size={24} className="text-amber-400" />
           <h1 className="text-2xl font-bold text-white">Admin Paneli</h1>
         </div>
       </div>
@@ -115,7 +115,7 @@ export default function AdminPage() {
         {/* Section Header */}
         <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
           <div className="flex items-center gap-2.5">
-            <Users size={20} className="text-yellow-400" />
+            <Users size={20} className="text-amber-400" />
             <h2 className="text-lg font-semibold text-white">Kullanicilar</h2>
             <span className="ml-1 text-sm text-gray-500">
               ({users.length})
@@ -124,31 +124,31 @@ export default function AdminPage() {
           <div className="flex items-center gap-2">
             <a
               href="/admin/my-companies"
-              className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
             >
               Firmalarim
             </a>
             <a
               href="/admin/debt-migration"
-              className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
             >
               Borc Migration
             </a>
             <a
               href="/admin/recurring"
-              className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
             >
               Recurring
             </a>
             <a
               href="/admin/audit"
-              className="px-3 py-2 text-sm rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
             >
               Audit Log
             </a>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold text-sm rounded-xl transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-colors"
             >
               <Plus size={16} />
               Yeni Kullanici
@@ -164,11 +164,11 @@ export default function AdminPage() {
             Henuz kullanici yok
           </div>
         ) : (
-          <div className="divide-y divide-[#2a2a2a]">
+          <div className="divide-y divide-surface-700">
             {users.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center justify-between p-4 hover:bg-[#222] transition-colors group"
+                className="flex items-center justify-between p-4 hover:bg-surface-800 transition-colors group"
               >
                 {/* User Info */}
                 <div className="flex items-center gap-4 min-w-0">
@@ -176,8 +176,8 @@ export default function AdminPage() {
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm shrink-0 ${
                       user.role === "admin"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-[#333] text-gray-400"
+                        ? "bg-amber-500/20 text-amber-400"
+                        : "bg-surface-600 text-gray-400"
                     }`}
                   >
                     {user.full_name
@@ -209,8 +209,8 @@ export default function AdminPage() {
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
                       user.role === "admin"
-                        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                        : "bg-[#333] text-gray-400 border border-[#444]"
+                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                        : "bg-surface-600 text-gray-400 border border-surface-600"
                     }`}
                   >
                     {getRoleLabel(user.role)}
@@ -230,7 +230,7 @@ export default function AdminPage() {
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => setEditingUser(user)}
-                      className="p-2 rounded-lg hover:bg-[#333] transition-colors"
+                      className="p-2 rounded-lg hover:bg-surface-600 transition-colors"
                       title="Duzenle"
                     >
                       <Pencil size={15} className="text-gray-400" />
@@ -294,7 +294,7 @@ export default function AdminPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 bg-[#333] hover:bg-[#444] text-white rounded-xl text-sm font-medium transition-colors"
+                className="flex-1 px-4 py-2.5 bg-surface-600 hover:bg-surface-600 text-white rounded-xl text-sm font-medium transition-colors"
               >
                 Iptal
               </button>
@@ -380,13 +380,13 @@ function CreateUserModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
+        <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <h3 className="text-lg font-semibold text-white">
             Yeni Kullanici Olustur
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-[#333] transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
           >
             <X size={18} className="text-gray-400" />
           </button>
@@ -409,7 +409,7 @@ function CreateUserModal({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-[#111] border border-[#333] rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
               placeholder="Ornek: Ahmet Yilmaz"
             />
           </div>
@@ -423,7 +423,7 @@ function CreateUserModal({
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2.5 bg-[#111] border border-[#333] rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
               placeholder="ornek: ahmet"
             />
           </div>
@@ -438,7 +438,7 @@ function CreateUserModal({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 pr-12 bg-[#111] border border-[#333] rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors"
+                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
                 placeholder="En az 6 karakter"
               />
               <button
@@ -464,8 +464,8 @@ function CreateUserModal({
                   onClick={() => setRole(opt.value)}
                   className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     role === opt.value
-                      ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400"
-                      : "bg-[#111] border-[#333] text-gray-400 hover:border-[#444]"
+                      ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                      : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
                   }`}
                 >
                   {opt.label}
@@ -491,8 +491,8 @@ function CreateUserModal({
                     onClick={() => toggleBusiness(biz.id)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm border transition-colors ${
                       selectedBusinessIds.includes(biz.id)
-                        ? "bg-yellow-500/10 border-yellow-500/40 text-white"
-                        : "bg-[#111] border-[#333] text-gray-400 hover:border-[#444]"
+                        ? "bg-amber-500/10 border-amber-500/40 text-white"
+                        : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -500,7 +500,7 @@ function CreateUserModal({
                       <span>{biz.name}</span>
                     </div>
                     {selectedBusinessIds.includes(biz.id) && (
-                      <Check size={16} className="text-yellow-400" />
+                      <Check size={16} className="text-amber-400" />
                     )}
                   </button>
                 ))}
@@ -509,8 +509,8 @@ function CreateUserModal({
           )}
 
           {role === "admin" && (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-              <p className="text-sm text-yellow-400">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+              <p className="text-sm text-amber-400">
                 Admin rolu tum isletmelere erisim saglar.
               </p>
             </div>
@@ -520,7 +520,7 @@ function CreateUserModal({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors"
+            className="w-full py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors"
           >
             {submitting ? "Olusturuluyor..." : "Kullanici Olustur"}
           </button>
@@ -597,13 +597,13 @@ function EditUserModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
+        <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <h3 className="text-lg font-semibold text-white">
             Kullaniciyi Duzenle
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-[#333] transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
           >
             <X size={18} className="text-gray-400" />
           </button>
@@ -626,7 +626,7 @@ function EditUserModal({
               type="text"
               value={user.username}
               disabled
-              className="w-full px-4 py-2.5 bg-[#111] border border-[#333] rounded-xl text-gray-500 text-sm cursor-not-allowed"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-gray-500 text-sm cursor-not-allowed"
             />
           </div>
 
@@ -639,7 +639,7 @@ function EditUserModal({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-[#111] border border-[#333] rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
             />
           </div>
 
@@ -654,7 +654,7 @@ function EditUserModal({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 pr-12 bg-[#111] border border-[#333] rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors"
+                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
                 placeholder="Degistirmek icin girin"
               />
               <button
@@ -680,8 +680,8 @@ function EditUserModal({
                   onClick={() => setRole(opt.value)}
                   className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     role === opt.value
-                      ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400"
-                      : "bg-[#111] border-[#333] text-gray-400 hover:border-[#444]"
+                      ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                      : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
                   }`}
                 >
                   {opt.label}
@@ -691,13 +691,13 @@ function EditUserModal({
           </div>
 
           {/* Active toggle */}
-          <div className="flex items-center justify-between p-4 bg-[#111] border border-[#333] rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-surface-900 border border-surface-600 rounded-xl">
             <span className="text-sm text-gray-300">Aktif Durum</span>
             <button
               type="button"
               onClick={() => setIsActive(!isActive)}
               className={`relative w-12 h-6 rounded-full transition-colors ${
-                isActive ? "bg-yellow-500" : "bg-[#444]"
+                isActive ? "bg-amber-500" : "bg-surface-600"
               }`}
             >
               <span
@@ -722,8 +722,8 @@ function EditUserModal({
                     onClick={() => toggleBusiness(biz.id)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm border transition-colors ${
                       selectedBusinessIds.includes(biz.id)
-                        ? "bg-yellow-500/10 border-yellow-500/40 text-white"
-                        : "bg-[#111] border-[#333] text-gray-400 hover:border-[#444]"
+                        ? "bg-amber-500/10 border-amber-500/40 text-white"
+                        : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -731,7 +731,7 @@ function EditUserModal({
                       <span>{biz.name}</span>
                     </div>
                     {selectedBusinessIds.includes(biz.id) && (
-                      <Check size={16} className="text-yellow-400" />
+                      <Check size={16} className="text-amber-400" />
                     )}
                   </button>
                 ))}
@@ -740,8 +740,8 @@ function EditUserModal({
           )}
 
           {role === "admin" && (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-              <p className="text-sm text-yellow-400">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+              <p className="text-sm text-amber-400">
                 Admin rolu tum isletmelere erisim saglar.
               </p>
             </div>
@@ -751,7 +751,7 @@ function EditUserModal({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors"
+            className="w-full py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors"
           >
             {submitting ? "Kaydediliyor..." : "Degisiklikleri Kaydet"}
           </button>

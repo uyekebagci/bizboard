@@ -50,12 +50,12 @@ export default function RecurringPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-[#2a2a2a] hover:bg-[#333] transition-colors"
+          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
         >
-          <ChevronLeft size={20} className="text-yellow-400" />
+          <ChevronLeft size={20} className="text-amber-400" />
         </button>
         <div className="flex items-center gap-2.5">
-          <RefreshCw size={24} className="text-yellow-400" />
+          <RefreshCw size={24} className="text-amber-400" />
           <h1 className="text-2xl font-bold text-white">Recurring Tx Jeneratoru</h1>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function RecurringPage() {
         <button
           onClick={runNow}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-black text-sm font-semibold"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-sm font-semibold"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />}
           Simdi Calistir

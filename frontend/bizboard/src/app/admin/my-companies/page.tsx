@@ -138,12 +138,12 @@ export default function AdminMyCompaniesPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-[#2a2a2a] hover:bg-[#333] transition-colors"
+          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
         >
-          <ChevronLeft size={20} className="text-yellow-400" />
+          <ChevronLeft size={20} className="text-amber-400" />
         </button>
         <div className="flex items-center gap-2.5">
-          <Building2 size={24} className="text-yellow-400" />
+          <Building2 size={24} className="text-amber-400" />
           <h1 className="text-2xl font-bold text-white">Benim Firmalarim</h1>
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function AdminMyCompaniesPage() {
       )}
 
       <div className="glass-card overflow-hidden">
-        <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
+        <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <div className="flex items-center gap-2.5">
             <h2 className="text-lg font-semibold text-white">Firmalar</h2>
             <span className="ml-1 text-sm text-gray-500">
@@ -164,7 +164,7 @@ export default function AdminMyCompaniesPage() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold text-sm rounded-xl transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-colors"
           >
             <Plus size={16} />
             Yeni Firma
@@ -176,11 +176,11 @@ export default function AdminMyCompaniesPage() {
         ) : companies.length === 0 ? (
           <div className="p-8 text-center text-gray-500">Henuz firma yok</div>
         ) : (
-          <div className="divide-y divide-[#2a2a2a]">
+          <div className="divide-y divide-surface-700">
             {companies.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between p-4 hover:bg-[#222] transition-colors group gap-4"
+                className="flex items-center justify-between p-4 hover:bg-surface-800 transition-colors group gap-4"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -188,12 +188,12 @@ export default function AdminMyCompaniesPage() {
                       {c.legal_name}
                     </h3>
                     {c.is_default && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-400 text-[10px] font-medium">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-[10px] font-medium">
                         <Star size={10} />
                         Varsayilan
                       </span>
                     )}
-                    <span className="px-2 py-0.5 rounded-md bg-[#2a2a2a] text-gray-400 text-[10px] font-medium">
+                    <span className="px-2 py-0.5 rounded-md bg-surface-700 text-gray-400 text-[10px] font-medium">
                       {typeLabel(c.company_type)}
                     </span>
                   </div>
@@ -206,7 +206,7 @@ export default function AdminMyCompaniesPage() {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => setEditing(c)}
-                    className="p-2 rounded-lg hover:bg-[#333] text-gray-400 hover:text-white transition-colors"
+                    className="p-2 rounded-lg hover:bg-surface-600 text-gray-400 hover:text-white transition-colors"
                     title="Duzenle"
                   >
                     <Pencil size={16} />
@@ -278,7 +278,7 @@ export default function AdminMyCompaniesPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 text-sm"
+                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 text-sm"
               >
                 Iptal
               </button>
@@ -367,7 +367,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-[#2a2a2a] text-gray-400 hover:text-white"
+            className="p-2 rounded-lg hover:bg-surface-700 text-gray-400 hover:text-white"
           >
             <X size={18} />
           </button>
@@ -506,14 +506,14 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#333] text-gray-200 text-sm"
+            className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 text-sm"
           >
             Iptal
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-black font-semibold text-sm"
+            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-semibold text-sm"
           >
             {submitting ? "Kaydediliyor..." : "Kaydet"}
           </button>
@@ -524,7 +524,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
 }
 
 const inputClass =
-  "w-full px-3 py-2 rounded-lg bg-[#2a2a2a] border border-[#333] text-white text-sm placeholder-gray-500 focus:outline-none focus:border-yellow-500 transition-colors";
+  "w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors";
 
 function Field({
   label,

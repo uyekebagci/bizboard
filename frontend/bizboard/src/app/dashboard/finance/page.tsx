@@ -594,25 +594,26 @@ function IncomeExpenseCompare({
       </div>
 
       {/* Alt detaylar */}
-      <div className="grid grid-cols-3 gap-3 mt-4">
-        <div className="text-center p-3 bg-green-50 rounded-xl">
-          <p className="text-[10px] text-green-600 font-medium uppercase">Gelir</p>
-          <p className="text-base font-bold text-green-700 mt-0.5">{formatCurrency(income)}</p>
+      {/* W2: dar ekranda sıkışmasın — tek kolon → sm'de 3 kolon. Token-correct renkler. */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+        <div className="text-center p-3 bg-emerald-500/10 rounded-xl">
+          <p className="text-[10px] text-emerald-300 font-medium uppercase">Gelir</p>
+          <p className="num text-base font-bold text-emerald-300 mt-0.5">{formatCurrency(income)}</p>
         </div>
-        <div className="text-center p-3 bg-red-50 rounded-xl">
-          <p className="text-[10px] text-red-600 font-medium uppercase">Islem Gideri</p>
-          <p className="text-base font-bold text-red-700 mt-0.5">{formatCurrency(variableExpense > 0 ? variableExpense : expense)}</p>
+        <div className="text-center p-3 bg-rose-500/10 rounded-xl">
+          <p className="text-[10px] text-rose-300 font-medium uppercase">Islem Gideri</p>
+          <p className="num text-base font-bold text-rose-300 mt-0.5">{formatCurrency(variableExpense > 0 ? variableExpense : expense)}</p>
         </div>
         {fixedCost > 0 && (
-          <div className="text-center p-3 bg-orange-50 rounded-xl">
-            <p className="text-[10px] text-orange-600 font-medium uppercase">Sabit Gider</p>
-            <p className="text-base font-bold text-orange-700 mt-0.5">{formatCurrency(fixedCost)}</p>
+          <div className="text-center p-3 bg-orange-500/10 rounded-xl">
+            <p className="text-[10px] text-orange-300 font-medium uppercase">Sabit Gider</p>
+            <p className="num text-base font-bold text-orange-300 mt-0.5">{formatCurrency(fixedCost)}</p>
           </div>
         )}
         {fixedCost <= 0 && (
-          <div className="text-center p-3 bg-brand-50 rounded-xl">
-            <p className="text-[10px] text-brand-600 font-medium uppercase">Net Kar</p>
-            <p className={cn("text-base font-bold mt-0.5", income - expense >= 0 ? "text-green-700" : "text-red-700")}>
+          <div className="text-center p-3 bg-brand-500/10 rounded-xl">
+            <p className="text-[10px] text-brand-300 font-medium uppercase">Net Kar</p>
+            <p className={cn("num text-base font-bold mt-0.5", income - expense >= 0 ? "text-emerald-300" : "text-rose-300")}>
               {formatCurrency(income - expense)}
             </p>
           </div>
