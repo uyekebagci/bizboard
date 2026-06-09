@@ -401,7 +401,7 @@ public class SubCashInclusionService {
         BankAccount subCash = bankAccountRepository.findById(subCashId)
                 .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
         UUID businessId = subCash.getBusiness() != null ? subCash.getBusiness().getId() : null;
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
 
         EntitySets sets = collectAssignedEntityIds(subCashId);
         if (sets.isEmpty()) {

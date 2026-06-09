@@ -57,7 +57,7 @@ public class AccountStatementService {
             throw new IllegalArgumentException("Counterpart business'a bağlı değil");
         }
         UUID businessId = counterpart.getBusiness().getId();
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
 
         // ── Open debts ──────────────────────────────────────────────
         List<Debt> allDebts = debtRepository.findByBusinessAndCounterpartAll(businessId, counterpartId);

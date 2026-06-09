@@ -86,7 +86,7 @@ public class CounterpartService {
     public CounterpartDto get(UUID id, UUID actorUserId) {
         Counterpart c = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi"));
-        accessGuard.assertCanAccessBusiness(actorUserId,
+        accessGuard.assertCanReadBusiness(actorUserId,
                 c.getBusiness() != null ? c.getBusiness().getId() : null);
         return toDto(c);
     }

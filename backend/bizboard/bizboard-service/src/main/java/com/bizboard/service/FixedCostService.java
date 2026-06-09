@@ -29,7 +29,7 @@ public class FixedCostService {
 
     @Transactional(readOnly = true)
     public List<FixedCostDto> getFixedCostsForBusiness(UUID businessId, UUID actorUserId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         return fixedCostRepository.findByBusinessIdOrderByCreatedAtDesc(businessId)
                 .stream().map(this::toDto).toList();
     }
@@ -38,7 +38,7 @@ public class FixedCostService {
 
     @Transactional(readOnly = true)
     public FixedCostSummaryDto getFixedCostSummary(UUID businessId, UUID actorUserId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         List<FixedCost> costs = fixedCostRepository
                 .findByBusinessIdAndActiveTrueOrderByCreatedAtDesc(businessId);
 

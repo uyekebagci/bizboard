@@ -40,7 +40,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<EmployeeDto> getEmployeesForBusiness(UUID businessId, UUID actorUserId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         return employeeRepository.findByBusinessIdOrderByFullNameAsc(businessId)
                 .stream().map(this::toDto).toList();
     }
@@ -51,7 +51,7 @@ public class EmployeeService {
     public EmployeeDto getEmployee(UUID employeeId, UUID actorUserId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Personel bulunamadi"));
-        accessGuard.assertCanAccessBusiness(actorUserId, employee.getBusiness().getId());
+        accessGuard.assertCanReadBusiness(actorUserId, employee.getBusiness().getId());
         return toDto(employee);
     }
 
@@ -246,7 +246,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public EmployeeSummaryDto getEmployeeSummary(UUID businessId, UUID actorUserId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         List<Employee> employees = employeeRepository.findByBusinessIdOrderByFullNameAsc(businessId);
 
         int total = employees.size();

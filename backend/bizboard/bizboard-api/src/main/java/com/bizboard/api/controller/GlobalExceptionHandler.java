@@ -1,5 +1,6 @@
 package com.bizboard.api.controller;
 
+import com.bizboard.service.ResourceNotAccessibleException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +30,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
     }
 
+    /**
+     * H-2 (arch-rules §1.5): cross-tenant READ reddi → 404 "bulunamadı"
+     * (varlık sızdırma yok). Mutate reddi {@link SecurityException} ile 403 kalır.
+     */
+    @ExceptionHandler(ResourceNotAccessibleException.class)
+    public ResponseEntity<Map<String, String>> handleNotAccessible(ResourceNotAccessibleException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Kayit bulunamadi"));
+    }
+
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, String>> handleSecurity(SecurityException e) {
-        // Beta v1.1 hotfix: stack trace log et — gerçek kaynağı tespit için.
+        // arch-rules §1.5: mutate-deny → 403 (varlık path'ten zaten biliniyor).
         log.warn("[SecurityException -> 403] message={}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Access denied"));

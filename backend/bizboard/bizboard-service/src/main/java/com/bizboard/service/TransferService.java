@@ -225,7 +225,7 @@ public class TransferService {
         }
         UUID bizId = pair.get(0).getBusiness() != null
                 ? pair.get(0).getBusiness().getId() : null;
-        accessGuard.assertCanAccessBusiness(actorUserId, bizId);
+        accessGuard.assertCanReadBusiness(actorUserId, bizId);
 
         // direction sırasını netleştir — EXPENSE first (OUT), INCOME second (IN)
         Transaction outTx = pair.stream()

@@ -77,14 +77,26 @@ public class BusinessAccessGuard {
     }
 
     /**
-     * Erişim yoksa {@link SecurityException} fırlatır. Mutate eden tüm service
-     * metodları bunun ardından iş mantığını yapmalı.
+     * MUTATE (create/update/delete) erişim kontrolü. Erişim yoksa
+     * {@link SecurityException} → <b>403</b>. arch-rules §1.5: mutate-deny 403.
      *
      * <p>Hata mesajı kasıtlı olarak generic; bilgi sızması yapmaz.</p>
      */
     public void assertCanAccessBusiness(UUID userId, UUID businessId) {
         if (!canAccessBusiness(userId, businessId)) {
             throw new SecurityException("Access denied");
+        }
+    }
+
+    /**
+     * H-2 (arch-rules §1.5): READ erişim kontrolü. Erişim yoksa
+     * {@link ResourceNotAccessibleException} → <b>404 "Kayıt bulunamadı"</b>
+     * (varlık sızdırma yok). Read/list/get/summary/statement servis metodları
+     * mutate-variant yerine bunu kullanmalı.
+     */
+    public void assertCanReadBusiness(UUID userId, UUID businessId) {
+        if (!canAccessBusiness(userId, businessId)) {
+            throw new ResourceNotAccessibleException();
         }
     }
 

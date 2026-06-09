@@ -34,7 +34,7 @@ public class VehicleService {
 
     @Transactional(readOnly = true)
     public List<VehicleDto> getVehiclesForBusiness(UUID businessId, UUID actorUserId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         return vehicleRepository.findByBusinessIdOrderByPlateNumberAsc(businessId)
                 .stream().map(this::toDto).toList();
     }
@@ -45,7 +45,7 @@ public class VehicleService {
     public VehicleDto getVehicle(UUID vehicleId, UUID actorUserId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalArgumentException("Arac bulunamadi"));
-        accessGuard.assertCanAccessBusiness(actorUserId, vehicle.getBusiness().getId());
+        accessGuard.assertCanReadBusiness(actorUserId, vehicle.getBusiness().getId());
         return toDto(vehicle);
     }
 
@@ -178,7 +178,7 @@ public class VehicleService {
 
     @Transactional(readOnly = true)
     public VehicleSummaryDto getVehicleSummary(UUID businessId, UUID actorUserId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         List<Vehicle> vehicles = vehicleRepository.findByBusinessIdOrderByPlateNumberAsc(businessId);
 
         int total = vehicles.size();

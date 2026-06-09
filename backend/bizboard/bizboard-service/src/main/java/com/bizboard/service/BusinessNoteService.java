@@ -36,7 +36,7 @@ public class BusinessNoteService {
     @Transactional(readOnly = true)
     public List<BusinessNoteDto> getNotesForBusiness(UUID businessId, UUID actorUserId,
                                                      boolean isAdmin, String scope) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         String s = normalizeScope(scope);
         List<BusinessNote> notes;
         if (isAdmin) {

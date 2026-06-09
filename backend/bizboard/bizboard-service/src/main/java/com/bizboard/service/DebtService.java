@@ -48,7 +48,7 @@ public class DebtService {
 
     @Transactional(readOnly = true)
     public List<DebtDto> getDebtsForBusiness(UUID businessId, UUID userId) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -345,7 +345,7 @@ public class DebtService {
 
     @Transactional(readOnly = true)
     public DebtSummaryDto getBusinessDebtSummary(UUID businessId, UUID userId) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 

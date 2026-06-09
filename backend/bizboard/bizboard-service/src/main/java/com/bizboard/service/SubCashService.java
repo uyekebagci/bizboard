@@ -198,7 +198,7 @@ public class SubCashService {
     public List<SubCashAssignment> listForSubCash(UUID subCashId, UUID actorUserId) {
         BankAccount subCash = bankAccountRepository.findById(subCashId)
                 .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
-        accessGuard.assertCanAccessBusiness(actorUserId,
+        accessGuard.assertCanReadBusiness(actorUserId,
                 subCash.getBusiness() != null ? subCash.getBusiness().getId() : null);
         return repository.findBySubCashIdOrderByAssignedAtDesc(subCashId);
     }
@@ -250,7 +250,7 @@ public class SubCashService {
         BankAccount subCash = bankAccountRepository.findById(subCashId)
                 .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
         UUID bizId = subCash.getBusiness() != null ? subCash.getBusiness().getId() : null;
-        accessGuard.assertCanAccessBusiness(actorUserId, bizId);
+        accessGuard.assertCanReadBusiness(actorUserId, bizId);
         if (bizId == null) return List.of();
 
         // assignment'larda entity_id'leri set olarak topla
@@ -310,7 +310,7 @@ public class SubCashService {
         BankAccount subCash = bankAccountRepository.findById(subCashId)
                 .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
         UUID bizId = subCash.getBusiness() != null ? subCash.getBusiness().getId() : null;
-        accessGuard.assertCanAccessBusiness(actorUserId, bizId);
+        accessGuard.assertCanReadBusiness(actorUserId, bizId);
 
         java.time.LocalDate today = java.time.LocalDate.now();
         java.time.LocalDate effFrom = from != null ? from : today.withDayOfMonth(1);

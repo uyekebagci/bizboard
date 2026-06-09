@@ -189,7 +189,7 @@ public class DebtWriteoffService {
         List<DebtWriteoff> items = repository.findByCounterpart_IdOrderByWrittenOffAtDesc(counterpartId);
         if (items.isEmpty()) return List.of();
         UUID bizId = items.get(0).getBusiness() != null ? items.get(0).getBusiness().getId() : null;
-        accessGuard.assertCanAccessBusiness(actorUserId, bizId);
+        accessGuard.assertCanReadBusiness(actorUserId, bizId);
         return items.stream().map(w -> toDto(w, w.getDebt(),
                 userRepository.findById(w.getWrittenOffBy()).orElse(null))).toList();
     }

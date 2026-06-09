@@ -62,7 +62,7 @@ public class QuickActionService {
 
     @Transactional(readOnly = true)
     public List<QuickActionDto> list(UUID actorUserId, UUID businessId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         List<QuickAction> items = repository
                 .findByUserIdAndBusinessIdOrderByOrderIndexAscLastUsedAtDesc(actorUserId, businessId);
         // NULLS LAST for last_used_at DESC — Postgres default for DESC = NULLS FIRST,

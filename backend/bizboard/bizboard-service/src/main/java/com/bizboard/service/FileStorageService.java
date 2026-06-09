@@ -200,7 +200,7 @@ public class FileStorageService {
                                                 UUID userId, boolean isAdmin) {
         // Business'a bağlı dosya listeleniyorsa o işletmeye erişim zorunlu.
         if (isBusinessLinked(entityType) && entityId != null && !isAdmin) {
-            accessGuard.assertCanAccessBusiness(userId, entityId);
+            accessGuard.assertCanReadBusiness(userId, entityId);
         }
         List<FileUpload> files;
         if (isAdmin) {

@@ -361,7 +361,7 @@ public class CashClosingService {
     /** v1.6.23.21: business-scoped paged list. */
     @Transactional(readOnly = true)
     public Page<CashClosingDto> list(UUID userId, UUID businessId, int page, int size) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         int safePage = Math.max(0, page);
         int safeSize = Math.min(Math.max(size, 1), 200);
         Pageable pageable = PageRequest.of(safePage, safeSize,
@@ -384,14 +384,14 @@ public class CashClosingService {
     /** v1.6.23.21: business-scoped today. */
     @Transactional(readOnly = true)
     public Optional<CashClosingDto> getToday(UUID userId, UUID businessId) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         return repository.findByBusinessIdAndClosingDate(businessId, LocalDate.now()).map(this::toDto);
     }
 
     /** v1.6.23.21: business-scoped yesterday. */
     @Transactional(readOnly = true)
     public Optional<CashClosingDto> getYesterday(UUID userId, UUID businessId) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         return repository.findByBusinessIdAndClosingDate(businessId, LocalDate.now().minusDays(1))
                 .map(this::toDto);
     }
@@ -399,7 +399,7 @@ public class CashClosingService {
     /** v1.6.23.21: business-scoped preview. */
     @Transactional(readOnly = true)
     public Map<String, Object> getTodayPreview(UUID userId, UUID businessId) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         LocalDate today = LocalDate.now();
         BigDecimal opening = calculator.getOpeningBalance(businessId, today);
         BigDecimal computed = calculator.computeClosing(businessId, today);

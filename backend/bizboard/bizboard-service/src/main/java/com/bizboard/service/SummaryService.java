@@ -54,7 +54,7 @@ public class SummaryService {
     public PeriodSummaryDto getBusinessSummary(UUID userId, UUID businessId, String period,
                                                LocalDate from, LocalDate to) {
         // C-1: diğer guard'lı read'lerle aynı — ilk satırda erişim kontrolü.
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         DateRange range = resolveDateRange(period, from, to);
 
         List<Transaction> transactions = transactionRepository

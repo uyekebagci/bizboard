@@ -52,7 +52,7 @@ public class AgingReportService {
     private List<Debt> loadOpenDebts(UUID userId, UUID businessId) {
         List<Debt> raw;
         if (businessId != null) {
-            accessGuard.assertCanAccessBusiness(userId, businessId);
+            accessGuard.assertCanReadBusiness(userId, businessId);
             raw = debtRepository.findByBusinessIdOrderByCreatedAtDesc(businessId);
         } else {
             List<UUID> ids = accessGuard.accessibleBusinessIds(userId);

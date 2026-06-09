@@ -73,7 +73,7 @@ public class BusinessController {
             @PathVariable UUID id,
             @PathVariable UUID txId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        accessGuard.assertCanAccessBusiness(principal.getId(), id);
+        accessGuard.assertCanReadBusiness(principal.getId(), id);
         List<com.bizboard.common.entity.SubCashTxInclusion> incs =
                 inclusionRepository.findByTransaction_Id(txId);
         List<Map<String, Object>> result = new java.util.ArrayList<>(incs.size());

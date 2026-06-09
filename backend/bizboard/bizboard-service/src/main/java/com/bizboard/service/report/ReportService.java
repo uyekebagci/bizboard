@@ -136,7 +136,7 @@ public class ReportService {
     // ── reconciliation helper ──
 
     private CashReconciliation buildReconciliation(UUID userId, UUID businessId, LocalDate from, LocalDate to) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         LocalDate f = from != null ? from : LocalDate.now().minusDays(30);
         LocalDate tt = to != null ? to : LocalDate.now();
         List<CashClosing> list = cashClosingRepository

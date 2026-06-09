@@ -50,7 +50,7 @@ public class PosDeviceManagementService {
     public List<com.bizboard.common.dto.TransactionDto> getDeviceTransactions(UUID deviceId, UUID actorUserId) {
         PosDevice d = repository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("POS cihazi bulunamadi: " + deviceId));
-        accessGuard.assertCanAccessBusiness(actorUserId,
+        accessGuard.assertCanReadBusiness(actorUserId,
                 d.getBusiness() != null ? d.getBusiness().getId() : null);
         return transactionRepository.findByPosDeviceIdOrderByDateDesc(deviceId).stream()
                 .map(DtoMapper::toTransactionDto)
@@ -74,7 +74,7 @@ public class PosDeviceManagementService {
     public PosDeviceDto get(UUID id, UUID actorUserId) {
         PosDevice d = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("POS cihazi bulunamadi: " + id));
-        accessGuard.assertCanAccessBusiness(actorUserId,
+        accessGuard.assertCanReadBusiness(actorUserId,
                 d.getBusiness() != null ? d.getBusiness().getId() : null);
         return toDto(d);
     }

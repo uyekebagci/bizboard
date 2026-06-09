@@ -435,7 +435,7 @@ public class BankAccountService {
                 .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + id));
         UUID businessId = account.getBusiness() != null ? account.getBusiness().getId() : null;
         // v1.6.23.19 (Security WP TODO 7432143f): cross-tenant access engeli.
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
 
         // Son N tx
         List<Transaction> recent = transactionRepository
@@ -554,7 +554,7 @@ public class BankAccountService {
      */
     @Transactional(readOnly = true)
     public CashHoldersSummaryDto cashHoldersSummary(UUID businessId, UUID actorUserId) {
-        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        accessGuard.assertCanReadBusiness(actorUserId, businessId);
         List<BankAccount> rows = repository
                 .findByBusinessIdAndTypeAndActiveTrueOrderByCurrentBalanceDesc(
                         businessId, BankAccountType.CASH_HOLDER);

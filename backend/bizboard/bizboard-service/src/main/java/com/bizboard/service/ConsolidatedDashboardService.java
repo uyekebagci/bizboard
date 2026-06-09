@@ -43,7 +43,7 @@ public class ConsolidatedDashboardService {
 
     @Transactional(readOnly = true)
     public ConsolidatedDashboardDto getConsolidated(UUID userId, UUID businessId) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
+        accessGuard.assertCanReadBusiness(userId, businessId);
         // Mevcudiyet kontrolü (404 vs.)
         businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Business not found"));
