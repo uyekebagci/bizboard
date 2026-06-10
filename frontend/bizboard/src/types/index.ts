@@ -1567,3 +1567,126 @@ export interface TaxDeadline {
   /** Bugünden son tarihe kalan gün (negatif → geçmiş). */
   days_until: number;
 }
+
+// ---- Ledger v2 (Faz C): POS kâr-payı + gider/masraf + aylık kâr ----
+
+export type ProfitShareRuleType =
+  | "RATE_SPREAD" | "MARGIN_PCT" | "OWNER_COMMISSION" | "RESIDUAL";
+export type PosDealStatus = "PENDING" | "PROVISIONAL" | "FINALIZED" | "REVERSED";
+
+/** Bir POS deal'in hesaplanan kâr-payı bacağı. */
+export interface PosDealShareLeg {
+  rule_type: ProfitShareRuleType | string;
+  operator_counterpart_id: string | null;
+  operator_name: string | null;
+  target_subcash_account_id: string | null;
+  target_subcash_account_name: string | null;
+  amount: number;
+  provisional: boolean;
+}
+
+export interface PosDeal {
+  id: string;
+  deal_date: string;
+  gross_amount: number;
+  customer_rate: number;
+  pos_device_id: string | null;
+  pos_device_name: string | null;
+  owner_company_name: string | null;
+  bank_rate: number | null;
+  referrer_counterpart_id: string | null;
+  referrer_name: string | null;
+  owner_account_id: string | null;
+  owner_account_name: string | null;
+  settlement_batch_id: string | null;
+  avg_commission_rate: number | null;
+  status: PosDealStatus | string;
+  notes: string | null;
+  shares: PosDealShareLeg[];
+}
+
+export interface PosSettlementBatch {
+  id: string | null;
+  settle_date: string;
+  pos_device_id: string | null;
+  pos_device_name: string | null;
+  gross_total: number;
+  deposited_amount: number | null;
+  avg_commission_rate: number | null;
+  finalized: boolean;
+  deal_count: number;
+  pending_deposit: boolean;
+}
+
+/** Operatör kâr-merkezi READ-ONLY statement (§3.11). */
+export interface OperatorStatementLine {
+  posting_id: string;
+  journal_entry_id: string | null;
+  date: string | null;
+  source_type: string | null;
+  description: string | null;
+  amount: number;     // + = kâr, − = ödeme
+  provisional: boolean;
+}
+
+export interface OperatorStatement {
+  account_id: string;
+  account_name: string;
+  operator_counterpart_id: string | null;
+  operator_name: string | null;
+  total_earned: number;
+  total_paid_out: number;
+  balance: number;
+  provisional_pending: number;
+  lines?: OperatorStatementLine[] | null;
+}
+
+/** Aylık kâr raporu (kategori P&L + operatör kırılımı + gider≠masraf). */
+export interface ProfitCategoryLine {
+  category_id: string | null;
+  category_name: string;
+  amount: number;
+}
+
+export interface ProfitOperatorLine {
+  account_id: string;
+  account_name: string;
+  operator_counterpart_id: string | null;
+  operator_name: string | null;
+  earned: number;
+}
+
+export interface MonthlyProfitReport {
+  year: number;
+  month: number;
+  total_income: number;
+  total_expense: number;   // gider
+  total_cost: number;      // masraf
+  net_profit: number;
+  income_by_category: ProfitCategoryLine[];
+  expense_by_category: ProfitCategoryLine[];
+  cost_by_category: ProfitCategoryLine[];
+  operator_profit: ProfitOperatorLine[];
+  company_residual: number;
+}
+
+export interface ProfitShareRule {
+  id: string;
+  operator_counterpart_id: string | null;
+  operator_name: string | null;
+  target_subcash_account_id: string | null;
+  target_subcash_account_name: string | null;
+  pos_device_id: string | null;
+  pos_device_name: string | null;
+  rule_type: ProfitShareRuleType | string;
+  override_pct: number | null;
+  active: boolean;
+  priority: number;
+  notes: string | null;
+}
+
+export interface ProfitShareConfig {
+  owner_base_pct: number;
+  fatih_margin_pct: number;
+  tuncay_spread_pct: number;
+}

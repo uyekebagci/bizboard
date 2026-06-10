@@ -23,7 +23,7 @@ import {
   LayoutDashboard, Building2, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
-  Search, X, Smartphone, Pin, Landmark, Tags,
+  Search, X, Smartphone, Pin, Landmark, Tags, Sparkles, Lock, PieChart,
 } from "lucide-react";
 import { SidebarBusinessesSection } from "./SidebarBusinessesSection";
 import type { LucideIcon } from "lucide-react";
@@ -74,6 +74,9 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/hesaplar",         label: "Banka Hesaplari", icon: Wallet,        group: "kasa" },
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote,        group: "kasa" },
   { href: "/dashboard/pos-cihazlari",    label: "POS",           icon: CreditCard,      group: "kasa" },
+  { href: "/dashboard/pos-kar",          label: "POS Kar",       icon: Sparkles,        group: "kasa" },
+  { href: "/dashboard/operator-kasalari", label: "Operator Kasalari", icon: Lock,       group: "kasa" },
+  { href: "/dashboard/aylik-kar",        label: "Aylik Kar",     icon: PieChart,        group: "kasa" },
   { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck,   group: "kasa" },
   { href: "/dashboard/gun-kapanisi",     label: "Gun Kapanisi",  icon: CalendarCheck,   group: "kasa" },
   { href: "/dashboard/banka-import",     label: "Banka Import",  icon: Landmark,        group: "kasa" },
