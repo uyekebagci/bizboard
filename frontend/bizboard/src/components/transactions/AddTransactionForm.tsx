@@ -16,7 +16,7 @@
 import { useEffect, useState } from "react";
 import {
   ArrowDownLeft, ArrowUpRight, Calendar, Clock, Tag, FileText,
-  Loader2, CreditCard, Banknote,
+  Loader2, CreditCard, Banknote, Plus,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -28,6 +28,7 @@ import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart, PosDeviceListItem } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { QuickCounterpartModal } from "@/components/counterparts/QuickCounterpartModal";
+import { QuickCategoryModal } from "@/components/transactions/QuickCategoryModal";
 
 export interface AddTransactionFormProps {
   /** İşletme önceden seçili — modal "/business/[id]" pano'sundan açılırken kullanılır. */
@@ -92,7 +93,7 @@ export function AddTransactionForm({
     return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   });
   const [categoryId, setCategoryId] = useState("");
-  const [tags, setTags] = useState("");
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([]);
 
   // WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet
@@ -235,6 +236,11 @@ export function AddTransactionForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!businessId || !amount || !date || !time) return;
+    // Kategori artık ZORUNLU — seçilmeden kayıt yok.
+    if (!categoryId) {
+      setError("Lütfen bir kategori seçin (zorunlu).");
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -248,8 +254,7 @@ export function AddTransactionForm({
         amount: parseMoneyInput(amount),
         description: description || null,
         date,
-        category_id: categoryId || null,
-        tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        category_id: categoryId,
         payment_method: paymentMethod,
         target_counterpart_id: targetCounterpartId || null,
         pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
@@ -298,7 +303,7 @@ export function AddTransactionForm({
               // Beta v1.1: POS komisyon snapshot kaldırıldı
               applied_pos_rate: null,
               applied_our_commission_rate: null,
-              category_id: categoryId || null,
+              category_id: categoryId,
               description: description || null,
               // Beta v1.1 hotfix: alt kasa atamasını da template'a kaydet —
               // hızlı işlem çağrılınca aynı sub-cash'e MANUAL inclusion eklenir.
@@ -591,13 +596,31 @@ export function AddTransactionForm({
         />
       </div>
 
-      {/* Category */}
-      <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">
-          <Tag size={14} className="inline mr-1" /> Kategori
-        </label>
+      {/* Category — ZORUNLU. Form akışında öne çıkarıldı (kalın çerçeveli kart). */}
+      <div
+        className={cn(
+          "rounded-2xl border-2 p-3 transition-colors",
+          categoryId
+            ? "border-brand-500/40 bg-brand-500/5"
+            : "border-amber-500/40 bg-amber-500/5",
+        )}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-semibold text-surface-100">
+            <Tag size={14} className="inline mr-1" /> Kategori <span className="text-red-400">*</span>
+          </label>
+          {businessId && (
+            <button
+              type="button"
+              onClick={() => setShowCreateCategory(true)}
+              className="inline-flex items-center gap-1 text-xs font-medium text-brand-300 hover:text-brand-200"
+            >
+              <Plus size={13} /> Yeni kategori
+            </button>
+          )}
+        </div>
         {isLoadingCat ? (
-          <div className="h-12 bg-surface-700 rounded-xl animate-pulse" />
+          <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
         ) : filteredCategories.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {filteredCategories.map((cat) => (
@@ -606,20 +629,31 @@ export function AddTransactionForm({
                 type="button"
                 onClick={() => setCategoryId(categoryId === cat.id ? "" : cat.id)}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
                   categoryId === cat.id
-                    ? "bg-brand-500/15 border-brand-500/50 text-brand-300"
+                    ? "bg-brand-500/20 border-brand-500/60 text-brand-200"
                     : "bg-surface-700 border-surface-600 text-surface-300 hover:border-surface-300",
                 )}
+                style={
+                  categoryId === cat.id && cat.color
+                    ? { backgroundColor: `${cat.color}22`, borderColor: `${cat.color}88`, color: cat.color }
+                    : undefined
+                }
               >
+                {cat.icon && <span>{cat.icon}</span>}
                 {cat.name}
               </button>
             ))}
           </div>
         ) : businessId ? (
-          <p className="text-xs text-surface-400">Bu yonde kategori bulunamadi</p>
+          <p className="text-xs text-amber-300">
+            Bu yönde kategori yok — &quot;Yeni kategori&quot; ile hemen oluşturun.
+          </p>
         ) : (
-          <p className="text-xs text-surface-400">Once isletme secin</p>
+          <p className="text-xs text-surface-400">Önce işletme seçin</p>
+        )}
+        {!categoryId && businessId && filteredCategories.length > 0 && (
+          <p className="mt-2 text-[11px] text-amber-300">Kayıt için bir kategori seçin.</p>
         )}
       </div>
 
@@ -662,18 +696,6 @@ export function AddTransactionForm({
           placeholder="Islem aciklamasi..."
           rows={2}
           className="field field-sm py-2.5 resize-none"
-        />
-      </div>
-
-      {/* Tags */}
-      <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Etiketler</label>
-        <input
-          type="text"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="Virgul ile ayirin: malzeme, ofis, fatura"
-          className="field field-sm py-2.5"
         />
       </div>
 
@@ -784,7 +806,7 @@ export function AddTransactionForm({
         <button
           type="submit"
           disabled={
-            isSubmitting || !businessId || !amount || success ||
+            isSubmitting || !businessId || !amount || !categoryId || success ||
             // WP e4dc5271: toggle açıkken ad boş ise submit bloklu
             (saveAsQuickAction && !quickActionName.trim())
           }
@@ -822,6 +844,20 @@ export function AddTransactionForm({
           setCounterparts((prev) => [...prev, c]);
           setTargetCounterpartId(c.id);
           setShowCreateCounterpart(false);
+        }}
+      />
+    )}
+
+    {showCreateCategory && (
+      <QuickCategoryModal
+        businessId={businessId}
+        direction={direction}
+        onClose={() => setShowCreateCategory(false)}
+        onCreated={(c) => {
+          // Listeye ekle + otomatik seç (aynı yönde olduğu için filtreye düşer)
+          setCategories((prev) => [...prev, c]);
+          setCategoryId(c.id);
+          setShowCreateCategory(false);
         }}
       />
     )}

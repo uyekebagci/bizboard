@@ -23,7 +23,7 @@ import {
   LayoutDashboard, Building2, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
-  Search, X, Smartphone, Pin, Landmark,
+  Search, X, Smartphone, Pin, Landmark, Tags,
 } from "lucide-react";
 import { SidebarBusinessesSection } from "./SidebarBusinessesSection";
 import type { LucideIcon } from "lucide-react";
@@ -62,6 +62,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/firmalarim",       label: "Firmalarim",    icon: Building2,       group: "genel" },
   { href: "/dashboard/add-transaction",  label: "Islem Ekle",    icon: Receipt,         group: "genel" },
   { href: "/dashboard/transactions",     label: "Islemler",      icon: Receipt,         group: "genel" },
+  { href: "/dashboard/categories",       label: "Kategoriler",   icon: Tags,            group: "genel" },
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3,       group: "genel" },
   { href: "/dashboard/reports",          label: "Raporlar",      icon: BarChart3,       group: "genel" },
   // ── Cari & Borçlar ──

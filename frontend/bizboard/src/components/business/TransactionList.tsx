@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   ArrowDownLeft, ArrowUpRight, Trash2, X, Loader2,
-  AlertTriangle, Calendar, Building2, Tag, FileText, Hash,
+  AlertTriangle, Calendar, Building2, Tag, FileText, Plus,
   Pencil, Save, Paperclip, CreditCard, Banknote, ArrowLeftRight,
 } from "lucide-react";
 import { formatCurrency, formatRelativeDate, cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
@@ -14,6 +14,7 @@ import { toast } from "@/lib/toast";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { TransferDetailModal } from "@/components/transactions/TransferDetailModal";
+import { QuickCategoryModal } from "@/components/transactions/QuickCategoryModal";
 import type { Transaction, Category, FileUploadInfo, PaymentMethod } from "@/types";
 
 interface Props {
@@ -226,7 +227,6 @@ export function TransactionDetailModal({
   const [editAmount, setEditAmount] = useState(String(transaction.amount));
   const [editDescription, setEditDescription] = useState(transaction.description || "");
   const [editDate, setEditDate] = useState(transaction.date);
-  const [editTags, setEditTags] = useState((transaction.tags || []).join(", "));
   const [editPaymentMethod, setEditPaymentMethod] = useState<PaymentMethod>(
     (transaction.payment_method as PaymentMethod) || "NAKIT",
   );
@@ -261,6 +261,7 @@ export function TransactionDetailModal({
   // Categories
   const [categories, setCategories] = useState<Category[]>([]);
   const [editCategoryId, setEditCategoryId] = useState(transaction.category_id || "");
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
 
   // Files
   const [files, setFiles] = useState<FileUploadInfo[]>([]);
@@ -292,14 +293,14 @@ export function TransactionDetailModal({
   }, [transaction.business_id, transaction.id]);
 
   async function handleSave() {
+    // Kategori artık ZORUNLU — seçilmeden güncelleme yok.
+    if (!editCategoryId) {
+      setError("Lütfen bir kategori seçin (zorunlu).");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
-      const tags = editTags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-
       // Beta v1.1: POS komisyon UI kaldırıldı — edit'te eski oranları KORU
       // (backend tarafında migration yok, eski tx'ler değiştirilmesin).
       const isPosExpenseEdit = editPaymentMethod === "POS" && editDirection === "expense";
@@ -308,8 +309,7 @@ export function TransactionDetailModal({
         amount: parseMoneyInput(editAmount),
         description: editDescription || null,
         date: editDate,
-        category_id: editCategoryId || null,
-        tags,
+        category_id: editCategoryId,
         payment_method: editPaymentMethod,
         pos_rate: transaction.pos_rate ?? null,
         our_commission_rate: transaction.applied_our_commission_rate ?? null,
@@ -351,6 +351,7 @@ export function TransactionDetailModal({
   const allFiles = [...files, ...uploadedFiles];
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="modal-surface shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
@@ -376,7 +377,7 @@ export function TransactionDetailModal({
                   <button
                     key={dir}
                     type="button"
-                    onClick={() => setEditDirection(dir)}
+                    onClick={() => { setEditDirection(dir); setEditCategoryId(""); }}
                     className={cn(
                       "flex-1 py-2.5 text-sm font-medium transition-colors",
                       editDirection === dir
@@ -501,21 +502,33 @@ export function TransactionDetailModal({
                 />
               </div>
 
-              {/* Category */}
-              {categories.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Kategori</label>
-                  <DarkSelect
-                    value={editCategoryId}
-                    onChange={setEditCategoryId}
-                    placeholder="Kategorisiz"
-                    searchable={categories.filter((c) => c.direction === editDirection).length > 6}
-                    options={categories
-                      .filter((c) => c.direction === editDirection)
-                      .map((c) => ({ value: c.id, label: c.name }))}
-                  />
-                </div>
-              )}
+              {/* Category — ZORUNLU. Inline hızlı-oluştur destekli. */}
+              <div>
+                <label className="block text-sm font-medium text-surface-200 mb-1">
+                  Kategori <span className="text-red-400">*</span>
+                </label>
+                <DarkSelect
+                  value={editCategoryId}
+                  onChange={setEditCategoryId}
+                  placeholder="Kategori seçin (zorunlu)"
+                  searchable={categories.filter((c) => c.direction === editDirection).length > 6}
+                  options={categories
+                    .filter((c) => c.direction === editDirection)
+                    .map((c) => ({
+                      value: c.id,
+                      label: c.icon ? `${c.icon} ${c.name}` : c.name,
+                    }))}
+                  addOption={{
+                    label: "+ Yeni kategori",
+                    onClick: () => setShowCreateCategory(true),
+                  }}
+                />
+                {!editCategoryId && (
+                  <p className="mt-1 text-[11px] text-amber-300">
+                    Güncelleme için bir kategori seçin.
+                  </p>
+                )}
+              </div>
 
               {/* Description */}
               <div>
@@ -528,20 +541,6 @@ export function TransactionDetailModal({
                              placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                              focus:border-transparent resize-none"
                   placeholder="Aciklama ekleyin..."
-                />
-              </div>
-
-              {/* Tags */}
-              <div>
-                <label className="block text-sm font-medium text-surface-200 mb-1">Etiketler</label>
-                <input
-                  type="text"
-                  value={editTags}
-                  onChange={(e) => setEditTags(e.target.value)}
-                  placeholder="Virgul ile ayirin: fatura, kira, malzeme"
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
-                             placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
-                             focus:border-transparent"
                 />
               </div>
 
@@ -586,7 +585,7 @@ export function TransactionDetailModal({
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving || !editAmount || parseMoneyInput(editAmount) <= 0}
+                  disabled={saving || !editAmount || parseMoneyInput(editAmount) <= 0 || !editCategoryId}
                   className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
                 >
                   {saving ? (
@@ -744,25 +743,6 @@ export function TransactionDetailModal({
                   </div>
                 )}
 
-                {transaction.tags && transaction.tags.length > 0 && (
-                  <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
-                    <Hash size={16} className="text-surface-400 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-surface-400 uppercase tracking-wider">Etiketler</p>
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        {transaction.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-0.5 bg-brand-500/15 text-brand-300 text-xs font-medium rounded-full"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Attached Files */}
                 {allFiles.length > 0 && (
                   <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
@@ -821,6 +801,21 @@ export function TransactionDetailModal({
         </div>
       </div>
     </div>
+
+    {showCreateCategory && (
+      <QuickCategoryModal
+        businessId={transaction.business_id}
+        direction={editDirection}
+        onClose={() => setShowCreateCategory(false)}
+        onCreated={(c) => {
+          // Listeye ekle + otomatik seç (edit yönüyle eşleşir)
+          setCategories((prev) => [...prev, c]);
+          setEditCategoryId(c.id);
+          setShowCreateCategory(false);
+        }}
+      />
+    )}
+    </>
   );
 }
 

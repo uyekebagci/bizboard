@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, ArrowDownLeft, ArrowUpRight, Search, Filter,
-  Calendar, Building2, Tag, Trash2, X, Loader2, AlertTriangle, Pin,
+  Calendar, Building2, Trash2, X, Loader2, AlertTriangle, Pin,
 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
@@ -82,8 +82,7 @@ export default function AllTransactionsPage() {
       const descMatch = tx.description?.toLowerCase().includes(q);
       const catMatch = tx.category?.name?.toLowerCase().includes(q);
       const bizMatch = tx.business_name?.toLowerCase().includes(q);
-      const tagMatch = tx.tags?.some((t) => t.toLowerCase().includes(q));
-      if (!descMatch && !catMatch && !bizMatch && !tagMatch) return false;
+      if (!descMatch && !catMatch && !bizMatch) return false;
     }
     if (filterMonth) {
       const txMonth = tx.date.substring(0, 7); // YYYY-MM
@@ -209,7 +208,7 @@ export default function AllTransactionsPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Islem ara... (aciklama, kategori, etiket)"
+          placeholder="Islem ara... (aciklama, kategori)"
           className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm text-white
                      placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
         />
