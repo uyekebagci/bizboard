@@ -510,6 +510,29 @@ public class PaymentService {
                         + (reason != null ? " (" + reason + ")" : ""),
                 Map.of("instrumentId", inst.getId(),
                         "reason", reason != null ? reason : ""));
+
+        // WP f1fa3cd5: INSTRUMENT_BOUNCED → admin'lere dispatch (in-app + Telegram).
+        List<UUID> admins = userRepository.findByRoleIgnoreCase("admin")
+                .stream().map(User::getId).toList();
+        if (!admins.isEmpty()) {
+            String instrType = inst.getInstrumentType() != null ? inst.getInstrumentType() : "Enstrüman";
+            String cpName = inst.getCounterpart() != null && inst.getCounterpart().getName() != null
+                    ? inst.getCounterpart().getName() : "?";
+            String currency = inst.getCurrency() != null ? inst.getCurrency() : "TRY";
+            String reasonStr = reason != null && !reason.isBlank() ? " (" + reason + ")" : "";
+            dispatchService.dispatch(
+                    NotificationEvent.INSTRUMENT_BOUNCED,
+                    admins,
+                    Map.of(
+                            "counterparty", cpName,
+                            "instrumentType", instrType,
+                            "amount", inst.getAmount().toPlainString(),
+                            "currency", currency,
+                            "reason", reasonStr
+                    ),
+                    "/dashboard/counterparts/" + (inst.getCounterpart() != null ? inst.getCounterpart().getId() : ""),
+                    inst.getBusiness() != null ? inst.getBusiness().getId() : null);
+        }
         return inst;
     }
 

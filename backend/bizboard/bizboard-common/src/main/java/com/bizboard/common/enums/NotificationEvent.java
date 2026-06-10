@@ -43,6 +43,12 @@ public enum NotificationEvent {
     /** WP f1fa3cd5: Bir kullanıcıya firma erişimi verildi. */
     FIRM_ACCESS_GRANTED,
 
+    /** Çek/senet karşılıksız çıktı (bounce). Admin'lere alarm. */
+    INSTRUMENT_BOUNCED,
+
+    /** Günlük kasa kapanışı varyans alarmı (beklenen ≠ gerçekleşen). Admin'lere alarm. */
+    DAY_CLOSE_VARIANCE_ALERT,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

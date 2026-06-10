@@ -68,6 +68,14 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "Doğrulama kodu",
                     "Doğrulama kodunuz: {code}. {ttl} dakika geçerlidir.")),
+            Map.entry(NotificationEvent.INSTRUMENT_BOUNCED, new Template(
+                    NotificationType.ALERT,
+                    "Karşılıksız çek/senet: {counterparty}",
+                    "{counterparty} — {instrumentType} {amount} {currency} karşılıksız çıktı{reason}.")),
+            Map.entry(NotificationEvent.DAY_CLOSE_VARIANCE_ALERT, new Template(
+                    NotificationType.ALERT,
+                    "Kasa varyans alarmı: {business}",
+                    "{business} — {date} günü kasa kapanışında {variance} {currency} fark tespit edildi (beklenen: {expected}, gerçekleşen: {actual}).")),
             Map.entry(NotificationEvent.GENERIC, new Template(
                     NotificationType.INFO,
                     "{title}",
