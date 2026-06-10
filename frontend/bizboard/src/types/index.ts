@@ -629,6 +629,113 @@ export interface CashClosingPreview {
   auto: boolean;
 }
 
+// ---- Ledger v2 (Faz B): DayClose / SAĞLAMA HESAP / kaçak ----
+
+export type DayCloseStatus = "PENDING" | "CLOSED" | "REOPENED";
+export type DayCloseCreatedVia =
+  | "AUTO_CRON" | "TODAY" | "BACKDATED" | "EDIT_APPROVED" | "CHAIN_RECOMPUTE" | "MIGRATED";
+export type DayCloseEditStatus = "PENDING" | "APPROVED" | "APPLIED" | "REJECTED";
+
+export interface DayCloseAccountCount {
+  id?: string;
+  account_id: string;
+  account_name?: string;
+  account_type?: string;
+  counted_balance?: number | null;
+  computed_balance?: number | null;
+  account_variance?: number | null;
+}
+
+export interface DayClose {
+  id: string | null;
+  close_date: string;
+  status: DayCloseStatus | string;
+  opening_balance: number;      // ÖNCEKİ KASA
+  total_in: number;             // TOPLAM GELEN
+  total_out: number;            // TOPLAM GİDEN
+  computed_closing: number;     // OLMASI GEREKEN
+  actual_total: number | null;  // SON KASA
+  variance: number | null;      // ARTI EKSİ KALAN (computed - actual)
+  variance_threshold?: number | null;
+  alarm_fired: boolean;
+  is_backdated: boolean;
+  created_via?: DayCloseCreatedVia | string;
+  reason_category?: string | null;
+  reason_note?: string | null;
+  closed_by?: string | null;
+  closed_at?: string | null;
+  account_counts: DayCloseAccountCount[];
+}
+
+export interface DayCloseDrillDownMovement {
+  posting_id: string;
+  journal_entry_id: string | null;
+  account_id: string | null;
+  account_name: string | null;
+  amount: number;
+  source_type: string | null;
+  description: string | null;
+}
+
+export interface DayCloseDrillDown {
+  close_date: string;
+  opening_balance: number;
+  total_in: number;
+  total_out: number;
+  computed_closing: number;
+  actual_total: number | null;
+  variance: number | null;
+  account_breakdown: DayCloseAccountCount[];
+  movements: DayCloseDrillDownMovement[];
+}
+
+export interface DayCloseEditRequest {
+  id: string;
+  day_close_id: string;
+  close_date: string | null;
+  status: DayCloseEditStatus | string;
+  payload?: Record<string, unknown> | null;
+  before_snapshot?: Record<string, unknown> | null;
+  reason_category?: string | null;
+  reason_note?: string | null;
+  requested_by?: string | null;
+  requested_at?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  applied_at?: string | null;
+  reject_note?: string | null;
+}
+
+// ---- Ledger v2 (Faz B): banka import (manuel satır iskeleti) ----
+
+export type BankImportLineStatus = "PARSED" | "CATEGORIZED" | "POSTED" | "FLAGGED";
+
+export interface BankImportLine {
+  id: string;
+  parsed_date: string | null;
+  parsed_amount: number;
+  parsed_counterpart: string | null;
+  raw_text: string | null;
+  suggested_category_id: string | null;
+  suggested_category_name: string | null;
+  confirmed_category_id: string | null;
+  status: BankImportLineStatus | string;
+  journal_entry_id: string | null;
+}
+
+export interface BankImportBatch {
+  id: string;
+  account_id: string;
+  account_name: string;
+  statement_date: string | null;
+  status: string;
+  line_count: number;
+  matched_count: number;
+  unexplained_count: number;
+  created_at: string | null;
+  lines?: BankImportLine[];
+}
+
 // ---- Debt Models ----
 export type DebtDirection = "RECEIVABLE" | "PAYABLE";
 

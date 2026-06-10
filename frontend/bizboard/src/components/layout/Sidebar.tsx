@@ -75,6 +75,8 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote,        group: "kasa" },
   { href: "/dashboard/pos-cihazlari",    label: "POS",           icon: CreditCard,      group: "kasa" },
   { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck,   group: "kasa" },
+  { href: "/dashboard/gun-kapanisi",     label: "Gun Kapanisi",  icon: CalendarCheck,   group: "kasa" },
+  { href: "/dashboard/banka-import",     label: "Banka Import",  icon: Landmark,        group: "kasa" },
   // ── Operasyon ──
   { href: "/dashboard/inventory",        label: "Envanter",      icon: Package,         group: "operasyon" },
   { href: "/dashboard/documents",        label: "Belgeler",      icon: FolderOpen,      group: "operasyon" },
