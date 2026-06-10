@@ -755,7 +755,7 @@ function AssignmentPicker({
                 tab === "POS_DEVICE"   ? "Ad / banka / sahip ara…" :
                                           "Ad / VKN / telefon ara…"
               }
-              className="w-full pl-7 pr-7 py-1.5 text-xs bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              className="field field-sm py-1.5 pl-7 pr-7 text-xs"
             />
             {query && (
               <button

@@ -165,7 +165,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
                   value={amount}
                   onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                   required
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-900 text-xl font-bold text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="field field-sm py-2.5 text-xl font-bold"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 font-medium text-sm">
                   TRY
@@ -181,7 +181,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-900 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="field field-sm py-2"
               />
             </div>
             <div>
@@ -194,7 +194,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Opsiyonel"
                 maxLength={255}
-                className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-900 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="field field-sm py-2"
               />
             </div>
           </div>

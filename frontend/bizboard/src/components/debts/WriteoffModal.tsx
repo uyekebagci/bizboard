@@ -189,7 +189,7 @@ export function WriteoffModal({
                     onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                     placeholder="0"
                     disabled={!selectedDebt}
-                    className="w-full px-3 py-3 rounded-xl border border-surface-600 bg-surface-900 text-xl font-bold text-white placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-rose-500 disabled:opacity-50"
+                    className="field field-error py-3 text-xl font-bold disabled:opacity-50"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">
                     TRY
@@ -215,7 +215,7 @@ export function WriteoffModal({
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="İskonto anlaşması, mutabakat, hatalı kayıt..."
                   maxLength={500}
-                  className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-900 text-white text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
+                  className="field field-sm field-error py-2.5"
                 />
               </div>
 

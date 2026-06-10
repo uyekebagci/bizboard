@@ -262,7 +262,7 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Ara..."
-                  className="w-full pl-8 pr-3 py-2 rounded-lg bg-surface-800 border border-surface-700 text-sm text-white placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className="field field-sm py-2 pl-8 pr-3"
                 />
               </div>
             </div>

@@ -202,7 +202,7 @@ export function BankAccountCreateForm({
               : type === "CASH_HOLDER" ? "Ör. Okan (Eldeki)"
               : "Ör. Garanti Vakif"
           }
-          className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+          className="field field-sm py-2"
           required
           autoFocus={type !== "CASH_HOLDER"}
         />
@@ -218,7 +218,7 @@ export function BankAccountCreateForm({
               value={bankName}
               onChange={(e) => setBankName(e.target.value)}
               placeholder="Ör. Garanti BBVA"
-              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              className="field field-sm py-2"
             />
           </div>
           <div>
@@ -228,7 +228,7 @@ export function BankAccountCreateForm({
               value={iban}
               onChange={(e) => setIban(e.target.value)}
               placeholder="TR..."
-              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50 font-mono"
+              className="field field-sm py-2 font-mono"
             />
           </div>
         </>
@@ -247,7 +247,7 @@ export function BankAccountCreateForm({
               value={holderName}
               onChange={(e) => setHolderName(e.target.value)}
               placeholder="Ör. Okan"
-              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              className="field field-sm py-2"
               required
               autoFocus
               maxLength={200}
@@ -265,7 +265,7 @@ export function BankAccountCreateForm({
               value={holderPhone}
               onChange={(e) => setHolderPhone(e.target.value)}
               placeholder="+90 5__ ___ __ __"
-              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+              className="field field-sm py-2"
               maxLength={20}
             />
           </div>
@@ -278,7 +278,7 @@ export function BankAccountCreateForm({
               onChange={(e) => setHolderNotes(e.target.value)}
               placeholder="Kısa açıklama (örn. saha şefi, eldeki avans)"
               rows={2}
-              className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50 resize-none"
+              className="field field-sm py-2 resize-none"
             />
           </div>
         </>
@@ -315,7 +315,7 @@ export function BankAccountCreateForm({
           value={openingBalance}
           onChange={(e) => setOpeningBalance(formatMoneyInput(e.target.value))}
           placeholder="0"
-          className="w-full px-3 py-2 text-sm bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+          className="field field-sm py-2"
         />
       </div>
 

@@ -223,7 +223,7 @@ export function ClosureQuickAddModal({
                     value={amount}
                     onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                     placeholder="0"
-                    className="w-full px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-900 text-lg font-bold text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="field field-sm py-2.5 text-lg font-bold"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">TRY</span>
                 </div>
