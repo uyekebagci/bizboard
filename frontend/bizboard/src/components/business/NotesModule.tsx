@@ -149,20 +149,20 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
                 {/* Pin badge */}
                 {note.is_pinned && (
                   <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center">
-                    <Pin size={10} className="text-white" />
+                    <Pin size={10} className="text-surface-100" />
                   </div>
                 )}
 
                 {/* Admin only badge */}
                 {note.admin_only && isAdmin && (
                   <div className="absolute -top-1.5 -left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 rounded-full">
-                    <EyeOff size={9} className="text-white" />
-                    <span className="text-[9px] text-white font-medium">Gizli</span>
+                    <EyeOff size={9} className="text-surface-100" />
+                    <span className="text-[9px] text-surface-100 font-medium">Gizli</span>
                   </div>
                 )}
 
                 {/* Content */}
-                <p className="text-sm text-white whitespace-pre-wrap break-words leading-relaxed">
+                <p className="text-sm text-surface-100 whitespace-pre-wrap break-words leading-relaxed">
                   {note.content}
                 </p>
 
@@ -246,7 +246,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="glass-card shadow-xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-surface-100 mb-2">
               Notu Sil
             </h3>
             <p className="text-surface-300 text-sm mb-1">

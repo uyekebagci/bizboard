@@ -37,7 +37,7 @@ export default function ExpenseFormPage() {
           </button>
           <div className="flex items-center gap-2 min-w-0">
             <ArrowUpRight size={20} className="text-rose-300 shrink-0" />
-            <h1 className="text-xl font-bold text-white truncate">Yeni Gider</h1>
+            <h1 className="text-xl font-bold text-surface-100 truncate">Yeni Gider</h1>
           </div>
         </div>
         <Link

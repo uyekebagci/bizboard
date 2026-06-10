@@ -242,7 +242,7 @@ function ModuleManagerModal({
             <div className="w-8 h-8 rounded-lg bg-brand-500/15 flex items-center justify-center">
               <Plus size={16} className="text-brand-400" />
             </div>
-            <h3 className="text-lg font-bold text-white">Modul Yonetimi</h3>
+            <h3 className="text-lg font-bold text-surface-100">Modul Yonetimi</h3>
           </div>
           <button onClick={handleClose} className="p-2 rounded-xl hover:bg-surface-700">
             <X size={20} className="text-surface-400" />

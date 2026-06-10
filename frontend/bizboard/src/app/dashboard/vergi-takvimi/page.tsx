@@ -111,7 +111,7 @@ export default function VergiTakvimiPage() {
             <Landmark size={20} className="text-brand-300" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white h-display">Vergi Takvimi</h1>
+            <h1 className="text-xl font-bold text-surface-100 h-display">Vergi Takvimi</h1>
             <p className="text-xs text-surface-400">TR vergi son tarihleri (GİB takvimi)</p>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function VergiTakvimiPage() {
       <section className="grid grid-cols-3 gap-3">
         <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Kayıt</p>
-          <p className="mt-1 text-lg font-bold text-white">{list.length}</p>
+          <p className="mt-1 text-lg font-bold text-surface-100">{list.length}</p>
         </div>
         <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Yaklaşan (≤7g)</p>
@@ -131,7 +131,7 @@ export default function VergiTakvimiPage() {
         </div>
         <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">İlk Son Tarih</p>
-          <p className="mt-1 text-sm font-semibold text-white truncate">
+          <p className="mt-1 text-sm font-semibold text-surface-100 truncate">
             {nextDeadline ? formatTrDate(nextDeadline.due_date) : "—"}
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function VergiTakvimiPage() {
               "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
               days === d
                 ? "bg-brand-500/20 border-brand-400 text-brand-200"
-                : "bg-surface-700 border-surface-600 text-surface-300 hover:text-white",
+                : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
             )}
           >
             {d} gün
@@ -191,7 +191,7 @@ export default function VergiTakvimiPage() {
                     <ReceiptText size={16} className={theme.text} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{d.label}</p>
+                    <p className="text-sm font-semibold text-surface-100 truncate">{d.label}</p>
                     <p className="text-xs text-surface-400 truncate">{d.description}</p>
                     <p className="mt-1 text-xs text-surface-300">
                       <span className="num">{formatTrDate(d.due_date)}</span>

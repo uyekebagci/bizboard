@@ -56,7 +56,7 @@ export default function RecurringPage() {
         </button>
         <div className="flex items-center gap-2.5">
           <RefreshCw size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-white">Recurring Tx Jeneratoru</h1>
+          <h1 className="text-2xl font-bold text-surface-100">Recurring Tx Jeneratoru</h1>
         </div>
       </div>
 
@@ -122,7 +122,7 @@ function Stat({ label, value, positive }: { label: string; value: number; positi
   return (
     <div>
       <p className="text-[10px] text-surface-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-white"}`}>
+      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-surface-100"}`}>
         {value}
       </p>
     </div>

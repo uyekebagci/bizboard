@@ -87,14 +87,14 @@ export default function BusinessDetailPage() {
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl text-surface-300 hover:text-white hover:bg-surface-700 transition-colors shrink-0"
+            className="p-2 -ml-2 rounded-xl text-surface-300 hover:text-surface-100 hover:bg-surface-700 transition-colors shrink-0"
             aria-label="Geri"
             title="Geri"
           >
             <ArrowLeft size={20} />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold text-white truncate leading-tight">
+            <h1 className="text-lg font-bold text-surface-100 truncate leading-tight">
               {business.name}
             </h1>
             <p className="text-[11px] text-surface-400 flex items-center gap-1.5 mt-0.5">
@@ -135,11 +135,11 @@ export default function BusinessDetailPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="glass-card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-surface-100 mb-2">
               Isletmeyi Sil
             </h3>
             <p className="text-sm text-surface-400 mb-4">
-              <strong className="text-white">{business.name}</strong> isletmesini
+              <strong className="text-surface-100">{business.name}</strong> isletmesini
               silmek istediginden emin misin? Bu islem geri alinamaz. Bagli
               kayitlar (islemler, sabit giderler, personel, vb.) var ise silme
               reddedilebilir.
@@ -261,7 +261,7 @@ function RecentTransactionsSection({
   return (
     <section className="glass-card overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-bold h-display text-white">Son İşlemler</h2>
+        <h2 className="text-sm font-bold h-display text-surface-100">Son İşlemler</h2>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -308,7 +308,7 @@ function RecentTransactionsSection({
           onClick={() => setPaymentFilter("ALL")}
           className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
             paymentFilter === "ALL"
-              ? "bg-surface-600 border-surface-500 text-white"
+              ? "bg-surface-600 border-surface-500 text-surface-100"
               : "bg-surface-700 border-surface-600 text-surface-300"
           }`}
         >

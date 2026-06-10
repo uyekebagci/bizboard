@@ -131,7 +131,7 @@ export default function AllTransactionsPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold h-display text-white">Tum Islemler</h1>
+            <h1 className="text-xl font-bold h-display text-surface-100">Tum Islemler</h1>
             <p className="text-xs text-surface-400">{filtered.length} islem</p>
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function AllTransactionsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Islem ara... (aciklama, kategori)"
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm text-white
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm text-surface-100
                      placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
         />
       </div>
@@ -240,7 +240,7 @@ export default function AllTransactionsPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filterDirection === opt.key
                   ? "seg-active font-semibold"
-                  : "text-surface-400 hover:text-white"
+                  : "text-surface-400 hover:text-surface-100"
               }`}
             >
               {opt.label}
@@ -298,7 +298,7 @@ export default function AllTransactionsPage() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
+                  <p className="text-sm font-medium text-surface-100 truncate">
                     {tx.description || tx.category?.name || "Islem"}
                   </p>
                   <p className="text-xs text-surface-400 mt-0.5">
@@ -409,7 +409,7 @@ function DeleteModal({
             <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />
             </div>
-            <h3 className="text-lg font-bold text-white">Islemi Sil</h3>
+            <h3 className="text-lg font-bold text-surface-100">Islemi Sil</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
             <X size={20} className="text-surface-400" />
@@ -420,7 +420,7 @@ function DeleteModal({
           <div className="bg-surface-700 rounded-xl p-3 mb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-surface-100">
                   {transaction.description || transaction.category?.name || "Islem"}
                 </p>
                 <p className="text-xs text-surface-400 mt-0.5">
@@ -457,7 +457,7 @@ function DeleteModal({
             placeholder="Bu islemi neden siliyorsunuz? (zorunlu)"
             rows={3}
             autoFocus
-            className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+            className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                        placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-red-500
                        focus:border-transparent transition-all resize-none"
           />

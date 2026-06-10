@@ -135,7 +135,7 @@ export function BankAccountsCard({
             <div className="min-w-0 flex items-center gap-2">
               <TypeBadge type={a.type} />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">{a.name}</p>
+                <p className="text-sm font-medium text-surface-100 truncate">{a.name}</p>
                 <p className="text-[11px] text-surface-400 truncate">
                   {a.type === "CASH_HOLDER" && a.holder_name
                     ? `Kişide: ${a.holder_name}`
@@ -143,7 +143,7 @@ export function BankAccountsCard({
                 </p>
               </div>
             </div>
-            <p className="text-sm font-semibold text-white shrink-0">
+            <p className="text-sm font-semibold text-surface-100 shrink-0">
               {formatCurrency(a.balance, a.currency || "TRY")}
             </p>
           </div>
@@ -206,7 +206,7 @@ export function BankAccountsCard({
                   <div className="min-w-0 flex-1 flex items-center gap-2">
                     <TypeBadge type={a.type} />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{a.name}</p>
+                      <p className="text-sm font-medium text-surface-100 truncate">{a.name}</p>
                       <p className="text-[11px] text-surface-400 truncate">
                         {a.type === "CASH_HOLDER" && a.holder_name
                           ? `Kişide: ${a.holder_name}`
@@ -215,7 +215,7 @@ export function BankAccountsCard({
                       </p>
                     </div>
                   </div>
-                  <p className="text-sm font-semibold text-white shrink-0">
+                  <p className="text-sm font-semibold text-surface-100 shrink-0">
                     {formatCurrency(a.balance, a.currency || "TRY")}
                   </p>
                   <ChevronRight size={14} className="text-surface-400" />
@@ -225,7 +225,7 @@ export function BankAccountsCard({
           </div>
           <div className="mt-4 pt-3 border-t border-surface-700 flex items-center justify-between text-sm">
             <span className="text-surface-300">Toplam</span>
-            <span className="font-bold text-white">{formatCurrency(total, "TRY")}</span>
+            <span className="font-bold text-surface-100">{formatCurrency(total, "TRY")}</span>
           </div>
         </>
       )}

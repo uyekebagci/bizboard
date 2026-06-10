@@ -27,7 +27,7 @@ export function UpcomingRemindersCard({ d }: { d: ConsolidatedDashboard }) {
         {list.slice(0, 8).map((r) => (
           <div key={r.debt_id} className="px-4 py-2">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-white truncate">{r.counterpart_name}</p>
+              <p className="text-sm font-medium text-surface-100 truncate">{r.counterpart_name}</p>
               <p className="text-sm font-semibold text-amber-300 shrink-0">
                 {formatCurrency(r.amount, "TRY")}
               </p>

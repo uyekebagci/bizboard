@@ -142,7 +142,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
           <div className="min-w-0 flex items-center gap-2">
             <Rewind size={16} className="text-blue-400 shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-white truncate">
+              <h3 className="text-sm font-semibold text-surface-100 truncate">
                 Geri Dönük İşlem Ekle — {subCashName}
               </h3>
               <p className="text-[10px] text-surface-400">
@@ -165,7 +165,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="w-full px-2 py-1.5 rounded-lg bg-surface-900 border border-surface-600 text-white text-xs"
+                className="w-full px-2 py-1.5 rounded-lg bg-surface-900 border border-surface-600 text-surface-100 text-xs"
               />
             </div>
             <div className="flex-1">
@@ -174,7 +174,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="w-full px-2 py-1.5 rounded-lg bg-surface-900 border border-surface-600 text-white text-xs"
+                className="w-full px-2 py-1.5 rounded-lg bg-surface-900 border border-surface-600 text-surface-100 text-xs"
               />
             </div>
           </div>
@@ -185,7 +185,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Açıklama, karşı taraf, POS cihazı..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-900 border border-surface-600 rounded-lg text-white placeholder:text-surface-500"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-900 border border-surface-600 rounded-lg text-surface-100 placeholder:text-surface-500"
             />
           </div>
         </div>
@@ -257,7 +257,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
                         className="cursor-pointer"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">
+                        <p className="text-sm text-surface-100 truncate">
                           {t.description || (isIncome ? "Gelir" : "Gider")}
                           <span className="ml-2 text-[10px] text-surface-400">
                             · {new Date(t.date).toLocaleDateString("tr-TR")}

@@ -113,7 +113,7 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
         className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <ShieldCheck size={16} className="text-indigo-300" />
             Erişim Yönet — {firm.legal_name}
           </h3>
@@ -212,7 +212,7 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
            onClick={() => setConfirmClear(false)}>
         <div onClick={(e) => e.stopPropagation()}
              className="glass-card !border-red-500/30 max-w-sm w-full p-5">
-          <h4 className="text-base font-semibold text-white mb-2">Tüm erişimleri temizle</h4>
+          <h4 className="text-base font-semibold text-surface-100 mb-2">Tüm erişimleri temizle</h4>
           <p className="text-sm text-surface-300 mb-4">
             <strong>{firm.legal_name}</strong> firmasının {access.length} kullanıcı erişimi tamamen
             kaldırılacak. Bu işlem geri alınamaz. Sadece adminler firmaya erişebilir.
@@ -314,7 +314,7 @@ function AddUsersSubmodal({
       <div onClick={(e) => e.stopPropagation()}
            className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl">
         <div className="modal-header">
-          <h4 className="text-base font-semibold text-white flex items-center gap-2">
+          <h4 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <Users size={16} className="text-brand-300" /> Kullanıcı Ekle
           </h4>
           <button onClick={onClose}

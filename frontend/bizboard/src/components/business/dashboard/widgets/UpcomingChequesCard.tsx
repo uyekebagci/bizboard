@@ -28,7 +28,7 @@ export function UpcomingChequesCard({ d }: { d: ConsolidatedDashboard }) {
         {list.slice(0, 8).map((c) => (
           <div key={c.debt_id} className="px-4 py-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">{c.counterpart_name}</p>
+              <p className="text-sm font-medium text-surface-100 truncate">{c.counterpart_name}</p>
               <p className="text-[11px] text-surface-400">
                 Vade {new Date(c.cheque_due_date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
                 {" · "}{c.days_to_due >= 0 ? `${c.days_to_due} gün` : `${Math.abs(c.days_to_due)} gün geçti`}

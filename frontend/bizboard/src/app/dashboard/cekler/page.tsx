@@ -86,7 +86,7 @@ export default function ChequesPage() {
             <FileText size={20} className="text-purple-300" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Çekler</h1>
+            <h1 className="text-xl font-bold text-surface-100">Çekler</h1>
             <p className="text-xs text-surface-400">Yaklaşan vadeler (açık çekler)</p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function ChequesPage() {
         </div>
         <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Kayıt</p>
-          <p className="mt-1 text-lg font-bold text-white">{list.length}</p>
+          <p className="mt-1 text-lg font-bold text-surface-100">{list.length}</p>
         </div>
         <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Vadesi Geçen</p>
@@ -172,7 +172,7 @@ export default function ChequesPage() {
               )}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-surface-100 truncate">
                       {c.counterparty}
                     </p>
                     {isOverdue && (

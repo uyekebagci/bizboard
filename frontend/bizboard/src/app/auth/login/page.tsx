@@ -92,7 +92,7 @@ function LoginForm() {
     <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 bg-surface-50">
       <div className="mb-8 text-center">
         <div className="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
-          <span className="text-white font-bold text-2xl">C</span>
+          <span className="text-surface-100 font-bold text-2xl">C</span>
         </div>
         <h1 className="text-2xl font-bold text-surface-900">Tekrar Hosgeldiniz</h1>
         <p className="text-surface-500 mt-1">CATI hesabiniza giris yapin</p>

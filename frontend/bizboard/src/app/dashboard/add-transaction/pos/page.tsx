@@ -38,7 +38,7 @@ export default function PosFormPage() {
           </button>
           <div className="flex items-center gap-2 min-w-0">
             <CreditCard size={20} className="text-blue-300 shrink-0" />
-            <h1 className="text-xl font-bold text-white truncate">POS Tahsilat</h1>
+            <h1 className="text-xl font-bold text-surface-100 truncate">POS Tahsilat</h1>
           </div>
         </div>
         <Link

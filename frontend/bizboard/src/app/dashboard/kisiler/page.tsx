@@ -51,7 +51,7 @@ export default function KisilerPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">Kişiler</h1>
+            <h1 className="text-xl font-bold text-surface-100">Kişiler</h1>
             <p className="text-xs text-surface-400">Gerçek kişi karşı tarafları (TCKN bazlı)</p>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function KisilerPage() {
                 <div className="flex items-center gap-2 min-w-0">
                   <CircleUserRound size={18} className="text-surface-400 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{p.name}</p>
+                    <p className="text-sm font-medium text-surface-100 truncate">{p.name}</p>
                     <p className="text-[11px] text-surface-400 truncate">
                       {p.contact_phone || p.tax_id || "—"}
                     </p>

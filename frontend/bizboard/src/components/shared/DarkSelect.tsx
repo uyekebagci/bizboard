@@ -210,8 +210,8 @@ export function DarkSelect({
           disabled
             ? "border-surface-700 text-surface-500 cursor-not-allowed opacity-60"
             : open
-              ? "border-brand-500/60 text-white"
-              : "border-surface-600 text-white hover:border-surface-500",
+              ? "border-brand-500/60 text-surface-100"
+              : "border-surface-600 text-surface-100 hover:border-surface-500",
         )}
       >
         <span className={cn("truncate flex-1", !selected && "text-surface-400")}>
@@ -257,7 +257,7 @@ export function DarkSelect({
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setHighlight(addOption ? 0 : 0); }}
                   placeholder="Ara…"
-                  className="w-full pl-7 pr-2 py-1.5 rounded-lg bg-surface-700/50 border border-surface-600 text-xs text-white placeholder:text-surface-400 focus:outline-none focus:border-brand-500"
+                  className="w-full pl-7 pr-2 py-1.5 rounded-lg bg-surface-700/50 border border-surface-600 text-xs text-surface-100 placeholder:text-surface-400 focus:outline-none focus:border-brand-500"
                 />
               </div>
             </div>
@@ -328,7 +328,7 @@ export function DarkSelect({
                       isHigh && !o.disabled
                         ? "bg-brand-500/15 text-brand-200"
                         : isSelected
-                          ? "text-white bg-surface-700/40"
+                          ? "text-surface-100 bg-surface-700/40"
                           : "text-surface-200 hover:bg-surface-700/40",
                     )}
                   >

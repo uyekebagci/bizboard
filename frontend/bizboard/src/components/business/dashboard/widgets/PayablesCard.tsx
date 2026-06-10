@@ -47,7 +47,7 @@ export function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
               soon && "bg-amber-500/5",
             )}>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">{p.counterpart_name}</p>
+                <p className="text-sm font-medium text-surface-100 truncate">{p.counterpart_name}</p>
                 <p className="text-[11px] text-surface-400">
                   {p.instrument_type || "—"}
                   {p.due_date && (
@@ -93,7 +93,7 @@ export function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
               )}
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-white">{p.counterpart_name}</p>
+                <p className="text-sm font-medium text-surface-100">{p.counterpart_name}</p>
                 <p className="text-[11px] text-surface-400">
                   {p.instrument_type || "—"}
                   {p.due_date && (

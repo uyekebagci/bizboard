@@ -56,7 +56,7 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
         type="button"
         {...attributes}
         {...listeners}
-        className="absolute top-2 left-2 p-1 rounded-md text-surface-500 hover:text-white hover:bg-surface-700 transition-colors cursor-grab active:cursor-grabbing"
+        className="absolute top-2 left-2 p-1 rounded-md text-surface-500 hover:text-surface-100 hover:bg-surface-700 transition-colors cursor-grab active:cursor-grabbing"
         aria-label="Surukle"
         onClick={(e) => e.stopPropagation()}
       >
@@ -89,7 +89,7 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
               <LayoutGrid size={20} style={{ color }} />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-white text-sm leading-tight truncate">
+              <h3 className="font-semibold text-surface-100 text-sm leading-tight truncate">
                 {business.name}
               </h3>
               <p className="text-[11px] text-surface-400 capitalize truncate">
@@ -135,7 +135,7 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
           </div>
           <p className={cn(
             "num text-base font-bold",
-            netProfit > 0 ? "text-emerald-300" : netProfit < 0 ? "text-rose-300" : "text-white"
+            netProfit > 0 ? "text-emerald-300" : netProfit < 0 ? "text-rose-300" : "text-surface-100"
           )}>
             {formatCurrency(netProfit, business.currency)}
           </p>

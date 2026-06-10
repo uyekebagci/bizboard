@@ -106,7 +106,7 @@ export function WriteoffModal({
           <div className="min-w-0 flex items-center gap-2">
             <Scissors size={18} className="text-rose-400 shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-white truncate">
+              <h3 className="text-sm font-semibold text-surface-100 truncate">
                 Borç Sil — {counterpartName}
               </h3>
               <p className="text-[10px] text-rose-300/80">
@@ -157,7 +157,7 @@ export function WriteoffModal({
                         className="mt-0.5"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-surface-100">
                           {formatCurrency(d.remaining_amount, "TRY")}
                           {d.remaining_amount !== d.original_amount && (
                             <span className="ml-2 text-[10px] text-surface-400">
@@ -277,13 +277,13 @@ export function WriteoffModal({
             onClick={(e) => e.stopPropagation()}
             className="glass-card !border-rose-500/40 max-w-sm w-full p-5"
           >
-            <h4 className="text-base font-semibold text-white mb-2 flex items-center gap-2">
+            <h4 className="text-base font-semibold text-surface-100 mb-2 flex items-center gap-2">
               <AlertTriangle size={18} className="text-rose-400" />
               Onayla: Borç Silme
             </h4>
             <p className="text-sm text-surface-300 mb-3">
               <strong className="text-rose-300">{formatCurrency(parsedAmount, "TRY")}</strong>
-              {" "}tutarındaki borç <strong className="text-white">{counterpartName}</strong>{" "}
+              {" "}tutarındaki borç <strong className="text-surface-100">{counterpartName}</strong>{" "}
               alacağından silinecek.
             </p>
             <p className="text-[11px] text-surface-400 mb-4">

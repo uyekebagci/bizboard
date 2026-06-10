@@ -28,7 +28,7 @@ export function CashOutflowsTodayCard({ d }: { d: ConsolidatedDashboard }) {
         {list.slice(0, 10).map((t) => (
           <div key={t.tx_id} className="px-4 py-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm text-white truncate">
+              <p className="text-sm text-surface-100 truncate">
                 {t.description || t.category_name || "Harcama"}
               </p>
               <p className="text-[11px] text-surface-400 truncate">

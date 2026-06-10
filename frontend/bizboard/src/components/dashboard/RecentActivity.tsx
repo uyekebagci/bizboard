@@ -99,7 +99,7 @@ export function RecentActivity() {
           />
           <div className="relative bg-surface-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up z-10">
             <div className="modal-header">
-              <h3 className="text-lg font-bold text-white">Son Islemler</h3>
+              <h3 className="text-lg font-bold text-surface-100">Son Islemler</h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="p-2 rounded-xl hover:bg-surface-600 transition-colors"
@@ -158,7 +158,7 @@ function TransactionRow({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">
+        <p className="text-sm font-medium text-surface-100 truncate">
           {/* Beta v1.1: POS komisyon UI kaldırıldı — POS satırı da normal
               description/kategori formatı kullanır. */}
           {tx.description || tx.category?.name || (isPos ? "POS İşlemi" : "Islem")}

@@ -384,7 +384,7 @@ export function CounterpartDebtModal({
             type="submit"
             disabled={submitting || !businessId || !counterpartId || !amount}
             className={cn(
-              "flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2",
+              "flex-1 py-2.5 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2",
               "transition-all duration-150 active:translate-y-0 hover:-translate-y-px",
               "disabled:opacity-50 disabled:pointer-events-none",
               isReceivable

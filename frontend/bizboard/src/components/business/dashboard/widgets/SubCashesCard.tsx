@@ -128,7 +128,7 @@ export function SubCashesCard({
               return (
                 <div key={s.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-white truncate">{s.name}</p>
+                    <p className="text-sm font-medium text-surface-100 truncate">{s.name}</p>
                     {/* v1.7.x WP TODO 46aca4d0: Bu Ay Gelir alt satırı */}
                     {inc != null && (
                       <p className="text-[10px] text-surface-400 mt-0.5">
@@ -225,7 +225,7 @@ export function SubCashesCard({
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{s.name}</p>
+                      <p className="text-sm font-medium text-surface-100 truncate">{s.name}</p>
                       <p className="text-[11px] text-surface-400">
                         Alt Kasa · {s.currency}
                       </p>

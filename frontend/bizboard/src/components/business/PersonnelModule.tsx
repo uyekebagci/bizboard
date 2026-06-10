@@ -163,7 +163,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className={`text-sm font-medium truncate ${
-                    emp.is_active ? "text-white" : "text-surface-400 line-through"
+                    emp.is_active ? "text-surface-100" : "text-surface-400 line-through"
                   }`}>
                     {emp.full_name}
                   </p>
@@ -180,7 +180,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
               </div>
 
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-surface-100">
                   {formatMoney(emp.total_cost)} {currency}
                 </p>
                 <p className="text-[10px] text-surface-400">
@@ -269,7 +269,7 @@ function EmployeeDetailModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white">Personel Detayi</h3>
+          <h3 className="text-lg font-semibold text-surface-100">Personel Detayi</h3>
           <button onClick={onClose} className="modal-close">
             <X size={18} className="text-surface-400" />
           </button>
@@ -324,7 +324,7 @@ function EmployeeDetailModal({
                 <CreditCard size={16} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">TC Kimlik No</p>
-                  <p className="text-sm text-white font-medium">{employee.tc_no}</p>
+                  <p className="text-sm text-surface-100 font-medium">{employee.tc_no}</p>
                 </div>
               </div>
             )}
@@ -334,7 +334,7 @@ function EmployeeDetailModal({
                 <Phone size={16} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Telefon</p>
-                  <p className="text-sm text-white font-medium">{employee.phone}</p>
+                  <p className="text-sm text-surface-100 font-medium">{employee.phone}</p>
                 </div>
               </div>
             )}
@@ -344,7 +344,7 @@ function EmployeeDetailModal({
                 <Calendar size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ise Baslama</p>
-                  <p className="text-sm text-white font-medium">
+                  <p className="text-sm text-surface-100 font-medium">
                     {formatDate(employee.start_date)}
                   </p>
                 </div>
@@ -353,7 +353,7 @@ function EmployeeDetailModal({
                 <Calendar size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Isten Ayrilis</p>
-                  <p className="text-sm text-white font-medium">
+                  <p className="text-sm text-surface-100 font-medium">
                     {employee.end_date ? formatDate(employee.end_date) : "Devam Ediyor"}
                   </p>
                 </div>
@@ -365,7 +365,7 @@ function EmployeeDetailModal({
                 <Briefcase size={16} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Notlar</p>
-                  <p className="text-sm text-white">{employee.notes}</p>
+                  <p className="text-sm text-surface-100">{employee.notes}</p>
                 </div>
               </div>
             )}
@@ -466,7 +466,7 @@ function CreateEmployeeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-lg font-bold text-surface-100">
             {isEdit ? "Personel Duzenle" : "Yeni Personel"}
           </h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-700">
@@ -485,7 +485,7 @@ function CreateEmployeeModal({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Personel adi"
-              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all"
             />
@@ -501,7 +501,7 @@ function CreateEmployeeModal({
               value={position}
               onChange={(e) => setPosition(e.target.value)}
               placeholder="Ornegin: Muhasebeci, Sofor, vb."
-              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all"
             />
@@ -519,7 +519,7 @@ function CreateEmployeeModal({
                 value={salary}
                 onChange={(e) => setSalary(formatMoneyInput(e.target.value))}
                 placeholder="0"
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                            placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                            focus:border-transparent transition-all"
               />
@@ -534,7 +534,7 @@ function CreateEmployeeModal({
                 value={insuranceCost}
                 onChange={(e) => setInsuranceCost(formatMoneyInput(e.target.value))}
                 placeholder="0"
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                            placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                            focus:border-transparent transition-all"
               />
@@ -553,7 +553,7 @@ function CreateEmployeeModal({
                 onChange={(e) => setTcNo(e.target.value)}
                 placeholder="TC No"
                 maxLength={11}
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                            placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                            focus:border-transparent transition-all"
               />
@@ -567,7 +567,7 @@ function CreateEmployeeModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="05XX XXX XXXX"
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                            placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                            focus:border-transparent transition-all"
               />
@@ -584,7 +584,7 @@ function CreateEmployeeModal({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                            focus:outline-none focus:ring-2 focus:ring-brand-500
                            focus:border-transparent transition-all"
               />
@@ -597,7 +597,7 @@ function CreateEmployeeModal({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+                className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                            focus:outline-none focus:ring-2 focus:ring-brand-500
                            focus:border-transparent transition-all"
               />
@@ -614,7 +614,7 @@ function CreateEmployeeModal({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ek bilgiler, notlar..."
               rows={2}
-              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all resize-none"
             />
@@ -691,7 +691,7 @@ function DeleteEmployeeModal({
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />
             </div>
-            <h3 className="text-lg font-bold text-white">Personeli Sil</h3>
+            <h3 className="text-lg font-bold text-surface-100">Personeli Sil</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-700">
             <X size={20} className="text-surface-400" />
@@ -700,7 +700,7 @@ function DeleteEmployeeModal({
 
         <div className="p-4">
           <div className="bg-surface-700 rounded-xl p-3 mb-4">
-            <p className="text-sm font-medium text-white">{employee.full_name}</p>
+            <p className="text-sm font-medium text-surface-100">{employee.full_name}</p>
             <p className="text-xs text-surface-400 mt-0.5">
               {employee.position || "Pozisyon belirtilmemis"} · Toplam Maliyet: {formatMoney(employee.total_cost)} TL
             </p>

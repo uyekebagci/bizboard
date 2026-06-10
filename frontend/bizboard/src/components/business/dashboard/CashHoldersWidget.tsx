@@ -81,7 +81,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
               <Wallet size={14} className="text-amber-300" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white">
+              <h2 className="text-sm font-semibold text-surface-100">
                 Elde Tutulan Nakitler
               </h2>
               <p className="text-[10px] text-surface-400">
@@ -127,7 +127,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
                     <div className="flex items-center gap-2 min-w-0">
                       <UserCircle2 size={16} className="text-amber-300 shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-sm text-white truncate">{display}</p>
+                        <p className="text-sm text-surface-100 truncate">{display}</p>
                         {it.holder_name && it.holder_name !== it.name && (
                           <p className="text-[10px] text-surface-500 truncate">{it.name}</p>
                         )}
@@ -181,7 +181,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
           >
             <div className="p-4 border-b border-surface-700 flex items-center gap-2">
               <UserCircle2 size={16} className="text-amber-300" />
-              <h3 className="text-sm font-semibold text-white">
+              <h3 className="text-sm font-semibold text-surface-100">
                 Kişide Nakit Ekle
                 {businessName && (
                   <span className="text-surface-400 font-normal"> · {businessName}</span>

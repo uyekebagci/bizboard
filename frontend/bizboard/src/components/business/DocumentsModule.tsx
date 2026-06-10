@@ -139,7 +139,7 @@ export function DocumentsModule({ businessId }: Props) {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-surface-100 truncate">
                       {file.original_name}
                     </p>
                     {file.admin_only && isAdmin && (
@@ -190,7 +190,7 @@ export function DocumentsModule({ businessId }: Props) {
       {deleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="glass-card shadow-xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">Belgeyi Sil</h3>
+            <h3 className="text-lg font-semibold text-surface-100 mb-2">Belgeyi Sil</h3>
             <p className="text-surface-300 text-sm mb-1">Bu belgeyi silmek istediginize emin misiniz?</p>
             <p className="text-surface-400 text-xs mb-6 truncate">&quot;{deleteConfirm.original_name}&quot;</p>
             <div className="flex gap-3">
@@ -235,7 +235,7 @@ function FileDetailModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white truncate pr-4">
+          <h3 className="text-lg font-semibold text-surface-100 truncate pr-4">
             Belge Detayi
           </h3>
           <button
@@ -271,7 +271,7 @@ function FileDetailModal({
               <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-[10px] text-surface-400 uppercase tracking-wider">Dosya Adi</p>
-                <p className="text-sm text-white font-medium break-all">{file.original_name}</p>
+                <p className="text-sm text-surface-100 font-medium break-all">{file.original_name}</p>
               </div>
             </div>
 
@@ -281,7 +281,7 @@ function FileDetailModal({
                 <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Aciklama</p>
-                  <p className="text-sm text-white">{file.description}</p>
+                  <p className="text-sm text-surface-100">{file.description}</p>
                 </div>
               </div>
             )}
@@ -290,11 +290,11 @@ function FileDetailModal({
             <div className="grid grid-cols-2 gap-2">
               <div className="p-3 bg-surface-700 rounded-xl">
                 <p className="text-[10px] text-surface-400 uppercase tracking-wider">Boyut</p>
-                <p className="text-sm text-white font-medium">{formatSize(file.size)}</p>
+                <p className="text-sm text-surface-100 font-medium">{formatSize(file.size)}</p>
               </div>
               <div className="p-3 bg-surface-700 rounded-xl">
                 <p className="text-[10px] text-surface-400 uppercase tracking-wider">Tip</p>
-                <p className="text-sm text-white font-medium">{file.category}</p>
+                <p className="text-sm text-surface-100 font-medium">{file.category}</p>
               </div>
             </div>
 
@@ -304,7 +304,7 @@ function FileDetailModal({
                 <Building2 size={16} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Isletme</p>
-                  <p className="text-sm text-white font-medium">{file.business_name}</p>
+                  <p className="text-sm text-surface-100 font-medium">{file.business_name}</p>
                 </div>
               </div>
             )}
@@ -315,14 +315,14 @@ function FileDetailModal({
                 <User size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Yukleyen</p>
-                  <p className="text-sm text-white">{file.uploaded_by_name || "-"}</p>
+                  <p className="text-sm text-surface-100">{file.uploaded_by_name || "-"}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                 <Calendar size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Tarih</p>
-                  <p className="text-sm text-white">{formatDate(file.created_at)}</p>
+                  <p className="text-sm text-surface-100">{formatDate(file.created_at)}</p>
                 </div>
               </div>
             </div>

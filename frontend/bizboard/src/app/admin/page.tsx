@@ -99,7 +99,7 @@ export default function AdminPage() {
         </button>
         <div className="flex items-center gap-2.5">
           <Shield size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-white">Admin Paneli</h1>
+          <h1 className="text-2xl font-bold text-surface-100">Admin Paneli</h1>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
           <div className="flex items-center gap-2.5">
             <Users size={20} className="text-amber-400" />
-            <h2 className="text-lg font-semibold text-white">Kullanicilar</h2>
+            <h2 className="text-lg font-semibold text-surface-100">Kullanicilar</h2>
             <span className="ml-1 text-sm text-surface-400">
               ({users.length})
             </span>
@@ -190,7 +190,7 @@ export default function AdminPage() {
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-white text-sm truncate">
+                      <p className="font-semibold text-surface-100 text-sm truncate">
                         {user.full_name}
                       </p>
                       {!user.is_active && (
@@ -281,11 +281,11 @@ export default function AdminPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="glass-card p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-surface-100 mb-2">
               Kullaniciyi Sil
             </h3>
             <p className="text-surface-400 text-sm mb-6">
-              <span className="text-white font-medium">
+              <span className="text-surface-100 font-medium">
                 {deleteConfirm.full_name}
               </span>{" "}
               adli kullaniciyi silmek istediginize emin misiniz? Bu islem geri
@@ -294,7 +294,7 @@ export default function AdminPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 bg-surface-600 hover:bg-surface-600 text-white rounded-xl text-sm font-medium transition-colors"
+                className="flex-1 px-4 py-2.5 bg-surface-600 hover:bg-surface-600 text-surface-100 rounded-xl text-sm font-medium transition-colors"
               >
                 Iptal
               </button>
@@ -381,7 +381,7 @@ function CreateUserModal({
       <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-surface-100">
             Yeni Kullanici Olustur
           </h3>
           <button
@@ -409,7 +409,7 @@ function CreateUserModal({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
               placeholder="Ornek: Ahmet Yilmaz"
             />
           </div>
@@ -423,7 +423,7 @@ function CreateUserModal({
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
               placeholder="ornek: ahmet"
             />
           </div>
@@ -438,7 +438,7 @@ function CreateUserModal({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
                 placeholder="En az 6 karakter"
               />
               <button
@@ -598,7 +598,7 @@ function EditUserModal({
       <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-surface-100">
             Kullaniciyi Duzenle
           </h3>
           <button
@@ -639,7 +639,7 @@ function EditUserModal({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
             />
           </div>
 
@@ -654,7 +654,7 @@ function EditUserModal({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
                 placeholder="Degistirmek icin girin"
               />
               <button

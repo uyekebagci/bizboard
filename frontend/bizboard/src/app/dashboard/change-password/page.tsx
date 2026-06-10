@@ -79,7 +79,7 @@ export default function ChangePasswordPage() {
         <div className="w-16 h-16 rounded-2xl bg-green-500/15 flex items-center justify-center mb-4">
           <ShieldCheck size={36} className="text-green-300" />
         </div>
-        <h1 className="text-xl font-bold text-white mb-1">Sifre Degistirildi</h1>
+        <h1 className="text-xl font-bold text-surface-100 mb-1">Sifre Degistirildi</h1>
         <p className="text-surface-400 text-sm">
           Guvenlik icin yeniden giris yapmaniz gerekiyor...
         </p>
@@ -91,9 +91,9 @@ export default function ChangePasswordPage() {
     <div className="max-w-md mx-auto p-6">
       <div className="mb-6 text-center">
         <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-3">
-          <Lock size={20} className="text-white" />
+          <Lock size={20} className="text-surface-100" />
         </div>
-        <h1 className="text-xl font-bold text-white">Sifre Degistir</h1>
+        <h1 className="text-xl font-bold text-surface-100">Sifre Degistir</h1>
         <p className="text-surface-400 text-sm mt-1">
           Guvenlik icin yeni bir sifre belirleyin
         </p>

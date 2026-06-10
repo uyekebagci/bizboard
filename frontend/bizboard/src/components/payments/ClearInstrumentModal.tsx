@@ -75,7 +75,7 @@ export function ClearInstrumentModal({ instrument, onClose, onSuccess }: Props) 
         onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-md shadow-xl">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <Check size={16} className="text-emerald-300" />
             {isCheque ? "Çek" : "Senet"} Tahsil
           </h3>

@@ -54,7 +54,7 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
       <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-md shadow-xl">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <AlertTriangle size={16} className="text-red-300" />
             {isCheque ? "Çek" : "Senet"} Karşılıksız İşaretle
           </h3>

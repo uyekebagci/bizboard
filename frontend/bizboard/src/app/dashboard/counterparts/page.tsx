@@ -194,7 +194,7 @@ export default function CounterpartsPage() {
               <Icon size={18} />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-white text-sm leading-tight truncate">
+              <h3 className="font-semibold text-surface-100 text-sm leading-tight truncate">
                 {c.name}
               </h3>
               <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -265,7 +265,7 @@ export default function CounterpartsPage() {
               <ArrowLeft size={20} className="text-surface-300" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">Karsi Firmalar</h1>
+              <h1 className="text-2xl font-bold text-surface-100">Karsi Firmalar</h1>
               <p className="text-surface-400 mt-1 text-sm">
                 Musteri, tedarikci ve diger dis paydaslarin cari hesabi
               </p>
@@ -335,7 +335,7 @@ export default function CounterpartsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Isim veya vergi no ara..."
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-white placeholder-surface-400 text-sm focus:outline-none focus:border-brand-500"
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-surface-100 placeholder-surface-400 text-sm focus:outline-none focus:border-brand-500"
             />
           </div>
           {/* v1.7.x: business filter (sadece >1 business varsa) */}
@@ -491,11 +491,11 @@ export default function CounterpartsPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-surface-100 mb-2">
               Karsi Firmayi Sil
             </h3>
             <p className="text-sm text-surface-400 mb-6">
-              <strong className="text-white">{deleteConfirm.name}</strong> kaydini
+              <strong className="text-surface-100">{deleteConfirm.name}</strong> kaydini
               silmek istediginden emin misin? Bagli borc varsa silme reddedilir.
             </p>
             <div className="flex justify-end gap-3">
@@ -595,7 +595,7 @@ function CounterpartFormModal({
         className="card p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <h3 className="text-lg font-semibold text-surface-100">{title}</h3>
           <button
             type="button"
             onClick={onClose}
@@ -750,7 +750,7 @@ function CounterpartFormModal({
 }
 
 const inputClass =
-  "w-full px-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-white text-sm placeholder-surface-400 focus:outline-none focus:border-brand-500 transition-colors";
+  "w-full px-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-surface-100 text-sm placeholder-surface-400 focus:outline-none focus:border-brand-500 transition-colors";
 
 function Field({
   label,

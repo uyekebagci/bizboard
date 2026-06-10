@@ -131,7 +131,7 @@ export function FinanceModule({ businessId, currency }: Props) {
             style={{ width: `${incomePctBar}%` }}
           >
             {incomePctBar > 20 && (
-              <span className="text-white text-[10px] font-bold">{incomePctBar.toFixed(0)}%</span>
+              <span className="text-surface-100 text-[10px] font-bold">{incomePctBar.toFixed(0)}%</span>
             )}
           </div>
           <div
@@ -139,7 +139,7 @@ export function FinanceModule({ businessId, currency }: Props) {
             style={{ width: `${100 - incomePctBar}%` }}
           >
             {(100 - incomePctBar) > 20 && (
-              <span className="text-white text-[10px] font-bold">{(100 - incomePctBar).toFixed(0)}%</span>
+              <span className="text-surface-100 text-[10px] font-bold">{(100 - incomePctBar).toFixed(0)}%</span>
             )}
           </div>
         </div>
@@ -199,7 +199,7 @@ export function FinanceModule({ businessId, currency }: Props) {
                 <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
                   {/* Tooltip */}
                   <div className="absolute bottom-full mb-1 hidden group-hover:block z-10">
-                    <div className="bg-surface-900 text-white rounded-lg p-2 text-[9px] shadow-xl whitespace-nowrap border border-surface-700">
+                    <div className="bg-surface-900 text-surface-100 rounded-lg p-2 text-[9px] shadow-xl whitespace-nowrap border border-surface-700">
                       <p className="font-bold">{MONTH_LABELS[m.month]} {m.year}</p>
                       <p className="text-green-400">Gelir: {formatCurrency(m.income, currency)}</p>
                       <p className="text-red-400">Gider: {formatCurrency(m.expense, currency)}</p>
@@ -283,7 +283,7 @@ export function FinanceModule({ businessId, currency }: Props) {
           </div>
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-700">
             <span className="text-xs font-medium text-surface-400">Toplam</span>
-            <span className="text-sm font-bold text-white">{formatCurrency(fixedCosts.total_monthly_cost, currency)}</span>
+            <span className="text-sm font-bold text-surface-100">{formatCurrency(fixedCosts.total_monthly_cost, currency)}</span>
           </div>
         </div>
       )}
@@ -307,7 +307,7 @@ export function FinanceModule({ businessId, currency }: Props) {
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-white truncate">
+                    <p className="text-xs font-medium text-surface-100 truncate">
                       {tx.description || tx.category?.name || (isIncome ? "Gelir" : "Gider")}
                     </p>
                     <p className="text-[10px] text-surface-400">
@@ -338,7 +338,7 @@ export function FinanceModule({ businessId, currency }: Props) {
             <BarChart3 size={20} className="text-brand-400" />
           </div>
           <div className="text-left">
-            <p className="text-sm font-semibold text-white group-hover:text-brand-400 transition-colors">
+            <p className="text-sm font-semibold text-surface-100 group-hover:text-brand-400 transition-colors">
               Detayli Finans Analizi
             </p>
             <p className="text-[10px] text-surface-400">

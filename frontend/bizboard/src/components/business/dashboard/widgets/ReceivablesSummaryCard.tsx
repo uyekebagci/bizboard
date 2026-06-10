@@ -93,7 +93,7 @@ export function ReceivablesSummaryCard({ d }: { d: ConsolidatedDashboard }) {
                   {t.type === "UNSPECIFIED" ? "Belirtilmemiş" : t.type}
                   <span className="ml-2 text-surface-500">({t.count} kayıt)</span>
                 </span>
-                <span className="font-mono text-white">{formatCurrency(t.amount, "TRY")}</span>
+                <span className="font-mono text-surface-100">{formatCurrency(t.amount, "TRY")}</span>
               </div>
             ))}
           </div>

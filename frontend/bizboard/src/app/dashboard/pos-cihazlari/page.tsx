@@ -131,7 +131,7 @@ export default function PosCihazlariPage() {
               <CreditCard size={20} className="text-indigo-300" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">POS Cihazlari</h1>
+              <h1 className="text-xl font-bold text-surface-100">POS Cihazlari</h1>
               <p className="text-xs text-surface-400">
                 Tum POS cihaz islemleri + komisyon + trend
               </p>
@@ -194,7 +194,7 @@ export default function PosCihazlariPage() {
               <div className="flex items-center gap-2 text-[11px] text-surface-400 uppercase tracking-wider">
                 <TrendingUp size={12} /> Toplam
               </div>
-              <p className="mt-1 text-lg font-bold text-white">
+              <p className="mt-1 text-lg font-bold text-surface-100">
                 {formatCurrency(totalGross, "TRY")}
               </p>
             </div>
@@ -259,13 +259,13 @@ export default function PosCihazlariPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-white">{s.business_name}</p>
+                      <p className="font-medium text-surface-100">{s.business_name}</p>
                       <p className="text-xs text-surface-400 mt-0.5">
                         {s.transaction_count} islem · ort. %{s.weighted_avg_rate.toFixed(2)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-sm font-semibold text-surface-100">
                         {formatCurrency(s.total_gross, s.currency)}
                       </p>
                       <p className="text-[11px] text-surface-400">
@@ -303,7 +303,7 @@ export default function PosCihazlariPage() {
                           })}
                         </p>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-surface-100">
                             {formatCurrency(dayGross, rows[0]?.currency || "TRY")}
                           </p>
                           <p className="text-[10px] text-emerald-300">
@@ -315,7 +315,7 @@ export default function PosCihazlariPage() {
                         {rows.map((r) => (
                           <div key={r.transaction_id} className="px-4 py-2.5 flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm text-white truncate">
+                              <p className="text-sm text-surface-100 truncate">
                                 {r.description || r.business_name}
                               </p>
                               <p className="text-[11px] text-surface-400">
@@ -323,7 +323,7 @@ export default function PosCihazlariPage() {
                               </p>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-sm font-semibold text-white">
+                              <p className="text-sm font-semibold text-surface-100">
                                 {formatCurrency(r.amount, r.currency)}
                               </p>
                               <p className="text-[10px] text-surface-400">
@@ -364,7 +364,7 @@ function PosTrendChart({
     <section className="glass-card p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold text-white">POS Hacmi (30 gün)</h2>
+          <h2 className="text-sm font-bold text-surface-100">POS Hacmi (30 gün)</h2>
           <p className="text-[11px] text-surface-400">
             Brüt <span className="text-emerald-300">{formatCurrency(t.gross, "TRY")}</span>
             {" · "}
@@ -393,7 +393,7 @@ function PosTrendChart({
           return (
             <div key={i} className="flex-1 flex flex-col items-center group relative min-w-0">
               <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
-                <div className="bg-surface-800 text-white rounded-lg p-2 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
+                <div className="bg-surface-800 text-surface-100 rounded-lg p-2 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
                   <p className="font-bold mb-0.5">
                     {new Date(s.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
                   </p>
@@ -522,7 +522,7 @@ function PendingSettlementsCard() {
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between bg-amber-500/5">
         <div className="flex items-center gap-2">
           <Receipt size={14} className="text-amber-400" />
-          <h2 className="text-sm font-semibold text-white">Bekleyen POS Tahsilatları</h2>
+          <h2 className="text-sm font-semibold text-surface-100">Bekleyen POS Tahsilatları</h2>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
             {items.length} işlem · {formatCurrency(totalNet, "TRY")} net
           </span>
@@ -568,7 +568,7 @@ function PendingSettlementsCard() {
                 className="cursor-pointer"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white truncate">
+                <p className="text-sm text-surface-100 truncate">
                   {t.description || "POS çekim"}
                   {t.pos_device_name && (
                     <span className="ml-2 text-surface-400 text-xs">· {t.pos_device_name}</span>
@@ -699,7 +699,7 @@ function BulkSettleModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-md">
         <div className="p-4 border-b border-surface-700">
-          <h3 className="text-base font-semibold text-white">
+          <h3 className="text-base font-semibold text-surface-100">
             Toplu Settle ({txIds.length} işlem · {formatCurrency(totalNet, "TRY")} net)
           </h3>
           <p className="text-xs text-surface-400 mt-1">
@@ -740,7 +740,7 @@ function BulkSettleModal({
               type="datetime-local"
               value={settledAt}
               onChange={(e) => setSettledAt(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm"
             />
           </div>
         </div>
@@ -776,7 +776,7 @@ function RegisteredDevicesCard({ devices }: { devices: PosDeviceListItem[] }) {
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CreditCard size={14} className="text-indigo-300" />
-          <h2 className="text-sm font-semibold text-white">Kayıtlı POS Cihazları</h2>
+          <h2 className="text-sm font-semibold text-surface-100">Kayıtlı POS Cihazları</h2>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
             {active.length} aktif{inactive.length > 0 ? ` · ${inactive.length} pasif` : ""}
           </span>
@@ -793,7 +793,7 @@ function RegisteredDevicesCard({ devices }: { devices: PosDeviceListItem[] }) {
             )}
           >
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-surface-100 truncate">
                 {d.name}
                 {!d.is_active && (
                   <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-surface-700 text-surface-400">

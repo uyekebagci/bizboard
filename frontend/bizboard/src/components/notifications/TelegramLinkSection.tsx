@@ -70,7 +70,7 @@ export function TelegramLinkSection() {
           <Send size={18} className="text-sky-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-white">Telegram Bildirimleri</h3>
+          <h3 className="text-sm font-bold text-surface-100">Telegram Bildirimleri</h3>
           <p className="text-[11px] text-surface-400">Bildirimleri Telegram'dan da alın.</p>
         </div>
         {status.linked && (
@@ -96,7 +96,7 @@ export function TelegramLinkSection() {
             <span className="text-surface-200"> /start {code.code}</span> yazın.
           </p>
           <div className="flex items-center gap-2">
-            <code className="num flex-1 text-center text-lg font-bold tracking-widest text-white bg-surface-800/60 border border-surface-600 rounded-xl py-2">
+            <code className="num flex-1 text-center text-lg font-bold tracking-widest text-surface-100 bg-surface-800/60 border border-surface-600 rounded-xl py-2">
               {code.code}
             </code>
             <button
@@ -118,7 +118,7 @@ export function TelegramLinkSection() {
           </a>
           <button
             onClick={() => void loadStatus()}
-            className="w-full text-[11px] text-surface-400 hover:text-white"
+            className="w-full text-[11px] text-surface-400 hover:text-surface-100"
           >
             Bağladım, durumu yenile
           </button>

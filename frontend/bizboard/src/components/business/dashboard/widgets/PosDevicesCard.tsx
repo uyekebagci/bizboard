@@ -55,7 +55,7 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
         {devs.map((dev) => (
           <div key={dev.device_id} className="px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">{dev.device_name}</p>
+              <p className="text-sm font-medium text-surface-100 truncate">{dev.device_name}</p>
               <p className="text-[11px] text-surface-400">{dev.tx_count} çekim
                 {dev.unsettled_count > 0 && (
                   <span className="ml-1.5 text-amber-300">· {dev.unsettled_count} hesaba düşmedi</span>
@@ -64,7 +64,7 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
             </div>
             <div className="text-right shrink-0">
               {/* Beta v1.1: sadece günlük hacim — komisyon/kâr satırı kaldırıldı. */}
-              <p className="text-sm font-semibold text-white">{formatCurrency(dev.today_gross, "TRY")}</p>
+              <p className="text-sm font-semibold text-surface-100">{formatCurrency(dev.today_gross, "TRY")}</p>
             </div>
           </div>
         ))}
@@ -147,7 +147,7 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-white">{dev.device_name}</p>
+                    <p className="text-sm font-medium text-surface-100">{dev.device_name}</p>
                     <p className="text-[11px] text-surface-400 mt-0.5">
                       {dev.tx_count} bugünkü çekim
                       {dev.unsettled_count > 0 && (
@@ -156,7 +156,7 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold text-white">{formatCurrency(dev.today_gross, "TRY")} brüt</p>
+                    <p className="text-sm font-semibold text-surface-100">{formatCurrency(dev.today_gross, "TRY")} brüt</p>
                     <p className="text-[10px] text-emerald-300">{formatCurrency(dev.today_net, "TRY")} net</p>
                   </div>
                   <ChevronRight size={14} className="text-surface-400" />

@@ -99,7 +99,7 @@ export function QuickActionsWidget({ businessId }: Props) {
       <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap size={14} className="text-amber-400" />
-          <h2 className="text-sm font-semibold text-white">Hızlı İşlemler</h2>
+          <h2 className="text-sm font-semibold text-surface-100">Hızlı İşlemler</h2>
           {items.length > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
               {items.length}/12
@@ -249,7 +249,7 @@ function QuickActionCard({
       <div className="flex items-start gap-2 mb-2">
         <Icon size={16} className={style.iconClass} />
       </div>
-      <p className="text-xs font-semibold text-white truncate" title={qa.name}>
+      <p className="text-xs font-semibold text-surface-100 truncate" title={qa.name}>
         {qa.name}
       </p>
       <p className={cn("text-sm font-bold mt-0.5", style.amountClass)}>

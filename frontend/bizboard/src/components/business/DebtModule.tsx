@@ -191,7 +191,7 @@ export function DebtModule({ businessId, currency }: Props) {
                 onClick={() => setFilter(f.key)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   filter === f.key
-                    ? "bg-surface-800 text-white shadow-sm"
+                    ? "bg-surface-800 text-surface-100 shadow-sm"
                     : "text-surface-400 hover:text-surface-200"
                 }`}
               >
@@ -251,7 +251,7 @@ export function DebtModule({ businessId, currency }: Props) {
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-white text-sm truncate">
+                      <p className="font-semibold text-surface-100 text-sm truncate">
                         {debt.counterparty}
                       </p>
                       {debt.is_settled && (
@@ -406,7 +406,7 @@ function ConfirmModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl p-6 max-w-sm w-full">
-        <h3 className="text-lg font-semibold text-white mb-2">
+        <h3 className="text-lg font-semibold text-surface-100 mb-2">
           {title}
         </h3>
         <p className="text-surface-300 text-sm mb-6">{message}</p>
@@ -419,7 +419,7 @@ function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2.5 text-white rounded-xl text-sm font-medium transition-colors ${
+            className={`flex-1 px-4 py-2.5 text-surface-100 rounded-xl text-sm font-medium transition-colors ${
               confirmColor === "red"
                 ? "bg-red-600 hover:bg-red-500"
                 : "bg-emerald-600 hover:bg-emerald-500"
@@ -561,7 +561,7 @@ function CreateDebtModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-surface-100">
             Yeni Borc / Alacak
           </h3>
           <button

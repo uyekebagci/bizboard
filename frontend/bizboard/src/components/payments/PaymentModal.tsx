@@ -226,7 +226,7 @@ export function PaymentModal({
         className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             {isReceived ? <ArrowDownLeft size={16} className="text-emerald-300" />
                         : <ArrowUpRight size={16} className="text-red-300" />}
             {isReceived ? "Ödeme Al" : "Ödeme Yap"}
@@ -426,7 +426,7 @@ export function PaymentModal({
                           type="text" inputMode="numeric"
                           value={allocations[d.id] || ""}
                           onChange={(e) => setAllocAmount(d.id, e.target.value)}
-                          className="w-24 px-2 py-1 rounded border border-surface-600 bg-surface-800 text-white text-xs text-right"
+                          className="w-24 px-2 py-1 rounded border border-surface-600 bg-surface-800 text-surface-100 text-xs text-right"
                         />
                       )}
                     </div>
@@ -463,7 +463,7 @@ export function PaymentModal({
           </button>
           <button type="submit"
             disabled={submitting || !parsedAmount || parsedAmount <= 0 || allocMismatch}
-            className={cn("flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
+            className={cn("flex-1 py-2.5 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
               isReceived ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700")}>
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
             {isReceived ? "Tahsil Et" : "Öde"}

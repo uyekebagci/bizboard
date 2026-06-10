@@ -85,7 +85,7 @@ export default function DebtMigrationPage() {
         </button>
         <div className="flex items-center gap-2.5">
           <GitMerge size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-white">Borc Counterpart Migration</h1>
+          <h1 className="text-2xl font-bold text-surface-100">Borc Counterpart Migration</h1>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ export default function DebtMigrationPage() {
             className="w-4 h-4 rounded accent-amber-500"
           />
           <div>
-            <span className="text-sm text-white font-medium">Auto-create</span>
+            <span className="text-sm text-surface-100 font-medium">Auto-create</span>
             <p className="text-xs text-surface-400">
               Eslesme bulunamayan isimleri yeni Counterpart olarak yarat (rol=OTHER).
               Kapaliyken bu kayitlar atlanir (skipped).
@@ -134,7 +134,7 @@ export default function DebtMigrationPage() {
         <button
           onClick={runDry}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-white text-sm font-semibold disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-100 text-sm font-semibold disabled:opacity-50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Info size={16} />}
           Dry-run (test)
@@ -163,7 +163,7 @@ export default function DebtMigrationPage() {
       {confirmApply && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="glass-card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-surface-100 mb-2">
               Migration'i Calistir
             </h3>
             <p className="text-sm text-surface-400 mb-2">
@@ -203,7 +203,7 @@ function ResultPanel({
   const baseClass =
     variant === "success"
       ? "bg-green-900/20 border-green-800/40 text-green-200"
-      : "bg-surface-900 border-surface-700 text-white";
+      : "bg-surface-900 border-surface-700 text-surface-100";
 
   return (
     <div className={`p-5 border rounded-xl ${baseClass}`}>
@@ -236,7 +236,7 @@ function Stat({ label, value, positive }: { label: string; value: number; positi
   return (
     <div>
       <p className="text-[10px] text-surface-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-white"}`}>
+      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-surface-100"}`}>
         {value}
       </p>
     </div>

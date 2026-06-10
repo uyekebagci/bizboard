@@ -213,7 +213,7 @@ export default function QuickActionsManagePage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white inline-flex items-center gap-2">
+            <h1 className="text-xl font-bold text-surface-100 inline-flex items-center gap-2">
               <Zap size={18} className="text-amber-400" />
               Hızlı İşlemler
             </h1>
@@ -227,7 +227,7 @@ export default function QuickActionsManagePage() {
             onClick={() => setView("list")}
             className={cn(
               "p-1.5 rounded-lg transition-colors",
-              view === "list" ? "bg-surface-500 text-white" : "text-surface-400 hover:text-white",
+              view === "list" ? "bg-surface-500 text-surface-100" : "text-surface-400 hover:text-surface-100",
             )}
             title="Liste"
           >
@@ -237,7 +237,7 @@ export default function QuickActionsManagePage() {
             onClick={() => setView("grid")}
             className={cn(
               "p-1.5 rounded-lg transition-colors",
-              view === "grid" ? "bg-surface-500 text-white" : "text-surface-400 hover:text-white",
+              view === "grid" ? "bg-surface-500 text-surface-100" : "text-surface-400 hover:text-surface-100",
             )}
             title="Grid"
           >
@@ -289,7 +289,7 @@ export default function QuickActionsManagePage() {
                 "px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
                 typeFilter === f.key
                   ? "bg-brand-600 border-brand-500 text-white"
-                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-white",
+                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
               )}
             >
               {f.label}
@@ -415,7 +415,7 @@ function ListView({
             <GripVertical size={14} className="text-surface-500 cursor-move shrink-0" />
             <Icon size={14} className={cn("shrink-0", style.iconClass)} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{qa.name}</p>
+              <p className="text-sm font-medium text-surface-100 truncate">{qa.name}</p>
               <p className="text-[11px] text-surface-400 truncate">
                 {summaryBadge(tpl)}
                 {qa.last_used_at && (
@@ -518,7 +518,7 @@ function GridView({
                 onDelete={() => onDelete(qa)}
               />
             </div>
-            <p className="text-xs font-semibold text-white truncate" title={qa.name}>{qa.name}</p>
+            <p className="text-xs font-semibold text-surface-100 truncate" title={qa.name}>{qa.name}</p>
             <p className={cn("text-base font-bold mt-0.5", style.amountClass)}>
               {tpl.amount != null ? formatCurrency(tpl.amount, "TRY") : "—"}
             </p>

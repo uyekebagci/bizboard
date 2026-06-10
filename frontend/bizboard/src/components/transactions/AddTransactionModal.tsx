@@ -88,13 +88,13 @@ export function AddTransactionModal({
         className="glass-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700 shrink-0">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <Receipt size={16} className="text-brand-400" />
             Yeni İşlem
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-white"
+            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100"
             aria-label="Kapat"
           >
             <X size={16} />

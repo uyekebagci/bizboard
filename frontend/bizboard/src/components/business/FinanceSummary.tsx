@@ -28,7 +28,7 @@ export function FinanceSummary({ summary, currency }: Props) {
             </div>
           </div>
           <p className="text-[11px] text-surface-400 font-medium uppercase tracking-wide">Gelir</p>
-          <p className="num text-base font-bold text-white mt-0.5 truncate">
+          <p className="num text-base font-bold text-surface-100 mt-0.5 truncate">
             {formatCurrency(income, currency)}
           </p>
         </div>
@@ -40,7 +40,7 @@ export function FinanceSummary({ summary, currency }: Props) {
             </div>
           </div>
           <p className="text-[11px] text-surface-400 font-medium uppercase tracking-wide">Gider</p>
-          <p className="num text-base font-bold text-white mt-0.5 truncate">
+          <p className="num text-base font-bold text-surface-100 mt-0.5 truncate">
             {formatCurrency(totalExpense, currency)}
           </p>
           {fixedCost > 0 && (
@@ -62,7 +62,7 @@ export function FinanceSummary({ summary, currency }: Props) {
           <p className="text-[11px] text-surface-400 font-medium uppercase tracking-wide">Kar</p>
           <p className={cn(
             "num text-base font-bold mt-0.5 truncate",
-            profit >= 0 ? "text-white" : "text-rose-300"
+            profit >= 0 ? "text-surface-100" : "text-rose-300"
           )}>
             {formatCurrency(profit, currency)}
           </p>

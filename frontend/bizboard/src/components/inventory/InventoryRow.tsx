@@ -24,7 +24,7 @@ export function InventoryRow({ item, onClick, showBusiness }: { item: InventoryI
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-white truncate">{item.name}</p>
+          <p className="text-sm font-medium text-surface-100 truncate">{item.name}</p>
           <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium border", statusCfg.bg, statusCfg.color)}>
             {statusCfg.label}
           </span>

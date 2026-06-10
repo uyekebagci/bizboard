@@ -79,7 +79,7 @@ export function BusinessGroupCard({
           {priorityIcon(group.priority) && (
             <span className="text-sm leading-none">{priorityIcon(group.priority)}</span>
           )}
-          <h3 className="font-semibold text-white text-sm truncate">{group.name}</h3>
+          <h3 className="font-semibold text-surface-100 text-sm truncate">{group.name}</h3>
           {isPinned && (
             <span className={cn("text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border", colorCls.chipBg, colorCls.chipText)}>
               PINNED

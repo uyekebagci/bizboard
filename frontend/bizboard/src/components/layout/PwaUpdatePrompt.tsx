@@ -81,10 +81,10 @@ export function PwaUpdatePrompt() {
     >
       <div className="bg-surface-800 border border-surface-600 shadow-card-hover rounded-2xl px-4 py-3 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0">
-          <RefreshCw size={18} className="text-white" />
+          <RefreshCw size={18} className="text-surface-100" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white">Yeni surum hazir</p>
+          <p className="text-sm font-semibold text-surface-100">Yeni surum hazir</p>
           <p className="text-xs text-surface-300">
             Yenilemek icin sayfayi tekrar yukleyin.
           </p>

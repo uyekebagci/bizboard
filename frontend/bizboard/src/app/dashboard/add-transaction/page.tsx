@@ -81,11 +81,11 @@ export default function AddTransactionChooserPage() {
         >
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
-        <h1 className="text-xl font-bold text-white">Yeni İşlem</h1>
+        <h1 className="text-xl font-bold text-surface-100">Yeni İşlem</h1>
       </div>
 
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-surface-100">
           Hangi İşlemi Yapmak İstiyorsunuz?
         </h2>
         <p className="text-sm text-surface-400">

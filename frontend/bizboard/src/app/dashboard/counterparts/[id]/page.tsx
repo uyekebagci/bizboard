@@ -160,10 +160,10 @@ export default function CounterpartDetailPage() {
         <button onClick={() => router.back()}
           className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600"
           title="Geri">
-          <ChevronLeft size={20} className="text-white" />
+          <ChevronLeft size={20} className="text-surface-100" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-white truncate">{cp.name}</h1>
+          <h1 className="text-xl font-bold text-surface-100 truncate">{cp.name}</h1>
           <div className="flex items-center gap-2 mt-1">
             {cp.kind && (
               <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-surface-700 text-surface-300">
@@ -186,7 +186,7 @@ export default function CounterpartDetailPage() {
           <div>
             <p className="text-xs text-surface-300 mb-1">Cari Bakiye</p>
             <p className={cn("num text-4xl font-bold h-display",
-              balance > 0 ? "text-emerald-300" : balance < 0 ? "text-red-300" : "text-white")}>
+              balance > 0 ? "text-emerald-300" : balance < 0 ? "text-red-300" : "text-surface-100")}>
               {formatCurrency(balance, "TRY")}
             </p>
             <p className="mt-1 text-[11px] text-surface-400">
@@ -364,7 +364,7 @@ export default function CounterpartDetailPage() {
                                   : <Scroll size={16} className={isIn ? "text-emerald-300" : "text-red-300"} />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">
+                        <p className="text-sm text-surface-100 truncate">
                           {isCheque ? (p.cheque_number || "Çek") : (p.note_serial || "Senet")}
                           {" · "}
                           <span className="font-semibold">{formatCurrency(p.amount, p.currency || "TRY")}</span>
@@ -539,7 +539,7 @@ function BreakdownCard({
   extra?: string; primary?: boolean;
 }) {
   const color = tone === "positive" ? "text-emerald-300"
-              : tone === "negative" ? "text-red-300" : "text-white";
+              : tone === "negative" ? "text-red-300" : "text-surface-100";
   return (
     <div className={cn("card p-3", primary && "ring-1 ring-brand-500/40 bg-brand-900/20")}>
       <div className="flex items-center gap-1.5 text-[10px] text-surface-400 uppercase mb-1">
@@ -588,7 +588,7 @@ function DebtListTab({
               <Receipt size={16} className={tone === "positive" ? "text-emerald-300" : "text-red-300"} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">
+              <p className="text-sm text-surface-100 truncate">
                 {d.description || "Borç"}
                 {isPartial && (
                   <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200">
@@ -746,7 +746,7 @@ function RunningHistoryRow({
           {row.amount === 0 ? "—" : (row.amount > 0 ? "+" : "−") + formatCurrency(Math.abs(row.amount), "TRY")}
         </span>
         <span className="text-[11px] text-surface-400 whitespace-nowrap">
-          Bakiye: <span className="text-white font-medium">{formatCurrency(row.balance_after, "TRY")}</span>
+          Bakiye: <span className="text-surface-100 font-medium">{formatCurrency(row.balance_after, "TRY")}</span>
         </span>
       </div>
       {onEdit && (

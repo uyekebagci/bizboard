@@ -102,7 +102,7 @@ export function ExchangeRateBar({ onRefreshed }: { onRefreshed?: () => void }) {
         {items.map((it) => (
           <span key={it.label} className="text-surface-200 whitespace-nowrap">
             {it.label}:{" "}
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-surface-100">
               {it.rate ? formatRate(it.rate.rate_to_try) : "—"}
             </span>
           </span>

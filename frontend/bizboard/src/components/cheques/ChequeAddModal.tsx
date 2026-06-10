@@ -162,7 +162,7 @@ export function ChequeAddModal({
         className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <FileText size={16} className="text-purple-300" />
             Yeni Çek Ekle
           </h3>
@@ -382,7 +382,7 @@ export function ChequeAddModal({
             type="submit"
             disabled={submitting || !businessId || !counterpartId || !amount || !chequeDueDate || !chequeNo.trim()}
             className={cn(
-              "flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
+              "flex-1 py-2.5 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
               "bg-purple-600 hover:bg-purple-700",
             )}
           >

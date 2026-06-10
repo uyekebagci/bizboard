@@ -51,7 +51,7 @@ export default function KapanislarPage() {
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-white">Günlük Kapanışlar</h1>
+          <h1 className="text-xl font-bold text-surface-100">Günlük Kapanışlar</h1>
           <p className="text-xs text-surface-400">Kasa kapanış geçmişi + bugünün durumu</p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function KapanislarPage() {
                 ) : (
                   <CalendarCheck size={14} className="text-amber-400" />
                 )}
-                <h2 className="text-sm font-semibold text-white">
+                <h2 className="text-sm font-semibold text-surface-100">
                   {todayClosed ? "Bugün Kapatıldı" : "Bugün Henüz Kapatılmadı"}
                 </h2>
                 {today?.is_auto && (
@@ -80,7 +80,7 @@ export default function KapanislarPage() {
                   </span>
                 )}
               </div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-surface-100">
                 {formatCurrency(preview.computed_closing, "TRY")}
               </p>
               <p className="text-[11px] text-surface-400 mt-0.5">
@@ -180,7 +180,7 @@ function ClosingRow({ closing, isAdmin }: { closing: CashClosing; isAdmin: boole
     <div className="p-4 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-white">
+          <p className="text-sm font-medium text-surface-100">
             {new Date(closing.closing_date).toLocaleDateString("tr-TR", {
               day: "numeric", month: "long", year: "numeric", weekday: "short",
             })}

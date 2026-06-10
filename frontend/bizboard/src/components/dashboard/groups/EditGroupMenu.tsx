@@ -61,7 +61,7 @@ export function EditGroupMenu({
       <button
         type="button"
         onClick={() => { setOpen((v) => !v); setSubmenu(null); }}
-        className="p-1.5 rounded-lg text-surface-300 hover:text-white hover:bg-surface-700 transition-colors"
+        className="p-1.5 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-700 transition-colors"
         aria-label="Grup aksiyonlari"
       >
         <MoreVertical size={16} />
@@ -150,7 +150,7 @@ export function EditGroupMenu({
           {pendingDelete && (
             <div className="p-3 space-y-2">
               <p className="text-xs text-surface-300">
-                <strong className="text-white">&quot;{group.name}&quot;</strong> grubunu sil?
+                <strong className="text-surface-100">&quot;{group.name}&quot;</strong> grubunu sil?
                 Uye isletmeler grupsuz konuma duser.
               </p>
               <div className="flex gap-2">

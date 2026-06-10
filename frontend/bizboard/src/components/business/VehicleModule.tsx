@@ -167,7 +167,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className={`text-sm font-bold tracking-wider ${
-                    v.is_active ? "text-white" : "text-surface-400 line-through"
+                    v.is_active ? "text-surface-100" : "text-surface-400 line-through"
                   }`}>
                     {v.plate_number}
                   </p>
@@ -260,7 +260,7 @@ function VehicleDetailModal({
         <Calendar size={14} className={`mt-0.5 shrink-0 ${isExpired ? "text-red-300" : isWarn ? "text-amber-300" : "text-surface-400"}`} />
         <div>
           <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
-          <p className={`text-sm font-medium ${isExpired ? "text-red-400" : isWarn ? "text-amber-400" : "text-white"}`}>
+          <p className={`text-sm font-medium ${isExpired ? "text-red-400" : isWarn ? "text-amber-400" : "text-surface-100"}`}>
             {formatDate(date)}
             {isExpired && <span className="ml-1 text-[10px] text-red-300 font-normal">SURESI DOLDU</span>}
             {isWarn && !isExpired && <span className="ml-1 text-[10px] text-amber-300 font-normal">YAKLASAN</span>}
@@ -275,7 +275,7 @@ function VehicleDetailModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white">Arac Detayi</h3>
+          <h3 className="text-lg font-semibold text-surface-100">Arac Detayi</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors">
             <X size={18} className="text-surface-400" />
           </button>
@@ -343,7 +343,7 @@ function VehicleDetailModal({
                   <Fuel size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Yakit Tipi</p>
-                    <p className="text-sm text-white font-medium">{FUEL_LABELS[v.fuel_type] || v.fuel_type}</p>
+                    <p className="text-sm text-surface-100 font-medium">{FUEL_LABELS[v.fuel_type] || v.fuel_type}</p>
                   </div>
                 </div>
               )}
@@ -352,7 +352,7 @@ function VehicleDetailModal({
                   <Settings size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Vites</p>
-                    <p className="text-sm text-white font-medium">{TRANSMISSION_LABELS[v.transmission] || v.transmission}</p>
+                    <p className="text-sm text-surface-100 font-medium">{TRANSMISSION_LABELS[v.transmission] || v.transmission}</p>
                   </div>
                 </div>
               )}
@@ -361,7 +361,7 @@ function VehicleDetailModal({
                   <Hash size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Motor Hacmi</p>
-                    <p className="text-sm text-white font-medium">{v.engine_displacement} cc</p>
+                    <p className="text-sm text-surface-100 font-medium">{v.engine_displacement} cc</p>
                   </div>
                 </div>
               )}
@@ -370,7 +370,7 @@ function VehicleDetailModal({
                   <Gauge size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Motor Gucu</p>
-                    <p className="text-sm text-white font-medium">{v.horse_power} HP</p>
+                    <p className="text-sm text-surface-100 font-medium">{v.horse_power} HP</p>
                   </div>
                 </div>
               )}
@@ -378,7 +378,7 @@ function VehicleDetailModal({
                 <MapPin size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] text-surface-400 uppercase tracking-wider">Kilometre</p>
-                  <p className="text-sm text-white font-medium">{formatKm(v.current_km)}</p>
+                  <p className="text-sm text-surface-100 font-medium">{formatKm(v.current_km)}</p>
                 </div>
               </div>
               {v.avg_fuel_consumption && (
@@ -386,7 +386,7 @@ function VehicleDetailModal({
                   <Fuel size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ort. Tuketim</p>
-                    <p className="text-sm text-white font-medium">{v.avg_fuel_consumption} lt/100km</p>
+                    <p className="text-sm text-surface-100 font-medium">{v.avg_fuel_consumption} lt/100km</p>
                   </div>
                 </div>
               )}
@@ -395,7 +395,7 @@ function VehicleDetailModal({
                   <Car size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Renk</p>
-                    <p className="text-sm text-white font-medium">{v.color}</p>
+                    <p className="text-sm text-surface-100 font-medium">{v.color}</p>
                   </div>
                 </div>
               )}
@@ -412,7 +412,7 @@ function VehicleDetailModal({
                     <Key size={14} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Sasi No</p>
-                      <p className="text-sm text-white font-mono">{v.chassis_number}</p>
+                      <p className="text-sm text-surface-100 font-mono">{v.chassis_number}</p>
                     </div>
                   </div>
                 )}
@@ -421,7 +421,7 @@ function VehicleDetailModal({
                     <Settings size={14} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Motor No</p>
-                      <p className="text-sm text-white font-mono">{v.engine_number}</p>
+                      <p className="text-sm text-surface-100 font-mono">{v.engine_number}</p>
                     </div>
                   </div>
                 )}
@@ -430,7 +430,7 @@ function VehicleDetailModal({
                     <FileText size={14} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ruhsat Seri</p>
-                      <p className="text-sm text-white font-medium">{v.registration_serial}</p>
+                      <p className="text-sm text-surface-100 font-medium">{v.registration_serial}</p>
                     </div>
                   </div>
                 )}
@@ -439,7 +439,7 @@ function VehicleDetailModal({
                     <FileText size={14} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ruhsat No</p>
-                      <p className="text-sm text-white font-medium">{v.registration_number}</p>
+                      <p className="text-sm text-surface-100 font-medium">{v.registration_number}</p>
                     </div>
                   </div>
                 )}
@@ -465,7 +465,7 @@ function VehicleDetailModal({
               <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
               <div>
                 <p className="text-[10px] text-surface-400 uppercase tracking-wider">Notlar</p>
-                <p className="text-sm text-white whitespace-pre-wrap">{v.notes}</p>
+                <p className="text-sm text-surface-100 whitespace-pre-wrap">{v.notes}</p>
               </div>
             </div>
           )}
@@ -604,14 +604,14 @@ function CreateVehicleModal({
     { key: "rental" as const, label: "Sahiplik" },
   ];
 
-  const inputCls = "w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all";
+  const inputCls = "w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all";
   const labelCls = "block text-sm font-medium text-surface-200 mb-1.5";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-lg font-bold text-surface-100">
             {isEdit ? "Arac Duzenle" : "Yeni Arac"}
           </h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
@@ -792,7 +792,7 @@ function DeleteVehicleModal({
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />
             </div>
-            <h3 className="text-lg font-bold text-white">Araci Sil</h3>
+            <h3 className="text-lg font-bold text-surface-100">Araci Sil</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
             <X size={20} className="text-surface-400" />
@@ -800,7 +800,7 @@ function DeleteVehicleModal({
         </div>
         <div className="p-4">
           <div className="bg-surface-700 rounded-xl p-3 mb-4">
-            <p className="text-sm font-bold text-white tracking-wider">{vehicle.plate_number}</p>
+            <p className="text-sm font-bold text-surface-100 tracking-wider">{vehicle.plate_number}</p>
             <p className="text-xs text-surface-400 mt-0.5">
               {[vehicle.brand, vehicle.model, vehicle.model_year].filter(Boolean).join(" ")}
             </p>

@@ -103,7 +103,7 @@ function DefaultErrorFallback({
           </svg>
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-semibold text-surface-100">
             Bir hata olustu
           </h2>
           <p className="text-sm text-surface-400 mt-1">
@@ -137,7 +137,7 @@ function DefaultErrorFallback({
           </button>
           <a
             href="/dashboard"
-            className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-white text-sm font-medium transition-colors"
+            className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-100 text-sm font-medium transition-colors"
           >
             Ana sayfa
           </a>

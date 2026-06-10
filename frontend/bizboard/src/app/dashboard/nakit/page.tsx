@@ -57,7 +57,7 @@ export default function NakitPage() {
             <Banknote size={20} className="text-emerald-300" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Nakit</h1>
+            <h1 className="text-xl font-bold text-surface-100">Nakit</h1>
             <p className="text-xs text-surface-400">
               Isletmelerin nakit bakiye dagilimi
             </p>
@@ -115,7 +115,7 @@ export default function NakitPage() {
                     className="flex items-center justify-between p-4 hover:bg-surface-700 transition-colors"
                   >
                     <div>
-                      <p className="font-medium text-white">{b.business_name}</p>
+                      <p className="font-medium text-surface-100">{b.business_name}</p>
                       <p className="text-xs text-surface-400 mt-0.5">{b.currency}</p>
                     </div>
                     <p className="text-base font-semibold text-emerald-300">

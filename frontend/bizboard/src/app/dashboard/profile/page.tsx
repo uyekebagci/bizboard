@@ -51,7 +51,7 @@ export default function ProfilePage() {
             {getInitials(profile.full_name)}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-white truncate">
+            <h1 className="text-lg font-bold text-surface-100 truncate">
               {profile.full_name}
             </h1>
             <p className="text-xs text-surface-400 truncate">
@@ -143,7 +143,7 @@ function InfoRow({
       <Icon size={16} className="text-surface-400 shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-[10px] text-surface-500 uppercase tracking-wide">{label}</p>
-        <p className="text-sm text-white truncate">{value}</p>
+        <p className="text-sm text-surface-100 truncate">{value}</p>
       </div>
     </div>
   );
@@ -158,7 +158,7 @@ function ActionRow({
       className="row-hover w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left"
     >
       <Icon size={16} className="text-surface-400 shrink-0" />
-      <span className="flex-1 text-sm text-white">{label}</span>
+      <span className="flex-1 text-sm text-surface-100">{label}</span>
       <ChevronRight size={16} className="text-surface-500" />
     </button>
   );

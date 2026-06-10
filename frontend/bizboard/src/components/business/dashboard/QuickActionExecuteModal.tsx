@@ -122,7 +122,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
           <div className="flex items-center gap-2 min-w-0">
             <Zap size={16} className="text-amber-400 shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-white truncate">
+              <h3 className="text-sm font-semibold text-surface-100 truncate">
                 Hızlı İşlem: {quickAction.name}
               </h3>
               <p className="text-[10px] text-surface-400">

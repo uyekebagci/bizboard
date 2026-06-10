@@ -201,7 +201,7 @@ export function ClosureQuickAddModal({
       >
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-sm font-semibold text-white">{meta.title}</h3>
+          <h3 className="text-sm font-semibold text-surface-100">{meta.title}</h3>
           <button type="button" onClick={onClose} disabled={submitting}
             className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 disabled:opacity-50">
             <X size={16} />
@@ -292,7 +292,7 @@ export function ClosureQuickAddModal({
                   type="text" value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Not, referans..."
-                  className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-900 text-white text-sm"
+                  className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-900 text-surface-100 text-sm"
                 />
               </Field>
 

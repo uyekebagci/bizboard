@@ -122,7 +122,7 @@ export function AlertsWidget({ businesses }: Props) {
         <div className="w-9 h-9 rounded-xl bg-amber-500/15 grid place-items-center">
           <AlertTriangle size={18} className="text-amber-400" />
         </div>
-        <h3 className="text-[15px] font-bold h-display text-white">Dikkat Gerektiren</h3>
+        <h3 className="text-[15px] font-bold h-display text-surface-100">Dikkat Gerektiren</h3>
         <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold">
           {alerts.length}
         </span>
@@ -135,7 +135,7 @@ export function AlertsWidget({ businesses }: Props) {
             <div key={i} className={cn("flex items-start gap-3 p-2.5 rounded-xl transition", alert.bg)}>
               <Icon size={16} className={cn("mt-0.5 shrink-0", alert.color)} />
               <div>
-                <p className="text-[13px] font-semibold text-white">{alert.title}</p>
+                <p className="text-[13px] font-semibold text-surface-100">{alert.title}</p>
                 <p className="text-[11px] text-surface-400">{alert.detail}</p>
               </div>
             </div>

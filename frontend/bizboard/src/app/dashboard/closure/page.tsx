@@ -241,7 +241,7 @@ function ClosurePage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-white truncate">
+            <h1 className="text-xl font-bold text-surface-100 truncate">
               Gün Kapanışı — {closureDate}
             </h1>
             {isPast && (
@@ -450,7 +450,7 @@ function ClosurePage() {
 
           {/* SUMMARY */}
           <section className="glass-card p-5 space-y-3">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <h2 className="text-sm font-bold text-surface-100 flex items-center gap-2">
               <BarChart3 size={14} className="text-emerald-400" />
               Gün Özeti
             </h2>
@@ -462,7 +462,7 @@ function ClosurePage() {
               <Row label="− Harcamalar" value={sectioned.expenses.grand_total} colorClass="text-rose-300" prefix="−" />
               <Row label="± İç Transfer (net 0)" value={0} colorClass="text-surface-500" />
               <div className="border-t border-surface-700 pt-2 mt-2 flex justify-between font-bold text-sm">
-                <span className="text-white">Hesaplanan Kapanış</span>
+                <span className="text-surface-100">Hesaplanan Kapanış</span>
                 <span className="text-emerald-300">{formatCurrency(computed, "TRY")}</span>
               </div>
             </div>
@@ -588,7 +588,7 @@ function Section({ title, icon: Icon, color, count, total, action, children }: {
         >
           <Icon size={16} className={colorMap[color]} />
           <div>
-            <h2 className="text-sm font-semibold text-white">{title}</h2>
+            <h2 className="text-sm font-semibold text-surface-100">{title}</h2>
             {count != null && (
               <p className="text-[10px] text-surface-400">
                 {count} işlem

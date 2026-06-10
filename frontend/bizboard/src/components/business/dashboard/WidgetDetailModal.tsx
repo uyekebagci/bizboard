@@ -66,14 +66,14 @@ export function WidgetDetailModal({
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700/60 shrink-0">
           <div className="min-w-0">
-            <h3 className="text-base font-bold h-display text-white truncate">{title}</h3>
+            <h3 className="text-base font-bold h-display text-surface-100 truncate">{title}</h3>
             {subtitle && <p className="text-xs text-surface-400 truncate mt-0.5">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {headerAction}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-white"
+              className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100"
               aria-label="Kapat"
             >
               <X size={16} />

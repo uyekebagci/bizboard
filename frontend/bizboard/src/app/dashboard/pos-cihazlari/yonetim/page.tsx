@@ -85,7 +85,7 @@ export default function PosDeviceManagementPage() {
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-white">POS Cihazi Yonetimi</h1>
+          <h1 className="text-xl font-bold text-surface-100">POS Cihazi Yonetimi</h1>
           <p className="text-xs text-surface-400">Cihaz ekle, duzenle, pasif yap</p>
         </div>
         <button
@@ -139,7 +139,7 @@ export default function PosDeviceManagementPage() {
             )}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-white truncate">{d.name}</p>
+                  <p className="text-sm font-semibold text-surface-100 truncate">{d.name}</p>
                   {!d.is_active && (
                     <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-surface-700 text-surface-400 border border-surface-600">
                       PASIF
@@ -151,19 +151,19 @@ export default function PosDeviceManagementPage() {
                   {d.bank_name && <> · {d.bank_name}</>}
                 </p>
                 <p className="text-[11px] text-surface-300 mt-0.5">
-                  Banka: <span className="text-white">%{d.default_rate ?? "—"}</span>
+                  Banka: <span className="text-surface-100">%{d.default_rate ?? "—"}</span>
                   {d.our_commission_rate != null && (
-                    <> · Biz: <span className="text-white">%{d.our_commission_rate}</span></>
+                    <> · Biz: <span className="text-surface-100">%{d.our_commission_rate}</span></>
                   )}
                   {d.last_used_rate != null && (
-                    <> · Son: <span className="text-white">%{d.last_used_rate}</span></>
+                    <> · Son: <span className="text-surface-100">%{d.last_used_rate}</span></>
                   )}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setEditing(d)}
-                  className="p-2 rounded-lg text-surface-300 hover:text-white hover:bg-surface-700"
+                  className="p-2 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-700"
                   title="Duzenle"
                 >
                   <Pencil size={14} />
@@ -275,7 +275,7 @@ function PosDeviceFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-md">
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-surface-100">
             {isEdit ? "POS Cihazini Duzenle" : "Yeni POS Cihazi"}
           </h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700">
@@ -433,7 +433,7 @@ function DeleteConfirmModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card w-full max-w-sm p-5">
-        <h3 className="text-base font-semibold text-white mb-1">Cihazi pasif yap</h3>
+        <h3 className="text-base font-semibold text-surface-100 mb-1">Cihazi pasif yap</h3>
         <p className="text-sm text-surface-300">
           <strong>{device.name}</strong> cihazı <strong>pasif</strong> yapılacak (fiziksel
           silinmez; tx referansları korunur). Tekrar aktif edilebilir.

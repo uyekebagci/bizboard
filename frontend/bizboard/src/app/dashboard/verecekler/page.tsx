@@ -155,7 +155,7 @@ export default function VereceklerPage() {
             <HandCoins size={20} className="text-red-300" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Verecekler</h1>
+            <h1 className="text-xl font-bold text-surface-100">Verecekler</h1>
             <p className="text-xs text-surface-400">
               Açık (ödenmemiş) verecekler — kişi/firma bazlı özet
             </p>
@@ -205,7 +205,7 @@ export default function VereceklerPage() {
                   aria-pressed={censored}
                   title={censored ? "Tutarları göster" : "Tutarları gizle"}
                   aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
-                  className="shrink-0 p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-white transition-colors"
+                  className="shrink-0 p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-surface-100 transition-colors"
                 >
                   {censored ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -213,7 +213,7 @@ export default function VereceklerPage() {
             </div>
             <div className="glass-card p-4">
               <p className="text-[11px] text-surface-400 uppercase tracking-wider">Açık Kayıt</p>
-              <p className="mt-1 text-2xl font-bold text-white">{totalCount}</p>
+              <p className="mt-1 text-2xl font-bold text-surface-100">{totalCount}</p>
               <p className="text-[11px] text-surface-400 mt-0.5">
                 {rows.length} farklı kişi/firma
               </p>
@@ -252,7 +252,7 @@ export default function VereceklerPage() {
               const Inner = (
                 <div className="p-4 flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white truncate">
+                    <p className="font-medium text-surface-100 truncate">
                       {r.counterpart_name || "Bilinmiyor"}
                     </p>
                     {r.last_due_date && (

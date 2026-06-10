@@ -76,7 +76,7 @@ export function QuickCounterpartModal({ businessId, onClose, onCreated }: Props)
         className="glass-card w-full max-w-sm shadow-xl"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white">Yeni Karşı Taraf</h3>
+          <h3 className="text-base font-semibold text-surface-100">Yeni Karşı Taraf</h3>
           <button type="button" onClick={onClose}
             className="modal-close">
             <X size={16} />

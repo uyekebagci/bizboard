@@ -21,7 +21,7 @@ export function DetailRow({ label, value, warn }: { label: string; value: string
   return (
     <div className="p-2 bg-surface-700 rounded-lg">
       <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
-      <p className={cn("text-sm font-medium", warn ? "text-red-600" : "text-white")}>{value}</p>
+      <p className={cn("text-sm font-medium", warn ? "text-red-600" : "text-surface-100")}>{value}</p>
     </div>
   );
 }

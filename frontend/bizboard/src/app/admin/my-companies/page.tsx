@@ -144,7 +144,7 @@ export default function AdminMyCompaniesPage() {
         </button>
         <div className="flex items-center gap-2.5">
           <Building2 size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-white">Benim Firmalarim</h1>
+          <h1 className="text-2xl font-bold text-surface-100">Benim Firmalarim</h1>
         </div>
       </div>
 
@@ -157,7 +157,7 @@ export default function AdminMyCompaniesPage() {
       <div className="glass-card overflow-hidden">
         <div className="modal-header">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-lg font-semibold text-white">Firmalar</h2>
+            <h2 className="text-lg font-semibold text-surface-100">Firmalar</h2>
             <span className="ml-1 text-sm text-surface-400">
               ({companies.length})
             </span>
@@ -184,7 +184,7 @@ export default function AdminMyCompaniesPage() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-white text-sm truncate">
+                    <h3 className="font-semibold text-surface-100 text-sm truncate">
                       {c.legal_name}
                     </h3>
                     {c.is_default && (
@@ -206,7 +206,7 @@ export default function AdminMyCompaniesPage() {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => setEditing(c)}
-                    className="p-2 rounded-lg hover:bg-surface-600 text-surface-400 hover:text-white transition-colors"
+                    className="p-2 rounded-lg hover:bg-surface-600 text-surface-400 hover:text-surface-100 transition-colors"
                     title="Duzenle"
                   >
                     <Pencil size={16} />
@@ -268,11 +268,11 @@ export default function AdminMyCompaniesPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="glass-card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-surface-100 mb-2">
               Firmayi Sil
             </h3>
             <p className="text-sm text-surface-400 mb-6">
-              <strong className="text-white">{deleteConfirm.legal_name}</strong>{" "}
+              <strong className="text-surface-100">{deleteConfirm.legal_name}</strong>{" "}
               kaydini silmek istediginizden emin misiniz? Bu islem geri alinamaz.
             </p>
             <div className="flex justify-end gap-3">
@@ -363,11 +363,11 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
         className="glass-card p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <h3 className="text-lg font-semibold text-surface-100">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-white"
+            className="p-2 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100"
           >
             <X size={18} />
           </button>
@@ -524,7 +524,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
 }
 
 const inputClass =
-  "w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors";
+  "w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors";
 
 function Field({
   label,

@@ -31,7 +31,7 @@ export function ExpenseChart({ portfolio }: Props) {
 
   return (
     <div className="card p-4 flex-1">
-      <h3 className="text-sm font-bold text-white mb-3">Gelir / Gider Dagilimi</h3>
+      <h3 className="text-sm font-bold text-surface-100 mb-3">Gelir / Gider Dagilimi</h3>
 
       {/* Bar */}
       <div className="h-4 rounded-full overflow-hidden flex bg-surface-700">

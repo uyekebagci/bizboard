@@ -149,7 +149,7 @@ export function CounterpartCombobox({
               onFocus={() => setOpen(true)}
               onChange={(e) => onChange(null, e.target.value)}
               placeholder={placeholder}
-              className="flex-1 bg-transparent border-0 outline-none text-sm placeholder-surface-400 text-white"
+              className="flex-1 bg-transparent border-0 outline-none text-sm placeholder-surface-400 text-surface-100"
             />
             <ChevronDown size={16} className="text-surface-400 shrink-0" />
           </>
@@ -179,7 +179,7 @@ export function CounterpartCombobox({
                   onClick={() => handleSelect(c)}
                   className="w-full text-left px-3 py-2 hover:bg-surface-700 transition-colors"
                 >
-                  <div className="text-sm text-white truncate">{c.name}</div>
+                  <div className="text-sm text-surface-100 truncate">{c.name}</div>
                   <div className="text-[10px] text-surface-400 flex gap-2">
                     <span>{roleLabel(c.role)}</span>
                     {c.tax_id && <span>{c.tax_id}</span>}
@@ -267,7 +267,7 @@ function InlineCreateModal({
         className="glass-card w-full max-w-md p-5"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-white">Yeni Karsi Firma</h3>
+          <h3 className="text-base font-semibold text-surface-100">Yeni Karsi Firma</h3>
           <button
             type="button"
             onClick={onClose}

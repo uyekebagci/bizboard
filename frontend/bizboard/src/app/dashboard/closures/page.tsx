@@ -72,7 +72,7 @@ export default function ClosuresListPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white inline-flex items-center gap-2">
+            <h1 className="text-xl font-bold text-surface-100 inline-flex items-center gap-2">
               <CalendarClock size={18} className="text-emerald-400" />
               Gün Kapanışları
             </h1>
@@ -122,7 +122,7 @@ export default function ClosuresListPage() {
                   className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface-700/30 transition-colors"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">{c.closing_date}</p>
+                    <p className="text-sm font-semibold text-surface-100">{c.closing_date}</p>
                     <p className="text-[11px] text-surface-400">
                       Açılış {formatCurrency(c.opening_balance, "TRY")}
                       {" → "}

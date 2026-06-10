@@ -67,7 +67,7 @@ export function DebtWidget({ businesses, onTotalChange }: Props) {
         <div className="w-9 h-9 rounded-xl bg-violet-500/15 grid place-items-center">
           <Scale size={18} className="text-violet-400" />
         </div>
-        <h3 className="text-[15px] font-bold h-display text-white">Borc / Alacak Durumu</h3>
+        <h3 className="text-[15px] font-bold h-display text-surface-100">Borc / Alacak Durumu</h3>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

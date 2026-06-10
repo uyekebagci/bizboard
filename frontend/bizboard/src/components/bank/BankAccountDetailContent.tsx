@@ -108,7 +108,7 @@ function Stat({
       <p className="text-[10px] uppercase text-surface-400">{label}</p>
       <p className={cn(
         "mt-1 text-sm font-semibold truncate",
-        accent ? "text-emerald-300" : "text-white",
+        accent ? "text-emerald-300" : "text-surface-100",
         mono && "font-mono text-[12px]",
       )}>
         {value}

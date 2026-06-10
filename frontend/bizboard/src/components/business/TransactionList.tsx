@@ -102,7 +102,7 @@ export function TransactionList({
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
+                <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
                   {/* Beta v1.1: POS komisyon UI tamamen kaldırıldı — POS satırı
                       da normal title formatı kullanır (description / kategori). */}
                   {tx.description || tx.category?.name || (isTransfer ? "Transfer" : isPos ? "POS İşlemi" : "Islem")}

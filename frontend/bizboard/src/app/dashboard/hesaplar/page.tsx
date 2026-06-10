@@ -181,7 +181,7 @@ export default function HesaplarPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">Banka Hesapları</h1>
+            <h1 className="text-xl font-bold text-surface-100">Banka Hesapları</h1>
             <p className="text-xs text-surface-400">
               Banka + kasa + kişide tutulan — tüm hesaplarınız tek panelde
             </p>
@@ -200,7 +200,7 @@ export default function HesaplarPage() {
       <section className="grid grid-cols-3 gap-3">
         <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Aktif Hesap</p>
-          <p className="mt-1 text-lg font-bold text-white">{physicalActive.length}</p>
+          <p className="mt-1 text-lg font-bold text-surface-100">{physicalActive.length}</p>
         </div>
         <div className="glass-card p-3">
           <p className="text-[10px] text-surface-400 uppercase">Pasif Hesap</p>
@@ -245,7 +245,7 @@ export default function HesaplarPage() {
                 "px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
                 typeFilter === f.key
                   ? "bg-brand-600 border-brand-500 text-white"
-                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-white",
+                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
               )}
             >
               {f.label}
@@ -260,8 +260,8 @@ export default function HesaplarPage() {
               className={cn(
                 "px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors",
                 businessFilter === null
-                  ? "bg-surface-500 border-surface-400 text-white"
-                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-white",
+                  ? "bg-surface-500 border-surface-400 text-surface-100"
+                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
               )}
             >
               Tüm İşletmeler
@@ -274,7 +274,7 @@ export default function HesaplarPage() {
                   "px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors",
                   businessFilter === b.id
                     ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
-                    : "bg-surface-700 border-surface-600 text-surface-300 hover:text-white",
+                    : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
                 )}
               >
                 {b.name}
@@ -354,7 +354,7 @@ export default function HesaplarPage() {
                 <div className="flex items-center gap-2 min-w-0">
                   <AccountTypeBadge type={a.type} />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
+                    <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
                       {a.name}
                       {isLocked && (
                         <Lock size={11} className={cn(
@@ -378,7 +378,7 @@ export default function HesaplarPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-surface-100">
                     {formatCurrency(a.current_balance, a.currency || "TRY")}
                   </p>
                   {/* Bankalar WP: bakiye düzelt — yalnız admin + bakiyesi tutulan tipler. */}
@@ -522,7 +522,7 @@ function ConfirmToggleModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-white">
+          <h3 className="text-base font-semibold text-surface-100">
             {deactivate ? "Hesabı pasif yap" : "Hesabı aktif yap"}
           </h3>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-surface-700">
@@ -530,7 +530,7 @@ function ConfirmToggleModal({
           </button>
         </div>
         <p className="text-sm text-surface-300">
-          <strong className="text-white">{account.name}</strong>
+          <strong className="text-surface-100">{account.name}</strong>
           {force && (account.current_balance ?? 0) !== 0 && (
             <> hesabının bakiyesi <strong className="text-red-300">
               {formatCurrency(account.current_balance, account.currency || "TRY")}
@@ -550,7 +550,7 @@ function ConfirmToggleModal({
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2 rounded-xl text-white text-sm font-semibold ${
+            className={`flex-1 px-4 py-2 rounded-xl text-surface-100 text-sm font-semibold ${
               deactivate ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
             }`}
           >
@@ -584,7 +584,7 @@ function ConfirmDeleteModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card !border-red-500/30 w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <Trash2 size={16} className="text-red-400" />
             {account.type === "SUB_CASH" ? "Alt Kasayı sil" : "Hesabı sil"}
           </h3>
@@ -593,7 +593,7 @@ function ConfirmDeleteModal({
           </button>
         </div>
         <p className="text-sm text-surface-300">
-          <strong className="text-white">{account.name}</strong> hesabını kalıcı olarak silmek
+          <strong className="text-surface-100">{account.name}</strong> hesabını kalıcı olarak silmek
           istediğine emin misin? Bağlı işlem varsa silinemez; önce pasif yapmanı öneririz.
         </p>
         {account.type === "SUB_CASH" && assignmentCount !== null && assignmentCount > 0 && (
@@ -642,7 +642,7 @@ function CreateBankAccountModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <Plus size={16} className="text-brand-400" />
             Yeni Hesap
           </h3>

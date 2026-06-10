@@ -137,12 +137,12 @@ export default function FinancePage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="w-9 h-9 rounded-xl bg-surface-800 flex items-center justify-center text-surface-400 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-xl bg-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-100 transition-colors"
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-bold h-display text-white">Finans Merkezi</h1>
+            <h1 className="text-xl font-bold h-display text-surface-100">Finans Merkezi</h1>
             <p className="text-surface-400 text-sm mt-0.5">Detayli finansal analiz ve raporlar</p>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function FinancePage() {
                 "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
                 period === value
                   ? "seg-active font-semibold"
-                  : "text-surface-400 hover:text-white"
+                  : "text-surface-400 hover:text-surface-100"
               )}
             >
               {label}
@@ -187,7 +187,7 @@ export default function FinancePage() {
               "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
               activeTab === key
                 ? "seg-active font-semibold"
-                : "text-surface-400 hover:text-white"
+                : "text-surface-400 hover:text-surface-100"
             )}
           >
             <Icon size={14} />
@@ -247,7 +247,7 @@ export default function FinancePage() {
           icon={Receipt}
           iconBg="bg-brand-500/10"
           iconColor="text-brand-400"
-          valueColor="text-white"
+          valueColor="text-surface-100"
           isCurrency={false}
           index={3}
         />
@@ -370,7 +370,7 @@ function MonthlyTrendChart({ trend }: { trend: FinanceMonthData[] }) {
   return (
     <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-white">Aylik Gelir / Gider Trendi</h3>
+        <h3 className="text-sm font-bold text-surface-100">Aylik Gelir / Gider Trendi</h3>
         <div className="flex items-center gap-4 text-[10px] font-medium">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-green-500" /> Gelir
@@ -395,7 +395,7 @@ function MonthlyTrendChart({ trend }: { trend: FinanceMonthData[] }) {
             <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
               {/* Tooltip */}
               <div className="absolute bottom-full mb-2 hidden group-hover:block z-10">
-                <div className="bg-surface-800 text-white rounded-lg p-2.5 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
+                <div className="bg-surface-800 text-surface-100 rounded-lg p-2.5 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
                   <p className="font-bold mb-1">{m.label} {m.year}</p>
                   <p className="text-green-400">Gelir: {formatCurrency(m.income)}</p>
                   <p className="text-red-400">Gider: {formatCurrency(m.expense + (m.fixed_cost || 0))}</p>
@@ -454,7 +454,7 @@ function DailyTrendChart({ cashFlow }: { cashFlow: DailyCashFlowData[] }) {
   return (
     <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-white">Gunluk Gelir / Gider (son 30 gun)</h3>
+        <h3 className="text-sm font-bold text-surface-100">Gunluk Gelir / Gider (son 30 gun)</h3>
         <div className="flex items-center gap-4 text-[10px] font-medium">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-green-500" /> Gelir
@@ -474,7 +474,7 @@ function DailyTrendChart({ cashFlow }: { cashFlow: DailyCashFlowData[] }) {
             <div key={idx} className="flex-1 flex flex-col items-center group relative min-w-0">
               {/* Tooltip */}
               <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
-                <div className="bg-surface-800 text-white rounded-lg p-2.5 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
+                <div className="bg-surface-800 text-surface-100 rounded-lg p-2.5 text-[10px] shadow-xl whitespace-nowrap border border-surface-700">
                   <p className="font-bold mb-1">{formatDate(d.date)}</p>
                   <p className="text-green-400">Gelir: {formatCurrency(d.income)}</p>
                   <p className="text-red-400">Gider: {formatCurrency(d.expense)}</p>
@@ -524,7 +524,7 @@ function TopTransactionsList({
   if (items.length === 0) {
     return (
       <div className="glass-card p-4">
-        <h3 className="text-sm font-bold text-white mb-3">{title}</h3>
+        <h3 className="text-sm font-bold text-surface-100 mb-3">{title}</h3>
         <p className="text-surface-400 text-xs text-center py-6">Henuz islem yok</p>
       </div>
     );
@@ -532,7 +532,7 @@ function TopTransactionsList({
 
   return (
     <div className="glass-card p-4">
-      <h3 className="text-sm font-bold text-white mb-3">{title}</h3>
+      <h3 className="text-sm font-bold text-surface-100 mb-3">{title}</h3>
       <div className="space-y-2">
         {items.map((item, idx) => (
           <div key={item.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-700 transition-colors">
@@ -540,7 +540,7 @@ function TopTransactionsList({
               {idx + 1}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-surface-100 truncate">
                 {item.description || item.category_name}
               </p>
               <p className="text-[10px] text-surface-400">
@@ -574,7 +574,7 @@ function IncomeExpenseCompare({
 
   return (
     <div className="glass-card p-5">
-      <h3 className="text-sm font-bold text-white mb-4">Gelir / Gider Karsilastirmasi</h3>
+      <h3 className="text-sm font-bold text-surface-100 mb-4">Gelir / Gider Karsilastirmasi</h3>
 
       {/* Büyük bar */}
       <div className="relative h-10 rounded-xl overflow-hidden flex bg-surface-700">
@@ -583,7 +583,7 @@ function IncomeExpenseCompare({
           style={{ width: `${incomePct}%` }}
         >
           {incomePct > 15 && (
-            <span className="text-white text-xs font-bold">
+            <span className="text-surface-100 text-xs font-bold">
               {formatCurrency(income)} ({incomePct.toFixed(0)}%)
             </span>
           )}
@@ -593,7 +593,7 @@ function IncomeExpenseCompare({
           style={{ width: `${expensePct}%` }}
         >
           {expensePct > 15 && (
-            <span className="text-white text-xs font-bold">
+            <span className="text-surface-100 text-xs font-bold">
               {formatCurrency(expense)} ({expensePct.toFixed(0)}%)
             </span>
           )}
@@ -683,7 +683,7 @@ function CumulativeCashFlowChart({ data }: { data: DailyCashFlowData[] }) {
 
   return (
     <div className="glass-card p-5">
-      <h3 className="text-sm font-bold text-white mb-4">Kumulatif Nakit Akisi (Son 30 Gun)</h3>
+      <h3 className="text-sm font-bold text-surface-100 mb-4">Kumulatif Nakit Akisi (Son 30 Gun)</h3>
       <div className="relative h-48 flex items-end gap-px">
         {/* Y-axis center line */}
         <div className="absolute top-1/2 left-0 right-0 border-t border-dashed border-surface-600 z-0" />
@@ -700,7 +700,7 @@ function CumulativeCashFlowChart({ data }: { data: DailyCashFlowData[] }) {
             >
               {/* Tooltip */}
               <div className="absolute bottom-full mb-1 hidden group-hover:block z-20">
-                <div className="bg-surface-800 text-white rounded-lg p-2 text-[9px] shadow-xl whitespace-nowrap border border-surface-700">
+                <div className="bg-surface-800 text-surface-100 rounded-lg p-2 text-[9px] shadow-xl whitespace-nowrap border border-surface-700">
                   <p className="font-bold">{formatDate(d.date)}</p>
                   <p className="text-green-400">+{formatCurrency(d.income)}</p>
                   <p className="text-red-400">-{formatCurrency(d.expense)}</p>
@@ -752,7 +752,7 @@ function DailyCashFlowList({ data }: { data: DailyCashFlowData[] }) {
 
   return (
     <div className="glass-card p-4">
-      <h3 className="text-sm font-bold text-white mb-3">Son 7 Gunluk Nakit Akisi</h3>
+      <h3 className="text-sm font-bold text-surface-100 mb-3">Son 7 Gunluk Nakit Akisi</h3>
       <div className="space-y-1.5">
         {recent.map((d) => (
           <div key={d.date} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-700 transition-colors">
@@ -852,7 +852,7 @@ function CategoryRingChart({
 
   return (
     <div className="glass-card p-5">
-      <h3 className="text-sm font-bold text-white mb-4">
+      <h3 className="text-sm font-bold text-surface-100 mb-4">
         {type === "expense" ? "Gider" : "Gelir"} Dagilimi
       </h3>
       <div className="flex items-center gap-8">
@@ -884,7 +884,7 @@ function CategoryRingChart({
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-[10px] text-surface-400 font-medium">Toplam</p>
-            <p className="num text-lg font-bold text-white">{formatCurrency(total)}</p>
+            <p className="num text-lg font-bold text-surface-100">{formatCurrency(total)}</p>
           </div>
         </div>
 
@@ -899,7 +899,7 @@ function CategoryRingChart({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-surface-200 truncate">{cat.name}</span>
-                  <span className="num text-xs font-bold text-white ml-2">{formatCurrency(cat.amount)}</span>
+                  <span className="num text-xs font-bold text-surface-100 ml-2">{formatCurrency(cat.amount)}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <div className="flex-1 h-1.5 rounded-full bg-surface-700 overflow-hidden">
@@ -931,7 +931,7 @@ function CategoryList({
 }) {
   return (
     <div className="glass-card p-4">
-      <h3 className="text-sm font-bold text-white mb-3">Kategori Detaylari</h3>
+      <h3 className="text-sm font-bold text-surface-100 mb-3">Kategori Detaylari</h3>
       <div className="space-y-2">
         {categories.map((cat) => (
           <div key={cat.name} className="flex items-center gap-3 p-3 rounded-xl bg-surface-700">
@@ -939,7 +939,7 @@ function CategoryList({
               <span className="text-lg">{cat.icon || (type === "expense" ? "💸" : "💰")}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white">{cat.name}</p>
+              <p className="text-sm font-semibold text-surface-100">{cat.name}</p>
               <p className="text-[10px] text-surface-400">{cat.transaction_count} islem</p>
             </div>
             <div className="text-right">
@@ -975,7 +975,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
     <div className="space-y-4">
       {/* İşletme Karşılaştırma */}
       <div className="glass-card p-5">
-        <h3 className="text-sm font-bold text-white mb-4">Isletme Karsilastirmasi</h3>
+        <h3 className="text-sm font-bold text-surface-100 mb-4">Isletme Karsilastirmasi</h3>
         <div className="space-y-4">
           {businesses.map((biz) => {
             const incomeShare = totalIncome > 0 ? (biz.income / totalIncome) * 100 : 0;
@@ -993,7 +993,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
                       {biz.business_name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{biz.business_name}</p>
+                      <p className="text-sm font-semibold text-surface-100">{biz.business_name}</p>
                       <p className="text-[10px] text-surface-400">{biz.transaction_count} islem</p>
                     </div>
                   </div>
@@ -1056,7 +1056,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
 
       {/* İşletme Performans Tablosu */}
       <div className="glass-card p-4 overflow-x-auto">
-        <h3 className="text-sm font-bold text-white mb-3">Performans Tablosu</h3>
+        <h3 className="text-sm font-bold text-surface-100 mb-3">Performans Tablosu</h3>
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-surface-700">
@@ -1071,7 +1071,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
           <tbody>
             {businesses.map((biz) => (
               <tr key={biz.business_id} className="border-b border-surface-700 row-hover transition-colors">
-                <td className="py-2.5 px-2 font-medium text-white">
+                <td className="py-2.5 px-2 font-medium text-surface-100">
                   <div className="flex items-center gap-2">
                     <div
                       className="w-5 h-5 rounded-md"
@@ -1099,7 +1099,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
             ))}
             {/* Toplam satırı */}
             <tr className="border-t-2 border-surface-600 font-bold">
-              <td className="py-2.5 px-2 text-white">Toplam</td>
+              <td className="py-2.5 px-2 text-surface-100">Toplam</td>
               <td className="py-2.5 px-2 text-right text-green-600">{formatCurrency(totalIncome)}</td>
               <td className="py-2.5 px-2 text-right text-red-600">{formatCurrency(totalExpense)}</td>
               <td className="py-2.5 px-2 text-right text-orange-600">
@@ -1150,7 +1150,7 @@ function EmptyState() {
       <div className="w-16 h-16 rounded-2xl bg-surface-800 flex items-center justify-center mb-4">
         <BarChart3 size={28} className="text-surface-400" />
       </div>
-      <h2 className="text-lg font-bold text-white mb-1">Finans Verileri Yuklenemedi</h2>
+      <h2 className="text-lg font-bold text-surface-100 mb-1">Finans Verileri Yuklenemedi</h2>
       <p className="text-surface-400 text-sm">Lutfen daha sonra tekrar deneyin.</p>
     </div>
   );

@@ -90,7 +90,7 @@ export default function TransferModePage() {
           </button>
           <div className="flex items-center gap-2 min-w-0">
             <ArrowLeftRight size={20} className="text-purple-300 shrink-0" />
-            <h1 className="text-xl font-bold text-white truncate">Yeni Transfer</h1>
+            <h1 className="text-xl font-bold text-surface-100 truncate">Yeni Transfer</h1>
           </div>
         </div>
         <Link
@@ -114,7 +114,7 @@ export default function TransferModePage() {
                 "flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-medium border-2 transition-all",
                 active
                   ? colorClass(m.color)
-                  : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500 hover:text-white",
+                  : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500 hover:text-surface-100",
               )}
             >
               <Icon size={13} />
@@ -619,7 +619,7 @@ function SubmitButton({ submitting, disabled, color, label }: {
       type="submit"
       disabled={submitting || disabled}
       className={cn(
-        "w-full py-3 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50 transition-all",
+        "w-full py-3 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50 transition-all",
         colorClasses[color] || "bg-brand-600 hover:bg-brand-500",
       )}
     >
@@ -636,7 +636,7 @@ function colorClass(color: string): string {
     emerald: "bg-emerald-500/15 border-emerald-500/50 text-emerald-300",
     rose: "bg-rose-500/15 border-rose-500/50 text-rose-300",
   };
-  return active[color] || "bg-surface-600 border-surface-500 text-white";
+  return active[color] || "bg-surface-600 border-surface-500 text-surface-100";
 }
 
 function infoBg(color: string): string {

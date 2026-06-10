@@ -81,7 +81,7 @@ export function EditGroupModal({ group, onClose, onUpdated, onDeleted }: Props) 
         className="glass-card w-full max-w-md shadow-xl"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white">Grubu Düzenle</h3>
+          <h3 className="text-base font-semibold text-surface-100">Grubu Düzenle</h3>
           <button type="button" onClick={onClose}
             className="modal-close">
             <X size={16} />
@@ -163,7 +163,7 @@ export function EditGroupModal({ group, onClose, onUpdated, onDeleted }: Props) 
            onClick={() => setConfirmDelete(false)}>
         <div onClick={(e) => e.stopPropagation()}
              className="glass-card !border-red-500/30 max-w-sm w-full p-5">
-          <h4 className="text-base font-semibold text-white mb-2">Grubu sil</h4>
+          <h4 className="text-base font-semibold text-surface-100 mb-2">Grubu sil</h4>
           <p className="text-sm text-surface-300 mb-4">
             <strong>{group.name}</strong> grubunu silmek istediğinden emin misin?
             {group.firm_count > 0 && (

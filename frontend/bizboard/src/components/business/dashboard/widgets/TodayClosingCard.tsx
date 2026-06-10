@@ -30,7 +30,7 @@ export function TodayClosingCard({ d, onCloseDay }: { d: ConsolidatedDashboard; 
         : "border-amber-500/30 bg-amber-500/5 hover:ring-amber-500/40",
     )}>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold text-surface-100 flex items-center gap-1.5">
           {t.closed ? <Lock size={14} className="text-emerald-400" /> : <CalendarClock size={14} className="text-amber-400" />}
           Bugünün Kasa Durumu
         </h3>

@@ -127,7 +127,7 @@ export default function AdminAuditPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-surface-900 text-white">
+    <div className="min-h-[100dvh] bg-surface-900 text-surface-100">
       <header className="sticky top-0 z-40 bg-surface-800/95 backdrop-blur-lg border-b border-surface-700">
         <div className="flex items-center gap-3 px-4 py-3 max-w-7xl mx-auto">
           <button
@@ -244,7 +244,7 @@ export default function AdminAuditPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-white">{actionLabel(r.action)}</span>
+                      <span className="text-sm font-semibold text-surface-100">{actionLabel(r.action)}</span>
                       {badge && (
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${badge.cls}`}>
                           {badge.label}

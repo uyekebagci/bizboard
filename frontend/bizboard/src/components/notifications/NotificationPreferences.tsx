@@ -78,7 +78,7 @@ export function NotificationPreferences() {
       <TelegramLinkSection />
 
       <section className="glass-card p-5">
-        <h3 className="text-sm font-bold text-white mb-1">Bildirim Tercihleri</h3>
+        <h3 className="text-sm font-bold text-surface-100 mb-1">Bildirim Tercihleri</h3>
         <p className="text-[11px] text-surface-400 mb-3">
           Hangi olayda hangi kanaldan bildirim alacağınızı seçin. Telegram kapalıysa
           yalnız uygulama içi gösterilir.

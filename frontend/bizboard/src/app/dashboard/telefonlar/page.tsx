@@ -105,7 +105,7 @@ export default function TelefonlarPage() {
               <Smartphone size={20} className="text-cyan-300" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-white">Telefonlar</h1>
+              <h1 className="text-xl font-bold text-surface-100">Telefonlar</h1>
               <p className="text-xs text-surface-400">
                 Fiziki telefonlar + atanmış firmalar + bankacılık uygulamaları
               </p>
@@ -130,7 +130,7 @@ export default function TelefonlarPage() {
             placeholder="Telefon / firma / banka ara..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+            className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm"
           />
         </div>
         <div className="min-w-[160px]">
@@ -188,7 +188,7 @@ export default function TelefonlarPage() {
                   className={d.is_active ? "" : "opacity-50"}
                 >
                   <td className="px-3 py-2 text-surface-400">#{d.device_number}</td>
-                  <td className="px-3 py-2 text-white">
+                  <td className="px-3 py-2 text-surface-100">
                     {d.display_label}
                     {d.custom_model && (
                       <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
@@ -436,7 +436,7 @@ function PhoneDeviceModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white">
+          <h3 className="text-base font-semibold text-surface-100">
             {mode === "create" ? "Yeni Telefon" : `Telefon #${existing?.device_number} Düzenle`}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-surface-700">
@@ -526,7 +526,7 @@ function PhoneDeviceModal({
                 value={customModel}
                 onChange={(e) => setCustomModel(e.target.value)}
                 placeholder="örn. Phone (3a)"
-                className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+                className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm"
               />
             </div>
           )}
@@ -539,7 +539,7 @@ function PhoneDeviceModal({
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="0555..."
-              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm"
             />
           </div>
 
@@ -569,7 +569,7 @@ function PhoneDeviceModal({
                   className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
                 >
                   {b.bank_name}
-                  <button onClick={() => removeBank(b.bank_name)} className="hover:text-white">
+                  <button onClick={() => removeBank(b.bank_name)} className="hover:text-surface-100">
                     <X size={10} />
                   </button>
                 </span>
@@ -582,7 +582,7 @@ function PhoneDeviceModal({
                 onChange={(e) => setNewBankName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addBank())}
                 placeholder="örn. Garanti, İş Bankası, Akbank..."
-                className="flex-1 px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+                className="flex-1 px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm"
               />
               <button
                 type="button"
@@ -601,7 +601,7 @@ function PhoneDeviceModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm resize-none"
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm resize-none"
             />
           </div>
         </div>
@@ -653,7 +653,7 @@ function DeleteConfirmModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-sm">
         <div className="p-4 border-b border-surface-700">
-          <h3 className="text-base font-semibold text-white">Telefonu pasif yap</h3>
+          <h3 className="text-base font-semibold text-surface-100">Telefonu pasif yap</h3>
         </div>
         <div className="p-4 text-sm text-surface-300">
           <p>

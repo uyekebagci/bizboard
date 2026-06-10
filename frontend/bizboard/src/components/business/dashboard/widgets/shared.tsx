@@ -12,7 +12,7 @@ export function SectionTitle({ icon: Icon, label, inline }: { icon: typeof Walle
   return (
     <div className={cn("flex items-center gap-1.5", !inline && "mb-2")}>
       <Icon size={14} className="text-surface-400" />
-      <h3 className="text-sm font-semibold text-white">{label}</h3>
+      <h3 className="text-sm font-semibold text-surface-100">{label}</h3>
     </div>
   );
 }
@@ -27,10 +27,10 @@ export function Stat({
       <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
       <p className={cn(
         "num mt-0.5",
-        bold ? "text-base font-bold text-white" : "text-sm font-medium",
+        bold ? "text-base font-bold text-surface-100" : "text-sm font-medium",
         !bold && tone === "positive" && "text-emerald-300",
         !bold && tone === "negative" && "text-red-300",
-        !bold && !tone && "text-white",
+        !bold && !tone && "text-surface-100",
       )}>
         {formatCurrency(value, "TRY")}
       </p>
@@ -64,7 +64,7 @@ export function DetailRow({
     pos: "text-emerald-300",
     neg: "text-red-300",
     warn: "text-amber-300",
-    neutral: "text-white",
+    neutral: "text-surface-100",
   }[tone];
   return (
     <div className="flex items-center justify-between gap-3">
@@ -131,7 +131,7 @@ export function Info({ label, value, tone }: { label: string; value: string; ton
       <p className={cn("text-sm font-medium mt-0.5",
         tone === "pos" && "text-emerald-300",
         tone === "neg" && "text-red-300",
-        !tone && "text-white"
+        !tone && "text-surface-100"
       )}>{value}</p>
     </div>
   );
@@ -144,7 +144,7 @@ export function Stat2({ label, value, tone }: { label: string; value: string; to
       <p className={cn("text-sm font-bold mt-0.5",
         tone === "pos" && "text-emerald-300",
         tone === "neg" && "text-red-300",
-        !tone && "text-white"
+        !tone && "text-surface-100"
       )}>{value}</p>
     </div>
   );

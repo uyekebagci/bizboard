@@ -847,7 +847,7 @@ export function AddTransactionForm({
             (saveAsQuickAction && !quickActionName.trim())
           }
           className={cn(
-            "py-3 rounded-2xl font-semibold text-white flex items-center justify-center gap-2",
+            "py-3 rounded-2xl font-semibold text-surface-100 flex items-center justify-center gap-2",
             "transition-all duration-150 hover:-translate-y-px active:translate-y-0",
             "disabled:opacity-50 disabled:pointer-events-none",
             direction === "income"

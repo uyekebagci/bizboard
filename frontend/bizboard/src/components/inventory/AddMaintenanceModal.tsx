@@ -41,7 +41,7 @@ export function AddMaintenanceModal({ itemId, onClose, onAdded }: {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-md">
         <div className="modal-header">
-          <h3 className="text-lg font-bold text-white">Bakim Kaydi Ekle</h3>
+          <h3 className="text-lg font-bold text-surface-100">Bakim Kaydi Ekle</h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600"><X size={20} className="text-surface-400" /></button>
         </div>
         <div className="p-4 space-y-3">

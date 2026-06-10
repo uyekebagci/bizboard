@@ -84,13 +84,13 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
         className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
             <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40">
               TRANSFER
             </span>
             Transfer Detayı
           </h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-white">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100">
             <X size={16} />
           </button>
         </div>
@@ -113,7 +113,7 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
             <>
               {/* Tutar — büyük */}
               <div className="text-center py-3 rounded-xl bg-surface-900 border border-surface-700">
-                <p className="text-3xl font-bold text-white">
+                <p className="text-3xl font-bold text-surface-100">
                   {formatCurrency(data.amount, data.currency || "TRY")}
                 </p>
                 <p className="text-[11px] text-surface-400 mt-1">{data.date}</p>
@@ -123,7 +123,7 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
               <div className="flex items-center gap-2">
                 <div className="flex-1 min-w-0 p-3 rounded-xl border border-red-500/30 bg-red-500/[0.04]">
                   <p className="text-[10px] uppercase text-red-300/80 tracking-wider mb-1">Kaynak</p>
-                  <p className="text-sm font-medium text-white truncate">{data.from_bank_account_name}</p>
+                  <p className="text-sm font-medium text-surface-100 truncate">{data.from_bank_account_name}</p>
                   <p className="text-[11px] text-red-300 mt-0.5">
                     −{formatCurrency(data.amount, data.currency || "TRY")}
                   </p>
@@ -131,7 +131,7 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
                 <ArrowRight size={20} className="text-surface-400 shrink-0" />
                 <div className="flex-1 min-w-0 p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04]">
                   <p className="text-[10px] uppercase text-emerald-300/80 tracking-wider mb-1">Hedef</p>
-                  <p className="text-sm font-medium text-white truncate">{data.to_bank_account_name}</p>
+                  <p className="text-sm font-medium text-surface-100 truncate">{data.to_bank_account_name}</p>
                   <p className="text-[11px] text-emerald-300 mt-0.5">
                     +{formatCurrency(data.amount, data.currency || "TRY")}
                   </p>

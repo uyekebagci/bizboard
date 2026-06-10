@@ -38,7 +38,7 @@ export default function IncomeFormPage() {
           </button>
           <div className="flex items-center gap-2 min-w-0">
             <ArrowDownLeft size={20} className="text-emerald-300 shrink-0" />
-            <h1 className="text-xl font-bold text-white truncate">Yeni Gelir</h1>
+            <h1 className="text-xl font-bold text-surface-100 truncate">Yeni Gelir</h1>
           </div>
         </div>
         <Link

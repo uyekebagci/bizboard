@@ -80,7 +80,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-md max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
-          <h3 className="text-lg font-bold h-display text-white">Günü Kapat</h3>
+          <h3 className="text-lg font-bold h-display text-surface-100">Günü Kapat</h3>
           <button onClick={onClose} className="modal-close">
             <X size={18} className="text-surface-400" />
           </button>
@@ -97,7 +97,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
           {/* Computed (büyük, readonly) */}
           <div className="rounded-2xl p-4 bg-surface-900/40 border border-surface-700/60 text-center">
             <p className="text-[11px] text-surface-400 uppercase tracking-wider">Hesaplanan Kapanış</p>
-            <p className="num mt-1 text-3xl font-bold text-white">
+            <p className="num mt-1 text-3xl font-bold text-surface-100">
               {formatCurrency(preview.computed_closing, "TRY")}
             </p>
             <p className="mt-1 text-[11px] text-surface-400">
@@ -133,7 +133,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
               <span className="text-sm text-surface-300">Fark</span>
               <span className={cn(
                 "text-lg font-bold",
-                difference === 0 && "text-white",
+                difference === 0 && "text-surface-100",
                 isNegative && "text-red-400",
                 isPositive && "text-emerald-400",
               )}>

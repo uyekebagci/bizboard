@@ -233,7 +233,7 @@ export default function FirmalarimPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start gap-2">
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-white flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-surface-100 flex items-center gap-2">
             <Building2 size={20} className="text-brand-300" />
             Firmalarım
           </h1>
@@ -260,12 +260,12 @@ export default function FirmalarimPage() {
           <div className="inline-flex rounded-xl border border-surface-600 overflow-hidden bg-surface-800">
             <button onClick={() => setView("list")}
               className={cn("px-2.5 py-2 text-xs font-medium inline-flex items-center gap-1.5",
-                view === "list" ? "bg-surface-700 text-white" : "text-surface-300 hover:bg-surface-700/50")}>
+                view === "list" ? "bg-surface-700 text-surface-100" : "text-surface-300 hover:bg-surface-700/50")}>
               <ListIcon size={12} /> Liste
             </button>
             <button onClick={() => setView("group")}
               className={cn("px-2.5 py-2 text-xs font-medium inline-flex items-center gap-1.5 border-l border-surface-600",
-                view === "group" ? "bg-surface-700 text-white" : "text-surface-300 hover:bg-surface-700/50")}>
+                view === "group" ? "bg-surface-700 text-surface-100" : "text-surface-300 hover:bg-surface-700/50")}>
               <LayoutGrid size={12} /> Grup
             </button>
           </div>
@@ -330,7 +330,7 @@ export default function FirmalarimPage() {
                   {isAdmin && !isUngrouped && s.group && (
                     <>
                       <button onClick={() => setEditGroup(s.group!)}
-                        className="ml-1 p-1 rounded hover:bg-surface-700 text-surface-400 hover:text-white"
+                        className="ml-1 p-1 rounded hover:bg-surface-700 text-surface-400 hover:text-surface-100"
                         title="Grubu düzenle">
                         <Pencil size={11} />
                       </button>
@@ -475,7 +475,7 @@ function FirmCard({
           <Building2 size={16} className="text-surface-300" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{firm.legal_name}</p>
+          <p className="text-sm font-semibold text-surface-100 truncate">{firm.legal_name}</p>
           <p className="text-[10px] text-surface-400 mt-0.5">
             {COMPANY_TYPE_LABEL[firm.company_type] || firm.company_type}
             {firm.tax_id && <span className="ml-1.5">· VKN {firm.tax_id}</span>}
@@ -510,7 +510,7 @@ function EmptyState({ isAdmin, onCreate }: { isAdmin: boolean; onCreate: () => v
     return (
       <div className="py-12 px-6 text-center rounded-2xl border border-surface-700 bg-surface-800/40">
         <ShieldOff size={28} className="mx-auto text-surface-500 mb-3" />
-        <p className="text-sm font-semibold text-white mb-1">Henüz hiçbir firmaya erişiminiz yok</p>
+        <p className="text-sm font-semibold text-surface-100 mb-1">Henüz hiçbir firmaya erişiminiz yok</p>
         <p className="text-xs text-surface-400">Yöneticinizden firma erişimi talep ediniz.</p>
       </div>
     );
@@ -518,7 +518,7 @@ function EmptyState({ isAdmin, onCreate }: { isAdmin: boolean; onCreate: () => v
   return (
     <div className="py-12 px-6 text-center rounded-2xl border border-surface-700 bg-surface-800/40">
       <Inbox size={28} className="mx-auto text-surface-500 mb-3" />
-      <p className="text-sm font-semibold text-white mb-1">Henüz firma yok</p>
+      <p className="text-sm font-semibold text-surface-100 mb-1">Henüz firma yok</p>
       <p className="text-xs text-surface-400 mb-4">İlk firmayı ekleyerek başlayın.</p>
       <button onClick={onCreate}
         className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold inline-flex items-center gap-1.5">

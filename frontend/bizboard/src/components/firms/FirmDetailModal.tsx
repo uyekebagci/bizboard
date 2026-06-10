@@ -203,7 +203,7 @@ export function FirmDetailModal({
         {/* Header */}
         <div className="modal-header">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-white truncate">
+            <h3 className="text-base font-semibold text-surface-100 truncate">
               {isReadOnly ? firm.legal_name : "Firmayı Düzenle"}
             </h3>
             <div className="flex items-center gap-2 mt-1">
@@ -494,7 +494,7 @@ export function FirmDetailModal({
            onClick={() => setConfirmDelete(false)}>
         <div onClick={(e) => e.stopPropagation()}
              className="glass-card !border-red-500/30 max-w-sm w-full p-5">
-          <h4 className="text-base font-semibold text-white mb-2">Firmayı sil</h4>
+          <h4 className="text-base font-semibold text-surface-100 mb-2">Firmayı sil</h4>
           <p className="text-sm text-surface-300 mb-4">
             <strong>{firm.legal_name}</strong> kaydını silmek istediğinden emin misin? Bu işlem geri alınamaz.
           </p>

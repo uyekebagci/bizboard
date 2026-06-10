@@ -58,7 +58,7 @@ export default function DashboardPage() {
       <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 rise">
         <div>
           <p className="text-[13px] text-brand-300 font-semibold tracking-wide">{getGreeting()} 👋</p>
-          <h1 className="text-2xl sm:text-[28px] font-extrabold h-display mt-1 text-white">
+          <h1 className="text-2xl sm:text-[28px] font-extrabold h-display mt-1 text-surface-100">
             Isletmeleriniz bir bakista
           </h1>
           <p className="text-surface-400 text-sm mt-1.5">
@@ -73,7 +73,7 @@ export default function DashboardPage() {
               className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                 period === p
                   ? "seg-active font-semibold"
-                  : "text-surface-400 hover:text-white"
+                  : "text-surface-400 hover:text-surface-100"
               }`}
               aria-pressed={period === p}
             >
@@ -112,7 +112,7 @@ export default function DashboardPage() {
       {/* Business Cards Grid */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold h-display text-white">
+          <h2 className="text-lg font-bold h-display text-surface-100">
             Isletmeleriniz
           </h2>
           <span className="text-sm text-surface-400">
@@ -124,7 +124,7 @@ export default function DashboardPage() {
 
       {/* Recent Activity */}
       <section>
-        <h2 className="text-lg font-bold h-display text-white mb-3">
+        <h2 className="text-lg font-bold h-display text-surface-100 mb-3">
           Son Islemler
         </h2>
         <RecentActivity />

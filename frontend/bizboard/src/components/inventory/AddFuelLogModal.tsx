@@ -111,7 +111,7 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
             <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center">
               <Fuel size={16} className="text-orange-300" />
             </div>
-            <h3 className="text-lg font-bold text-white">Yakit Kaydi Ekle</h3>
+            <h3 className="text-lg font-bold text-surface-100">Yakit Kaydi Ekle</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600"><X size={20} className="text-surface-400" /></button>
         </div>

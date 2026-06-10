@@ -18,7 +18,7 @@ export default function BusinessesPage() {
   return (
     <div className="space-y-5">
       <section>
-        <h1 className="text-2xl font-bold text-white">Isletmelerim</h1>
+        <h1 className="text-2xl font-bold text-surface-100">Isletmelerim</h1>
         <p className="text-surface-400 mt-1">
           Erisebildigin tum isletmeler
         </p>

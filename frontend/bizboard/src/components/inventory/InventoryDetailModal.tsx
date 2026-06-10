@@ -142,9 +142,9 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
             </div>
             {editing ? (
               <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
-                className="text-lg font-bold text-white border-b-2 border-brand-500 outline-none bg-transparent min-w-0" />
+                className="text-lg font-bold text-surface-100 border-b-2 border-brand-500 outline-none bg-transparent min-w-0" />
             ) : (
-              <h3 className="text-lg font-bold text-white truncate">{item.name}</h3>
+              <h3 className="text-lg font-bold text-surface-100 truncate">{item.name}</h3>
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">

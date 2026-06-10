@@ -118,7 +118,7 @@ function InventoryPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">Envanter Yonetimi</h1>
+            <h1 className="text-xl font-bold text-surface-100">Envanter Yonetimi</h1>
             <p className="text-xs text-surface-400">{totalCount} kalem</p>
           </div>
         </div>

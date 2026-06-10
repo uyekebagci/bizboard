@@ -80,7 +80,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
         <div className="modal-header">
           <div className="flex items-center gap-2">
             <TrendingDown size={18} className="text-red-300" />
-            <h3 className="text-sm font-bold text-white">Sabit Masraflar</h3>
+            <h3 className="text-sm font-bold text-surface-100">Sabit Masraflar</h3>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-red-300">
@@ -160,7 +160,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-sm font-medium text-white truncate">{fc.name}</p>
+                      <p className="text-sm font-medium text-surface-100 truncate">{fc.name}</p>
                       {fc.is_auto && (
                         <span className="px-1.5 py-0.5 bg-blue-500/15 text-blue-300 text-[9px] rounded-full font-medium">
                           Otomatik
@@ -336,7 +336,7 @@ function CreateFixedCostModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-lg font-bold text-surface-100">
             {isEdit ? "Sabit Gider Duzenle" : "Yeni Sabit Gider"}
           </h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
@@ -353,7 +353,7 @@ function CreateFixedCostModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="Ornegin: Ofis Kirasi, Elektrik, vb."
               aria-invalid={!!fieldErrors.name}
-              className={`w-full px-4 py-3 rounded-xl border bg-surface-800 text-white
+              className={`w-full px-4 py-3 rounded-xl border bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all ${
                 fieldErrors.name ? "border-red-500" : "border-surface-600"
@@ -386,7 +386,7 @@ function CreateFixedCostModal({
                 onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
                 placeholder="0"
                 aria-invalid={!!fieldErrors.amount}
-                className={`w-full px-4 py-3 rounded-xl border bg-surface-800 text-white
+                className={`w-full px-4 py-3 rounded-xl border bg-surface-800 text-surface-100
                            placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                            focus:border-transparent transition-all ${
                   fieldErrors.amount ? "border-red-500" : "border-surface-600"
@@ -405,7 +405,7 @@ function CreateFixedCostModal({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ek bilgiler..."
               rows={2}
-              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all resize-none"
             />
@@ -421,7 +421,7 @@ function CreateFixedCostModal({
                 className="mt-0.5 w-4 h-4 rounded accent-brand-600"
               />
               <div className="flex-1">
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-surface-100">
                   Her ay otomatik tx olustur
                 </p>
                 <p className="text-xs text-surface-400 mt-0.5">
@@ -525,7 +525,7 @@ function DeleteFixedCostModal({
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />
             </div>
-            <h3 className="text-lg font-bold text-white">Sabit Gideri Sil</h3>
+            <h3 className="text-lg font-bold text-surface-100">Sabit Gideri Sil</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
             <X size={20} className="text-surface-400" />

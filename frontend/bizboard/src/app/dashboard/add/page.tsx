@@ -387,7 +387,7 @@ export default function AddBusinessPage() {
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-white">
+          <h1 className="text-xl font-bold text-surface-100">
             {form.isMockup ? "Mock-up Isletme" : "Yeni Isletme"}
           </h1>
           <p className="text-sm text-surface-400">
@@ -434,7 +434,7 @@ export default function AddBusinessPage() {
             />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-surface-100">
               Mock-up / Fizibilite Modu
             </p>
             <p className="text-xs text-surface-400">
@@ -449,7 +449,7 @@ export default function AddBusinessPage() {
                 : "border-surface-300"
             )}
           >
-            {form.isMockup && <Check size={12} className="text-white" />}
+            {form.isMockup && <Check size={12} className="text-surface-100" />}
           </div>
         </button>
       )}
@@ -717,7 +717,7 @@ function StepBasicInfo({
         <div className="space-y-4 pt-4 border-t border-surface-600">
           <div className="flex items-center gap-2 mb-2">
             <Lightbulb size={18} className="text-amber-500" />
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-surface-100">
               Fizibilite Analizi
             </p>
           </div>
@@ -849,7 +849,7 @@ function StepModules({
                 />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-surface-100">
                   {moduleLabelMap[mod] || mod}
                 </p>
                 {isDefault && (
@@ -864,7 +864,7 @@ function StepModules({
                     : "border-surface-300"
                 )}
               >
-                {isActive && <Check size={12} className="text-white" />}
+                {isActive && <Check size={12} className="text-surface-100" />}
               </div>
             </button>
           );
@@ -906,7 +906,7 @@ function StepPreview({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="text-lg font-bold text-surface-100">
                 {form.name || "Isimsiz Isletme"}
               </h2>
               {form.isMockup && (
@@ -1041,7 +1041,7 @@ function StepPreview({
         <div className="glass-card p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/10 !border-amber-500/30">
           <div className="flex items-center gap-2 mb-4">
             <Calculator size={18} className="text-amber-300" />
-            <p className="text-sm font-bold text-white">
+            <p className="text-sm font-bold text-surface-100">
               Fizibilite Ozeti
             </p>
           </div>
@@ -1085,7 +1085,7 @@ function StepPreview({
                 <Sparkles size={16} className="text-amber-300" />
                 <p className="text-sm text-surface-200">
                   Tahmini geri donus suresi:{" "}
-                  <span className="font-bold text-white">
+                  <span className="font-bold text-surface-100">
                     {roiMonths} ay
                   </span>
                 </p>
@@ -1267,7 +1267,7 @@ function StepMonthlyFixedCosts({
             >
               <div className="flex items-center justify-between gap-3 mb-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-surface-100">
                     {it.label}
                   </p>
                   {it.required && (

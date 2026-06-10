@@ -96,7 +96,7 @@ export default function ReportsPage() {
     <div className="space-y-5">
       <section className="rise">
         <p className="text-[13px] text-brand-300 font-semibold tracking-wide">Rapor Merkezi</p>
-        <h1 className="text-2xl font-extrabold h-display text-white mt-1">Finansal Raporlar</h1>
+        <h1 className="text-2xl font-extrabold h-display text-surface-100 mt-1">Finansal Raporlar</h1>
         <p className="text-surface-400 mt-1 text-sm">
           Rapor seçin, dönem/işletme filtreleyin, PDF veya Excel indirin.
         </p>
@@ -148,7 +148,7 @@ export default function ReportsPage() {
                   <Icon size={22} className={r.iconColor} />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-white h-display">{r.title}</h3>
+                  <h3 className="font-bold text-surface-100 h-display">{r.title}</h3>
                   <p className="text-xs text-surface-400 mt-0.5">{r.desc}</p>
                 </div>
               </div>

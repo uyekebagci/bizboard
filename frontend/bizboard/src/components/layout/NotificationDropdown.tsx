@@ -120,7 +120,7 @@ export function NotificationDropdown() {
       >
         <Bell size={20} className="text-surface-300" />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 bg-status-danger text-white text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 bg-status-danger text-surface-100 text-xs font-bold rounded-full flex items-center justify-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -132,7 +132,7 @@ export function NotificationDropdown() {
           className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] bg-surface-800 rounded-xl shadow-card-hover border border-surface-700 py-1 z-50"
         >
           <div className="modal-header">
-            <p className="text-sm font-semibold text-white">Bildirimler</p>
+            <p className="text-sm font-semibold text-surface-100">Bildirimler</p>
             <button
               type="button"
               onClick={handleMarkAll}
@@ -189,7 +189,7 @@ function NotificationItem({ notification, busy, onMarkRead, onClose }: ItemProps
         />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-white font-medium truncate">
+        <p className="text-sm text-surface-100 font-medium truncate">
           {notification.title}
         </p>
         <p className="text-xs text-surface-300 line-clamp-2 mt-0.5">

@@ -116,7 +116,7 @@ export default function PosDeviceDetailPage() {
               <CreditCard size={20} className="text-indigo-300" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-white truncate">{device.name}</h1>
+              <h1 className="text-xl font-bold text-surface-100 truncate">{device.name}</h1>
               <p className="text-xs text-surface-400 truncate">
                 {device.owner_counterpart_name || "—"}
                 {device.bank_name && ` · ${device.bank_name}`}
@@ -158,7 +158,7 @@ export default function PosDeviceDetailPage() {
       {/* Daily chart (basit bar grafiği) */}
       {analytics && analytics.series.length > 0 && (
         <section className="card p-4">
-          <h2 className="text-sm font-semibold text-white mb-3">Son 30 Gün</h2>
+          <h2 className="text-sm font-semibold text-surface-100 mb-3">Son 30 Gün</h2>
           <DailyBarChart series={analytics.series} />
         </section>
       )}
@@ -167,7 +167,7 @@ export default function PosDeviceDetailPage() {
       {unsettled.length > 0 && (
         <section className="card overflow-hidden border-amber-500/30">
           <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between bg-amber-500/5">
-            <h2 className="text-sm font-semibold text-white">
+            <h2 className="text-sm font-semibold text-surface-100">
               Bekleyen Tahsilatlar
               <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 {unsettled.length} işlem
@@ -191,7 +191,7 @@ export default function PosDeviceDetailPage() {
       {/* Tüm işlemler */}
       <section className="card overflow-hidden">
         <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">
+          <h2 className="text-sm font-semibold text-surface-100">
             Tüm İşlemler
             <span className="ml-2 text-[10px] text-surface-400">({txs.length})</span>
           </h2>
@@ -217,7 +217,7 @@ function Info({ label, value, tone }: { label: string; value: string; tone?: "po
       <p className={cn("text-sm font-medium mt-0.5",
         tone === "pos" && "text-emerald-300",
         tone === "neg" && "text-red-300",
-        !tone && "text-white",
+        !tone && "text-surface-100",
       )}>
         {value}
       </p>
@@ -244,7 +244,7 @@ function StatCard({
         tone === "pos" && "text-emerald-300",
         tone === "neg" && "text-red-300",
         tone === "warn" && "text-amber-300",
-        !tone && "text-white",
+        !tone && "text-surface-100",
       )}>
         {valStr}
       </p>
@@ -258,7 +258,7 @@ function TxRow({ tx }: { tx: Transaction }) {
   return (
     <div className="px-4 py-2.5 flex items-center gap-3">
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-white truncate">{tx.description || "POS çekim"}</p>
+        <p className="text-sm text-surface-100 truncate">{tx.description || "POS çekim"}</p>
         <p className="text-[11px] text-surface-400">
           {new Date(tx.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}
           {tx.pos_rate != null && ` · %${tx.pos_rate}`}

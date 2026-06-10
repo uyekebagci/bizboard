@@ -526,7 +526,7 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
       <p className="text-[10px] uppercase text-surface-400">{label}</p>
       <p className={cn(
         "mt-1 text-sm font-semibold truncate",
-        accent === "emerald" ? "text-emerald-300" : "text-white",
+        accent === "emerald" ? "text-emerald-300" : "text-surface-100",
       )}>
         {formatCurrency(value, "TRY")}
       </p>
@@ -718,7 +718,7 @@ function AssignmentPicker({
         className="glass-card w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-surface-700 shrink-0">
-          <h3 className="text-sm font-semibold text-white">Atama Ekle</h3>
+          <h3 className="text-sm font-semibold text-surface-100">Atama Ekle</h3>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-surface-700">
             <X size={16} className="text-surface-400" />
           </button>
@@ -785,7 +785,7 @@ function AssignmentPicker({
                 className={cn(
                   "px-2 py-0.5 rounded-full text-[10px] font-medium border",
                   showInactive
-                    ? "bg-surface-500 border-surface-400 text-white"
+                    ? "bg-surface-500 border-surface-400 text-surface-100"
                     : "bg-surface-700 border-surface-600 text-surface-300",
                 )}
               >
@@ -837,7 +837,7 @@ function AssignmentPicker({
                     )}
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
                         {o.name}
                         {!o.active && (
                           <span className="text-[9px] px-1 py-0.5 rounded bg-surface-700 text-surface-400 border border-surface-600">

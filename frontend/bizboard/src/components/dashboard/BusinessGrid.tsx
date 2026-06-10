@@ -66,7 +66,7 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
                   <Icon size={20} style={{ color }} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white text-sm leading-tight truncate">
+                  <h3 className="font-semibold text-surface-100 text-sm leading-tight truncate">
                     {biz.name}
                   </h3>
                   <p className="text-[11px] text-surface-400 capitalize">
@@ -103,7 +103,7 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
               </div>
               <p className={cn(
                 "text-sm font-bold",
-                netProfit > 0 ? "text-green-300" : netProfit < 0 ? "text-red-300" : "text-white"
+                netProfit > 0 ? "text-green-300" : netProfit < 0 ? "text-red-300" : "text-surface-100"
               )}>
                 {formatCurrency(netProfit, biz.currency)}
               </p>
