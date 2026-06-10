@@ -86,16 +86,25 @@ public class ProfitSharePostingService {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal totalOperatorShare = BigDecimal.ZERO;
+        // 2a) Deal'in gross margin'ini POS geliri olarak tanı (PNL_INCOME) — bir kez.
+        //     Şirket residual = bu gelir − Σ operatör payı (DERIVED, ayrı postalanmaz).
+        BigDecimal grossMargin = grossMargin(deal, avgCommission);
+        JournalEntry incomeEntry = buildMarginIncomeEntry(deal, grossMargin);
         int posted = 0;
+        if (incomeEntry != null) {
+            journalEntryRepository.save(incomeEntry);
+            posted++;
+        }
+
+        BigDecimal totalOperatorShare = BigDecimal.ZERO;
         for (ProfitShareEngine.ShareLeg leg : legs) {
-            JournalEntry entry = buildEntry(deal, leg);
+            // RESIDUAL postalanmaz — gross margin income − operatör gideri'nden türer.
+            if (leg.type() == ProfitShareRuleType.RESIDUAL) continue;
+            JournalEntry entry = buildOperatorPayEntry(deal, leg);
             if (entry == null) continue;
             journalEntryRepository.save(entry); // cascade postings
             posted++;
-            if (leg.type() != ProfitShareRuleType.RESIDUAL) {
-                totalOperatorShare = totalOperatorShare.add(leg.amount());
-            }
+            totalOperatorShare = totalOperatorShare.add(leg.amount());
         }
 
         Map<String, Object> meta = new HashMap<>();
@@ -143,14 +152,69 @@ public class ProfitSharePostingService {
     // ───────── entry inşası ─────────
 
     /**
-     * Tek bir pay bacağı için dengeli JournalEntry üretir. RESIDUAL = şirket
-     * P&L geliri (operatör kasası yok); diğerleri = operatör kasası += pay
-     * (LOCATION_MOVE) + PNL_EXPENSE −pay.
+     * Deal'in gross margin'i = {@code gross × (customerRate − effBankRate) / 100}.
+     * effBankRate = FINAL'da ort.komisyon (settlement), PROVISIONAL'da cihaz banka
+     * oranı (defaultRate). Şirketin POS deal toplam kâr havuzu (operatör payı +
+     * residual buradan dağılır).
      */
-    private JournalEntry buildEntry(PosDeal deal, ProfitShareEngine.ShareLeg leg) {
+    private BigDecimal grossMargin(PosDeal deal, BigDecimal avgCommission) {
+        BigDecimal gross = deal.getGrossAmount() != null ? deal.getGrossAmount() : BigDecimal.ZERO;
+        BigDecimal customerRate = deal.getCustomerRate() != null ? deal.getCustomerRate() : BigDecimal.ZERO;
+        BigDecimal bankRate = avgCommission != null ? avgCommission
+                : (deal.getPosDevice() != null && deal.getPosDevice().getDefaultRate() != null
+                ? deal.getPosDevice().getDefaultRate() : BigDecimal.ZERO);
+        return gross.multiply(customerRate.subtract(bankRate))
+                .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    /**
+     * POS deal gross margin'ini şirket geliri olarak tanır (PNL_INCOME, "POS Kâr").
+     * Dengeleyici clearing bacağı (account NULL). margin 0 ise entry yok.
+     *
+     * <p>İşaret konvansiyonu (Faz A ile aynı): gelir tanıma bacağı = −margin;
+     * karşı clearing = +margin. Rapor {@code total_income} = −Σ PNL_INCOME = +margin.</p>
+     */
+    private JournalEntry buildMarginIncomeEntry(PosDeal deal, BigDecimal margin) {
+        if (margin == null || margin.signum() == 0) return null;
+        JournalEntry entry = JournalEntry.builder()
+                .business(deal.getBusiness())
+                .entryDate(deal.getDealDate())
+                .sourceType(JournalSourceType.PROFIT_SHARE)
+                .sourceRefId(deal.getId())
+                .description("POS Kâr (gross margin) — " + deal.getGrossAmount()
+                        + " @ %" + deal.getCustomerRate())
+                .build();
+        Category incomeCat = resolveCategory(deal.getBusiness(), CATEGORY_POS_PROFIT,
+                CategoryApplicability.INCOME_ONLY);
+        entry.setPostings(List.of(
+                Posting.builder().journalEntry(entry).account(null)
+                        .amount(margin.negate()).legKind(PostingLegKind.PNL_INCOME)
+                        .category(incomeCat).build(),
+                Posting.builder().journalEntry(entry).account(null)
+                        .amount(margin).legKind(PostingLegKind.LOCATION_MOVE).build()));
+        return entry;
+    }
+
+    /**
+     * Tek bir operatör pay bacağı için dengeli JournalEntry üretir.
+     *
+     * <p>İşaret konvansiyonu (Faz A ile TUTARLI): operatör payı = GİDER →
+     * PNL_EXPENSE = +amount (Faz A: gider bacağı pozitif). Operatör kâr-merkezi
+     * hesabı KREDİ-NORMAL yükümlülük cebidir → leg = −amount. Statement/rapor bu
+     * hesabın toplamını NEGATE ederek pozitif birikmiş kâr sunar.</p>
+     *
+     * <p>Residual = gross margin income − Σ operatör gideri (DERIVED; ayrı entry yok).</p>
+     */
+    private JournalEntry buildOperatorPayEntry(PosDeal deal, ProfitShareEngine.ShareLeg leg) {
         ProfitShareRule rule = leg.rule();
         BigDecimal amount = leg.amount();
         if (amount == null || amount.signum() == 0) return null;
+        BankAccount target = rule.getTargetSubCashAccount();
+        if (target == null) {
+            log.warn("[profit-share] kural {} ({}) hedef alt-kasa YOK — bacak atlandı.",
+                    rule.getId(), leg.type());
+            return null;
+        }
 
         String phaseTag = leg.provisional() ? "[PROV] " : "";
         JournalEntry entry = JournalEntry.builder()
@@ -158,56 +222,19 @@ public class ProfitSharePostingService {
                 .entryDate(deal.getDealDate())
                 .sourceType(JournalSourceType.PROFIT_SHARE)
                 .sourceRefId(deal.getId())
-                .description(phaseTag + "Kâr-payı: " + leg.type()
+                .description(phaseTag + "Operatör payı: " + leg.type()
                         + (rule.getOperatorCounterpart() != null
                         ? " — " + rule.getOperatorCounterpart().getName() : ""))
                 .build();
-
-        List<Posting> postings = new ArrayList<>();
-        if (leg.type() == ProfitShareRuleType.RESIDUAL) {
-            // Şirket residual = POS kâr geliri. Operatör kasası yok → P&L tanıma
-            // bacağı + dengeleyici clearing (account NULL). residual<0 ise gider.
-            Category incomeCat = resolveCategory(deal.getBusiness(), CATEGORY_POS_PROFIT,
-                    CategoryApplicability.INCOME_ONLY);
-            PostingLegKind kind = amount.signum() >= 0
-                    ? PostingLegKind.PNL_INCOME : PostingLegKind.PNL_EXPENSE;
-            // İşaret konvansiyonu: PNL_INCOME negatif amount (gelir tanıma), karşı
-            // clearing pozitif. residual + → income leg −residual, clearing +residual.
-            postings.add(Posting.builder()
-                    .journalEntry(entry).account(null)
-                    .amount(amount.negate()).legKind(kind).category(incomeCat).build());
-            postings.add(Posting.builder()
-                    .journalEntry(entry).account(null)
-                    .amount(amount).legKind(PostingLegKind.LOCATION_MOVE).build());
-        } else {
-            BankAccount target = rule.getTargetSubCashAccount();
-            if (target == null) {
-                log.warn("[profit-share] kural {} ({}) hedef alt-kasa YOK — bacak atlandı.",
-                        rule.getId(), leg.type());
-                return null;
-            }
-            Category expenseCat = resolveCategory(deal.getBusiness(), CATEGORY_OPERATOR_SHARE,
-                    CategoryApplicability.EXPENSE_ONLY);
-            // Operatör kasasına pay GİRİŞİ (+); karşı PNL_EXPENSE (operatör payı = gider).
-            postings.add(Posting.builder()
-                    .journalEntry(entry).account(target)
-                    .amount(amount).legKind(PostingLegKind.LOCATION_MOVE)
-                    .counterpart(rule.getOperatorCounterpart()).build());
-            postings.add(Posting.builder()
-                    .journalEntry(entry).account(null)
-                    .amount(amount.negate()).legKind(PostingLegKind.PNL_EXPENSE)
-                    .category(expenseCat).build());
-        }
-        entry.setPostings(postings);
-
-        // İnvariant: Σ posting.amount = 0.
-        BigDecimal sum = postings.stream().map(Posting::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (sum.signum() != 0) {
-            log.error("[profit-share] deal={} bacak DENGESİZ (Σ={}) — atlandı.",
-                    deal.getId(), sum);
-            return null;
-        }
+        Category expenseCat = resolveCategory(deal.getBusiness(), CATEGORY_OPERATOR_SHARE,
+                CategoryApplicability.EXPENSE_ONLY);
+        entry.setPostings(List.of(
+                Posting.builder().journalEntry(entry).account(target)
+                        .amount(amount.negate()).legKind(PostingLegKind.LOCATION_MOVE)
+                        .counterpart(rule.getOperatorCounterpart()).build(),
+                Posting.builder().journalEntry(entry).account(null)
+                        .amount(amount).legKind(PostingLegKind.PNL_EXPENSE)
+                        .category(expenseCat).build()));
         return entry;
     }
 

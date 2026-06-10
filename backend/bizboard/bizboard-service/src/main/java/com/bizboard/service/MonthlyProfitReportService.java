@@ -55,6 +55,9 @@ public class MonthlyProfitReportService {
         LocalDate to = ym.atEndOfMonth();
 
         // ── Kategori-bazlı P&L (NE tür) ──
+        // İşaret normalize: PNL_INCOME bacakları negatif (gelir hesaba +, P&L bacağı
+        // −) → negate ederek pozitif gelir sunarız (residual zarar ise negatif kalır,
+        // company_residual tutarlı). PNL_EXPENSE/PNL_COST zaten pozitif.
         List<MonthlyProfitReportDto.CategoryLine> incomeByCat =
                 categoryLines(businessId, from, to, PostingLegKind.PNL_INCOME, true);
         List<MonthlyProfitReportDto.CategoryLine> expenseByCat =
@@ -63,7 +66,7 @@ public class MonthlyProfitReportService {
                 categoryLines(businessId, from, to, PostingLegKind.PNL_COST, false);
 
         BigDecimal totalIncome = nz(postingRepository.sumPnlForPeriod(
-                businessId, from, to, PostingLegKind.PNL_INCOME)).abs();
+                businessId, from, to, PostingLegKind.PNL_INCOME)).negate();
         BigDecimal totalExpense = nz(postingRepository.sumPnlForPeriod(
                 businessId, from, to, PostingLegKind.PNL_EXPENSE));
         BigDecimal totalCost = nz(postingRepository.sumPnlForPeriod(
@@ -78,7 +81,8 @@ public class MonthlyProfitReportService {
             List<UUID> opIds = operators.stream().map(BankAccount::getId).toList();
             Map<UUID, BigDecimal> earnedByAccount = new HashMap<>();
             for (Object[] row : postingRepository.sumByAccountForPeriod(businessId, from, to, opIds)) {
-                earnedByAccount.put((UUID) row[0], (BigDecimal) row[1]);
+                // Operatör hesabı kredi-normal (accrual −amount) → negate ile pozitif kâr.
+                earnedByAccount.put((UUID) row[0], nz((BigDecimal) row[1]).negate());
             }
             for (BankAccount acc : operators) {
                 operatorLines.add(MonthlyProfitReportDto.OperatorLine.builder()
@@ -92,12 +96,18 @@ public class MonthlyProfitReportService {
                         .build());
             }
         }
-        // Şirket residual = "POS Kâr (Şirket)" kategorisindeki gelir (residual posting).
+        // Şirket residual = POS gross margin geliri − Σ operatör payı (DERIVED).
+        // POS Kâr geliri = "POS Kâr (Şirket)" kategorisindeki PNL_INCOME.
+        BigDecimal posMargin = BigDecimal.ZERO;
         for (MonthlyProfitReportDto.CategoryLine c : incomeByCat) {
             if (ProfitSharePostingService.CATEGORY_POS_PROFIT.equalsIgnoreCase(c.getCategoryName())) {
-                companyResidual = c.getAmount();
+                posMargin = c.getAmount();
             }
         }
+        BigDecimal operatorTotal = operatorLines.stream()
+                .map(MonthlyProfitReportDto.OperatorLine::getEarned)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        companyResidual = posMargin.subtract(operatorTotal);
 
         return MonthlyProfitReportDto.builder()
                 .year(year)
@@ -114,14 +124,19 @@ public class MonthlyProfitReportService {
                 .build();
     }
 
+    /**
+     * Kategori bazlı P&L satırları. {@code negateForIncome=true} (PNL_INCOME):
+     * negatif income bacaklarını negate ederek pozitif gelir sunar (residual zarar
+     * negatif kalır — abs ETMEZ). Gider/masraf zaten pozitif (negate yok).
+     */
     private List<MonthlyProfitReportDto.CategoryLine> categoryLines(
-            UUID businessId, LocalDate from, LocalDate to, PostingLegKind kind, boolean abs) {
+            UUID businessId, LocalDate from, LocalDate to, PostingLegKind kind, boolean negateForIncome) {
         List<MonthlyProfitReportDto.CategoryLine> out = new ArrayList<>();
         for (Object[] row : postingRepository.sumPnlByCategoryForPeriod(businessId, from, to, kind)) {
             UUID catId = (UUID) row[0];
             String catName = (String) row[1];
             BigDecimal amount = nz((BigDecimal) row[2]);
-            if (abs) amount = amount.abs();
+            if (negateForIncome) amount = amount.negate();
             if (amount.signum() == 0) continue;
             out.add(MonthlyProfitReportDto.CategoryLine.builder()
                     .categoryId(catId)

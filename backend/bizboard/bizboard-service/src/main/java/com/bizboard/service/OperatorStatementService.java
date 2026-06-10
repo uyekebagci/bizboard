@@ -88,7 +88,11 @@ public class OperatorStatementService {
 
         for (Posting p : postings) {
             JournalEntry e = p.getJournalEntry();
-            BigDecimal amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+            // Operatör kâr-merkezi KREDİ-NORMAL: kâr accrual hesaba −amount, ödeme
+            // +amount düşer. Statement'ta NEGATE ederek sunarız → kâr = +, ödeme = −,
+            // bakiye = biriken kâr − ödeme (sezgisel pozitif birikim).
+            BigDecimal raw = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+            BigDecimal amt = raw.negate();
             balance = balance.add(amt);
             boolean isProfitShare = e != null && e.getSourceType() == JournalSourceType.PROFIT_SHARE;
             boolean isProvisional = isProfitShare && e.getDescription() != null
