@@ -14,7 +14,11 @@ import org.springframework.stereotype.Component;
  * <p>Eski sürümlerden kalma constraint sadece {@code CHECKING/SAVINGS/CASH/CASH_HOLDER}
  * içeriyor olabilir; SUB_CASH ve MAIN_CASH eksik → kullanıcı alt kasa yaratamıyor.
  * Bu runner constraint'i okuyup eksik tipleri tespit ederse DROP + ADD ile
- * günceller. İdempotent — beş tipin tamamı varsa no-op.</p>
+ * günceller. İdempotent — tüm tiplerin tamamı varsa no-op.</p>
+ *
+ * <p>Ledger v2 (Faz A): yeni tipler eklendi —
+ * {@code POS_SETTLEMENT/RECEIVABLE/PAYABLE/ASSET}. Mevcut kuruluma çift-koşturmada
+ * bu runner eksik tipleri otomatik ekler (DROP+ADD); mevcut satırlar dokunulmaz.</p>
  */
 @Slf4j
 @Component
@@ -23,8 +27,11 @@ import org.springframework.stereotype.Component;
 public class BankAccountTypeCheckRepairRunner implements ApplicationRunner {
 
     private static final String CONSTRAINT_NAME = "bank_accounts_type_check";
-    private static final String[] REQUIRED_TYPES =
-            { "CHECKING", "SAVINGS", "MAIN_CASH", "SUB_CASH", "CASH_HOLDER" };
+    private static final String[] REQUIRED_TYPES = {
+            "CHECKING", "SAVINGS", "MAIN_CASH", "SUB_CASH", "CASH_HOLDER",
+            // Ledger v2 (Faz A) yeni tipler
+            "POS_SETTLEMENT", "RECEIVABLE", "PAYABLE", "ASSET"
+    };
 
     private final JdbcTemplate jdbc;
 
@@ -66,7 +73,12 @@ public class BankAccountTypeCheckRepairRunner implements ApplicationRunner {
     }
 
     private void addConstraint() {
+        StringBuilder in = new StringBuilder();
+        for (int i = 0; i < REQUIRED_TYPES.length; i++) {
+            if (i > 0) in.append(", ");
+            in.append('\'').append(REQUIRED_TYPES[i]).append('\'');
+        }
         jdbc.execute("ALTER TABLE bank_accounts ADD CONSTRAINT " + CONSTRAINT_NAME +
-                " CHECK (type IN ('CHECKING', 'SAVINGS', 'MAIN_CASH', 'SUB_CASH', 'CASH_HOLDER'))");
+                " CHECK (type IN (" + in + "))");
     }
 }
