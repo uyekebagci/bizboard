@@ -176,4 +176,21 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
                                          @Param("from") LocalDate from,
                                          @Param("to") LocalDate to,
                                          @Param("accountIds") List<UUID> accountIds);
+
+    // ───────── Ledger v2 (Faz D): patron raporları ─────────
+
+    /**
+     * Günlük hareket defteri (daybook): bir dönemde gerçek hesap bacakları
+     * (account NOT NULL — konum hareketleri), kaynak entry + kategori ile.
+     * Tarih sırası (eski → yeni). P&L bacakları (account NULL) hariç — rapor
+     * "hangi hesaba ne girdi/çıktı" gösterir.
+     */
+    @Query("SELECT p FROM Posting p " +
+            "WHERE p.journalEntry.business.id = :businessId " +
+            "AND p.journalEntry.entryDate >= :from AND p.journalEntry.entryDate <= :to " +
+            "AND p.account IS NOT NULL " +
+            "ORDER BY p.journalEntry.entryDate ASC, p.journalEntry.createdAt ASC")
+    List<Posting> findAccountLegsForPeriod(@Param("businessId") UUID businessId,
+                                           @Param("from") LocalDate from,
+                                           @Param("to") LocalDate to);
 }

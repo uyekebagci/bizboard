@@ -21,6 +21,10 @@ public interface PosDealRepository extends JpaRepository<PosDeal, UUID> {
 
     List<PosDeal> findByBusinessIdAndDealDateOrderByCreatedAtAsc(UUID businessId, LocalDate dealDate);
 
+    /** Faz D rapor: dönem POS mutabakatı için tarih-aralığı deal listesi. */
+    List<PosDeal> findByBusinessIdAndDealDateBetweenOrderByDealDateAscCreatedAtAsc(
+            UUID businessId, LocalDate from, LocalDate to);
+
     /** Bir gün + cihazdaki tüm deal'ler (settlement batch için brüt toplama + finalize). */
     List<PosDeal> findByBusinessIdAndPosDeviceIdAndDealDate(
             UUID businessId, UUID posDeviceId, LocalDate dealDate);
