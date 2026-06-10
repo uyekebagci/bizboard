@@ -161,7 +161,31 @@ public final class AuditAction {
     /** Kâr-payı global config (sahip%/Fatih%/Tuncay%) değişikliği. */
     public static final String PROFIT_SHARE_CONFIG_UPDATE = "PROFIT_SHARE_CONFIG_UPDATE";
 
+    // ── Ledger v2 (Faz D, §3.7): çek/senet (Instrument) ─────
+    /** Çek/senet portföy girişi (manuel ya da Telegram-foto/OCR onayı). */
+    public static final String INSTRUMENT_CREATE      = "INSTRUMENT_CREATE";
+    /** Çek/senet onayı (PENDING_OCR → CONFIRMED). */
+    public static final String INSTRUMENT_CONFIRM     = "INSTRUMENT_CONFIRM";
+    /** Çek/senet tahsil/ödeme (CASHED) — para hesabına Σ=0 posting. */
+    public static final String INSTRUMENT_CASH        = "INSTRUMENT_CASH";
+    /** Çek/senet karşılıksız (BOUNCED). */
+    public static final String INSTRUMENT_BOUNCE      = "INSTRUMENT_BOUNCE";
+    /** Çek/senet ciro/devir (ENDORSED) — başka counterpart'a aktarım. */
+    public static final String INSTRUMENT_ENDORSE     = "INSTRUMENT_ENDORSE";
+
+    // ── Ledger v2 (Faz D, §3.1 / §7): ayni varlık (ASSET) ─────
+    /** Ayni varlık edinimi (iş karşılığı araba/mal) → ASSET hesabına Σ=0 posting. */
+    public static final String ASSET_ACQUIRE          = "ASSET_ACQUIRE";
+    /** Ayni varlık satışı → ASSET çıkışı + PNL gelir/zarar. */
+    public static final String ASSET_SELL             = "ASSET_SELL";
+
+    // ── Ledger v2 (Faz D): patron Excel raporları ─────
+    /** Excel/CSV rapor indirildi (hazine/hareket/kategori P&L/POS mutabakat/kaçak/operatör). */
+    public static final String REPORT_EXPORTED        = "REPORT_EXPORTED";
+
     // Highlight rozetleri (UI vurgu)
     public static final String HIGHLIGHT_PROFIT_SHARE   = "PROFIT_SHARE";
     public static final String HIGHLIGHT_POS_DEAL       = "POS_DEAL";
+    /** Faz D: çek/senet karşılıksız (kritik — vurgu). */
+    public static final String HIGHLIGHT_INSTRUMENT_BOUNCE = "INSTRUMENT_BOUNCE";
 }

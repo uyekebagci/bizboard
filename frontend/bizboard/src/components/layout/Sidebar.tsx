@@ -70,6 +70,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins,       group: "cari" },
   { href: "/dashboard/verecekler",       label: "Verecekler",    icon: HandCoins,       group: "cari" },
   { href: "/dashboard/cekler",           label: "Cekler",        icon: FileText,        group: "cari" },
+  { href: "/dashboard/cek-senet",        label: "Cek/Senet (Ledger)", icon: FileText,   group: "cari" },
   // ── Kasa & Banka ──
   { href: "/dashboard/hesaplar",         label: "Banka Hesaplari", icon: Wallet,        group: "kasa" },
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote,        group: "kasa" },
