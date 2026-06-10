@@ -260,7 +260,7 @@ export function DebtModule({ businessId, currency }: Props) {
                         </span>
                       )}
                       {debt.admin_only && (
-                        <span className="px-1.5 py-0.5 text-[10px] bg-yellow-100 text-yellow-700 rounded-full font-medium">
+                        <span className="px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-300 rounded-full font-medium">
                           Gizli
                         </span>
                       )}

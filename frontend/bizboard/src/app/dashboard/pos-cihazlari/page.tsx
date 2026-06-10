@@ -180,7 +180,7 @@ export default function PosCihazlariPage() {
           </p>
           <Link
             href="/dashboard/add-transaction?payment_method=POS&type=income"
-            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors"
+            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors"
           >
             <Plus size={16} />
             POS Islemi Ekle

@@ -350,7 +350,7 @@ function AddUsersSubmodal({
                 </div>
                 <button type="button" onClick={applyBulkSelect}
                   disabled={!referenceFirmId}
-                  className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold disabled:opacity-50 whitespace-nowrap">
+                  className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold disabled:opacity-50 whitespace-nowrap">
                   Uygula
                 </button>
               </div>

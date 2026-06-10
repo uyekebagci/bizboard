@@ -143,7 +143,7 @@ export function PosDeviceModalDetail({
         <Link
           href={`/dashboard/pos-cihazlari/${device.device_id}`}
           onClick={onClose}
-          className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+          className="text-xs px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white"
         >
           Tam Detay Sayfasına Git →
         </Link>

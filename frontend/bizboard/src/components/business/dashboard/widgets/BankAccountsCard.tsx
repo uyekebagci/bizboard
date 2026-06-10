@@ -94,7 +94,7 @@ export function BankAccountsCard({
         <button
           type="button"
           onClick={() => setView("CREATE_ANY")}
-          className="text-[11px] px-2 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center gap-1"
+          className="text-[11px] px-2 py-1 rounded-md bg-brand-600 hover:bg-brand-700 text-white inline-flex items-center gap-1"
           title="Yeni banka / kişide hesap"
         >
           <Wallet size={11} />

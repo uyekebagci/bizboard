@@ -329,7 +329,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
           <button
             onClick={handleSubmit}
             disabled={submitting || selected.size === 0}
-            className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             Seçilenleri Ekle ({selected.size})

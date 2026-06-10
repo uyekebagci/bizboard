@@ -119,7 +119,7 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
           <Link
             href="/dashboard/pos-cihazlari"
             onClick={() => { setShowDetail(false); setSelectedDeviceId(null); }}
-            className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="text-xs px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white"
           >
             Tüm POS Sayfası →
           </Link>

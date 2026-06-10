@@ -137,13 +137,14 @@ const successDefaults: ToastOptions = {
   duration: 3500,
   position: "top-right",
   style: {
-    background: "#0f5132",
+    background: "linear-gradient(180deg,#125e3c,#0f5132)",
     color: "#d1fae5",
     border: "1px solid rgba(16,185,129,0.35)",
     fontSize: "13px",
     fontWeight: 500,
-    borderRadius: "10px",
-    padding: "10px 14px",
+    borderRadius: "12px",
+    padding: "11px 15px",
+    boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset",
   },
   iconTheme: { primary: "#10b981", secondary: "#0f5132" },
 };
@@ -152,13 +153,14 @@ const errorDefaults: ToastOptions = {
   duration: 5500,
   position: "top-right",
   style: {
-    background: "#491e1f",
+    background: "linear-gradient(180deg,#5a2526,#491e1f)",
     color: "#fecaca",
     border: "1px solid rgba(244,63,94,0.4)",
     fontSize: "13px",
     fontWeight: 500,
-    borderRadius: "10px",
-    padding: "10px 14px",
+    borderRadius: "12px",
+    padding: "11px 15px",
+    boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset",
   },
   iconTheme: { primary: "#f43f5e", secondary: "#491e1f" },
 };
@@ -167,13 +169,14 @@ const infoDefaults: ToastOptions = {
   duration: 3500,
   position: "top-right",
   style: {
-    background: "#1e293b",
+    background: "linear-gradient(180deg,#27364d,#1e293b)",
     color: "#cbd5e1",
     border: "1px solid rgba(148,163,184,0.35)",
     fontSize: "13px",
     fontWeight: 500,
-    borderRadius: "10px",
-    padding: "10px 14px",
+    borderRadius: "12px",
+    padding: "11px 15px",
+    boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset",
   },
 };
 
@@ -181,13 +184,14 @@ const warningDefaults: ToastOptions = {
   duration: 4500,
   position: "top-right",
   style: {
-    background: "#422006",
+    background: "linear-gradient(180deg,#53290a,#422006)",
     color: "#fde68a",
     border: "1px solid rgba(245,158,11,0.4)",
     fontSize: "13px",
     fontWeight: 500,
-    borderRadius: "10px",
-    padding: "10px 14px",
+    borderRadius: "12px",
+    padding: "11px 15px",
+    boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset",
   },
 };
 

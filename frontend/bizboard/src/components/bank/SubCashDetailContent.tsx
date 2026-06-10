@@ -405,7 +405,7 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
           <button
             type="button"
             onClick={() => setShowRetroactive(true)}
-            className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-500 text-white inline-flex items-center gap-1"
+            className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-brand-600 hover:bg-brand-500 text-white inline-flex items-center gap-1"
           >
             <Rewind size={11} />
             Geri Dönük Ekle

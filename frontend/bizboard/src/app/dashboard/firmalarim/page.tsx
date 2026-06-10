@@ -252,7 +252,7 @@ export default function FirmalarimPage() {
                 <Plus size={14} /> Yeni Firma
               </button>
               <button onClick={() => setShowCreateGroup(true)}
-                className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold inline-flex items-center gap-1.5">
+                className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold inline-flex items-center gap-1.5">
                 <FolderPlus size={14} /> Yeni Grup
               </button>
             </>
