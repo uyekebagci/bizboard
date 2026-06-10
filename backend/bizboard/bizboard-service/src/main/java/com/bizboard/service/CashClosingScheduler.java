@@ -43,6 +43,8 @@ public class CashClosingScheduler {
     // in-app + (opt-in) Telegram. Önceden dispatch bypass ediliyordu.
     private final NotificationDispatchService dispatchService;
     private final UserRepository userRepository;
+    /** Ledger v2 (Faz B): otomatik gün devri (DayClose PENDING aç). */
+    private final DayCloseService dayCloseService;
 
     /**
      * 19:30 reminder — bugün için CLOSED kapanış yoksa admin'lere push.
@@ -76,6 +78,20 @@ public class CashClosingScheduler {
     @Scheduled(cron = "0 0 20 * * *", zone = "Europe/Istanbul")
     public void runAutoClose() {
         LocalDate today = LocalDate.now();
+
+        // Ledger v2 (Faz B, §4 madde 2+6): otomatik gün devri — DayClose PENDING
+        // aç (opening = önceki gün actual). Manuel devir hata kaynağıydı; bu
+        // tamamen otomatik + tutarsızlık uyarısı (DayCloseService invariant).
+        // Non-fatal: DayClose omurgası eski CashClosing akışını bloklamaz.
+        try {
+            var opened = dayCloseService.autoOpenToday();
+            if (!opened.isEmpty()) {
+                log.info("[day-close-auto] {} işletme için DayClose PENDING açıldı (devir)", opened.size());
+            }
+        } catch (Exception e) {
+            log.warn("[day-close-auto] otomatik gün devri başarısız (non-fatal): {}", e.getMessage());
+        }
+
         // v1.6.23.21: autoCloseToday artık tüm işletmeler için döner.
         var result = closingService.autoCloseToday();
         if (result.isEmpty()) {
