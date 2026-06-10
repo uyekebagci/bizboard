@@ -44,12 +44,19 @@ public class Posting {
     private JournalEntry journalEntry;
 
     /**
-     * Bu bacağın etkilediği hesap. {@code Account} = mevcut {@code bank_accounts}
-     * genişlemesi (CHECKING/SAVINGS/MAIN_CASH/SUB_CASH/CASH_HOLDER + Faz A'da
-     * eklenen POS_SETTLEMENT/RECEIVABLE/PAYABLE/ASSET).
+     * Bu bacağın etkilediği hesap (konum). {@code Account} = mevcut
+     * {@code bank_accounts} genişlemesi (CHECKING/SAVINGS/MAIN_CASH/SUB_CASH/
+     * CASH_HOLDER + Faz A'da eklenen POS_SETTLEMENT/RECEIVABLE/PAYABLE/ASSET).
+     *
+     * <p><b>Nullable:</b> P&L tanıma bacakları ({@code PNL_INCOME/PNL_EXPENSE/
+     * PNL_COST}) bir KONUMA değil, gelir/gider tanımına karşılık gelir — bunların
+     * {@code account} alanı NULL'dır (karşı-bacak konum hesabını taşır). Bir
+     * hesabın bakiyesi = Σ o {@code account_id}'ye ait posting.amount; P&L
+     * bacakları (account NULL) bu toplama girmez ama entry'nin denge invariant'ına
+     * (Σ amount = 0) girer.</p>
      */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
     private BankAccount account;
 
     /**

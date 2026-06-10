@@ -107,4 +107,10 @@ public final class AuditAction {
     public static final String SEARCH_QUERY = "SEARCH_QUERY";
     /** Parser tarafından reddedilen/şüpheli sorgu (T5 injection denemesi vb.). */
     public static final String SEARCH_QUERY_REJECTED = "SEARCH_QUERY_REJECTED";
+
+    // ── Ledger v2 (Faz A): çift-giriş posting backfill / reversal (admin-only) ──
+    /** Transaction → Posting backfill (manuel tetik); metadata: total/derived/skip/flagged. */
+    public static final String LEDGER_POSTING_BACKFILL = "LEDGER_POSTING_BACKFILL";
+    /** Bir tx'in türetilmiş posting'lerinin geri alınması (reversible). */
+    public static final String LEDGER_POSTING_REVERSE = "LEDGER_POSTING_REVERSE";
 }
