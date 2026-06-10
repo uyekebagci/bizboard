@@ -107,6 +107,115 @@ public class BankAccountService {
         return toDto(a);
     }
 
+    // ─────────────────── ADJUST BALANCE (Bankalar WP) ──────────────────────
+
+    /**
+     * Hesabın bakiyesini doğrudan düzeltir (mutabakat / gerçek banka ekstresiyle
+     * eşitleme). <b>ADMIN-only</b> — controller {@code principal.isAdmin()} ile
+     * yetkiyi doğrulamalı; bu servis ayrıca tenant izolasyonunu garanti eder.
+     *
+     * <h3>STRICT finansal kural (gelir/gider'e yansımaz):</h3>
+     * <p>Eski ↔ yeni bakiye farkı bir <b>Transaction olarak YARATILMAZ</b>.
+     * Gelir/gider raporlarına, kategorilere veya kasa gelir-gider akışına
+     * hiçbir şekilde yansımaz. Fark yalnız cached {@code current_balance}'a
+     * yazılır; her düzeltme zorunlu açıklamayla audit log'a geçer ("görünmez
+     * para değişimi" imkânsız).</p>
+     *
+     * <h3>Tip kısıtı:</h3>
+     * <ul>
+     *   <li>CHECKING / SAVINGS / CASH_HOLDER → cached current_balance doğrudan
+     *       tutulur; düzeltilebilir.</li>
+     *   <li>MAIN_CASH / SUB_CASH → kendi bakiyesi <b>yoktur</b>; değeri üye
+     *       hesapların ({@link SubCashAggregateService}) aggregate'idir. Bunların
+     *       current_balance'ını set etmek DTO'da yok sayılır (Σ-invariant) — bu
+     *       sessiz no-op tam da yasak olan "görünmez değişim" olurdu, bu yüzden
+     *       {@link IllegalStateException} fırlatılır: üye hesabı düzeltin.</li>
+     * </ul>
+     *
+     * @param id          hesap id'si
+     * @param newBalance  yeni (eşitlenecek) bakiye — null değil
+     * @param description zorunlu gerekçe (boş/whitespace olamaz)
+     * @param actorUserId aksiyonu yapan (admin) kullanıcı
+     * @return güncel hesap DTO'su
+     * @throws SecurityException        cross-tenant erişim (controller 404'e çevirir)
+     * @throws IllegalArgumentException hesap yok / açıklama boş / newBalance null
+     * @throws IllegalStateException    aggregate tip (MAIN_CASH/SUB_CASH) düzeltilemez
+     */
+    @Transactional
+    public BankAccountDto adjustBalance(UUID id, BigDecimal newBalance,
+                                        String description, UUID actorUserId) {
+        if (newBalance == null) {
+            throw new IllegalArgumentException("new_balance zorunlu");
+        }
+        String reason = description != null ? description.trim() : "";
+        if (reason.isEmpty()) {
+            throw new IllegalArgumentException("Açıklama (description) zorunlu");
+        }
+        if (reason.length() > 1000) {
+            throw new IllegalArgumentException("Açıklama en fazla 1000 karakter olabilir");
+        }
+
+        BankAccount a = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + id));
+        // Tenant izolasyonu — cross-tenant düzeltmeyi engelle.
+        accessGuard.assertCanAccessBusiness(actorUserId,
+                a.getBusiness() != null ? a.getBusiness().getId() : null);
+
+        // Aggregate tipler düzeltilemez — kendi bakiyeleri yok (üye hesap toplamı).
+        BankAccountType type = a.getType();
+        if (type == BankAccountType.MAIN_CASH || type == BankAccountType.SUB_CASH) {
+            throw new IllegalStateException(
+                    (type == BankAccountType.MAIN_CASH ? "Ana Kasa" : "Alt Kasa")
+                    + " bakiyesi doğrudan düzeltilemez — bu bakiye üye banka/nakit "
+                    + "hesaplarının toplamından hesaplanır. İlgili üye hesabın "
+                    + "bakiyesini düzeltin.");
+        }
+
+        BigDecimal oldBalance = a.getCurrentBalance() != null
+                ? a.getCurrentBalance() : BigDecimal.ZERO;
+        BigDecimal diff = newBalance.subtract(oldBalance);
+
+        // No-op: fark yoksa yine de audit'e yazmaya değmez; idempotent dön.
+        if (diff.signum() == 0) {
+            log.info("[balance-adjust] id={} fark yok (={}); no-op", id, oldBalance.toPlainString());
+            return toDto(a);
+        }
+
+        // SAF bakiye düzeltmesi: yalnız current_balance set edilir.
+        // BURADA KESİNLİKLE Transaction YARATILMAZ — gelir/gider'e yansımaz.
+        a.setCurrentBalance(newBalance);
+        a = repository.save(a);
+
+        User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+        String currency = a.getCurrency() != null ? a.getCurrency() : "TRY";
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("name", a.getName());
+        meta.put("type", type != null ? type.name() : "?");
+        meta.put("oldBalance", oldBalance);
+        meta.put("newBalance", newBalance);
+        meta.put("diff", diff);
+        meta.put("currency", currency);
+        meta.put("description", reason);
+        meta.put("incomeExpenseImpact", false); // explicit: gelir/gider'e yansımaz
+
+        auditLogService.recordEntityAction(
+                com.bizboard.common.audit.AuditAction.BANK_BALANCE_ADJUST,
+                actorUserId, actor != null ? actor.getUsername() : null,
+                "BANK_ACCOUNT", a.getId(),
+                a.getName() + " — bakiye düzeltildi: "
+                        + oldBalance.toPlainString() + " → " + newBalance.toPlainString()
+                        + " " + currency + " (" + (diff.signum() > 0 ? "+" : "")
+                        + diff.toPlainString() + ") · " + reason,
+                meta,
+                com.bizboard.common.audit.AuditAction.HIGHLIGHT_BALANCE_ADJUST);
+        log.info("[balance-adjust] id={} name='{}' type={} {} -> {} {} (diff={}) by user={} reason='{}'",
+                a.getId(), a.getName(), type, oldBalance.toPlainString(),
+                newBalance.toPlainString(), currency, diff.toPlainString(),
+                actor != null ? actor.getUsername() : actorUserId, reason);
+
+        return toDto(a);
+    }
+
     // ───────────────────────── CREATE (v1.6.23.4) ─────────────────────────
 
     /**

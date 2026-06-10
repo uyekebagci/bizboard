@@ -14,15 +14,23 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Loader2, AlertTriangle, Wallet, Banknote, Building2, HandCoins,
-  ToggleLeft, ToggleRight, X, Search, Plus, Trash2, Lock,
+  ToggleLeft, ToggleRight, X, Search, Plus, Trash2, Lock, Scale,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { formatCurrency, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { useAppStore } from "@/lib/store";
 import type { BankAccountListItem, BankAccountType } from "@/types";
 import { BankAccountDetailModal } from "@/components/bank/BankAccountDetailModal";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
+import { AdjustBalanceModal } from "@/components/bank/AdjustBalanceModal";
+
+/**
+ * Bankalar WP (bakiye düzeltme): doğrudan bakiyesi tutulan (düzeltilebilir)
+ * tipler. MAIN_CASH/SUB_CASH aggregate'tir — kendi bakiyesi yok, düzeltilemez.
+ */
+const ADJUSTABLE_TYPES: ReadonlyArray<BankAccountType> = ["CHECKING", "SAVINGS", "CASH_HOLDER"];
 
 type TypeFilter = "ALL" | "BANK" | "KASA" | "CASH_HOLDER";
 const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
@@ -34,6 +42,9 @@ const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
 
 export default function HesaplarPage() {
   const router = useRouter();
+  // Bankalar WP (bakiye düzeltme): admin-only aksiyon görünürlüğü.
+  const profile = useAppStore((s) => s.profile);
+  const isAdmin = profile?.role === "admin";
 
   const [list, setList] = useState<BankAccountListItem[]>([]);
   const [showInactive, setShowInactive] = useState(false);
@@ -44,6 +55,8 @@ export default function HesaplarPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [detailAccount, setDetailAccount] = useState<BankAccountListItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // Bankalar WP: bakiye düzeltme modal hedefi (null = kapalı).
+  const [adjustTarget, setAdjustTarget] = useState<BankAccountListItem | null>(null);
 
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
@@ -368,6 +381,20 @@ export default function HesaplarPage() {
                   <p className="text-sm font-semibold text-white">
                     {formatCurrency(a.current_balance, a.currency || "TRY")}
                   </p>
+                  {/* Bankalar WP: bakiye düzelt — yalnız admin + bakiyesi tutulan tipler. */}
+                  {isAdmin && ADJUSTABLE_TYPES.includes(a.type) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAdjustTarget(a);
+                      }}
+                      disabled={busyId === a.id}
+                      className="p-1 rounded-md text-surface-400 hover:bg-brand-500/10 hover:text-brand-300 transition-colors"
+                      title="Bakiyeyi düzelt (mutabakat)"
+                    >
+                      <Scale size={16} />
+                    </button>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -452,6 +479,13 @@ export default function HesaplarPage() {
         // v1.6.23.27: SUB_CASH assignment değişince havuz listesini de yenile
         // (aggregate balance UI'da yansır).
         onChange={() => { void refresh(); }}
+      />
+
+      {/* Bankalar WP: admin-only bakiye düzeltme modalı (portal'lı). */}
+      <AdjustBalanceModal
+        account={adjustTarget}
+        onClose={() => setAdjustTarget(null)}
+        onAdjusted={() => { setAdjustTarget(null); void refresh(); }}
       />
     </div>
   );

@@ -90,4 +90,15 @@ public final class AuditAction {
     public static final String CATEGORY_UPDATE = "CATEGORY_UPDATE";
     /** Soft-delete: kategori pasif (active=false); bağlı tx'ler korunur. */
     public static final String CATEGORY_DELETE = "CATEGORY_DELETE";
+
+    // ── Bankalar WP (bakiye düzeltme): admin-only saf bakiye eşitleme ──────
+    /**
+     * Banka hesabı / kasa / kişide tutulan nakit bakiyesinin doğrudan
+     * düzeltilmesi (mutabakat). Gelir/gider <b>yaratmaz</b> — tx oluşmaz; fark
+     * yalnız cached current_balance'a yazılır. ADMIN-only. Metadata: eski→yeni
+     * bakiye, fark, açıklama, varlık tipi/id. "Görünmez para değişimi" olamaz.
+     */
+    public static final String BANK_BALANCE_ADJUST = "BANK_BALANCE_ADJUST";
+    /** UI vurgu rozeti: bakiye düzeltme audit kaydı için. */
+    public static final String HIGHLIGHT_BALANCE_ADJUST = "BALANCE_ADJUST";
 }

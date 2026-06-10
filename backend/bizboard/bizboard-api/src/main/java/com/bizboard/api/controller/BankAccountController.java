@@ -1,5 +1,6 @@
 package com.bizboard.api.controller;
 
+import com.bizboard.common.dto.AdjustBalanceRequest;
 import com.bizboard.common.dto.BankAccountDetailDto;
 import com.bizboard.common.dto.BankAccountDto;
 import com.bizboard.common.dto.BankAccountToggleRequest;
@@ -136,6 +137,53 @@ public class BankAccountController {
             // Cross-tenant — existence reveal kapalı.
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(java.util.Map.of("message", "Hesap bulunamadi"));
+        }
+    }
+
+    /**
+     * Bankalar WP (bakiye düzeltme): {@code POST /bank-accounts/{id}/adjust-balance}.
+     *
+     * <p><b>ADMIN-only</b> — admin olmayan kullanıcı 403 alır (buton da UI'da
+     * gizli). Bakiyeyi gerçek banka ekstresiyle eşitlemek (mutabakat) için
+     * cached {@code current_balance}'ı doğrudan set eder.</p>
+     *
+     * <p><b>STRICT kural:</b> eski↔yeni fark bir Transaction OLARAK YARATILMAZ —
+     * gelir/gider raporlarına yansımaz. Zorunlu açıklama + audit kaydı
+     * (eski→yeni, fark, gerekçe, varlık tipi/id) servis tarafında garanti edilir.</p>
+     *
+     * <p>Hata haritası:
+     * <ul>
+     *   <li>admin değil → 403</li>
+     *   <li>description boş / new_balance null → 400 (bean validation veya servis)</li>
+     *   <li>aggregate tip (MAIN_CASH/SUB_CASH) → 409 (üye hesabı düzeltin)</li>
+     *   <li>cross-tenant / yok → 404 (existence reveal kapalı)</li>
+     * </ul>
+     */
+    @PostMapping("/{id}/adjust-balance")
+    public ResponseEntity<?> adjustBalance(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id,
+            @Valid @RequestBody AdjustBalanceRequest req) {
+        // ADMIN-only gate — service tenant izolasyonu yapsa da yetki burada kesilir.
+        if (principal == null || !principal.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of(
+                            "message", "Bakiye düzeltme yetkisi yalnızca yöneticidedir."));
+        }
+        try {
+            return ResponseEntity.ok(service.adjustBalance(
+                    id, req.getNewBalance(), req.getDescription(), principal.getId()));
+        } catch (IllegalStateException e) {
+            // Aggregate tip (MAIN_CASH/SUB_CASH) — kendi bakiyesi yok.
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("message", e.getMessage()));
+        } catch (SecurityException e) {
+            // Cross-tenant — existence reveal kapalı.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("message", "Hesap bulunamadi"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
