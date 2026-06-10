@@ -845,15 +845,11 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
               <button
                 type="button"
                 onClick={() => setAdminOnly(!adminOnly)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  adminOnly ? "bg-brand-600" : "bg-surface-300"
-                }`}
+                data-on={adminOnly}
+                aria-pressed={adminOnly}
+                className="toggle-track toggle-track--warn"
               >
-                <span
-                  className={`absolute top-0.5 w-5 h-5 bg-surface-800 rounded-full transition-transform shadow-sm ${
-                    adminOnly ? "left-[22px]" : "left-0.5"
-                  }`}
-                />
+                <span className="toggle-knob" />
               </button>
             </div>
           )}
