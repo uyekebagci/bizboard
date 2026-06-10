@@ -28,8 +28,15 @@ public class Category {
     @Column(nullable = false)
     private String name;
 
+    /**
+     * Paylaşımlı kategori modeli (yön-bağımsız): bir kategori hem gelir hem
+     * gider işlemlerinde kullanılabilir. NULL = paylaşımlı (yeni model).
+     *
+     * <p>Eski yön-bazlı kayıtlar migration ile NULL'a (paylaşımlı) çevrilir;
+     * sütun nullable kalır (geriye dönük veri okunabilir).</p>
+     */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private TransactionDirection direction;
 
     private String icon;

@@ -148,7 +148,9 @@ public final class DtoMapper {
                 .id(c.getId())
                 .businessId(c.getBusiness().getId())
                 .name(c.getName())
-                .direction(c.getDirection().name().toLowerCase(java.util.Locale.ENGLISH))
+                // Paylaşımlı (yön-bağımsız) model: direction NULL olabilir.
+                .direction(c.getDirection() != null
+                        ? c.getDirection().name().toLowerCase(java.util.Locale.ENGLISH) : null)
                 .icon(c.getIcon())
                 .color(c.getColor())
                 .sortOrder(c.getSortOrder())

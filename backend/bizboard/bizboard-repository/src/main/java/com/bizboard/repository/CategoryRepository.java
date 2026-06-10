@@ -13,8 +13,16 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findByBusinessIdAndActiveTrueOrderBySortOrder(UUID businessId);
 
     /**
-     * Kategori CRUD (cat-be WP): aynı business+direction içinde aktif isim
-     * çakışması kontrolü (case-insensitive). Boş ise yeni isim serbest.
+     * Paylaşımlı kategori modeli: aynı business içinde aktif isim çakışması
+     * kontrolü (case-insensitive, yön-bağımsız). Boş ise yeni isim serbest.
+     */
+    Optional<Category> findFirstByBusinessIdAndNameIgnoreCaseAndActiveTrue(
+            UUID businessId, String name);
+
+    /**
+     * Kategori CRUD (cat-be WP, legacy): aynı business+direction içinde aktif isim
+     * çakışması kontrolü (case-insensitive). Paylaşımlı modele geçişte artık
+     * kullanılmaz; geriye dönük referanslar için korunur.
      */
     Optional<Category> findFirstByBusinessIdAndDirectionAndNameIgnoreCaseAndActiveTrue(
             UUID businessId, TransactionDirection direction, String name);

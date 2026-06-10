@@ -204,13 +204,13 @@ public class TransactionMutationService {
 
         accessGuard.assertCanAccessBusiness(userId, businessId);
 
-        // cat-be WP: kategori ARTIK ZORUNLU + sıkı doğrulama. categoryId verilmeli;
-        // verilen kategori business'a ait ve tx direction'ı (INCOME/EXPENSE) ile
-        // eşleşmeli. Uyumsuzlukta 400 — sessizce null'a DÜŞÜRME yok.
+        // Kategori ZORUNLU + sıkı doğrulama. categoryId verilmeli; verilen
+        // kategori business'a ait ve aktif olmalı. Paylaşımlı modelde yön-eşleşme
+        // kontrolü YOK (kategori hem gelir hem giderde geçerli).
         TransactionDirection txDirection = TransactionDirection.valueOf(
                 request.getDirection().toUpperCase(java.util.Locale.ENGLISH));
         Category category = resolveRequiredCategory(
-                request.getCategoryId(), business.getId(), txDirection);
+                request.getCategoryId(), business.getId());
 
         // v1.6.3: payment_method normalize (POS/NAKIT)
         // v1.6.23.4: HESAPDAN da geçerli — banka hesabından yapılan ödeme
@@ -517,35 +517,29 @@ public class TransactionMutationService {
             changes.put("date", Map.of("from", transaction.getDate().toString(), "to", request.getDate().toString()));
             transaction.setDate(request.getDate());
         }
-        // cat-be WP: kategori sıkı doğrulama + ZORUNLU.
-        // - categoryId verilirse: business'a ait + (güncel) direction ile eşleşmeli.
-        // - direction değişip kategori verilmezse: mevcut kategori yeni yönle hâlâ
-        //   uyumlu mu kontrol et; değilse 400 (kullanıcı yeni kategori vermeli).
+        // Kategori sıkı doğrulama + ZORUNLU. Paylaşımlı modelde kategori
+        // yön-bağımsız; yön-eşleşme kontrolü YOK.
+        // - categoryId verilirse: business'a ait + aktif olmalı.
+        // - verilmezse: mevcut kategori (varsa) korunur — yön değişse bile
+        //   paylaşımlı kategori yeni yönde de geçerlidir.
         // Sessizce null'a DÜŞÜRME yok; tx kategorisi her zaman dolu kalmalı.
         if (request.getCategoryId() != null) {
             UUID oldCategoryId = transaction.getCategory() != null ? transaction.getCategory().getId() : null;
             if (!java.util.Objects.equals(oldCategoryId, request.getCategoryId())) {
                 Category category = resolveRequiredCategory(
-                        request.getCategoryId(), transaction.getBusiness().getId(),
-                        transaction.getDirection());
+                        request.getCategoryId(), transaction.getBusiness().getId());
                 changes.put("categoryId", Map.of(
                         "from", oldCategoryId != null ? oldCategoryId.toString() : "null",
                         "to", request.getCategoryId().toString()));
                 transaction.setCategory(category);
             }
         } else {
-            // categoryId verilmedi — mevcut kategori (varsa) yeni direction'la
-            // tutarlı olmalı; yoksa kategori zorunluluğu ihlal ediliyor demektir.
+            // categoryId verilmedi — mevcut kategori dolu olmalı (zorunluluk).
+            // Paylaşımlı modelde yön değişimi mevcut kategoriyi geçersiz kılmaz.
             Category current = transaction.getCategory();
             if (current == null) {
                 throw new IllegalArgumentException(
                         "category_id zorunlu (her islem bir kategoriye bagli olmali)");
-            }
-            if (current.getDirection() != transaction.getDirection()) {
-                throw new IllegalArgumentException(
-                        "Islem yonu degisti; mevcut kategori (" + current.getName()
-                                + ") yeni yon (" + transaction.getDirection().name()
-                                + ") ile uyumsuz — uygun bir category_id gonderin.");
             }
         }
         // cat-be WP: tags request'ten yok sayılır — yeni yazımda kullanılmaz
@@ -813,20 +807,20 @@ public class TransactionMutationService {
     // ───────── shared mutation helpers (create + update; R3) ─────────
 
     /**
-     * cat-be WP: tx kategori çözümleme + ZORUNLU + sıkı doğrulama.
+     * Tx kategori çözümleme + ZORUNLU + sıkı doğrulama.
      *
+     * <p>Paylaşımlı (yön-bağımsız) model: kategori hem gelir hem giderde
+     * kullanılabilir; yön-eşleşme kontrolü YOKTUR. Kalan kurallar:</p>
      * <ul>
      *   <li>{@code categoryId == null} → 400 (kategori zorunlu).</li>
      *   <li>Kategori bulunamazsa → 400.</li>
      *   <li>Kategori başka işletmeye aitse → 400 (sızdırma yok, generic).</li>
-     *   <li>Kategori direction (INCOME/EXPENSE) tx ile eşleşmezse → 400.</li>
      *   <li>Kategori pasif (soft-deleted) ise → 400 (yeni tx'e atanamaz).</li>
      * </ul>
      *
      * Sessizce null'a düşürme YOK — uyumsuzlukta her zaman anlamlı 400.
      */
-    Category resolveRequiredCategory(UUID categoryId, UUID businessId,
-                                     TransactionDirection direction) {
+    Category resolveRequiredCategory(UUID categoryId, UUID businessId) {
         if (categoryId == null) {
             throw new IllegalArgumentException(
                     "category_id zorunlu (her islem bir kategoriye bagli olmali)");
@@ -837,11 +831,6 @@ public class TransactionMutationService {
         if (category.getBusiness() == null
                 || !category.getBusiness().getId().equals(businessId)) {
             throw new IllegalArgumentException("Kategori bu isletmeye ait degil");
-        }
-        if (category.getDirection() != direction) {
-            throw new IllegalArgumentException(
-                    "Kategori yonu islem yonuyle uyusmuyor: kategori="
-                            + category.getDirection().name() + ", islem=" + direction.name());
         }
         if (!category.isActive()) {
             throw new IllegalArgumentException(

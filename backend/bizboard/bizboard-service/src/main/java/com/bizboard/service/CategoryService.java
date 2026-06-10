@@ -7,7 +7,6 @@ import com.bizboard.common.dto.UpdateCategoryRequest;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Category;
 import com.bizboard.common.entity.User;
-import com.bizboard.common.enums.TransactionDirection;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CategoryRepository;
 import com.bizboard.repository.UserRepository;
@@ -16,13 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * cat-be WP: gelir/gider kategori CRUD. Kategoriler per-business + per-direction
- * (INCOME/EXPENSE); gelir ve gider ayrı korunur, gider simetrik. Erişim
+ * Kategori CRUD. Paylaşımlı (yön-bağımsız) model: bir kategori hem gelir hem
+ * gider işlemlerinde kullanılabilir; kategoriler per-business tutulur. Erişim
  * {@link BusinessAccessGuard} (business sahipliği) ile korunur.
  *
  * <p>DELETE soft-delete'tir (active=false): bağlı transaction'lar category_id'yi
@@ -50,19 +48,20 @@ public class CategoryService {
         if (name.isEmpty()) {
             throw new IllegalArgumentException("Kategori adi zorunlu");
         }
-        TransactionDirection direction = parseDirection(request.getDirection());
 
-        // Aynı business+direction içinde aktif isim çakışmasını engelle.
-        categoryRepository.findFirstByBusinessIdAndDirectionAndNameIgnoreCaseAndActiveTrue(
-                businessId, direction, name).ifPresent(existing -> {
+        // Paylaşımlı model: kategoriler yön-bağımsız. request.direction eski
+        // client'lardan gelebilir ama YOK SAYILIR (kategori paylaşımlı/null).
+        // Aynı business içinde aktif isim çakışmasını engelle (yön-bağımsız).
+        categoryRepository.findFirstByBusinessIdAndNameIgnoreCaseAndActiveTrue(
+                businessId, name).ifPresent(existing -> {
             throw new IllegalArgumentException(
-                    "Bu yonde ayni isimde bir kategori zaten var: " + name);
+                    "Ayni isimde bir kategori zaten var: " + name);
         });
 
         Category category = Category.builder()
                 .business(business)
                 .name(name)
-                .direction(direction)
+                .direction(null) // paylaşımlı (yön-bağımsız)
                 .icon(request.getIcon())
                 .color(request.getColor())
                 .sortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0)
@@ -73,7 +72,7 @@ public class CategoryService {
 
         recordAudit(AuditAction.CATEGORY_CREATE, userId, businessId, business.getName(), category,
                 business.getName() + " — kategori olusturuldu: " + category.getName()
-                        + " (" + direction.name() + ")");
+                        + " (paylasimli)");
 
         return DtoMapper.toCategoryDto(category);
     }
@@ -91,12 +90,13 @@ public class CategoryService {
             if (newName.isEmpty()) {
                 throw new IllegalArgumentException("Kategori adi bos olamaz");
             }
-            // Yeni isim aynı business+direction içinde başka aktif kategoriyle çakışmasın.
+            // Paylaşımlı model: yeni isim aynı business içinde başka aktif
+            // kategoriyle çakışmasın (yön-bağımsız).
             if (!newName.equalsIgnoreCase(category.getName())) {
-                categoryRepository.findFirstByBusinessIdAndDirectionAndNameIgnoreCaseAndActiveTrue(
-                        business.getId(), category.getDirection(), newName).ifPresent(existing -> {
+                categoryRepository.findFirstByBusinessIdAndNameIgnoreCaseAndActiveTrue(
+                        business.getId(), newName).ifPresent(existing -> {
                     throw new IllegalArgumentException(
-                            "Bu yonde ayni isimde bir kategori zaten var: " + newName);
+                            "Ayni isimde bir kategori zaten var: " + newName);
                 });
             }
             category.setName(newName);
@@ -144,18 +144,6 @@ public class CategoryService {
 
     // ───────── helpers ─────────
 
-    static TransactionDirection parseDirection(String raw) {
-        if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("direction zorunlu (INCOME veya EXPENSE)");
-        }
-        try {
-            return TransactionDirection.valueOf(raw.trim().toUpperCase(Locale.ENGLISH));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(
-                    "Gecersiz direction: '" + raw + "' (INCOME veya EXPENSE olmali)");
-        }
-    }
-
     private void recordAudit(String action, UUID userId, UUID businessId,
                              String businessName, Category category, String detail) {
         User user = userRepository.findById(userId).orElse(null);
@@ -167,7 +155,8 @@ public class CategoryService {
                 Map.of(
                         "businessId", businessId,
                         "categoryName", category.getName(),
-                        "direction", category.getDirection().name(),
+                        "direction", category.getDirection() != null
+                                ? category.getDirection().name() : "SHARED",
                         "active", category.isActive()
                 ));
     }
