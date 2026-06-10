@@ -41,6 +41,35 @@ export function formatCurrency(
   }).format(amount);
 }
 
+/**
+ * Borç sansürü (privacy) — tutarı blur yerine `*` ile maskele.
+ *
+ * <p>Alacaklar/Verecekler sayfaları ve ConsolidatedPositionCard'daki "göz"
+ * toggle'ı (localStorage "cati-alacaklar-censor" / "cati-verecekler-censor")
+ * ile kullanılır. Tüm sansür noktalarında TUTARLI sonuç için tek kaynak.</p>
+ *
+ * <ul>
+ *   <li><b>censored=false</b> → normal {@link formatCurrency} çıktısı.</li>
+ *   <li><b>censored=true</b> → para birimi sembolü korunur, her RAKAM `*`
+ *       ile değiştirilir (ayraçlar/sembol aynen kalır). Gerçek değer DOM'da
+ *       KALMAZ — blur gibi "gizli ama okunabilir" değil, tamamen maskeli.</li>
+ * </ul>
+ *
+ * <p>Örnek: formatCurrency(12.500) = "₺12.500" → maskAmount(12500, true)
+ * = "₺**.***". Uzunluk gerçek tutara yakın kaldığı için hizalama bozulmaz.</p>
+ */
+export function maskAmount(
+  amount: number,
+  censored: boolean,
+  currency: string = "TRY",
+  locale: string = "tr-TR"
+): string {
+  const formatted = formatCurrency(amount, currency, locale);
+  if (!censored) return formatted;
+  // Her Unicode rakamını `*` ile değiştir; sembol/ayraç/eksi işareti korunur.
+  return formatted.replace(/\p{Nd}/gu, "*");
+}
+
 // Format compact number (e.g., 1.2M, 450K)
 export function formatCompact(amount: number): string {
   if (Math.abs(amount) >= 1_000_000) {

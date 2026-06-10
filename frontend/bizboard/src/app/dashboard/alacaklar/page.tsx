@@ -16,7 +16,7 @@ import {
   ArrowLeft, Loader2, HandCoins, Plus, CalendarClock, Eye, EyeOff,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, maskAmount, cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart, Business } from "@/types";
@@ -46,8 +46,8 @@ export default function AlacaklarPage() {
       return next;
     });
   }
-  // Blur util — sayı yapısı korunur ama okunmaz (select-none ile kopyalama da engellenir).
-  const censorCls = censored ? "blur-[6px] select-none" : "";
+  // Sansürlüyken kopyalamayı da engelle (maskeli `*` zaten gerçek değeri taşımaz).
+  const censorCls = censored ? "select-none" : "";
   // WP a9da4e9d: Alacaklar sayfasına notlar — businessId resolve (tek işletme
   // ise direkt; çoklu ise selector). DGR tek işletme → selector görünmez.
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -137,16 +137,6 @@ export default function AlacaklarPage() {
             </p>
           </div>
         </div>
-        {/* Sansür toggle (privacy) — göz ikonu ile tutarları gizle/göster. */}
-        <button
-          onClick={toggleCensor}
-          aria-pressed={censored}
-          title={censored ? "Tutarları göster" : "Tutarları gizle"}
-          aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
-          className="p-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-white transition-colors"
-        >
-          {censored ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
@@ -188,9 +178,21 @@ export default function AlacaklarPage() {
             <section className="grid grid-cols-2 gap-3">
               <div className="glass-card p-4">
                 <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
-                <p className={cn("mt-1 text-2xl font-bold text-amber-300 transition-[filter]", censorCls)}>
-                  {formatCurrency(total, "TRY")}
-                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <p className={cn("text-2xl font-bold text-amber-300", censorCls)}>
+                    {maskAmount(total, censored, "TRY")}
+                  </p>
+                  {/* Sansür toggle (privacy) — maskelenen tutarın hemen yanında. */}
+                  <button
+                    onClick={toggleCensor}
+                    aria-pressed={censored}
+                    title={censored ? "Tutarları göster" : "Tutarları gizle"}
+                    aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
+                    className="shrink-0 p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-white transition-colors"
+                  >
+                    {censored ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
               <div className="glass-card p-4">
                 <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>
@@ -254,8 +256,8 @@ export default function AlacaklarPage() {
                     </div>
                     <div className="text-right shrink-0">
                       {/* total_amount güncel TL net toplam → her zaman ₺ (USD sembolü bug fix). */}
-                      <p className={cn("text-base font-semibold text-amber-300 transition-[filter]", censorCls)}>
-                        {formatCurrency(r.total_amount, "TRY")}
+                      <p className={cn("text-base font-semibold text-amber-300", censorCls)}>
+                        {maskAmount(r.total_amount, censored, "TRY")}
                       </p>
                       <p className="text-[11px] text-surface-400">
                         {r.count} kayit
@@ -346,7 +348,7 @@ function TypeBadge({
     >
       <span>{label}</span>
       <span className="opacity-70">·</span>
-      <span className={censored ? "blur-[4px] select-none" : ""}>{formatCurrency(breakdown.amount, "TRY")}</span>
+      <span className={censored ? "select-none" : ""}>{maskAmount(breakdown.amount, !!censored, "TRY")}</span>
     </span>
   );
 }

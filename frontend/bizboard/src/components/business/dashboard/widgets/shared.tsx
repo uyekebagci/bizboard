@@ -6,7 +6,7 @@
 // ══════════════════════════════════════════════════════════
 
 import { Wallet, Building2, Banknote, HandCoins } from "lucide-react";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, maskAmount, cn } from "@/lib/utils";
 
 export function SectionTitle({ icon: Icon, label, inline }: { icon: typeof Wallet; label: string; inline?: boolean }) {
   return (
@@ -54,10 +54,9 @@ export function DetailRow({
   tone: "pos" | "neg" | "warn" | "neutral";
   bold?: boolean;
   /**
-   * Borç sansürü (privacy): true ise tutar blur'lanır + kopyalanamaz —
-   * Verecekler/Alacaklar sayfalarındaki "cati-*-censor" toggle'ı ile aynı
-   * davranış (bkz. ConsolidatedPositionCard). Değer DOM'da kalır, sadece
-   * görsel olarak okunamaz.
+   * Borç sansürü (privacy): true ise tutar `*` ile maskelenir — gerçek değer
+   * DOM'da KALMAZ. Verecekler/Alacaklar sayfalarındaki "cati-*-censor" toggle'ı
+   * ile aynı davranış (bkz. ConsolidatedPositionCard). {@link maskAmount}.
    */
   censor?: boolean;
 }) {
@@ -71,11 +70,11 @@ export function DetailRow({
     <div className="flex items-center justify-between gap-3">
       <span className="text-surface-300 text-xs">{label}</span>
       <span className={cn(
-        "font-mono transition-[filter]",
+        "font-mono",
         bold && "font-bold text-base", !bold && "text-sm", colorClass,
-        censor && "blur-[6px] select-none",
+        censor && "select-none",
       )}>
-        {formatCurrency(value, "TRY")}
+        {maskAmount(value, !!censor, "TRY")}
       </span>
     </div>
   );
@@ -94,11 +93,11 @@ export function PositionStat({ label, value, tone, censor }: {
     <div>
       <p className="text-brand-200 uppercase tracking-wider">{label}</p>
       <p className={cn(
-        "text-sm font-bold mt-0.5 transition-[filter]",
+        "text-sm font-bold mt-0.5",
         tone === "negative" ? "text-red-200" : "text-white",
-        censor && "blur-[6px] select-none",
+        censor && "select-none",
       )}>
-        {formatCurrency(displayValue, "TRY")}
+        {maskAmount(displayValue, !!censor, "TRY")}
       </p>
     </div>
   );
