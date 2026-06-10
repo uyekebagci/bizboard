@@ -19,7 +19,10 @@ export type SearchEntityType =
   | "POS_DEVICE"
   | "INVENTORY_ITEM"
   | "VEHICLE"
-  | "NOTE";
+  | "NOTE"
+  | "FIXED_COST"
+  | "SUB_CASH"
+  | "FIRM_GROUP";
 
 export interface SearchHit {
   type: SearchEntityType;
@@ -132,4 +135,7 @@ export const ENTITY_LABELS: Record<SearchEntityType, string> = {
   INVENTORY_ITEM: "Envanter",
   VEHICLE: "Araç",
   NOTE: "Not",
+  FIXED_COST: "Sabit Gider",
+  SUB_CASH: "Alt Kasa",
+  FIRM_GROUP: "Firma Grubu",
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Wallet, Package, Users, FolderKanban, FileText,
   CalendarCheck, CarFront, UtensilsCrossed, UserCircle,
@@ -62,7 +63,15 @@ export function ModuleTabs({ business }: Props) {
     });
   }, [business.modules]);
 
+  // v2.2 Advanced Search: arama deep-link'i `?tab=vehicles` ile ilgili modülü
+  // açabilir. Geçerli + enabled değilse default mantığa düşülür.
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<ModuleType>(() => {
+    const requested = searchParams.get("tab") as ModuleType | null;
+    const isEnabled = (m: string) => enabledModules.some((e) => e.module === m);
+    if (requested && moduleConfig[requested] && (isEnabled(requested) || isAdmin)) {
+      return requested;
+    }
     // Sayfa açılışında Notlar varsa onu aç; yoksa ilk enabled; o da yoksa "notes".
     const hasNotes = enabledModules.some((m) => m.module === "notes");
     if (hasNotes) return "notes";

@@ -18,7 +18,7 @@ const EXAMPLES: { query: string; desc: string }[] = [
 ];
 
 const FIELDS: { token: string; desc: string }[] = [
-  { token: "tip:", desc: "Entity tipi (transaction, cari, borc, personel, hesap, firmam...)" },
+  { token: "tip:", desc: "transaction, cari, borc, personel, hesap, firmam, cek, pos, envanter, arac, not, sabit, altkasa, grup, isletme" },
   { token: "isletme:", desc: "İşletme adı" },
   { token: "kategori:", desc: "Kategori" },
   { token: "tutar:", desc: ">5000, <1000, 1000..5000" },

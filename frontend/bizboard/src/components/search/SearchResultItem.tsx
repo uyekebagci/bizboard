@@ -41,6 +41,13 @@ function extractFields(hit: SearchHit): MaskedField[] {
   if (typeof m.position === "string") fields.push({ label: "Pozisyon", value: m.position, masked: false });
   if (typeof m.bankName === "string") fields.push({ label: "Banka", value: m.bankName, masked: false });
   if (typeof m.phone === "string") fields.push({ label: "Telefon", value: m.phone, masked: false });
+  if (typeof m.sku === "string") fields.push({ label: "SKU", value: m.sku, masked: false });
+  if (typeof m.brand === "string") fields.push({ label: "Marka", value: m.brand, masked: false });
+  if (typeof m.model === "string") fields.push({ label: "Model", value: m.model, masked: false });
+  if (m.year != null) fields.push({ label: "Yıl", value: String(m.year), masked: false });
+  if (typeof m.owner === "string") fields.push({ label: "Sahip", value: m.owner, masked: false });
+  if (typeof m.chequeNo === "string") fields.push({ label: "Çek No", value: m.chequeNo, masked: false });
+  if (typeof m.noteSerial === "string") fields.push({ label: "Seri", value: m.noteSerial, masked: false });
   if (m.taxId != null) fields.push({ label: "VKN", value: String(m.taxId), masked: m.taxIdMasked === true });
   if (m.iban != null) fields.push({ label: "IBAN", value: String(m.iban), masked: m.ibanMasked === true });
   if (m.mersis != null) fields.push({ label: "MERSIS", value: String(m.mersis), masked: m.mersisMasked === true });
