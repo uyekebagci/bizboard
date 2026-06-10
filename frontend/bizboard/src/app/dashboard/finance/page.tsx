@@ -1070,7 +1070,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
           </thead>
           <tbody>
             {businesses.map((biz) => (
-              <tr key={biz.business_id} className="border-b border-surface-700 hover:bg-surface-700">
+              <tr key={biz.business_id} className="border-b border-surface-700 row-hover transition-colors">
                 <td className="py-2.5 px-2 font-medium text-white">
                   <div className="flex items-center gap-2">
                     <div

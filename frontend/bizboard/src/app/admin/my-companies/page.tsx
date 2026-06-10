@@ -158,7 +158,7 @@ export default function AdminMyCompaniesPage() {
         <div className="flex items-center justify-between p-5 border-b border-surface-700">
           <div className="flex items-center gap-2.5">
             <h2 className="text-lg font-semibold text-white">Firmalar</h2>
-            <span className="ml-1 text-sm text-gray-500">
+            <span className="ml-1 text-sm text-surface-400">
               ({companies.length})
             </span>
           </div>
@@ -172,9 +172,9 @@ export default function AdminMyCompaniesPage() {
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Yukleniyor...</div>
+          <div className="p-8 text-center text-surface-400">Yukleniyor...</div>
         ) : companies.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Henuz firma yok</div>
+          <div className="p-8 text-center text-surface-400">Henuz firma yok</div>
         ) : (
           <div className="divide-y divide-surface-700">
             {companies.map((c) => (
@@ -193,11 +193,11 @@ export default function AdminMyCompaniesPage() {
                         Varsayilan
                       </span>
                     )}
-                    <span className="px-2 py-0.5 rounded-md bg-surface-700 text-gray-400 text-[10px] font-medium">
+                    <span className="px-2 py-0.5 rounded-md bg-surface-700 text-surface-400 text-[10px] font-medium">
                       {typeLabel(c.company_type)}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 flex flex-wrap gap-3">
+                  <div className="text-xs text-surface-400 flex flex-wrap gap-3">
                     {c.tax_id && <span>VKN/TC: {c.tax_id}</span>}
                     {c.tax_office && <span>{c.tax_office}</span>}
                     {c.activity_code && <span>NACE {c.activity_code}</span>}
@@ -206,7 +206,7 @@ export default function AdminMyCompaniesPage() {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => setEditing(c)}
-                    className="p-2 rounded-lg hover:bg-surface-600 text-gray-400 hover:text-white transition-colors"
+                    className="p-2 rounded-lg hover:bg-surface-600 text-surface-400 hover:text-white transition-colors"
                     title="Duzenle"
                   >
                     <Pencil size={16} />
@@ -216,8 +216,8 @@ export default function AdminMyCompaniesPage() {
                     disabled={c.is_default}
                     className={`p-2 rounded-lg transition-colors ${
                       c.is_default
-                        ? "text-gray-700 cursor-not-allowed"
-                        : "hover:bg-red-900/30 text-gray-400 hover:text-red-400"
+                        ? "text-surface-200 cursor-not-allowed"
+                        : "hover:bg-red-900/30 text-surface-400 hover:text-red-400"
                     }`}
                     title={
                       c.is_default
@@ -271,14 +271,14 @@ export default function AdminMyCompaniesPage() {
             <h3 className="text-lg font-semibold text-white mb-2">
               Firmayi Sil
             </h3>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-surface-400 mb-6">
               <strong className="text-white">{deleteConfirm.legal_name}</strong>{" "}
               kaydini silmek istediginizden emin misiniz? Bu islem geri alinamaz.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 text-sm"
+                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
               >
                 Iptal
               </button>
@@ -367,7 +367,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-surface-700 text-gray-400 hover:text-white"
+            className="p-2 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-white"
           >
             <X size={18} />
           </button>
@@ -506,7 +506,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 text-sm"
+            className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
           >
             Iptal
           </button>
@@ -537,7 +537,7 @@ function Field({
 }) {
   return (
     <div className={colSpan ?? ""}>
-      <label className="block text-xs font-medium text-gray-400 mb-1.5">
+      <label className="block text-xs font-medium text-surface-400 mb-1.5">
         {label}
       </label>
       {children}

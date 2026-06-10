@@ -121,7 +121,7 @@ export default function RecurringPage() {
 function Stat({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-surface-400 uppercase tracking-wide">{label}</p>
       <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-white"}`}>
         {value}
       </p>

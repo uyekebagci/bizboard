@@ -117,32 +117,32 @@ export default function AdminPage() {
           <div className="flex items-center gap-2.5">
             <Users size={20} className="text-amber-400" />
             <h2 className="text-lg font-semibold text-white">Kullanicilar</h2>
-            <span className="ml-1 text-sm text-gray-500">
+            <span className="ml-1 text-sm text-surface-400">
               ({users.length})
             </span>
           </div>
           <div className="flex items-center gap-2">
             <a
               href="/admin/my-companies"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
             >
               Firmalarim
             </a>
             <a
               href="/admin/debt-migration"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
             >
               Borc Migration
             </a>
             <a
               href="/admin/recurring"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
             >
               Recurring
             </a>
             <a
               href="/admin/audit"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 transition-colors"
+              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
             >
               Audit Log
             </a>
@@ -158,9 +158,9 @@ export default function AdminPage() {
 
         {/* User List */}
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Yukleniyor...</div>
+          <div className="p-8 text-center text-surface-400">Yukleniyor...</div>
         ) : users.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-surface-400">
             Henuz kullanici yok
           </div>
         ) : (
@@ -177,7 +177,7 @@ export default function AdminPage() {
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm shrink-0 ${
                       user.role === "admin"
                         ? "bg-amber-500/20 text-amber-400"
-                        : "bg-surface-600 text-gray-400"
+                        : "bg-surface-600 text-surface-400"
                     }`}
                   >
                     {user.full_name
@@ -199,7 +199,7 @@ export default function AdminPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500">@{user.username}</p>
+                    <p className="text-xs text-surface-400">@{user.username}</p>
                   </div>
                 </div>
 
@@ -210,14 +210,14 @@ export default function AdminPage() {
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
                       user.role === "admin"
                         ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        : "bg-surface-600 text-gray-400 border border-surface-600"
+                        : "bg-surface-600 text-surface-400 border border-surface-600"
                     }`}
                   >
                     {getRoleLabel(user.role)}
                   </span>
 
                   {/* Business count */}
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <div className="flex items-center gap-1.5 text-xs text-surface-400">
                     <Building2 size={14} />
                     <span>
                       {user.role === "admin"
@@ -233,7 +233,7 @@ export default function AdminPage() {
                       className="p-2 rounded-lg hover:bg-surface-600 transition-colors"
                       title="Duzenle"
                     >
-                      <Pencil size={15} className="text-gray-400" />
+                      <Pencil size={15} className="text-surface-400" />
                     </button>
                     {user.role !== "admin" && (
                       <button
@@ -284,7 +284,7 @@ export default function AdminPage() {
             <h3 className="text-lg font-semibold text-white mb-2">
               Kullaniciyi Sil
             </h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-surface-400 text-sm mb-6">
               <span className="text-white font-medium">
                 {deleteConfirm.full_name}
               </span>{" "}
@@ -388,7 +388,7 @@ function CreateUserModal({
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
           >
-            <X size={18} className="text-gray-400" />
+            <X size={18} className="text-surface-400" />
           </button>
         </div>
 
@@ -402,7 +402,7 @@ function CreateUserModal({
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Ad Soyad
             </label>
             <input
@@ -416,7 +416,7 @@ function CreateUserModal({
 
           {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Kullanici Adi
             </label>
             <input
@@ -430,7 +430,7 @@ function CreateUserModal({
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Sifre
             </label>
             <div className="relative">
@@ -444,7 +444,7 @@ function CreateUserModal({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-300"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -453,7 +453,7 @@ function CreateUserModal({
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Rol
             </label>
             <div className="flex gap-3">
@@ -465,7 +465,7 @@ function CreateUserModal({
                   className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     role === opt.value
                       ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
-                      : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
+                      : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
                   }`}
                 >
                   {opt.label}
@@ -477,10 +477,10 @@ function CreateUserModal({
           {/* Business Selection (hide for admin) */}
           {role !== "admin" && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label className="block text-sm font-medium text-surface-300 mb-1.5">
                 Erisebilecegi Isletmeler
               </label>
-              <p className="text-xs text-gray-500 mb-3">
+              <p className="text-xs text-surface-400 mb-3">
                 En az bir isletme secmelisiniz
               </p>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -492,7 +492,7 @@ function CreateUserModal({
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm border transition-colors ${
                       selectedBusinessIds.includes(biz.id)
                         ? "bg-amber-500/10 border-amber-500/40 text-white"
-                        : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
+                        : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -605,7 +605,7 @@ function EditUserModal({
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
           >
-            <X size={18} className="text-gray-400" />
+            <X size={18} className="text-surface-400" />
           </button>
         </div>
 
@@ -619,20 +619,20 @@ function EditUserModal({
 
           {/* Username (read only) */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Kullanici Adi
             </label>
             <input
               type="text"
               value={user.username}
               disabled
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-gray-500 text-sm cursor-not-allowed"
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-400 text-sm cursor-not-allowed"
             />
           </div>
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Ad Soyad
             </label>
             <input
@@ -645,9 +645,9 @@ function EditUserModal({
 
           {/* Password (optional) */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Yeni Sifre{" "}
-              <span className="text-gray-600">(bos birakilabilir)</span>
+              <span className="text-surface-300">(bos birakilabilir)</span>
             </label>
             <div className="relative">
               <input
@@ -660,7 +660,7 @@ function EditUserModal({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-300"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -669,7 +669,7 @@ function EditUserModal({
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
               Rol
             </label>
             <div className="flex gap-3">
@@ -681,7 +681,7 @@ function EditUserModal({
                   className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     role === opt.value
                       ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
-                      : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
+                      : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
                   }`}
                 >
                   {opt.label}
@@ -692,7 +692,7 @@ function EditUserModal({
 
           {/* Active toggle */}
           <div className="flex items-center justify-between p-4 bg-surface-900 border border-surface-600 rounded-xl">
-            <span className="text-sm text-gray-300">Aktif Durum</span>
+            <span className="text-sm text-surface-300">Aktif Durum</span>
             <button
               type="button"
               onClick={() => setIsActive(!isActive)}
@@ -711,7 +711,7 @@ function EditUserModal({
           {/* Business Selection (hide for admin) */}
           {role !== "admin" && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label className="block text-sm font-medium text-surface-300 mb-1.5">
                 Erisebilecegi Isletmeler
               </label>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -723,7 +723,7 @@ function EditUserModal({
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm border transition-colors ${
                       selectedBusinessIds.includes(biz.id)
                         ? "bg-amber-500/10 border-amber-500/40 text-white"
-                        : "bg-surface-900 border-surface-600 text-gray-400 hover:border-surface-600"
+                        : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
                     }`}
                   >
                     <div className="flex items-center gap-3">

@@ -121,7 +121,7 @@ export default function DebtMigrationPage() {
           />
           <div>
             <span className="text-sm text-white font-medium">Auto-create</span>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-surface-400">
               Eslesme bulunamayan isimleri yeni Counterpart olarak yarat (rol=OTHER).
               Kapaliyken bu kayitlar atlanir (skipped).
             </p>
@@ -166,12 +166,12 @@ export default function DebtMigrationPage() {
             <h3 className="text-lg font-semibold text-white mb-2">
               Migration'i Calistir
             </h3>
-            <p className="text-sm text-gray-400 mb-2">
+            <p className="text-sm text-surface-400 mb-2">
               Bu islem orphan borc kayitlarini Counterpart kayitlarina kalici olarak baglar.
             </p>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-surface-400 mb-6">
               Auto-create:{" "}
-              <strong className={autoCreate ? "text-amber-400" : "text-gray-500"}>
+              <strong className={autoCreate ? "text-amber-400" : "text-surface-400"}>
                 {autoCreate ? "ACIK" : "Kapali"}
               </strong>
               . Devam edilsin mi?
@@ -179,7 +179,7 @@ export default function DebtMigrationPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmApply(false)}
-                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-gray-200 text-sm"
+                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
               >
                 Iptal
               </button>
@@ -224,7 +224,7 @@ function ResultPanel({
         <Stat label="Recompute edilen" value={result.recomputed_counterparts} />
       </div>
       {result.dry_run && (
-        <p className="text-xs text-gray-400 mt-3">
+        <p className="text-xs text-surface-400 mt-3">
           Bu sadece bir simulasyon. Hicbir veri degisiklikten gecmedi.
         </p>
       )}
@@ -235,7 +235,7 @@ function ResultPanel({
 function Stat({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-surface-400 uppercase tracking-wide">{label}</p>
       <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-white"}`}>
         {value}
       </p>
