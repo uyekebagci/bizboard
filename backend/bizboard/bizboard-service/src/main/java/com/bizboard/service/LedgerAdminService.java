@@ -35,11 +35,13 @@ public class LedgerAdminService {
     /**
      * Dry-run: hiçbir şey PERSIST ETMEDEN tüm tx'leri tarar; kaçının dengeli
      * türetilebileceğini / FLAGGED olacağını raporlar. DB'ye dokunmaz (güvenli).
+     *
+     * @param businessId NULL ise GLOBAL (tüm işletmeler); doluysa yalnız o işletme.
      */
     @Transactional(readOnly = true)
-    public BackfillResult dryRunBackfill() {
+    public BackfillResult dryRunBackfill(UUID businessId) {
         BackfillResult r = new BackfillResult(true);
-        forEachTransaction(tx -> {
+        forEachTransaction(businessId, tx -> {
             boolean alreadyDerived = isAlreadyDerived(tx.getId());
             if (alreadyDerived) {
                 r.skipped++;
@@ -50,19 +52,22 @@ public class LedgerAdminService {
             }
             r.total++;
         });
-        log.info("[ledger-admin] dry-run — total={}, derivable={}, skip={}, flagged={}",
-                r.total, r.derived, r.skipped, r.flagged);
+        log.info("[ledger-admin] dry-run — scope={}, total={}, derivable={}, skip={}, flagged={}",
+                businessId != null ? businessId : "GLOBAL", r.total, r.derived, r.skipped, r.flagged);
         return r;
     }
 
     /**
      * Gerçek backfill (idempotent). Türetilmiş entry zaten varsa atlanır;
      * dengelenemeyen tx FLAGGED (entry üretilmez). Boot runner ile aynı sonuç.
+     *
+     * @param businessId NULL ise GLOBAL (tüm işletmeler); doluysa yalnız o işletme
+     *                   türetilir — izole test + güvenli (tek-işletme) yeniden-türetme.
      */
     @Transactional
-    public BackfillResult runBackfill() {
+    public BackfillResult runBackfill(UUID businessId) {
         BackfillResult r = new BackfillResult(false);
-        forEachTransaction(tx -> {
+        forEachTransaction(businessId, tx -> {
             try {
                 if (isAlreadyDerived(tx.getId())) {
                     r.skipped++;
@@ -76,8 +81,8 @@ public class LedgerAdminService {
             }
             r.total++;
         });
-        log.info("[ledger-admin] backfill — total={}, derived={}, skip={}, flagged={}",
-                r.total, r.derived, r.skipped, r.flagged);
+        log.info("[ledger-admin] backfill — scope={}, total={}, derived={}, skip={}, flagged={}",
+                businessId != null ? businessId : "GLOBAL", r.total, r.derived, r.skipped, r.flagged);
         return r;
     }
 
@@ -100,7 +105,19 @@ public class LedgerAdminService {
                 com.bizboard.common.enums.JournalSourceType.TRANSFER, txId);
     }
 
-    private void forEachTransaction(java.util.function.Consumer<Transaction> consumer) {
+    /**
+     * Tx iterasyonu. {@code businessId == null} → GLOBAL (sayfalı, tüm tx);
+     * dolu → yalnız o işletmenin tx'leri (izole test / tek-işletme yeniden-türetme).
+     */
+    private void forEachTransaction(UUID businessId,
+                                    java.util.function.Consumer<Transaction> consumer) {
+        if (businessId != null) {
+            // Tek işletme: doğrudan business-scoped çek (DGR/diğer işletmelere DOKUNMA).
+            for (Transaction tx : transactionRepository.findByBusinessIdOrderByDateDesc(businessId)) {
+                consumer.accept(tx);
+            }
+            return;
+        }
         int pageIndex = 0;
         Page<Transaction> page;
         do {

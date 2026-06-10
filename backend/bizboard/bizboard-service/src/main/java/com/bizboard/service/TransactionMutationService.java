@@ -62,6 +62,12 @@ public class TransactionMutationService {
     private final CounterpartRepository counterpartRepository;
     private final PosDeviceRepository posDeviceRepository;
     private final NotificationDispatchService dispatchService;
+    // Ledger v2 (Faz A): tx mutasyonunda senkron çift-giriş Posting türetme.
+    // current_balance snapshot facade'i AYNEN korunur; bunun YANINDA JournalEntry/
+    // Posting türetilir → gün-kapanışı posting-tabanlı totalIn/totalOut API yoluyla
+    // da dolar (boot/admin backfill ile aynı kurallar, idempotent marker
+    // source_type+source_ref_id). create→derive, update→reverse+rederive, delete→reverse.
+    private final LedgerPostingService ledgerPostingService;
 
     @Transactional
     public void deleteTransaction(UUID transactionId, UUID userId, String reason) {
@@ -164,6 +170,12 @@ public class TransactionMutationService {
         // eklenmişti; tx silinince düşmesi gerek). subCashInclusionService bunu
         // yapar ve inclusion satırlarını da temizler.
         subCashInclusionService.onTransactionDeleted(transaction);
+
+        // Ledger v2 (Faz A): tx silinmeden ÖNCE türetilmiş JournalEntry+Posting'leri
+        // geri al (idempotent; yoksa no-op). source_ref_id=tx.id ile bağlı oldukları
+        // için tx silinince yetim kalmasınlar → posting-tabanlı gün-kapanışı doğru
+        // kalır. current_balance reversal yukarıda korundu.
+        ledgerPostingService.reversePostingsForTransaction(transaction.getId());
 
         // Transaction'ı sil
         transactionRepository.delete(transaction);
@@ -381,6 +393,13 @@ public class TransactionMutationService {
                             ? bankAccount.getCurrentBalance() : java.math.BigDecimal.ZERO).add(delta));
             bankAccountRepository.save(bankAccount);
         }
+
+        // Ledger v2 (Faz A): senkron çift-giriş Posting türetme (gün-kapanışı API E2E).
+        // current_balance snapshot facade'i yukarıda korundu; bunun YANINDA dengeli
+        // JournalEntry+Posting türetilir. Aynı JPA transaction içinde — tx ile atomik.
+        // İdempotent (entry zaten varsa no-op); dengelenemeyen → FLAGGED (entry yok),
+        // boot backfill ile aynı kurallar. Türetme tx create'i BOZMAMALI (non-fatal).
+        deriveLedgerPostings(transaction.getId());
 
         // Geriye dönük bir işlem mi? (kapanmış döneme ait)
         if (ledgerService.isClosedPeriod(request.getDate())) {
@@ -777,6 +796,14 @@ public class TransactionMutationService {
             }
         }
 
+        // Ledger v2 (Faz A): tx alanları (tutar/yön/tarih/hesap/kategori) değişmiş
+        // olabilir → türetilmiş Posting'leri YENİDEN türet (reverse + rederive).
+        // İdempotent reverse (yoksa no-op) + tek dengeli entry yeniden üretilir;
+        // böylece posting-tabanlı gün-kapanışı totalIn/totalOut güncel kalır.
+        // current_balance reconcile yukarıda korundu — Σ=0 invariant'ı bozulmaz.
+        ledgerPostingService.reversePostingsForTransaction(transaction.getId());
+        deriveLedgerPostings(transaction.getId());
+
         Map<String, Object> meta = new HashMap<>();
         meta.put("businessId", transaction.getBusiness().getId());
         meta.put("amount", transaction.getAmount());
@@ -802,6 +829,31 @@ public class TransactionMutationService {
         TransactionDto dto = DtoMapper.toTransactionDto(transaction);
         dto.setBusinessName(transaction.getBusiness().getName());
         return dto;
+    }
+
+    // ───────── ledger posting türetme (Faz A senkron) ─────────
+
+    /**
+     * Ledger v2 (Faz A): bir tx için dengeli çift-giriş Posting'i senkron türetir.
+     *
+     * <p>Boot {@link TransactionPostingBackfillRunner} / admin
+     * {@link LedgerAdminService} ile AYNI mantığı ({@link LedgerPostingService})
+     * tx create/update mutasyonunun içinde çağırır → posting-tabanlı gün-kapanışı
+     * {@code totalIn/totalOut} API yoluyla da dolar. İdempotent (entry varsa no-op);
+     * dengelenemeyen tx FLAGGED (entry üretilmez), boot backfill ile aynı kural.</p>
+     *
+     * <p><b>Non-fatal:</b> türetme hatası tx mutasyonunu (snapshot facade +
+     * current_balance) BOZMAZ — loglanır, atlanır; gerekirse admin backfill ile
+     * (businessId-scoped) yeniden türetilebilir.</p>
+     */
+    private void deriveLedgerPostings(UUID txId) {
+        if (txId == null) return;
+        try {
+            ledgerPostingService.deriveForTransactionId(txId);
+        } catch (Exception e) {
+            log.warn("[tx-mutation] tx={} senkron posting turetme hatasi (izole, atlandi): {}",
+                    txId, e.getMessage());
+        }
     }
 
     // ───────── shared mutation helpers (create + update; R3) ─────────

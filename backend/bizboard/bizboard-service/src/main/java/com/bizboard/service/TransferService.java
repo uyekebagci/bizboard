@@ -57,6 +57,10 @@ public class TransferService {
     private final UserRepository userRepository;
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
+    // Ledger v2 (Faz A): transfer tx'leri için senkron çift-giriş Posting türetme.
+    // Her transfer yönü (OUT/IN) ayrı tx → her biri kendi dengeli TRANSFER entry'sini
+    // türetir (loc bacağı ± + clearing bacağı ∓). current_balance facade'i korunur.
+    private final LedgerPostingService ledgerPostingService;
 
     /** Transfer kaynağı/hedefi olamayacak tipler. */
     private static final EnumSet<BankAccountType> INELIGIBLE_TYPES =
@@ -191,6 +195,12 @@ public class TransferService {
         bankAccountRepository.save(from);
         bankAccountRepository.save(to);
 
+        // Ledger v2 (Faz A): her transfer yönü için senkron dengeli Posting türetme
+        // (idempotent; non-fatal). Posting-tabanlı gün-kapanışı için transfer
+        // konum-hareketleri de türetilir; P&L'i etkilemez (clearing bacağı dengeler).
+        deriveLedgerPostings(outTx.getId());
+        deriveLedgerPostings(inTx.getId());
+
         // Audit
         auditLogService.recordEntityAction(
                 "TRANSFER_CREATE",
@@ -280,6 +290,11 @@ public class TransferService {
             bankAccountRepository.save(toAcc);
         }
 
+        // Ledger v2 (Faz A): türetilmiş Posting'leri tx silinmeden önce geri al
+        // (her iki yön; idempotent). source_ref_id=tx.id bağı yetim kalmasın.
+        ledgerPostingService.reversePostingsForTransaction(outTx.getId());
+        ledgerPostingService.reversePostingsForTransaction(inTx.getId());
+
         transactionRepository.delete(outTx);
         transactionRepository.delete(inTx);
 
@@ -364,6 +379,9 @@ public class TransferService {
         from.setCurrentBalance(fromBal.subtract(amount));
         bankAccountRepository.save(from);
 
+        // Ledger v2 (Faz A): dış transfer OUT tx'i için senkron Posting türetme.
+        deriveLedgerPostings(outTx.getId());
+
         auditLogService.recordEntityAction(
                 "TRANSFER_CREATE_EXTERNAL",
                 actorUserId, actor != null ? actor.getUsername() : null,
@@ -396,6 +414,21 @@ public class TransferService {
     }
 
     // ─────────────────────── helpers ───────────────────────
+
+    /**
+     * Ledger v2 (Faz A): bir transfer tx'i için dengeli Posting'i senkron türetir.
+     * İdempotent + non-fatal — türetme hatası transfer'i (snapshot + current_balance)
+     * BOZMAZ (loglanır, atlanır; admin backfill ile yeniden türetilebilir).
+     */
+    private void deriveLedgerPostings(UUID txId) {
+        if (txId == null) return;
+        try {
+            ledgerPostingService.deriveForTransactionId(txId);
+        } catch (Exception e) {
+            log.warn("[transfer] tx={} senkron posting turetme hatasi (izole, atlandi): {}",
+                    txId, e.getMessage());
+        }
+    }
 
     private TransferDto buildDto(Transaction outTx, Transaction inTx, String warning) {
         BankAccount from = outTx.getBankAccount();

@@ -57,25 +57,32 @@ public class AdminLedgerController {
      * Transaction → Posting backfill. {@code dryRun=true} (default) DB'ye dokunmaz,
      * yalnız kaç tx'in dengeli/FLAGGED olacağını raporlar. {@code dryRun=false}
      * gerçek (idempotent) backfill koşturur + audit'ler.
+     *
+     * <p>{@code businessId} verilirse YALNIZ o işletme türetilir (izole test +
+     * güvenli tek-işletme yeniden-türetme — diğer işletmelere DOKUNMAZ).
+     * Verilmezse GLOBAL (tüm işletmeler) — eski davranış aynen korunur.</p>
      */
     @PostMapping("/backfill")
     public ResponseEntity<LedgerAdminService.BackfillResult> backfill(
             @RequestParam(name = "dryRun", defaultValue = "true") boolean dryRun,
+            @RequestParam(name = "businessId", required = false) UUID businessId,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (dryRun) {
-            return ResponseEntity.ok(ledgerAdminService.dryRunBackfill());
+            return ResponseEntity.ok(ledgerAdminService.dryRunBackfill(businessId));
         }
-        LedgerAdminService.BackfillResult result = ledgerAdminService.runBackfill();
+        LedgerAdminService.BackfillResult result = ledgerAdminService.runBackfill(businessId);
         auditLogService.recordEntityAction(
                 AuditAction.LEDGER_POSTING_BACKFILL,
                 principal != null ? principal.getId() : null,
                 principal != null ? principal.getUsername() : null,
-                "LEDGER", null,
-                "Tx→Posting backfill (manuel) — toplam=" + result.getTotal()
+                "LEDGER", businessId,
+                "Tx→Posting backfill (manuel, scope=" + (businessId != null ? businessId : "GLOBAL")
+                        + ") — toplam=" + result.getTotal()
                         + ", turetildi=" + result.getDerived()
                         + ", skip=" + result.getSkipped()
                         + ", FLAGGED=" + result.getFlagged(),
                 Map.of(
+                        "scope", businessId != null ? businessId.toString() : "GLOBAL",
                         "total", result.getTotal(),
                         "derived", result.getDerived(),
                         "skipped", result.getSkipped(),
