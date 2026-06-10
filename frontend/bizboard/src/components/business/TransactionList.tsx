@@ -351,11 +351,11 @@ export function TransactionDetailModal({
   const allFiles = [...files, ...uploadedFiles];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="modal-surface shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-surface-100">
             {editing ? "Islemi Duzenle" : "Islem Detayi"}
           </h3>
           <button
@@ -484,7 +484,7 @@ export function TransactionDetailModal({
                   inputMode="numeric"
                   value={editAmount}
                   onChange={(e) => setEditAmount(formatMoneyInput(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
+                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                              focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
@@ -496,7 +496,7 @@ export function TransactionDetailModal({
                   type="date"
                   value={editDate}
                   onChange={(e) => setEditDate(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
+                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                              focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
@@ -524,7 +524,7 @@ export function TransactionDetailModal({
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   rows={2}
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
+                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                              placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                              focus:border-transparent resize-none"
                   placeholder="Aciklama ekleyin..."
@@ -539,7 +539,7 @@ export function TransactionDetailModal({
                   value={editTags}
                   onChange={(e) => setEditTags(e.target.value)}
                   placeholder="Virgul ile ayirin: fatura, kira, malzeme"
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-white
+                  className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                              placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                              focus:border-transparent"
                 />
@@ -636,7 +636,7 @@ export function TransactionDetailModal({
                     <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Aciklama</p>
-                      <p className="text-sm text-white">{transaction.description}</p>
+                      <p className="text-sm text-surface-100">{transaction.description}</p>
                     </div>
                   </div>
                 )}
@@ -646,7 +646,7 @@ export function TransactionDetailModal({
                     <Calendar size={14} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Tarih</p>
-                      <p className="text-sm text-white font-medium">
+                      <p className="text-sm text-surface-100 font-medium">
                         {new Date(transaction.date).toLocaleDateString("tr-TR", {
                           day: "numeric", month: "long", year: "numeric",
                         })}
@@ -657,7 +657,7 @@ export function TransactionDetailModal({
                     <Tag size={14} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Kategori</p>
-                      <p className="text-sm text-white font-medium">
+                      <p className="text-sm text-surface-100 font-medium">
                         {transaction.category?.name || "Kategorisiz"}
                       </p>
                     </div>
@@ -669,7 +669,7 @@ export function TransactionDetailModal({
                     <Building2 size={16} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Isletme</p>
-                      <p className="text-sm text-white font-medium">{transaction.business_name}</p>
+                      <p className="text-sm text-surface-100 font-medium">{transaction.business_name}</p>
                     </div>
                   </div>
                 )}
@@ -683,7 +683,7 @@ export function TransactionDetailModal({
                   )}
                   <div className="flex-1">
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Odeme</p>
-                    <p className="text-sm text-white font-medium">
+                    <p className="text-sm text-surface-100 font-medium">
                       {/* Beta v1.1: POS komisyon UI kaldırıldı — sadece method + cihaz adı. */}
                       {(transaction.payment_method || "NAKIT") === "POS" ? "POS" : "Nakit"}
                       {transaction.pos_device_name && (
@@ -781,7 +781,7 @@ export function TransactionDetailModal({
                 {transaction.created_at && (
                   <div className="p-3 bg-surface-700 rounded-xl">
                     <p className="text-[10px] text-surface-400 uppercase tracking-wider">Olusturulma</p>
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-surface-100">
                       {new Date(transaction.created_at).toLocaleDateString("tr-TR", {
                         day: "numeric", month: "long", year: "numeric",
                         hour: "2-digit", minute: "2-digit",
@@ -877,7 +877,7 @@ function DeleteTransactionModal({
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />
             </div>
-            <h3 className="text-lg font-bold text-white">Islemi Sil</h3>
+            <h3 className="text-lg font-bold text-surface-100">Islemi Sil</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-700 transition-colors">
             <X size={20} className="text-surface-400" />
@@ -888,7 +888,7 @@ function DeleteTransactionModal({
           <div className="bg-surface-700 rounded-xl p-3 mb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-surface-100">
                   {transaction.description || transaction.category?.name || "Islem"}
                 </p>
                 <p className="text-xs text-surface-400 mt-0.5">
@@ -913,7 +913,7 @@ function DeleteTransactionModal({
               placeholder="Bu islemi neden siliyorsunuz? (zorunlu)"
               rows={3}
               autoFocus
-              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-white
+              className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-red-500
                          focus:border-transparent transition-all resize-none"
             />
@@ -1104,7 +1104,7 @@ function SettleModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-md">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-white">POS işlemi hesaba düştü</h3>
+          <h3 className="text-base font-semibold text-surface-100">POS işlemi hesaba düştü</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-surface-700">
             <X size={16} className="text-surface-400" />
           </button>
@@ -1141,7 +1141,7 @@ function SettleModal({
               type="datetime-local"
               value={settledAt}
               onChange={(e) => setSettledAt(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-white text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm"
             />
           </div>
         </div>

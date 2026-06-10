@@ -18,21 +18,25 @@
     --color-surface: 255 255 255;
     --radius: 0.75rem;
 
-    /* LIGHT palet — koyu indeksler açık zemine, açık indeksler koyu metne döner */
-    --surface-0: 33 37 41;     /* #212529 — en koyu metin */
-    --surface-50: 241 243 245; /* #f1f3f5 */
-    --surface-100: 33 37 41;   /* #212529 — başlık metni */
-    --surface-200: 52 58 64;   /* #343a40 — body metin */
-    --surface-300: 73 80 87;   /* #495057 */
-    --surface-400: 134 142 150;/* #868e96 — muted metin */
-    --surface-500: 173 181 189;/* #adb5bd */
-    --surface-600: 222 226 230;/* #dee2e6 — border */
-    --surface-700: 233 236 239;/* #e9ecef */
-    --surface-800: 248 249 250;/* #f8f9fa — kart */
-    --surface-900: 255 255 255;/* #ffffff — en dış arka plan */
+    /* LIGHT palet — premium revize (FAZ 2 cila).
+     * Koyu indeksler = metin (açık→koyu), açık indeksler = yüzey.
+     * Hedef: derinlikli, temiz, hafif soğuk-nötr ("slate") tonlar; düz/
+     * yıkanmış #f8f9fa görünümü giderildi. App arka planı kartlardan
+     * belirgin AYRI (kontrast + ayrışma), border'lar daha okunur. */
+    --surface-0: 15 23 42;     /* #0f172a — en koyu metin (slate-900) */
+    --surface-50: 241 245 249; /* #f1f5f9 — slate-100 */
+    --surface-100: 15 23 42;   /* #0f172a — başlık metni */
+    --surface-200: 30 41 59;   /* #1e293b — body metin (slate-800) */
+    --surface-300: 51 65 85;   /* #334155 — slate-700 */
+    --surface-400: 100 116 139;/* #64748b — muted metin (slate-500) */
+    --surface-500: 148 163 184;/* #94a3b8 — slate-400 */
+    --surface-600: 203 213 225;/* #cbd5e1 — border (slate-300) */
+    --surface-700: 226 232 240;/* #e2e8f0 — alt-yüzey / chip (slate-200) */
+    --surface-800: 255 255 255;/* #ffffff — kart (net beyaz, bg'den ayrı) */
+    --surface-900: 255 255 255;/* #ffffff — panel/üst yüzey */
 
-    --body-bg: 248 249 250;    /* #f8f9fa */
-    --body-text: 52 58 64;     /* #343a40 */
+    --body-bg: 237 242 248;    /* #edf2f8 — app arka planı (hafif soğuk, kartlardan ayrı) */
+    --body-text: 30 41 59;     /* #1e293b — slate-800 */
   }
 
   .dark {
@@ -119,6 +123,50 @@
     box-shadow:
       0 1px 2px rgba(15, 23, 42, 0.06),
       0 14px 30px -22px rgba(15, 23, 42, 0.35);
+  }
+
+  /* Solid modal yüzeyi — glass-card'ın dark'taki yarı-saydamlığı bazı
+     yoğun detay modallarını "yıkanmış/floaty" gösteriyordu. Bu varyant
+     her iki temada da OPAK + net border + premium gölge sağlar; içerik
+     kontrastı garanti. Yalnızca opt-in modallarda kullanılır (blast yok). */
+  .modal-surface {
+    background: rgb(var(--surface-800) / 1);
+    border: 1px solid rgb(var(--surface-700) / 0.9);
+    box-shadow:
+      0 1px 0 rgb(var(--surface-0) / 0.06) inset,
+      0 24px 60px -28px rgba(0, 0, 0, 0.85);
+    border-radius: 1rem;
+  }
+  html:not(.dark) .modal-surface {
+    background: rgb(var(--surface-900) / 1);
+    border: 1px solid rgb(var(--surface-600) / 0.7);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 18px 44px -26px rgba(15, 23, 42, 0.4);
+  }
+
+  /* Floating menü / dropdown / popover yüzeyi — glass-card'ın dark'taki
+     yarı-saydamlığı yüzünden arkadaki sayfa içeriği menü içinden sızıyordu.
+     Bu varyant dark'ta neredeyse OPAK (içerik sızmaz, okunur) ama hafif glass
+     hissi + blur korur; light'ta net beyaz panel. Opt-in (blast yok). */
+  .popover-surface {
+    background: rgb(var(--surface-800) / 0.96);
+    border: 1px solid rgb(var(--surface-700) / 0.8);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow:
+      0 1px 0 rgb(var(--surface-0) / 0.06) inset,
+      0 20px 48px -24px rgba(0, 0, 0, 0.8);
+    border-radius: 0.75rem;
+  }
+  html:not(.dark) .popover-surface {
+    background: rgb(var(--surface-900) / 1);
+    border: 1px solid rgb(var(--surface-600) / 0.7);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 16px 36px -22px rgba(15, 23, 42, 0.35);
   }
 
   /* Hover: hafif yükselme + brand glow. */

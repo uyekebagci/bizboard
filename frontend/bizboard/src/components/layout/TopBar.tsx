@@ -112,10 +112,10 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
             {menuOpen && (
               <div
                 role="menu"
-                className="glass-card absolute right-0 mt-2 w-52 !rounded-xl shadow-card-hover py-2 animate-fade-in z-50"
+                className="popover-surface absolute right-0 mt-2 w-52 !rounded-xl py-2 animate-fade-in z-50"
               >
                 <div className="px-4 py-2.5 border-b border-surface-700/60">
-                  <p className="font-semibold text-white text-sm truncate">
+                  <p className="font-semibold text-surface-100 text-sm truncate">
                     {profile?.full_name || "Kullanici"}
                   </p>
                   {profile?.username && (
