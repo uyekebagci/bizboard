@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * Kategori Yönetim Sayfası — Kategori FE WP.
+ * Kategori Yönetim Sayfası.
  *
- * <p>İşletme bazlı gelir/gider kategorilerinin yönetimi. Gelir ve gider ayrı
- * sekmelerde tutulur (backend {@code direction} INCOME/EXPENSE). Liste
- * ikon/renk/ad/sıra gösterir; oluştur/düzenle/sil (soft-delete) destekler.</p>
+ * <p>İşletme bazlı PAYLAŞIMLI (yön-bağımsız) kategori yönetimi: bir kategori hem
+ * gelir hem gider işlemlerinde kullanılabilir. Tek liste; ikon/renk/ad/sıra
+ * gösterir; oluştur/düzenle/sil (soft-delete) destekler.</p>
  *
  * <p>API: {@code GET|POST /businesses/{id}/categories}, {@code PUT /categories/{id}},
  * {@code DELETE /categories/{id}} (soft-delete). İşlemlerde kategori zorunlu
@@ -15,15 +15,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Plus, Pencil, Trash2, ArrowDownLeft, ArrowUpRight,
+  ArrowLeft, Plus, Pencil, Trash2,
   Loader2, Tags,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
-import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
-import type { Business, Category, TransactionDirection } from "@/types";
+import type { Business, Category } from "@/types";
 import { CategoryFormModal } from "@/components/transactions/CategoryFormModal";
 
 export default function CategoriesPage() {
@@ -32,7 +31,6 @@ export default function CategoriesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [businessId, setBusinessId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [direction, setDirection] = useState<TransactionDirection>("income");
 
   const [loadingBiz, setLoadingBiz] = useState(true);
   const [loadingCat, setLoadingCat] = useState(false);
@@ -64,10 +62,9 @@ export default function CategoriesPage() {
   }, [businessId]);
 
   const visible = useMemo(
-    () => categories
-      .filter((c) => c.direction === direction)
+    () => [...categories]
       .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, "tr")),
-    [categories, direction],
+    [categories],
   );
 
   function openCreate() {
@@ -104,8 +101,6 @@ export default function CategoriesPage() {
     }
   }
 
-  const incomeCount = categories.filter((c) => c.direction === "income").length;
-  const expenseCount = categories.filter((c) => c.direction === "expense").length;
 
   return (
     <div className="space-y-5">
@@ -125,7 +120,8 @@ export default function CategoriesPage() {
                 <Tags size={22} className="text-brand-400" /> Kategoriler
               </h1>
               <p className="text-surface-400 mt-1 text-sm">
-                Gelir ve gider kategorilerini yönetin. İşlemlerde kategori zorunludur.
+                Kategorileriniz hem gelir hem gider işlemlerinde kullanılır.
+                İşlemlerde kategori zorunludur.
               </p>
             </div>
           </div>
@@ -169,37 +165,7 @@ export default function CategoriesPage() {
         )}
       </section>
 
-      {/* Gelir / Gider sekmeleri */}
-      <div className="flex rounded-xl border border-surface-600 overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setDirection("income")}
-          className={cn(
-            "flex-1 py-2.5 text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors",
-            direction === "income"
-              ? "bg-green-500/15 text-green-300"
-              : "bg-surface-800 text-surface-300 hover:bg-surface-700",
-          )}
-        >
-          <ArrowDownLeft size={16} /> Gelir
-          <span className="text-[11px] text-surface-400">({incomeCount})</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setDirection("expense")}
-          className={cn(
-            "flex-1 py-2.5 text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors border-l border-surface-600",
-            direction === "expense"
-              ? "bg-red-500/15 text-red-300"
-              : "bg-surface-800 text-surface-300 hover:bg-surface-700",
-          )}
-        >
-          <ArrowUpRight size={16} /> Gider
-          <span className="text-[11px] text-surface-400">({expenseCount})</span>
-        </button>
-      </div>
-
-      {/* Liste */}
+      {/* Liste — tek paylaşımlı liste (yön sekmeleri yok) */}
       <section className="space-y-2">
         {loadingCat ? (
           <div className="space-y-2">
@@ -208,7 +174,7 @@ export default function CategoriesPage() {
             ))}
           </div>
         ) : !businessId ? null : visible.length === 0 ? (
-          <EmptyState direction={direction} onCreate={openCreate} />
+          <EmptyState onCreate={openCreate} />
         ) : (
           visible.map((cat) => (
             <CategoryRow
@@ -225,7 +191,6 @@ export default function CategoriesPage() {
       {showForm && businessId && (
         <CategoryFormModal
           businessId={businessId}
-          direction={direction}
           existing={editTarget}
           onClose={() => { setShowForm(false); setEditTarget(null); }}
           onSaved={handleSaved}
@@ -275,24 +240,14 @@ function CategoryRow({
   );
 }
 
-function EmptyState({
-  direction, onCreate,
-}: {
-  direction: TransactionDirection;
-  onCreate: () => void;
-}) {
-  const isIncome = direction === "income";
+function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="glass-card p-8 text-center">
       <div className="mx-auto mb-3 flex items-center justify-center w-14 h-14 rounded-2xl bg-surface-700">
-        {isIncome ? (
-          <ArrowDownLeft size={26} className="text-green-400" />
-        ) : (
-          <ArrowUpRight size={26} className="text-red-400" />
-        )}
+        <Tags size={26} className="text-brand-400" />
       </div>
       <h3 className="text-base font-semibold text-surface-100">
-        Henüz {isIncome ? "gelir" : "gider"} kategorisi yok
+        Henüz kategori yok
       </h3>
       <p className="text-sm text-surface-400 mt-1 mb-4">
         İlk kategoriyi oluşturun; işlem eklerken seçilebilir olsun.

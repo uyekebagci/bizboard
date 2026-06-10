@@ -1,23 +1,24 @@
 "use client";
 
 /**
- * Kategori FE WP: İşlem formundan inline HIZLI kategori oluşturma modal'ı.
+ * İşlem formundan inline HIZLI kategori oluşturma modal'ı.
  *
  * <p>AddTransactionForm ve TransactionList düzenleme akışındaki kategori
  * seçicisinde "+ Yeni kategori" tıklanınca açılır. Sayfa navigasyonu yapmaz;
  * oluşturulan kategori parent'a geri döner, parent listeye ekleyip otomatik
  * seçer. {@link QuickCounterpartModal} ile aynı UX deseni.</p>
  *
- * <p>Yön (gelir/gider) form'dan KİLİTLİ gelir — kullanıcı yanlış yöne kategori
- * oluşturamaz. POST {@code /businesses/{id}/categories}.</p>
+ * <p>Paylaşımlı (yön-bağımsız) kategori modeli: oluşturulan kategori hem gelir
+ * hem gider işlemlerinde kullanılabilir; yön seçimi YOKTUR. POST
+ * {@code /businesses/{id}/categories}.</p>
  */
 
 import { useState } from "react";
-import { X, Loader2, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import type { Category, TransactionDirection } from "@/types";
+import type { Category } from "@/types";
 import {
   CATEGORY_ICONS,
   CATEGORY_COLORS,
@@ -26,22 +27,18 @@ import {
 } from "./category-presets";
 
 interface Props {
-  /** Kategori bu işletmeye + yöne bağlanır. */
+  /** Kategori bu işletmeye bağlanır (paylaşımlı — yön-bağımsız). */
   businessId: string;
-  /** Form'un mevcut yönü — kilitli, kullanıcı değiştiremez. */
-  direction: TransactionDirection;
   onClose: () => void;
   onCreated: (c: Category) => void;
 }
 
-export function QuickCategoryModal({ businessId, direction, onClose, onCreated }: Props) {
+export function QuickCategoryModal({ businessId, onClose, onCreated }: Props) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<string>(DEFAULT_CATEGORY_ICON);
   const [color, setColor] = useState<string>(DEFAULT_CATEGORY_COLOR);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const isIncome = direction === "income";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,9 +48,9 @@ export function QuickCategoryModal({ businessId, direction, onClose, onCreated }
     if (!businessId) { setError("Önce işletme seçin"); return; }
     setSubmitting(true);
     try {
+      // Paylaşımlı kategori: direction gönderilmez (backend yok sayar).
       const created = await api.post<Category>(`/businesses/${businessId}/categories`, {
         name: trimmed,
-        direction: direction.toUpperCase(), // backend INCOME/EXPENSE (case-insensitive)
         icon: icon || null,
         color: color || null,
       });
@@ -91,18 +88,10 @@ export function QuickCategoryModal({ businessId, direction, onClose, onCreated }
             </div>
           )}
 
-          {/* Yön — kilitli rozet (form yönünü yansıtır) */}
-          <div
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
-              isIncome
-                ? "bg-green-500/15 border-green-500/40 text-green-300"
-                : "bg-red-500/15 border-red-500/40 text-red-300",
-            )}
-          >
-            {isIncome ? <ArrowDownLeft size={12} /> : <ArrowUpRight size={12} />}
-            {isIncome ? "Gelir kategorisi" : "Gider kategorisi"}
-          </div>
+          {/* Paylaşımlı kategori notu — hem gelir hem giderde kullanılabilir */}
+          <p className="text-[11px] text-surface-400">
+            Bu kategori hem gelir hem gider işlemlerinde kullanılabilir.
+          </p>
 
           {/* Önizleme */}
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-700/50 border border-surface-600">

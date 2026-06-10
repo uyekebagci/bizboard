@@ -7,20 +7,22 @@
  * ikon/renk). Bu modal yönetim sayfasında kullanılır ve ek olarak
  * {@code sort_order} (sıra) düzenlemeyi de destekler.</p>
  *
+ * <p>Paylaşımlı (yön-bağımsız) kategori modeli: kategoriler hem gelir hem
+ * giderde kullanılır; yön seçimi YOKTUR.</p>
+ *
  * <ul>
- *   <li>Create: {@code POST /businesses/{id}/categories} — name, direction,
- *       icon, color, sort_order.</li>
- *   <li>Update: {@code PUT /categories/{id}} — name, icon, color, sort_order.
- *       (Yön değiştirilmez — backend kontratı PUT'ta direction kabul etmez.)</li>
+ *   <li>Create: {@code POST /businesses/{id}/categories} — name, icon, color,
+ *       sort_order.</li>
+ *   <li>Update: {@code PUT /categories/{id}} — name, icon, color, sort_order.</li>
  * </ul>
  */
 
 import { useState } from "react";
-import { X, Loader2, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import type { Category, TransactionDirection } from "@/types";
+import type { Category } from "@/types";
 import {
   CATEGORY_ICONS,
   CATEGORY_COLORS,
@@ -30,8 +32,6 @@ import {
 
 interface Props {
   businessId: string;
-  /** Create modunda yeni kategorinin yönü (sekme yönü). */
-  direction: TransactionDirection;
   /** Düzenleme modunda mevcut kategori; null ise create. */
   existing?: Category | null;
   onClose: () => void;
@@ -39,11 +39,9 @@ interface Props {
 }
 
 export function CategoryFormModal({
-  businessId, direction, existing, onClose, onSaved,
+  businessId, existing, onClose, onSaved,
 }: Props) {
   const isEdit = !!existing;
-  const effectiveDirection = existing?.direction ?? direction;
-  const isIncome = effectiveDirection === "income";
 
   const [name, setName] = useState(existing?.name ?? "");
   const [icon, setIcon] = useState<string>(existing?.icon ?? DEFAULT_CATEGORY_ICON);
@@ -72,9 +70,9 @@ export function CategoryFormModal({
         });
         toast.success("Kategori güncellendi");
       } else {
+        // Paylaşımlı kategori: direction gönderilmez (backend yok sayar).
         saved = await api.post<Category>(`/businesses/${businessId}/categories`, {
           name: trimmed,
-          direction: effectiveDirection.toUpperCase(), // INCOME/EXPENSE (case-insensitive)
           icon: icon || null,
           color: color || null,
           sort_order: sort,
@@ -116,18 +114,10 @@ export function CategoryFormModal({
             </div>
           )}
 
-          {/* Yön rozeti (kilitli) */}
-          <div
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
-              isIncome
-                ? "bg-green-500/15 border-green-500/40 text-green-300"
-                : "bg-red-500/15 border-red-500/40 text-red-300",
-            )}
-          >
-            {isIncome ? <ArrowDownLeft size={12} /> : <ArrowUpRight size={12} />}
-            {isIncome ? "Gelir kategorisi" : "Gider kategorisi"}
-          </div>
+          {/* Paylaşımlı kategori notu — hem gelir hem giderde kullanılabilir */}
+          <p className="text-[11px] text-surface-400">
+            Bu kategori hem gelir hem gider işlemlerinde kullanılabilir.
+          </p>
 
           {/* Önizleme */}
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-700/50 border border-surface-600">

@@ -398,7 +398,7 @@ export function TransactionDetailModal({
                   <button
                     key={dir}
                     type="button"
-                    onClick={() => { setEditDirection(dir); setEditCategoryId(""); }}
+                    onClick={() => setEditDirection(dir)}
                     className={cn(
                       "flex-1 py-2.5 text-sm font-medium transition-colors",
                       editDirection === dir
@@ -532,9 +532,11 @@ export function TransactionDetailModal({
                   value={editCategoryId}
                   onChange={setEditCategoryId}
                   placeholder="Kategori seçin (zorunlu)"
-                  searchable={categories.filter((c) => c.direction === editDirection).length > 6}
-                  options={categories
-                    .filter((c) => c.direction === editDirection)
+                  searchable={categories.length > 6}
+                  options={[...categories]
+                    .sort((a, b) =>
+                      (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                      || a.name.localeCompare(b.name, "tr"))
                     .map((c) => ({
                       value: c.id,
                       label: c.icon ? `${c.icon} ${c.name}` : c.name,
@@ -675,10 +677,15 @@ export function TransactionDetailModal({
                   </div>
                   <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                     <Tag size={14} className="text-surface-400 mt-0.5 shrink-0" />
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] text-surface-400 uppercase tracking-wider">Kategori</p>
-                      <p className="text-sm text-surface-100 font-medium">
-                        {transaction.category?.name || "Kategorisiz"}
+                      <p className="text-sm text-surface-100 font-medium flex items-center gap-1.5 truncate">
+                        {transaction.category?.icon && (
+                          <span aria-hidden>{transaction.category.icon}</span>
+                        )}
+                        <span className="truncate">
+                          {transaction.category?.name || "Kategorisiz"}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -826,11 +833,14 @@ export function TransactionDetailModal({
     {showCreateCategory && (
       <QuickCategoryModal
         businessId={transaction.business_id}
-        direction={editDirection}
         onClose={() => setShowCreateCategory(false)}
         onCreated={(c) => {
-          // Listeye ekle + otomatik seç (edit yönüyle eşleşir)
-          setCategories((prev) => [...prev, c]);
+          // Paylaşımlı kategori: listeye ekle (varsa değiştir) + otomatik seç.
+          // Yön filtresi olmadığı için yeni kategori seçicide ANINDA görünür.
+          setCategories((prev) => {
+            const exists = prev.some((p) => p.id === c.id);
+            return exists ? prev.map((p) => (p.id === c.id ? c : p)) : [...prev, c];
+          });
           setEditCategoryId(c.id);
           setShowCreateCategory(false);
         }}

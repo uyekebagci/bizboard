@@ -133,7 +133,7 @@ export function AddTransactionForm({
   useEffect(() => {
     if (preselectedType && preselectedType !== direction) {
       setDirection(preselectedType);
-      setCategoryId("");
+      // Paylaşımlı kategori: yön değişse de seçim geçerli kalır (sıfırlama yok).
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preselectedType]);
@@ -231,7 +231,11 @@ export function AddTransactionForm({
     fetchCategories();
   }, [businessId]);
 
-  const filteredCategories = categories.filter((c) => c.direction === direction);
+  // Paylaşımlı (yön-bağımsız) kategori modeli: kategoriler hem gelir hem
+  // giderde kullanılabilir; yön filtresi YOK. Tümü sırayla gösterilir.
+  const filteredCategories = [...categories].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name, "tr"),
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -358,7 +362,7 @@ export function AddTransactionForm({
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => { setDirection("income"); setCategoryId(""); }}
+            onClick={() => setDirection("income")}
             className={cn(
               "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               direction === "income"
@@ -371,7 +375,7 @@ export function AddTransactionForm({
           </button>
           <button
             type="button"
-            onClick={() => { setDirection("expense"); setCategoryId(""); }}
+            onClick={() => setDirection("expense")}
             className={cn(
               "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               direction === "expense"
@@ -647,7 +651,7 @@ export function AddTransactionForm({
           </div>
         ) : businessId ? (
           <p className="text-xs text-amber-300">
-            Bu yönde kategori yok — &quot;Yeni kategori&quot; ile hemen oluşturun.
+            Henüz kategori yok — &quot;Yeni kategori&quot; ile hemen oluşturun.
           </p>
         ) : (
           <p className="text-xs text-surface-400">Önce işletme seçin</p>
@@ -851,11 +855,14 @@ export function AddTransactionForm({
     {showCreateCategory && (
       <QuickCategoryModal
         businessId={businessId}
-        direction={direction}
         onClose={() => setShowCreateCategory(false)}
         onCreated={(c) => {
-          // Listeye ekle + otomatik seç (aynı yönde olduğu için filtreye düşer)
-          setCategories((prev) => [...prev, c]);
+          // Paylaşımlı kategori: listeye ekle (varsa değiştir) + otomatik seç.
+          // Yön filtresi olmadığı için yeni kategori chip listesinde ANINDA görünür.
+          setCategories((prev) => {
+            const exists = prev.some((p) => p.id === c.id);
+            return exists ? prev.map((p) => (p.id === c.id ? c : p)) : [...prev, c];
+          });
           setCategoryId(c.id);
           setShowCreateCategory(false);
         }}
