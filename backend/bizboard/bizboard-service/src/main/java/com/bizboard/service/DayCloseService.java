@@ -47,6 +47,7 @@ public class DayCloseService {
 
     private final DayCloseRepository dayCloseRepository;
     private final DayCloseAccountCountRepository countRepository;
+    private final jakarta.persistence.EntityManager entityManager;
     private final BankAccountRepository bankAccountRepository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
@@ -121,7 +122,7 @@ public class DayCloseService {
             }
 
             BigDecimal actualTotal = BigDecimal.ZERO;
-            dc.getAccountCounts().clear(); // orphanRemoval eski count'ları temizler
+            clearExistingCounts(dc); // override: eski sayımları DB'den sil + flush (unique çakışmasını önle)
             for (CloseDayRequest.AccountCountInput in : req.getAccountCounts()) {
                 BankAccount acc = moneyAccounts.get(in.getAccountId());
                 if (acc == null) {
@@ -472,7 +473,7 @@ public class DayCloseService {
 
             if (newCounts != null && !newCounts.isEmpty()) {
                 BigDecimal actualTotal = BigDecimal.ZERO;
-                dc.getAccountCounts().clear();
+                clearExistingCounts(dc);
                 for (CloseDayRequest.AccountCountInput in : newCounts) {
                     BankAccount acc = moneyAccounts.get(in.getAccountId());
                     if (acc == null) {
@@ -591,6 +592,21 @@ public class DayCloseService {
     }
 
     // ──────────────────────────── HELPERS ────────────────────────────
+
+    /**
+     * Override/edit re-count'ta eski {@link DayCloseAccountCount}'ları temizler.
+     * orphanRemoval tek başına yetmez: Hibernate yeni INSERT'leri eski DELETE'ten
+     * ÖNCE atabilir → {@code uk_dcac_dayclose_account} unique ihlali. Bu yüzden
+     * önce koleksiyonu boşalt + DB'den fiziksel sil + flush; sonra yeni count'lar
+     * eklenir (çakışma yok). Yeni (id'siz) DayClose için no-op.
+     */
+    private void clearExistingCounts(DayClose dc) {
+        dc.getAccountCounts().clear();
+        if (dc.getId() != null) {
+            countRepository.deleteByDayCloseId(dc.getId());
+            entityManager.flush();
+        }
+    }
 
     private void assertBackdateAllowed(User user) {
         if (!"admin".equalsIgnoreCase(user.getRole())) {
