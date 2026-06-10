@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Receipt, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,11 @@ export function AddTransactionModal({
     initialTab ?? (preselectedType ?? "expense"),
   );
 
+  // SSR-safe portal: createPortal yalnızca client'ta (mount sonrası) çalışır;
+  // server render'da document yok → mounted=false iken null döner.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // open değişince tab'ı reset (yeniden açıldığında initialTab'a düşsün)
   useEffect(() => {
     if (open) setTab(initialTab ?? (preselectedType ?? "expense"));
@@ -57,11 +63,20 @@ export function AddTransactionModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const isTransfer = tab === "transfer";
 
-  return (
+  // v1.7.x hotfix: Modal'ı document.body'ye PORTAL ediyoruz.
+  // Önceden modal, ata <section className="glass-card"> içinde render
+  // oluyordu. .glass-card dark temada `backdrop-filter: blur(14px)` taşır;
+  // CSS spec'e göre backdrop-filter (transform/filter/will-change gibi) o
+  // elementi `position: fixed` için containing block yapar → overlay viewport
+  // yerine o panele göre konumlanıp panel'in overflow-hidden'ı ile kırpılıyordu
+  // (light temada blur=none olduğu için sorun görünmüyordu). Portal ile
+  // overlay her zaman <body>'nin altında olur → fixed inset-0 viewport'a göre
+  // tam ekran ortalı + backdrop + scroll garanti.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
@@ -137,7 +152,8 @@ export function AddTransactionModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
