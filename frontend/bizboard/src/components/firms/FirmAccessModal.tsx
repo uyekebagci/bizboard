@@ -112,13 +112,13 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
             <ShieldCheck size={16} className="text-indigo-300" />
             Erişim Yönet — {firm.legal_name}
           </h3>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400">
+            className="modal-close">
             <X size={16} />
           </button>
         </div>
@@ -313,12 +313,12 @@ function AddUsersSubmodal({
          onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
            className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl">
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h4 className="text-base font-semibold text-white flex items-center gap-2">
             <Users size={16} className="text-brand-300" /> Kullanıcı Ekle
           </h4>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400">
+            className="modal-close">
             <X size={16} />
           </button>
         </div>

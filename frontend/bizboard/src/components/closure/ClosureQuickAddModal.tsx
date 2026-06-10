@@ -200,7 +200,7 @@ export function ClosureQuickAddModal({
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-sm font-semibold text-white">{meta.title}</h3>
           <button type="button" onClick={onClose} disabled={submitting}
             className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 disabled:opacity-50">

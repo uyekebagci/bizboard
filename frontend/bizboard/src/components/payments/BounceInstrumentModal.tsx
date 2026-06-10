@@ -53,13 +53,13 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
       onClick={onClose}>
       <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-md shadow-xl">
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
             <AlertTriangle size={16} className="text-red-300" />
             {isCheque ? "Çek" : "Senet"} Karşılıksız İşaretle
           </h3>
           <button type="button" onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400">
+            className="modal-close">
             <X size={16} />
           </button>
         </div>

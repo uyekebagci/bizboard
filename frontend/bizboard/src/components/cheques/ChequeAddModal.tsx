@@ -161,7 +161,7 @@ export function ChequeAddModal({
         onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
             <FileText size={16} className="text-purple-300" />
             Yeni Çek Ekle
@@ -169,7 +169,7 @@ export function ChequeAddModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400"
+            className="modal-close"
             aria-label="Kapat"
           >
             <X size={16} />

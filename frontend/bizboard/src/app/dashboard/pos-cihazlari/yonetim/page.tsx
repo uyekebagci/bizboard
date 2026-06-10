@@ -274,7 +274,7 @@ function PosDeviceFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-lg font-semibold text-white">
             {isEdit ? "POS Cihazini Duzenle" : "Yeni POS Cihazi"}
           </h3>

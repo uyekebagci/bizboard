@@ -106,7 +106,7 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center">
               <Fuel size={16} className="text-orange-300" />

@@ -131,7 +131,7 @@ export function NotificationDropdown() {
           role="menu"
           className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] bg-surface-800 rounded-xl shadow-card-hover border border-surface-700 py-1 z-50"
         >
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-surface-700">
+          <div className="modal-header">
             <p className="text-sm font-semibold text-white">Bildirimler</p>
             <button
               type="button"

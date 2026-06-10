@@ -274,7 +274,7 @@ function VehicleDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-lg font-semibold text-white">Arac Detayi</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors">
             <X size={18} className="text-surface-400" />
@@ -610,7 +610,7 @@ function CreateVehicleModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-lg font-bold text-white">
             {isEdit ? "Arac Duzenle" : "Yeni Arac"}
           </h3>
@@ -787,7 +787,7 @@ function DeleteVehicleModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />

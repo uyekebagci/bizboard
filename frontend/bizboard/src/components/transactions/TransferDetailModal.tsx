@@ -83,7 +83,7 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
         onClick={(e) => e.stopPropagation()}
         className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
             <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40">
               TRANSFER

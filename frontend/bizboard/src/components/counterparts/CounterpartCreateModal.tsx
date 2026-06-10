@@ -77,7 +77,7 @@ export function CounterpartCreateModal({
         onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-md shadow-xl"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
             {isFirm ? <Building2 size={16} className="text-brand-400" />
                     : <UserIcon size={16} className="text-brand-400" />}
@@ -86,7 +86,7 @@ export function CounterpartCreateModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400"
+            className="modal-close"
             aria-label="Kapat"
           >
             <X size={16} />

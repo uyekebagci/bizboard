@@ -271,7 +271,7 @@ function InlineCreateModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400"
+            className="modal-close"
           >
             <X size={16} />
           </button>

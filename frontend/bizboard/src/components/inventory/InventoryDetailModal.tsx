@@ -135,7 +135,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
+        <div className="modal-header">
           <div className="flex items-center gap-2 min-w-0">
             <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", catDef.bg)}>
               <catDef.icon size={16} className={catDef.color} />

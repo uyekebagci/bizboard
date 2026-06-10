@@ -159,7 +159,7 @@ function UngroupedSection({
   return (
     <section className="glass-card relative overflow-hidden">
       <div className="absolute inset-y-0 left-0 w-[3px] bg-surface-600" aria-hidden />
-      <header className="flex items-center justify-between px-4 py-3 border-b border-surface-700">
+      <header className="modal-header">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-surface-300 text-sm">Grupsuz</h3>
           <span className="text-[11px] text-surface-400">{businesses.length} isletme</span>

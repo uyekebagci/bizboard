@@ -155,7 +155,7 @@ export default function AdminMyCompaniesPage() {
       )}
 
       <div className="glass-card overflow-hidden">
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
+        <div className="modal-header">
           <div className="flex items-center gap-2.5">
             <h2 className="text-lg font-semibold text-white">Firmalar</h2>
             <span className="ml-1 text-sm text-surface-400">

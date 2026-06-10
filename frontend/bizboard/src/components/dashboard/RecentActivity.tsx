@@ -98,7 +98,7 @@ export function RecentActivity() {
             onClick={() => setShowModal(false)}
           />
           <div className="relative bg-surface-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up z-10">
-            <div className="flex items-center justify-between p-4 border-b border-surface-700">
+            <div className="modal-header">
               <h3 className="text-lg font-bold text-white">Son Islemler</h3>
               <button
                 onClick={() => setShowModal(false)}

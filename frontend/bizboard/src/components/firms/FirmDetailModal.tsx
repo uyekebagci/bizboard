@@ -201,7 +201,7 @@ export function FirmDetailModal({
         className="glass-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold text-white truncate">
               {isReadOnly ? firm.legal_name : "Firmayı Düzenle"}
@@ -238,7 +238,7 @@ export function FirmDetailModal({
               </button>
             )}
             <button type="button" onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400">
+              className="modal-close">
               <X size={16} />
             </button>
           </div>

@@ -102,7 +102,7 @@ export function WriteoffModal({
         className="glass-card !border-rose-500/30 w-full max-w-lg max-h-[92vh] flex flex-col shadow-xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <div className="min-w-0 flex items-center gap-2">
             <Scissors size={18} className="text-rose-400 shrink-0" />
             <div className="min-w-0">

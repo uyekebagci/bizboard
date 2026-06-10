@@ -81,7 +81,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
       <div className="glass-card shadow-xl w-full max-w-md max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
           <h3 className="text-lg font-bold h-display text-white">Günü Kapat</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700 transition-colors">
+          <button onClick={onClose} className="modal-close">
             <X size={18} className="text-surface-400" />
           </button>
         </div>

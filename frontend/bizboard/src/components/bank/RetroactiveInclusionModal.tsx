@@ -138,7 +138,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
         className="glass-card w-full max-w-2xl max-h-[92vh] flex flex-col shadow-xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <div className="min-w-0 flex items-center gap-2">
             <Rewind size={16} className="text-blue-400 shrink-0" />
             <div className="min-w-0">

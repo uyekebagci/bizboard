@@ -118,7 +118,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
         className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-surface-700">
+        <div className="modal-header">
           <div className="flex items-center gap-2 min-w-0">
             <Zap size={16} className="text-amber-400 shrink-0" />
             <div className="min-w-0">

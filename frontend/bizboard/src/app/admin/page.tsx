@@ -380,7 +380,7 @@ function CreateUserModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-lg font-semibold text-white">
             Yeni Kullanici Olustur
           </h3>
@@ -597,7 +597,7 @@ function EditUserModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-700">
+        <div className="modal-header">
           <h3 className="text-lg font-semibold text-white">
             Kullaniciyi Duzenle
           </h3>
