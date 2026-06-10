@@ -101,4 +101,10 @@ public final class AuditAction {
     public static final String BANK_BALANCE_ADJUST = "BANK_BALANCE_ADJUST";
     /** UI vurgu rozeti: bakiye düzeltme audit kaydı için. */
     public static final String HIGHLIGHT_BALANCE_ADJUST = "BALANCE_ADJUST";
+
+    // ── v2.2.0 (Advanced Search, L6): her arama audit'lenir ───────────────
+    /** Global arama sorgusu (raw query, filtrelenen business sayısı, sonuç sayısı). */
+    public static final String SEARCH_QUERY = "SEARCH_QUERY";
+    /** Parser tarafından reddedilen/şüpheli sorgu (T5 injection denemesi vb.). */
+    public static final String SEARCH_QUERY_REJECTED = "SEARCH_QUERY_REJECTED";
 }
