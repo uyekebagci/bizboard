@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowDownLeft, ArrowUpRight, Trash2, X, Loader2,
   AlertTriangle, Calendar, Building2, Tag, FileText, Plus,
@@ -222,6 +223,13 @@ export function TransactionDetailModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // v1.7.x hotfix: SSR-safe portal gate. createPortal yalnızca client'ta
+  // (mount sonrası) çalışır; server render'da document yok → mounted=false
+  // iken null döner. Parent zaten {detailTarget && <Modal/>} ile koşullu
+  // mount ediyor, ayrı `open` prop'u yok.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // Edit form state
   const [editDirection, setEditDirection] = useState(transaction.direction);
   const [editAmount, setEditAmount] = useState(String(transaction.amount));
@@ -350,7 +358,20 @@ export function TransactionDetailModal({
 
   const allFiles = [...files, ...uploadedFiles];
 
-  return (
+  if (!mounted) return null;
+
+  // v1.7.x hotfix: Modal'ı document.body'ye PORTAL ediyoruz (AddTransactionModal
+  // 5abe75f ile aynı kök neden). Önceden modal, ata "Son İşlemler"
+  // <section className="glass-card"> içinde render oluyordu. .glass-card dark
+  // temada `backdrop-filter: blur(...)` taşır; CSS spec'e göre backdrop-filter
+  // (transform/filter/will-change gibi) o elementi `position: fixed` için
+  // containing block yapar → overlay viewport yerine o panele göre konumlanıp
+  // panel'in overflow ile kırpılıyordu (light temada blur=none olduğu için
+  // sorun görünmüyordu). Portal ile overlay her zaman <body>'nin altında olur →
+  // fixed inset-0 viewport'a göre tam ekran ortalı + backdrop + scroll garanti.
+  // QuickCategoryModal sibling'i de portal'ın içinde — o da glass-card
+  // containing-block'undan kaçmalı.
+  return createPortal(
     <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="modal-surface shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -815,7 +836,8 @@ export function TransactionDetailModal({
         }}
       />
     )}
-    </>
+    </>,
+    document.body,
   );
 }
 
@@ -833,6 +855,10 @@ function DeleteTransactionModal({
   const [reason, setReason] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // v1.7.x hotfix: SSR-safe portal gate (TransactionDetailModal ile aynı).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const isIncome = transaction.direction === "income";
 
@@ -860,7 +886,11 @@ function DeleteTransactionModal({
     }
   }
 
-  return (
+  if (!mounted) return null;
+
+  // v1.7.x hotfix: document.body'ye portal (glass-card backdrop-filter
+  // containing-block sorunu — TransactionDetailModal ile aynı kök neden).
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -945,7 +975,8 @@ function DeleteTransactionModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -1057,6 +1088,10 @@ function SettleModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // v1.7.x hotfix: SSR-safe portal gate (TransactionDetailModal ile aynı).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     api
       .get<BankRow[]>("/bank-accounts")
@@ -1095,7 +1130,11 @@ function SettleModal({
     }
   }
 
-  return (
+  if (!mounted) return null;
+
+  // v1.7.x hotfix: document.body'ye portal (glass-card backdrop-filter
+  // containing-block sorunu — TransactionDetailModal ile aynı kök neden).
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="glass-card shadow-xl w-full max-w-md">
         <div className="modal-header">
@@ -1157,6 +1196,7 @@ function SettleModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
