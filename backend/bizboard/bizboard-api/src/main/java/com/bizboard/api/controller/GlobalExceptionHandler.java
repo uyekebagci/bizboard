@@ -1,9 +1,12 @@
 package com.bizboard.api.controller;
 
 import com.bizboard.service.ResourceNotAccessibleException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -59,6 +62,36 @@ public class GlobalExceptionHandler {
         log.warn("[SecurityException -> 403] message={}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Access denied"));
+    }
+
+    /**
+     * Bozuk/okunamaz request body → 400. Tipik durum: geçersiz enum değeri
+     * (ör. bilinmeyen {@code event} / {@code channel}) — Jackson
+     * {@link InvalidFormatException} fırlatır. Ham 500 yerine anlamlı 400 döner;
+     * hangi değerin geçersiz olduğu mesajda belirtilir.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleNotReadable(HttpMessageNotReadableException e) {
+        if (e.getCause() instanceof InvalidFormatException ife
+                && ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", "Gecersiz deger: '" + ife.getValue() + "' ("
+                            + ife.getTargetType().getSimpleName() + " icin kabul edilmiyor)"));
+        }
+        return ResponseEntity.badRequest().body(Map.of("message", "Gecersiz istek govdesi"));
+    }
+
+    /**
+     * DB bütünlük ihlali (unique/check/FK) → 409 Conflict. Ham 500 sızmaz; iç
+     * SQL detayı (constraint adı vb.) yalnız sunucu log'una yazılır, istemciye
+     * generic ama anlamlı mesaj döner. (notif-pref bug: eski enum CHECK ihlali
+     * artık 500 değil 409.)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrity(DataIntegrityViolationException e) {
+        log.error("[data integrity -> 409] message={}", e.getMostSpecificCause().getMessage(), e);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", "Kayit kaydedilemedi: veri butunlugu kisitlamasi"));
     }
 
     /**

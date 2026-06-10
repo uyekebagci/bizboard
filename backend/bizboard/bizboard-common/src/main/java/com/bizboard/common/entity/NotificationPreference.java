@@ -42,12 +42,23 @@ public class NotificationPreference {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    /**
+     * Bug fix (notif-pref 500): {@code columnDefinition} ile Hibernate'in bu enum
+     * kolonu için OTOMATİK CHECK constraint üretmesi ENGELLENİR. Aksi halde
+     * Hibernate, tablo ilk oluşurken o anki enum değerlerini bir CHECK'e gömer;
+     * sonradan enum'a yeni olay (TAX_DEADLINE_DUE_SOON, LOW_STOCK, WARRANTY_EXPIRING,
+     * NEW_TRANSACTION, FIRM_ACCESS_GRANTED) eklendiğinde {@code ddl-auto=update}
+     * mevcut CHECK'i GÜNCELLEMEZ → yeni değer insert'i constraint'i ihlal eder →
+     * DataIntegrityViolationException → 500. Enum geçerliliği zaten Java tarafında
+     * (@Enumerated STRING) garanti edilir; brittle DB CHECK'e gerek yok.
+     * Mevcut DB'lerdeki eski CHECK'i {@code NotificationPreferenceConstraintRepair} düşürür.
+     */
     @Enumerated(EnumType.STRING)
-    @Column(name = "event", nullable = false, length = 40)
+    @Column(name = "event", nullable = false, columnDefinition = "varchar(40)")
     private NotificationEvent event;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "channel", nullable = false, length = 20)
+    @Column(name = "channel", nullable = false, columnDefinition = "varchar(20)")
     private NotificationChannelType channel;
 
     @Column(name = "enabled", nullable = false)
