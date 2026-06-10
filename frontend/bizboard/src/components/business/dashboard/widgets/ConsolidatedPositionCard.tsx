@@ -3,7 +3,7 @@
 // ───────────────────────── 1. KONSOLİDE POZİSYON ─────────────────────────
 // (R3 god-component bolme: ConsolidatedWidgets.tsx'ten cikarildi)
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
@@ -12,6 +12,20 @@ import { DetailRow, PositionStat } from "./shared";
 
 export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   const c = d.consolidated;
+  // fix(debt): Borç sansürü tutarlılığı — Verecekler/Alacaklar sayfalarındaki
+  // "göz" toggle'ı (localStorage "cati-verecekler-censor" / "cati-alacaklar-censor")
+  // burada da uygulanır. Bu kasa detayı kartı borç/verecek tutarlarını gösterdiği
+  // için, debt sayfalarında sansür açıkken aynı tutarlar burada da blur'lanmalı —
+  // aksi halde sansür atlanmış oluyordu. SSR/CSR uyumu için flag mount sonrası okunur
+  // (default sansürsüz → hydration mismatch yok).
+  const [payableCensor, setPayableCensor] = useState(false);
+  const [receivableCensor, setReceivableCensor] = useState(false);
+  useEffect(() => {
+    try {
+      setPayableCensor(localStorage.getItem("cati-verecekler-censor") === "1");
+      setReceivableCensor(localStorage.getItem("cati-alacaklar-censor") === "1");
+    } catch { /* ignore */ }
+  }, []);
   // v1.6.23.13 (TODO bb3fceb5): net=0 nötr, 0'ı yeşil sayma.
   const sign: "pos" | "neg" | "zero" = c.net > 0 ? "pos" : c.net < 0 ? "neg" : "zero";
   // v1.6.23.9 (TODO 8c7ffaac): bekleyen POS tahsilatı (settle olunca eklenecek).
@@ -62,8 +76,8 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
 
       {/* Sub-stat row: 3 küçük metric */}
       <div className="mt-3 pt-3 border-t border-brand-600/50 grid grid-cols-3 gap-2 text-[10px]">
-        <PositionStat label="Alacaklar" value={c.receivables} tone="positive" />
-        <PositionStat label="Verecekler" value={-Math.abs(c.payables)} tone="negative" />
+        <PositionStat label="Alacaklar" value={c.receivables} tone="positive" censor={receivableCensor} />
+        <PositionStat label="Verecekler" value={-Math.abs(c.payables)} tone="negative" censor={payableCensor} />
         {pendingPos > 0 ? (
           <div>
             <p className="text-amber-200 uppercase tracking-wider">Bekleyen POS</p>
@@ -76,6 +90,7 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
             label="KK + Kredi"
             value={-(Math.abs(c.credit_card_debt) + Math.abs(c.loan_principal))}
             tone="negative"
+            censor={payableCensor}
           />
         )}
       </div>
@@ -91,10 +106,10 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
         <DetailRow label="Toplam Nakit (kasa + cebde)" value={c.total_cash} tone="pos" />
         <DetailRow label="Banka Bakiyeleri (CHECKING+SAVINGS)" value={c.total_bank_balance ?? 0} tone="neutral" />
         <DetailRow label="Bekleyen POS Tahsilatı (settle bekliyor)" value={pendingPos} tone={pendingPos > 0 ? "warn" : "neutral"} />
-        <DetailRow label="Alacaklar (DGR'ye gelecek)" value={c.receivables} tone="pos" />
-        <DetailRow label="Verecekler (DGR'den gidecek)" value={-Math.abs(c.payables)} tone="neg" />
-        <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" />
-        <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" />
+        <DetailRow label="Alacaklar (DGR'ye gelecek)" value={c.receivables} tone="pos" censor={receivableCensor} />
+        <DetailRow label="Verecekler (DGR'den gidecek)" value={-Math.abs(c.payables)} tone="neg" censor={payableCensor} />
+        <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" censor={payableCensor} />
+        <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" censor={payableCensor} />
         <div className="pt-2 border-t border-surface-700">
           <DetailRow label="Konsolide Net (ekonomik gelir)" value={c.net} tone={sign === "pos" ? "pos" : sign === "neg" ? "neg" : "neutral"} bold />
           {pendingPos > 0 && (

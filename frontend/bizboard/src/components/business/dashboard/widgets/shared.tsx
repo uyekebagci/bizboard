@@ -48,11 +48,18 @@ export function Footer({ left, right }: { left: React.ReactNode; right: React.Re
 }
 
 export function DetailRow({
-  label, value, tone, bold,
+  label, value, tone, bold, censor,
 }: {
   label: string; value: number;
   tone: "pos" | "neg" | "warn" | "neutral";
   bold?: boolean;
+  /**
+   * Borç sansürü (privacy): true ise tutar blur'lanır + kopyalanamaz —
+   * Verecekler/Alacaklar sayfalarındaki "cati-*-censor" toggle'ı ile aynı
+   * davranış (bkz. ConsolidatedPositionCard). Değer DOM'da kalır, sadece
+   * görsel olarak okunamaz.
+   */
+  censor?: boolean;
 }) {
   const colorClass = {
     pos: "text-emerald-300",
@@ -63,14 +70,22 @@ export function DetailRow({
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-surface-300 text-xs">{label}</span>
-      <span className={cn("font-mono", bold && "font-bold text-base", !bold && "text-sm", colorClass)}>
+      <span className={cn(
+        "font-mono transition-[filter]",
+        bold && "font-bold text-base", !bold && "text-sm", colorClass,
+        censor && "blur-[6px] select-none",
+      )}>
         {formatCurrency(value, "TRY")}
       </span>
     </div>
   );
 }
 
-export function PositionStat({ label, value, tone }: { label: string; value: number; tone: "positive" | "negative" }) {
+export function PositionStat({ label, value, tone, censor }: {
+  label: string; value: number; tone: "positive" | "negative";
+  /** Borç sansürü — bkz. {@link DetailRow} censor prop'u. */
+  censor?: boolean;
+}) {
   // v1.6.23.8 (DGR perspective hotfix): negative tone'da minus sign explicit.
   // value < 0 ise formatCurrency zaten "-" prefix verir. Pozitif değerlerde
   // tone=negative ise (defensive — caller -Math.abs zaten veriyor) yine minus göster.
@@ -78,7 +93,11 @@ export function PositionStat({ label, value, tone }: { label: string; value: num
   return (
     <div>
       <p className="text-brand-200 uppercase tracking-wider">{label}</p>
-      <p className={cn("text-sm font-bold mt-0.5", tone === "negative" ? "text-red-200" : "text-white")}>
+      <p className={cn(
+        "text-sm font-bold mt-0.5 transition-[filter]",
+        tone === "negative" ? "text-red-200" : "text-white",
+        censor && "blur-[6px] select-none",
+      )}>
         {formatCurrency(displayValue, "TRY")}
       </p>
     </div>
