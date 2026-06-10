@@ -5,11 +5,14 @@ import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.AuditLogService;
 import com.bizboard.service.LedgerAdminService;
 import com.bizboard.service.LedgerBalanceService;
+import com.bizboard.service.LedgerCategoryHygieneService;
+import com.bizboard.service.LedgerNameParseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,7 +27,14 @@ import java.util.UUID;
  *   <li>{@code GET  /admin/ledger/invariant}        — bakiye + entry denge raporu</li>
  *   <li>{@code POST /admin/ledger/backfill?dryRun=}  — tx→posting backfill (dry-run/gerçek)</li>
  *   <li>{@code POST /admin/ledger/reverse/{txId}}    — tek tx'in posting'lerini geri al</li>
+ *   <li>{@code GET  /admin/ledger/suggestions/firm-bank}  — firma↔banka parse önerisi (dry-run)</li>
+ *   <li>{@code GET  /admin/ledger/suggestions/typo-merge} — typo-merge önerisi (dry-run)</li>
+ *   <li>{@code GET  /admin/ledger/suggestions/operator-categories} — operatör kategori ayıklama (§3.10)</li>
+ *   <li>{@code GET  /admin/ledger/suggestions/duplicate-categories} — aynı isimli kategori (dry-run)</li>
  * </ul>
+ *
+ * <p>Tüm {@code /suggestions/*} uçları SALT-OKUNUR (DB'ye dokunmaz) — STRICT:
+ * otomatik commit YOK, uygulama elle onayla yapılır.</p>
  */
 @RestController
 @RequestMapping("/admin/ledger")
@@ -33,6 +43,8 @@ public class AdminLedgerController {
 
     private final LedgerAdminService ledgerAdminService;
     private final LedgerBalanceService ledgerBalanceService;
+    private final LedgerNameParseService ledgerNameParseService;
+    private final LedgerCategoryHygieneService ledgerCategoryHygieneService;
     private final AuditLogService auditLogService;
 
     /** Bakiye (snapshot ↔ türetilmiş) + entry denge (Σ=0) invariant raporu. */
@@ -85,5 +97,33 @@ public class AdminLedgerController {
                 "Tx posting reversal — silinen-entry=" + removed,
                 Map.of("txId", txId.toString(), "removedEntries", removed));
         return ResponseEntity.ok(Map.of("txId", txId.toString(), "removedEntries", removed));
+    }
+
+    // ───────── ÖNERİ uçları (SALT-OKUNUR, dry-run; STRICT: commit YOK) ─────────
+
+    /** §8.4: firma↔banka isim parse önerisi. DB'ye dokunmaz. */
+    @GetMapping("/suggestions/firm-bank")
+    public ResponseEntity<List<LedgerNameParseService.NameParseSuggestion>> firmBankSuggestions() {
+        return ResponseEntity.ok(ledgerNameParseService.suggestFirmBankParse());
+    }
+
+    /** §1.4: typo-merge önerisi (aynı kanonik forma düşen farklı yazımlar). */
+    @GetMapping("/suggestions/typo-merge")
+    public ResponseEntity<List<LedgerNameParseService.TypoMergeSuggestion>> typoMergeSuggestions() {
+        return ResponseEntity.ok(ledgerNameParseService.suggestTypoMerge());
+    }
+
+    /** §3.10 (A6): operatör/kişi-tipi kategori ayıklama önerisi. */
+    @GetMapping("/suggestions/operator-categories")
+    public ResponseEntity<List<LedgerCategoryHygieneService.OperatorCategorySuggestion>>
+            operatorCategorySuggestions() {
+        return ResponseEntity.ok(ledgerCategoryHygieneService.suggestOperatorCategoryExtraction());
+    }
+
+    /** §8.6: aynı isimli aktif kategori (duplicate) merge önerisi. */
+    @GetMapping("/suggestions/duplicate-categories")
+    public ResponseEntity<List<LedgerCategoryHygieneService.DuplicateCategorySuggestion>>
+            duplicateCategorySuggestions() {
+        return ResponseEntity.ok(ledgerCategoryHygieneService.suggestDuplicateMerge());
     }
 }
