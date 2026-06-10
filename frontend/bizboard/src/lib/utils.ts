@@ -41,8 +41,11 @@ export function formatCurrency(
   }).format(amount);
 }
 
+/** Sansür maskesindeki SABİT asterisk sayısı (tutar büyüklüğünden bağımsız). */
+const CENSOR_MASK = "*".repeat(5);
+
 /**
- * Borç sansürü (privacy) — tutarı blur yerine `*` ile maskele.
+ * Borç sansürü (privacy) — tutarı blur yerine SABİT `*` maskesiyle gizle.
  *
  * <p>Alacaklar/Verecekler sayfaları ve ConsolidatedPositionCard'daki "göz"
  * toggle'ı (localStorage "cati-alacaklar-censor" / "cati-verecekler-censor")
@@ -50,13 +53,15 @@ export function formatCurrency(
  *
  * <ul>
  *   <li><b>censored=false</b> → normal {@link formatCurrency} çıktısı.</li>
- *   <li><b>censored=true</b> → para birimi sembolü korunur, her RAKAM `*`
- *       ile değiştirilir (ayraçlar/sembol aynen kalır). Gerçek değer DOM'da
- *       KALMAZ — blur gibi "gizli ama okunabilir" değil, tamamen maskeli.</li>
+ *   <li><b>censored=true</b> → para birimi sembolü korunur, geri kalan her şey
+ *       (rakamlar, binlik ayraçları, eksi işareti) tamamen kaldırılıp SABİT
+ *       sayıda `*` ile değiştirilir. Tutarın büyüklüğü/basamak sayısı ve yönü
+ *       (eksi) DOM'a SIZMAZ — tüm tutarlar aynı maskeyi gösterir.</li>
  * </ul>
  *
- * <p>Örnek: formatCurrency(12.500) = "₺12.500" → maskAmount(12500, true)
- * = "₺**.***". Uzunluk gerçek tutara yakın kaldığı için hizalama bozulmaz.</p>
+ * <p>Örnek: maskAmount(12500, true) = maskAmount(8900000, true) = "₺*****".
+ * Önceki davranış basamak sayısını ele veriyordu ("₺**.***"); bu sürüm sabit
+ * maske ile büyüklük/yön sızıntısını kapatır.</p>
  */
 export function maskAmount(
   amount: number,
@@ -66,8 +71,10 @@ export function maskAmount(
 ): string {
   const formatted = formatCurrency(amount, currency, locale);
   if (!censored) return formatted;
-  // Her Unicode rakamını `*` ile değiştir; sembol/ayraç/eksi işareti korunur.
-  return formatted.replace(/\p{Nd}/gu, "*");
+  // Rakam / ayraç (./,) / eksi işareti / boşlukları at → yalnız para birimi
+  // sembolü kalsın; ardından SABİT maskeyi ekle. Büyüklük/basamak/yön sızmaz.
+  const symbol = formatted.replace(/[\p{Nd}.,−\-\s]/gu, "");
+  return `${symbol}${CENSOR_MASK}`;
 }
 
 // Format compact number (e.g., 1.2M, 450K)
