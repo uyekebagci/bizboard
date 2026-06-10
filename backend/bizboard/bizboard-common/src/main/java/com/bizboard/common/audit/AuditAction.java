@@ -113,4 +113,36 @@ public final class AuditAction {
     public static final String LEDGER_POSTING_BACKFILL = "LEDGER_POSTING_BACKFILL";
     /** Bir tx'in türetilmiş posting'lerinin geri alınması (reversible). */
     public static final String LEDGER_POSTING_REVERSE = "LEDGER_POSTING_REVERSE";
+
+    // ── Ledger v2 (Faz B): gün-kapanışı / mutabakat / kaçak omurgası ──────────
+    /** DayClose finalize (çok-hesaplı sayım + SAĞLAMA HESAP); metadata: opening/in/out/computed/actual/variance. */
+    public static final String DAY_CLOSE_CLOSED        = "DAY_CLOSE_CLOSED";
+    /** Cron otomatik gün açma/kapama (actual=null). */
+    public static final String DAY_CLOSE_AUTO          = "DAY_CLOSE_AUTO";
+    /** Admin gün-kapanışını yeniden açtı (REOPENED). */
+    public static final String DAY_CLOSE_REOPENED      = "DAY_CLOSE_REOPENED";
+    /** §4.1 admin geçmiş tarihe kapanış (feature flag arkasında). */
+    public static final String DAY_CLOSE_BACKDATED     = "DAY_CLOSE_BACKDATED";
+    /** Variance eşik aşımı — kaçak alarmı. */
+    public static final String DAY_CLOSE_ALARM         = "DAY_CLOSE_ALARM";
+    /** §4.1 devir zinciri ileri-yeniden-hesap (recomputeChainFrom). */
+    public static final String DAY_CLOSE_CHAIN_RECOMPUTE = "DAY_CLOSE_CHAIN_RECOMPUTE";
+    /** §8.5 CashClosing → DayClose migrate (idempotent). */
+    public static final String DAY_CLOSE_MIGRATED      = "DAY_CLOSE_MIGRATED";
+
+    // ── Ledger v2 (Faz B, §4.2): onaylı kapanış düzenleme ─────────────────────
+    public static final String DAY_CLOSE_EDIT_REQUESTED = "DAY_CLOSE_EDIT_REQUESTED";
+    public static final String DAY_CLOSE_EDIT_APPROVED  = "DAY_CLOSE_EDIT_APPROVED";
+    public static final String DAY_CLOSE_EDIT_REJECTED  = "DAY_CLOSE_EDIT_REJECTED";
+    public static final String DAY_CLOSE_EDIT_APPLIED   = "DAY_CLOSE_EDIT_APPLIED";
+
+    // Highlight rozetleri (UI vurgu)
+    public static final String HIGHLIGHT_DAY_CLOSE_BACKDATED = "DAY_CLOSE_BACKDATED";
+    public static final String HIGHLIGHT_DAY_CLOSE_ALARM     = "DAY_CLOSE_ALARM";
+    public static final String HIGHLIGHT_DAY_CLOSE_REOPEN    = "DAY_CLOSE_REOPEN";
+    public static final String HIGHLIGHT_DAY_CLOSE_EDIT      = "DAY_CLOSE_EDIT";
+
+    // ── Ledger v2 (Faz B, §3.8 / §5): banka import (manuel satır iskeleti) ─────
+    public static final String BANK_IMPORT_BATCH_CREATE = "BANK_IMPORT_BATCH_CREATE";
+    public static final String BANK_IMPORT_LINE_POSTED  = "BANK_IMPORT_LINE_POSTED";
 }
