@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, LogOut, Shield, Menu, Sun, Moon, UserCircle, KeyRound } from "lucide-react";
+import { LogOut, Shield, Menu, Sun, Moon, UserCircle, KeyRound } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { getInitials } from "@/lib/utils";
 import { logout } from "@/lib/api/client";
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 import { useTheme } from "@/components/layout/ThemeProvider";
+import { GlobalSearchBox } from "@/components/search/GlobalSearchBox";
 
 interface TopBarProps {
   /** v1.6.13: mobile/tablet hamburger handler — sidebar açar/kapatır. */
@@ -56,30 +57,23 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
     /* Redesign PR-1: glass topbar — yarı saydam + blur, surface-token tabanlı. */
     <header className="sticky top-0 z-40 bg-surface-900/70 backdrop-blur-xl border-b border-surface-700/60">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        {/* Sol: yalnız mobile hamburger; desktop'ta sidebar zaten sabit görünür. */}
-        <div className="flex items-center">
+        {/* Sol: mobile hamburger + global arama kutusu (spec v2.2 §10.1). */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {onMenuClick && (
             <button
               type="button"
               onClick={onMenuClick}
-              className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-surface-700 transition-colors"
+              className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-surface-700 transition-colors shrink-0"
               aria-label="Menuyu ac"
             >
               <Menu size={20} className="text-surface-300" />
             </button>
           )}
+          {/* v2.2 Advanced Search — global arama + autocomplete. */}
+          <GlobalSearchBox />
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Mockup-fidelity: ikon butonları glass-card glass-hover (düz hover yerine). */}
-          <button
-            type="button"
-            aria-label="Ara"
-            className="glass-card glass-hover !rounded-xl p-2.5"
-          >
-            <Search size={20} className="text-surface-300" />
-          </button>
-
+        <div className="flex items-center gap-2 shrink-0">
           {/* Çift tema FAZ 1: tema geçişi (güneş/ay). localStorage persist, default dark. */}
           <button
             type="button"
