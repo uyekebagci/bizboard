@@ -226,10 +226,30 @@ public class LedgerPostingService {
         }
         BigDecimal signedLoc = income ? amount : amount.negate();
         legs.add(PostingDraft.location(loc, signedLoc));
-        // Karşı P&L bacağı (account NULL): gelir → PNL_INCOME (-), gider → PNL_EXPENSE (+).
-        PostingLegKind pnlKind = income ? PostingLegKind.PNL_INCOME : PostingLegKind.PNL_EXPENSE;
+        // Karşı P&L bacağı (account NULL): gelir → PNL_INCOME (-);
+        // gider → PNL_EXPENSE (+) ya da masraf → PNL_COST (+) (gider≠masraf, Faz C §5).
+        PostingLegKind pnlKind = income
+                ? PostingLegKind.PNL_INCOME
+                : (isCostCategory(tx.getCategory()) ? PostingLegKind.PNL_COST : PostingLegKind.PNL_EXPENSE);
         legs.add(PostingDraft.pnl(signedLoc.negate(), pnlKind, true, true));
         return legs;
+    }
+
+    /**
+     * Ledger v2 (Faz C, §5 — gider≠masraf): bir gider işleminin MASRAF mı (banka
+     * komisyonu/transfer ücreti = {@code PNL_COST}) yoksa GİDER mi (kira/maaş =
+     * {@code PNL_EXPENSE}) olduğunu kategori adından çıkarır. Config-benzeri
+     * (kategori adı) — rakam/sabit hard-code değil; kullanıcı kategori adıyla
+     * kontrol eder. Eşleşme yoksa GİDER (geriye-uyum: mevcut davranış korunur).
+     */
+    private boolean isCostCategory(com.bizboard.common.entity.Category category) {
+        if (category == null || category.getName() == null) return false;
+        String n = category.getName().toLowerCase(java.util.Locale.ROOT);
+        return n.contains("komisyon")
+                || n.contains("transfer ücret") || n.contains("transfer ucret")
+                || n.contains("havale ücret") || n.contains("havale ucret")
+                || n.contains("eft ücret") || n.contains("eft ucret")
+                || n.contains("banka masraf") || n.contains("masraf");
     }
 
     /**

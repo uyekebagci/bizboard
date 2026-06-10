@@ -1,6 +1,7 @@
 package com.bizboard.common.entity;
 
 import com.bizboard.common.enums.BankAccountType;
+import com.bizboard.common.enums.SubCashRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -128,12 +129,44 @@ public class BankAccount {
     @Builder.Default
     private boolean system = false;
 
+    /**
+     * Ledger v2 (Faz C, §3.11): SUB_CASH hesabının rolü. {@code PROFIT_CENTER}
+     * = operatör kâr-merkezi (READ-ONLY, bakiye türetilir); {@code AGGREGATE}
+     * = klasik atama-tabanlı alt-kasa. SUB_CASH dışı tiplerde anlamsız (NULL ya
+     * da AGGREGATE bırakılır). Mevcut tüm SUB_CASH satırları default AGGREGATE
+     * (kırılma yok); operatör kasaları create/migration ile PROFIT_CENTER olur.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sub_cash_role", length = 16)
+    private SubCashRole subCashRole;
+
+    /**
+     * Ledger v2 (Faz C, §3.11): operatör kâr-merkezi ise operatörün kimliği
+     * (Kemal/Fatih/Tuncay — kişi/{@code Counterpart}). {@code subCashRole=
+     * PROFIT_CENTER} hesaplarda doldurulur; diğerlerinde NULL. ProfitShareRule
+     * bu operatöre bağlanır; pay bu hesaba auto-postalanır.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "operator_counterpart_id")
+    private Counterpart operatorCounterpart;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * Ledger v2 (Faz C, §3.11): bu hesap READ-ONLY operatör kâr-merkezi mi?
+     * (manuel hareket girilemez; bakiye yalnız sistem kâr-payı posting'leri +
+     * ödemelerden türetilir).
+     */
+    @Transient
+    public boolean isProfitCenter() {
+        return type == BankAccountType.SUB_CASH
+                && subCashRole != null && subCashRole.isProfitCenter();
+    }
 
     @UpdateTimestamp
     @Column(name = "updated_at")

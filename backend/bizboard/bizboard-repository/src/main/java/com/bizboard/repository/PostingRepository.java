@@ -104,4 +104,76 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     List<Posting> findLocationLegsForDate(@Param("businessId") UUID businessId,
                                           @Param("date") LocalDate date,
                                           @Param("accountIds") List<UUID> accountIds);
+
+    // ───────── Ledger v2 (Faz C): POS kâr-payı / operatör statement / aylık P&L ─────────
+
+    /**
+     * Bir deal'in PROFIT_SHARE journal entry'lerini getirir (idempotency +
+     * reversal + provisional→final). {@code source_type=PROFIT_SHARE} +
+     * {@code source_ref_id=dealId}. Bir deal'in birden çok kâr posting'i olabilir
+     * (her operatör + provisional/final adjust ayrı bacak).
+     */
+    @Query("SELECT p FROM Posting p " +
+            "WHERE p.journalEntry.sourceType = com.bizboard.common.enums.JournalSourceType.PROFIT_SHARE " +
+            "AND p.journalEntry.sourceRefId = :dealId")
+    List<Posting> findProfitShareByDealId(@Param("dealId") UUID dealId);
+
+    /**
+     * Operatör kâr-merkezi statement: bir hesabın tüm posting'leri (kaynak entry
+     * ile), tarih sırası. READ-ONLY statement görünümü için (biriken kâr +
+     * ödemeler). Sayfalama yerine tam liste — operatör başına hacim sınırlı.
+     */
+    @Query("SELECT p FROM Posting p " +
+            "WHERE p.account.id = :accountId " +
+            "ORDER BY p.journalEntry.entryDate DESC, p.journalEntry.createdAt DESC")
+    List<Posting> findByAccountIdWithEntry(@Param("accountId") UUID accountId);
+
+    /**
+     * Aylık P&L kategori kırılımı: bir dönemde belirli {@code leg_kind} (gelir/
+     * gider/masraf) bacaklarının kategori bazlı toplamı. P&L bacakları account
+     * NULL'dır; işaret konvansiyonu: PNL_INCOME negatif (gelir hesaba +, P&L
+     * bacağı −), PNL_EXPENSE/PNL_COST pozitif. Rapor servisi işareti normalize eder.
+     *
+     * @return [categoryId, categoryName, Σ amount] satırları
+     */
+    @Query("SELECT p.category.id, p.category.name, COALESCE(SUM(p.amount), 0) " +
+            "FROM Posting p " +
+            "WHERE p.journalEntry.business.id = :businessId " +
+            "AND p.journalEntry.entryDate >= :from AND p.journalEntry.entryDate <= :to " +
+            "AND p.legKind = :legKind " +
+            "GROUP BY p.category.id, p.category.name")
+    List<Object[]> sumPnlByCategoryForPeriod(@Param("businessId") UUID businessId,
+                                             @Param("from") LocalDate from,
+                                             @Param("to") LocalDate to,
+                                             @Param("legKind") com.bizboard.common.enums.PostingLegKind legKind);
+
+    /**
+     * Aylık P&L toplamı bir {@code leg_kind} için (kategori kırılımsız). Hızlı
+     * özet (gelir/gider/masraf üst-satır).
+     */
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Posting p " +
+            "WHERE p.journalEntry.business.id = :businessId " +
+            "AND p.journalEntry.entryDate >= :from AND p.journalEntry.entryDate <= :to " +
+            "AND p.legKind = :legKind")
+    BigDecimal sumPnlForPeriod(@Param("businessId") UUID businessId,
+                               @Param("from") LocalDate from,
+                               @Param("to") LocalDate to,
+                               @Param("legKind") com.bizboard.common.enums.PostingLegKind legKind);
+
+    /**
+     * Operatör/kâr-merkezi bazlı aylık kâr: bir dönemde belirli hesaplara (operatör
+     * kasaları) düşen POSITIVE kâr posting'lerinin (PROFIT_SHARE entry) toplamı.
+     * Operatöre ödemeler (LOCATION_MOVE) ayrı sorgulanır.
+     *
+     * @return [accountId, Σ amount] — operatör kasası bazında biriken kâr.
+     */
+    @Query("SELECT p.account.id, COALESCE(SUM(p.amount), 0) FROM Posting p " +
+            "WHERE p.journalEntry.business.id = :businessId " +
+            "AND p.journalEntry.entryDate >= :from AND p.journalEntry.entryDate <= :to " +
+            "AND p.account.id IN :accountIds " +
+            "GROUP BY p.account.id")
+    List<Object[]> sumByAccountForPeriod(@Param("businessId") UUID businessId,
+                                         @Param("from") LocalDate from,
+                                         @Param("to") LocalDate to,
+                                         @Param("accountIds") List<UUID> accountIds);
 }

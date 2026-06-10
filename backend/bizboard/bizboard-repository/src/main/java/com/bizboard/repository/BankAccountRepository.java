@@ -34,4 +34,7 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> 
     /** Beta v1.1 (WP 2786a36e): CASH_HOLDER summary widget için. */
     List<BankAccount> findByBusinessIdAndTypeAndActiveTrueOrderByCurrentBalanceDesc(
             UUID businessId, BankAccountType type);
+
+    /** Ledger v2 (Faz C, §3.11): bir işletmenin SUB_CASH hesapları (operatör/agg). */
+    List<BankAccount> findByBusinessIdAndTypeOrderByNameAsc(UUID businessId, BankAccountType type);
 }

@@ -57,7 +57,13 @@ public class DayCloseAccountCount {
     @Column(name = "computed_balance", precision = 19, scale = 2)
     private BigDecimal computedBalance;
 
-    /** Bu hesap özelinde sapma = counted − computed (drill-down; null olabilir). */
+    /**
+     * Bu hesap özelinde sapma = computed − counted (drill-down; null olabilir).
+     * Faz C: gün-seviyesi {@code variance = computed − actual} ile HİZALI (KARAR A1).
+     * Pozitif = beklenenden AZ sayıldı (eksik/kaçak); negatif = fazla.
+     * (Eski Faz B davranışı {@code counted − computed} TERS idi; guardian notuyla
+     * hizalandı.)
+     */
     @Column(name = "account_variance", precision = 19, scale = 2)
     private BigDecimal accountVariance;
 }

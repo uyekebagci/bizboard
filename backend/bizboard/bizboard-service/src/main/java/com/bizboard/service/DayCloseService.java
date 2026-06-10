@@ -137,7 +137,7 @@ public class DayCloseService {
                         .account(acc)
                         .countedBalance(counted)
                         .computedBalance(computedBal)
-                        .accountVariance(counted.subtract(computedBal))
+                        .accountVariance(computedBal.subtract(counted))
                         .build();
                 dc.getAccountCounts().add(c);
                 actualTotal = actualTotal.add(counted);
@@ -486,7 +486,7 @@ public class DayCloseService {
                             .dayClose(dc).account(acc)
                             .countedBalance(counted)
                             .computedBalance(computedBal)
-                            .accountVariance(counted.subtract(computedBal))
+                            .accountVariance(computedBal.subtract(counted))
                             .build());
                     actualTotal = actualTotal.add(counted);
                 }

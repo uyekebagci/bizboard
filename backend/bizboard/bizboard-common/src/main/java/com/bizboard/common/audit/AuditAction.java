@@ -145,4 +145,23 @@ public final class AuditAction {
     // ── Ledger v2 (Faz B, §3.8 / §5): banka import (manuel satır iskeleti) ─────
     public static final String BANK_IMPORT_BATCH_CREATE = "BANK_IMPORT_BATCH_CREATE";
     public static final String BANK_IMPORT_LINE_POSTED  = "BANK_IMPORT_LINE_POSTED";
+
+    // ── Ledger v2 (Faz C): POS kâr-payı motoru + gider/masraf + aylık kâr ─────
+    /** POS işlem (deal) girişi — cihaz/getiren/müşteri oranı + kâr-payı şelalesi. */
+    public static final String POS_DEAL_CREATE        = "POS_DEAL_CREATE";
+    /** POS deal geri alındı — tüm kâr posting'leri ters çevrildi. */
+    public static final String POS_DEAL_REVERSE       = "POS_DEAL_REVERSE";
+    /** T+1 settlement finalize — ort.komisyon + OWNER_COMMISSION final adjust. */
+    public static final String POS_SETTLEMENT_FINALIZE = "POS_SETTLEMENT_FINALIZE";
+    /** Operatör kâr-payı sistem postası (source=auto, read-only kâr-merkezi). */
+    public static final String PROFIT_SHARE_POSTED    = "PROFIT_SHARE_POSTED";
+    /** ProfitShareRule CRUD (admin). */
+    public static final String PROFIT_SHARE_RULE_UPSERT = "PROFIT_SHARE_RULE_UPSERT";
+    public static final String PROFIT_SHARE_RULE_DELETE = "PROFIT_SHARE_RULE_DELETE";
+    /** Kâr-payı global config (sahip%/Fatih%/Tuncay%) değişikliği. */
+    public static final String PROFIT_SHARE_CONFIG_UPDATE = "PROFIT_SHARE_CONFIG_UPDATE";
+
+    // Highlight rozetleri (UI vurgu)
+    public static final String HIGHLIGHT_PROFIT_SHARE   = "PROFIT_SHARE";
+    public static final String HIGHLIGHT_POS_DEAL       = "POS_DEAL";
 }
