@@ -18,7 +18,7 @@ import { X, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import type { Category } from "@/types";
+import type { Category, CategoryApplicability } from "@/types";
 import {
   CATEGORY_ICONS,
   CATEGORY_COLORS,
@@ -37,6 +37,8 @@ export function QuickCategoryModal({ businessId, onClose, onCreated }: Props) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<string>(DEFAULT_CATEGORY_ICON);
   const [color, setColor] = useState<string>(DEFAULT_CATEGORY_COLOR);
+  // Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik (default BOTH).
+  const [applicability, setApplicability] = useState<CategoryApplicability>("BOTH");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,10 +51,12 @@ export function QuickCategoryModal({ businessId, onClose, onCreated }: Props) {
     setSubmitting(true);
     try {
       // Paylaşımlı kategori: direction gönderilmez (backend yok sayar).
+      // Ledger v2 (Faz A, §3.9): applicability (BOTH/INCOME_ONLY/EXPENSE_ONLY).
       const created = await api.post<Category>(`/businesses/${businessId}/categories`, {
         name: trimmed,
         icon: icon || null,
         color: color || null,
+        applicability,
       });
       toast.success("Kategori oluşturuldu");
       onCreated(created);
@@ -88,10 +92,41 @@ export function QuickCategoryModal({ businessId, onClose, onCreated }: Props) {
             </div>
           )}
 
-          {/* Paylaşımlı kategori notu — hem gelir hem giderde kullanılabilir */}
-          <p className="text-[11px] text-surface-400">
-            Bu kategori hem gelir hem gider işlemlerinde kullanılabilir.
-          </p>
+          {/* Ledger v2 (§3.9): uygulanabilirlik — BOTH (varsayılan, paylaşımlı)
+              ya da tek tarafa kilit. İşlem formu o anki yöne göre süzer. */}
+          <div>
+            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+              Kullanım
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                { v: "BOTH", label: "İkisi de", hint: "gelir + gider" },
+                { v: "INCOME_ONLY", label: "Yalnız gelir", hint: "" },
+                { v: "EXPENSE_ONLY", label: "Yalnız gider", hint: "" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setApplicability(opt.v)}
+                  className={cn(
+                    "py-2 px-2 rounded-lg text-[11px] font-medium border transition-all text-center",
+                    applicability === opt.v
+                      ? "bg-brand-500/20 border-brand-500/60 text-brand-200"
+                      : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-[10px] text-surface-500">
+              {applicability === "BOTH"
+                ? "Hem gelir hem gider işlemlerinde görünür."
+                : applicability === "INCOME_ONLY"
+                  ? "Yalnız gelir işlemlerinde listelenir."
+                  : "Yalnız gider işlemlerinde listelenir."}
+            </p>
+          </div>
 
           {/* Önizleme */}
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-700/50 border border-surface-600">

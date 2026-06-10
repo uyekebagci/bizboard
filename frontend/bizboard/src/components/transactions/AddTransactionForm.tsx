@@ -231,11 +231,36 @@ export function AddTransactionForm({
     fetchCategories();
   }, [businessId]);
 
-  // Paylaşımlı (yön-bağımsız) kategori modeli: kategoriler hem gelir hem
-  // giderde kullanılabilir; yön filtresi YOK. Tümü sırayla gösterilir.
-  const filteredCategories = [...categories].sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name, "tr"),
-  );
+  // Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik süzme. Kategoriler
+  // paylaşımlı (BOTH) ya da tek-tarafa kilitli (INCOME_ONLY/EXPENSE_ONLY)
+  // olabilir. İşlem formu o anki yöne göre süzer: BOTH her zaman + yöne uygun
+  // olan. applicability alanı yoksa (eski API) BOTH varsayılır → kırılma yok.
+  const dirEnum = direction === "income" ? "INCOME" : "EXPENSE";
+  const filteredCategories = [...categories]
+    .filter((c) => {
+      const appl = c.applicability ?? "BOTH";
+      if (appl === "BOTH") return true;
+      if (appl === "INCOME_ONLY") return dirEnum === "INCOME";
+      return dirEnum === "EXPENSE"; // EXPENSE_ONLY
+    })
+    .sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name, "tr"),
+    );
+
+  // A7 (KİLİTLİ): tek-tarafa-kilit ihlali HARD-BLOCK DEĞİL — seçili kategori
+  // o anki yöne uymuyorsa uyarı gösterilir ama kayıt engellenmez (STRICT, soft).
+  const selectedCat = categories.find((c) => c.id === categoryId);
+  const applicabilityWarning =
+    selectedCat &&
+    (selectedCat.applicability ?? "BOTH") !== "BOTH" &&
+    !(
+      (selectedCat.applicability === "INCOME_ONLY" && dirEnum === "INCOME") ||
+      (selectedCat.applicability === "EXPENSE_ONLY" && dirEnum === "EXPENSE")
+    )
+      ? `"${selectedCat.name}" kategorisi ${
+          selectedCat.applicability === "INCOME_ONLY" ? "yalnız gelir" : "yalnız gider"
+        } için işaretli — bu ${direction === "income" ? "gelir" : "gider"} işlemine yine de izin verilir.`
+      : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -611,7 +636,9 @@ export function AddTransactionForm({
       >
         <div className="flex items-center justify-between mb-2">
           <label className="block text-sm font-semibold text-surface-100">
-            <Tag size={14} className="inline mr-1" /> Kategori <span className="text-red-400">*</span>
+            <Tag size={14} className="inline mr-1" /> Kategori
+            <span className="text-surface-400 font-normal text-[11px] ml-1">(ne tür?)</span>
+            <span className="text-red-400"> *</span>
           </label>
           {businessId && (
             <button
@@ -658,6 +685,10 @@ export function AddTransactionForm({
         )}
         {!categoryId && businessId && filteredCategories.length > 0 && (
           <p className="mt-2 text-[11px] text-amber-300">Kayıt için bir kategori seçin.</p>
+        )}
+        {/* A7 (§3.9): tek-tarafa-kilit ihlali — uyarı, kayıt engellenmez. */}
+        {applicabilityWarning && (
+          <p className="mt-2 text-[11px] text-amber-300">⚠️ {applicabilityWarning}</p>
         )}
       </div>
 
@@ -730,7 +761,8 @@ export function AddTransactionForm({
             className="checkbox cursor-pointer"
           />
           <span className="text-sm font-medium text-surface-200">
-            🏦 Bir alt kasaya da ekle (manuel)
+            🏦 Hesap / Alt-kasa
+            <span className="text-surface-400 font-normal text-[11px] ml-1">(kim / nerede?)</span>
           </span>
           {subCashList.length === 0 && (
             <span className="text-[10px] text-surface-500">(alt kasa yok)</span>

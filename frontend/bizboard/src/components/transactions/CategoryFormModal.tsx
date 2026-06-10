@@ -22,7 +22,7 @@ import { X, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import type { Category } from "@/types";
+import type { Category, CategoryApplicability } from "@/types";
 import {
   CATEGORY_ICONS,
   CATEGORY_COLORS,
@@ -47,6 +47,10 @@ export function CategoryFormModal({
   const [icon, setIcon] = useState<string>(existing?.icon ?? DEFAULT_CATEGORY_ICON);
   const [color, setColor] = useState<string>(existing?.color ?? DEFAULT_CATEGORY_COLOR);
   const [sortOrder, setSortOrder] = useState<string>(String(existing?.sort_order ?? 0));
+  // Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik (default BOTH).
+  const [applicability, setApplicability] = useState<CategoryApplicability>(
+    existing?.applicability ?? "BOTH",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,15 +71,18 @@ export function CategoryFormModal({
           icon: icon || null,
           color: color || null,
           sort_order: sort,
+          applicability,
         });
         toast.success("Kategori güncellendi");
       } else {
         // Paylaşımlı kategori: direction gönderilmez (backend yok sayar).
+        // Ledger v2 (§3.9): applicability (BOTH/INCOME_ONLY/EXPENSE_ONLY).
         saved = await api.post<Category>(`/businesses/${businessId}/categories`, {
           name: trimmed,
           icon: icon || null,
           color: color || null,
           sort_order: sort,
+          applicability,
         });
         toast.success("Kategori oluşturuldu");
       }
@@ -114,10 +121,41 @@ export function CategoryFormModal({
             </div>
           )}
 
-          {/* Paylaşımlı kategori notu — hem gelir hem giderde kullanılabilir */}
-          <p className="text-[11px] text-surface-400">
-            Bu kategori hem gelir hem gider işlemlerinde kullanılabilir.
-          </p>
+          {/* Ledger v2 (§3.9): uygulanabilirlik — BOTH (paylaşımlı) ya da
+              tek tarafa kilit. İşlem formu o anki yöne göre süzer. */}
+          <div>
+            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+              Kullanım
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                { v: "BOTH", label: "İkisi de" },
+                { v: "INCOME_ONLY", label: "Yalnız gelir" },
+                { v: "EXPENSE_ONLY", label: "Yalnız gider" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setApplicability(opt.v)}
+                  className={cn(
+                    "py-2 px-2 rounded-lg text-[11px] font-medium border transition-all text-center",
+                    applicability === opt.v
+                      ? "bg-brand-500/20 border-brand-500/60 text-brand-200"
+                      : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-[10px] text-surface-500">
+              {applicability === "BOTH"
+                ? "Hem gelir hem gider işlemlerinde görünür (paylaşımlı)."
+                : applicability === "INCOME_ONLY"
+                  ? "Yalnız gelir işlemlerinde listelenir."
+                  : "Yalnız gider işlemlerinde listelenir."}
+            </p>
+          </div>
 
           {/* Önizleme */}
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-700/50 border border-surface-600">
