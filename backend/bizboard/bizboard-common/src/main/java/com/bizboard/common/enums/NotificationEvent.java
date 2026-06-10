@@ -43,6 +43,19 @@ public enum NotificationEvent {
     /** WP f1fa3cd5: Bir kullanıcıya firma erişimi verildi. */
     FIRM_ACCESS_GRANTED,
 
+    /**
+     * Ledger v2 (Faz D, §9 / TODO 4): gün kapanışı variance (kaçak) eşik aştı.
+     * Kritik anomali — Telegram'a outbound + admin'lere. {@code OLMASI GEREKEN −
+     * SON KASA} eşiği aşınca tetiklenir (DayCloseService.fireAlarm).
+     */
+    DAY_CLOSE_VARIANCE_ALERT,
+
+    /**
+     * Ledger v2 (Faz D, §3.7): çek/senet karşılıksız (BOUNCED) — kritik anomali,
+     * admin'lere + Telegram.
+     */
+    INSTRUMENT_BOUNCED,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

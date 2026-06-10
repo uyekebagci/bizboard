@@ -28,6 +28,9 @@ const EVENTS: { key: string; label: string }[] = [
   { key: "WARRANTY_EXPIRING", label: "Garanti bitiyor" },
   { key: "NEW_TRANSACTION", label: "Yeni işlem" },
   { key: "FIRM_ACCESS_GRANTED", label: "Firma erişimi verildi" },
+  // Ledger v2 (Faz D) — kaçak/anomali alarmları
+  { key: "DAY_CLOSE_VARIANCE_ALERT", label: "Kaçak alarmı (gün kapanışı farkı)" },
+  { key: "INSTRUMENT_BOUNCED", label: "Karşılıksız çek/senet" },
 ];
 
 // Default (kayıt yoksa): In-App açık, Telegram kapalı (backend ile aynı semantik).

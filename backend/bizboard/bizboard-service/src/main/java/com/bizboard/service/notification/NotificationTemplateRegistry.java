@@ -64,6 +64,15 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "Firma erişimi verildi: {business}",
                     "{business} işletmesine erişiminiz tanımlandı.")),
+            Map.entry(NotificationEvent.DAY_CLOSE_VARIANCE_ALERT, new Template(
+                    NotificationType.ALERT,
+                    "⚠ KAÇAK ALARMI — {date}",
+                    "{date} kapanışında kaçak/fark {variance} {currency} (eşik {threshold}). "
+                            + "Olması gereken {computed}, sayılan {actual}. Drill-down: gün hareketleri.")),
+            Map.entry(NotificationEvent.INSTRUMENT_BOUNCED, new Template(
+                    NotificationType.ALERT,
+                    "⚠ KARŞILIKSIZ ÇEK/SENET: {counterparty}",
+                    "{counterparty} — {amount} {currency} — vade {dueDate} karşılıksız çıktı.")),
             Map.entry(NotificationEvent.OTP, new Template(
                     NotificationType.INFO,
                     "Doğrulama kodu",

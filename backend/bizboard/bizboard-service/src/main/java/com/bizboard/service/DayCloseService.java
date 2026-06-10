@@ -56,6 +56,8 @@ public class DayCloseService {
     private final BusinessAccessGuard accessGuard;
     private final LedgerFeatureFlagService featureFlags;
     private final AuditLogService auditLogService;
+    /** Faz D (§9/TODO 4): kaçak eşik aşımı → bildirim (in-app + opt-in Telegram). */
+    private final com.bizboard.service.notification.NotificationDispatchService dispatchService;
 
     /**
      * Recompute kilidi: bir business'in zincirini aynı anda iki recompute/edit
@@ -632,6 +634,46 @@ public class DayCloseService {
         log.warn("[day-close-alarm] business={} date={} variance={} threshold={}",
                 dc.getBusiness() != null ? dc.getBusiness().getId() : null,
                 dc.getCloseDate(), dc.getVariance(), dc.getVarianceThreshold());
+
+        // Faz D (§9/TODO 4): kaçak eşik aşıldı → bildirim üret. In-app default açık;
+        // Telegram opt-in (admin per-event tercih). Best-effort: bildirim hatası
+        // kapanışı bozmaz.
+        try {
+            dispatchVarianceAlert(dc);
+        } catch (Exception e) {
+            log.warn("[day-close-alarm] bildirim dispatch hatası: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Faz D (§9/TODO 4): DAY_CLOSE_VARIANCE_ALERT'i tüm admin'lere dağıt (in-app +
+     * opt-in Telegram outbound). Per-event tercih + admin'e dispatch katmanında
+     * uygulanır.
+     */
+    private void dispatchVarianceAlert(DayClose dc) {
+        java.util.List<User> admins = userRepository.findByRoleIgnoreCase("admin");
+        if (admins.isEmpty()) return;
+        java.util.List<UUID> recipients = admins.stream().map(User::getId).toList();
+        UUID businessId = dc.getBusiness() != null ? dc.getBusiness().getId() : null;
+        dispatchService.dispatch(
+                com.bizboard.common.enums.NotificationEvent.DAY_CLOSE_VARIANCE_ALERT,
+                recipients,
+                Map.of(
+                        "date", dc.getCloseDate() != null ? dc.getCloseDate().toString() : "—",
+                        "variance", money(dc.getVariance()),
+                        "threshold", money(dc.getVarianceThreshold()),
+                        "computed", money(dc.getComputedClosing()),
+                        "actual", money(dc.getActualTotal()),
+                        "currency", "TL"
+                ),
+                "/dashboard/gun-kapanisi",
+                businessId);
+        log.info("[day-close-alarm] variance alert dispatched business={} date={} alıcı={}",
+                businessId, dc.getCloseDate(), recipients.size());
+    }
+
+    private static String money(BigDecimal v) {
+        return v != null ? v.toPlainString() : "0";
     }
 
     private Map<String, Object> baseMeta(DayClose dc) {

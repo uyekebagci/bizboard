@@ -64,6 +64,8 @@ public class InstrumentService {
     private final JournalEntryRepository journalEntryRepository;
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
+    /** Faz D (§9/TODO 4): karşılıksız çek anomalisi → bildirim (in-app + opt-in Telegram). */
+    private final com.bizboard.service.notification.NotificationDispatchService dispatchService;
 
     // ──────────────────────────── CREATE ────────────────────────────
 
@@ -224,7 +226,33 @@ public class InstrumentService {
                 "KARŞILIKSIZ — " + ins.getType() + " " + ins.getAmount(), null,
                 AuditAction.HIGHLIGHT_INSTRUMENT_BOUNCE);
         log.warn("[instrument] BOUNCED id={} amount={}", ins.getId(), ins.getAmount());
+
+        // Faz D (§9/TODO 4): karşılıksız = anomali → admin'lere bildirim
+        // (in-app + opt-in Telegram). Best-effort.
+        try {
+            dispatchBounceAlert(ins);
+        } catch (Exception e) {
+            log.warn("[instrument] bounce bildirim hatası: {}", e.getMessage());
+        }
         return toDto(ins);
+    }
+
+    private void dispatchBounceAlert(Instrument ins) {
+        java.util.List<User> admins = userRepository.findByRoleIgnoreCase("admin");
+        if (admins.isEmpty()) return;
+        java.util.List<UUID> recipients = admins.stream().map(User::getId).toList();
+        dispatchService.dispatch(
+                com.bizboard.common.enums.NotificationEvent.INSTRUMENT_BOUNCED,
+                recipients,
+                Map.of(
+                        "counterparty", ins.getIssuerCounterpart() != null
+                                ? ins.getIssuerCounterpart().getName() : "—",
+                        "amount", ins.getAmount() != null ? ins.getAmount().toPlainString() : "?",
+                        "currency", ins.getCurrency() != null ? ins.getCurrency() : "",
+                        "dueDate", ins.getDueDate() != null ? ins.getDueDate().toString() : "—"
+                ),
+                "/dashboard/cek-senet",
+                ins.getBusiness() != null ? ins.getBusiness().getId() : null);
     }
 
     // ──────────────────────────── ENDORSE (ciro/devir) ────────────────────────────
