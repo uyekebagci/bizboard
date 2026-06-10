@@ -5,15 +5,19 @@ import { useState } from "react";
 import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon, ArrowLeftRight } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { ConsolidatedWidgets } from "@/components/business/dashboard/ConsolidatedWidgets";
+import { QuickActionsWidget } from "@/components/business/dashboard/QuickActionsWidget";
 import { CarryOverBanner } from "@/components/closing/CarryOverBanner";
 import { CloseTodayModal } from "@/components/closing/CloseTodayModal";
 import { useConsolidatedDashboard } from "@/hooks/useConsolidatedDashboard";
 import { useCashClosing } from "@/hooks/useCashClosing";
 // v1.6.23: BusinessHeader widget kaldırıldı — info "Geri" satırına taşındı.
-import { FinanceSummary } from "@/components/business/FinanceSummary";
+// v1.7.x (dashboard reorg): FinanceSummary (Gelir/Gider/Kar 3'lü kart) ve
+// FixedCostsWidget (Sabit Masraflar) dashboard render'ından KALDIRILDI.
+// FinanceSummary redundant (aynı bilgi Konsolide/Bugünün Kasa Durumu kartında);
+// FixedCostsWidget özelliği KORUNDU (ModuleTabs > "Sabit Masraflar" modülünde
+// hâlâ erişilebilir — sadece bu standalone dashboard widget'ı gizlendi).
 import { TransactionList } from "@/components/business/TransactionList";
 import { ModuleTabs } from "@/components/business/ModuleTabs";
-import { FixedCostsWidget } from "@/components/business/FixedCostsWidget";
 import { useBusiness } from "@/hooks/useBusiness";
 import { useAppStore } from "@/lib/store";
 import { api, ApiError } from "@/lib/api/client";
@@ -26,7 +30,9 @@ export default function BusinessDetailPage() {
   const params = useParams();
   const router = useRouter();
   const businessId = params.id as string;
-  const { business, transactions, summary, isLoading } = useBusiness(businessId);
+  // v1.7.x (dashboard reorg): `summary` artık kullanılmıyor (FinanceSummary
+  // widget'ı kaldırıldı); hook çağrısı veri katmanı için aynen korunuyor.
+  const { business, transactions, isLoading } = useBusiness(businessId);
   const { profile, triggerRefresh } = useAppStore();
   const isAdmin = profile?.role === "admin";
 
@@ -210,14 +216,19 @@ export default function BusinessDetailPage() {
         />
       )}
 
-      {/* Finance Summary Cards */}
-      <FinanceSummary summary={summary} currency={business.currency} />
+      {/* v1.7.x (dashboard reorg): FinanceSummary (Gelir/Gider/Kar) ve
+          FixedCostsWidget (Sabit Masraflar) bu konumdan kaldırıldı — bkz.
+          import bloğundaki not. Veri/hesaplama (summary) ve FixedCosts
+          özelliği yerinde duruyor; sadece bu sayfadaki render iptal edildi. */}
 
-      {/* Fixed Costs Widget */}
-      <FixedCostsWidget businessId={businessId} currency={business.currency} />
-
-      {/* Module Tabs */}
+      {/* Module Tabs (modüller widget'ı) — Hızlı İşlemler'in üstünde */}
       <ModuleTabs business={business} />
+
+      {/* v1.7.x (dashboard reorg): Hızlı İşlemler EN ALTA taşındı
+          (önceden ConsolidatedWidgets içinde Row 1 altındaydı). */}
+      {consolidated && (
+        <QuickActionsWidget businessId={consolidated.business_id} />
+      )}
     </div>
   );
 }

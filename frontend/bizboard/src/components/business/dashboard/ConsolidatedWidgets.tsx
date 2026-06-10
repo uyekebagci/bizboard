@@ -12,7 +12,6 @@
 
 import type { ConsolidatedDashboard } from "@/types";
 import { CashHoldersWidget } from "@/components/business/dashboard/CashHoldersWidget";
-import { QuickActionsWidget } from "./QuickActionsWidget";
 import { ConsolidatedPositionCard } from "./widgets/ConsolidatedPositionCard";
 import { TodayClosingCard } from "./widgets/TodayClosingCard";
 import { CashOutflowsTodayCard } from "./widgets/CashOutflowsTodayCard";
@@ -62,9 +61,9 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
         <TodayClosingCard d={data} onCloseDay={onCloseDay} />
       </div>
 
-      {/* WP e4dc5271 (Beta v1.4) TODO 6ae21ec4:
-          Hızlı İşlemler widget — Row 1 (Konsolide + Bugünkü Kasa) ALTINDA. */}
-      <QuickActionsWidget businessId={data.business_id} />
+      {/* v1.7.x (dashboard reorg): Hızlı İşlemler widget'ı buradan KALDIRILDI;
+          artık page.tsx'te ModuleTabs'in altında — sayfanın EN ALTINDA render
+          edilir. Modüller widget'ı yukarı, Hızlı İşlemler aşağı taşındı. */}
 
       {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
