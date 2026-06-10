@@ -25,7 +25,10 @@ public enum SearchEntityType {
     POS_DEVICE("pos_device", "pos"),
     INVENTORY_ITEM("inventory_item", "envanter", "stok"),
     VEHICLE("vehicle", "arac", "araç"),
-    NOTE("note", "not");
+    NOTE("note", "not"),
+    FIXED_COST("fixed_cost", "sabit", "gider", "masraf"),
+    SUB_CASH("sub_cash", "altkasa", "alt-kasa", "kasa"),
+    FIRM_GROUP("firm_group", "grup", "firmagrubu");
 
     private final String[] aliases;
 

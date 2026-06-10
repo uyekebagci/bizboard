@@ -10,38 +10,31 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * v2.2.0 — BankAccount FTS (spec §4). Hassas: iban (BANK_FULL_VIEW gerekli).
- * Tenant-scope: business.id IN (L3). {@code iban:} ile arama yetki gerektirir;
- * eşleşme dönse de değer maskeli sunulur.
+ * v2.2.0 — SubCash (alt kasa) FTS (spec §4, v1.7+).
  *
- * <p>SUB_CASH (alt kasa) tipi bu sorgudan <b>hariç tutulur</b> — UI'da ayrı
- * kategori olduğu için {@code SubCashSearchRepository} ile ayrı döner (duplicate
- * önlenir).</p>
+ * <p>Alt kasa = {@code bank_accounts} satırı, {@code type = SUB_CASH}. UI'da ayrı
+ * kategori olduğu için ayrı strategy/tip; BankAccount strategy SUB_CASH'i hariç
+ * tutar (duplicate yok). Tenant-scope: {@code business.id IN :businessIds} (L3).</p>
  */
-public interface BankAccountSearchRepository extends JpaRepository<BankAccount, UUID> {
+public interface SubCashSearchRepository extends JpaRepository<BankAccount, UUID> {
 
     @Query("""
             SELECT b FROM BankAccount b
             WHERE b.business.id IN :businessIds
-              AND b.type <> com.bizboard.common.enums.BankAccountType.SUB_CASH
-              AND ( :hasText = false
-                    OR LOWER(b.name) LIKE :term
-                    OR LOWER(COALESCE(b.bankName, '')) LIKE :term
-                    OR LOWER(COALESCE(b.holderName, '')) LIKE :term )
-              AND ( :iban IS NULL OR b.iban = :iban )
+              AND b.type = com.bizboard.common.enums.BankAccountType.SUB_CASH
+              AND ( :hasText = false OR LOWER(b.name) LIKE :term )
             ORDER BY b.name ASC
             """)
     List<BankAccount> search(
             @Param("businessIds") List<UUID> businessIds,
             @Param("hasText") boolean hasText,
             @Param("term") String term,
-            @Param("iban") String iban,
             Pageable page);
 
     @Query("""
             SELECT b FROM BankAccount b
             WHERE b.business.id IN :businessIds
-              AND b.type <> com.bizboard.common.enums.BankAccountType.SUB_CASH
+              AND b.type = com.bizboard.common.enums.BankAccountType.SUB_CASH
               AND LOWER(b.name) LIKE :prefix
             ORDER BY b.name ASC
             """)
