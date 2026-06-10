@@ -157,7 +157,7 @@ export function CounterpartCombobox({
       </div>
 
       {open && !selectedName && (
-        <div className="absolute z-30 mt-1 left-0 right-0 max-h-64 overflow-y-auto rounded-xl bg-surface-800 border border-surface-600 shadow-card-hover">
+        <div className="absolute z-30 mt-1 left-0 right-0 max-h-64 overflow-y-auto rounded-xl bg-surface-800 border border-surface-600 shadow-2xl ring-1 ring-brand-500/20">
           {loading ? (
             <div className="flex items-center gap-2 px-3 py-3 text-xs text-surface-400">
               <Loader2 size={14} className="animate-spin" />

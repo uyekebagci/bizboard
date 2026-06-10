@@ -168,8 +168,7 @@ function InventoryPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
           <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Ara... (ad, marka, seri no, lokasyon)"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm text-white
-                       placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+            className="field field-sm py-2.5 pl-9 pr-4" />
         </div>
         <select value={filterBusiness} onChange={(e) => setFilterBusiness(e.target.value)}
           className="field-sm py-2 text-xs">

@@ -93,7 +93,7 @@ export default function ClosuresListPage() {
           <select
             value={businessId}
             onChange={(e) => setBusinessId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-surface-800 border border-surface-600 text-white text-sm"
+            className="field field-sm py-2"
           >
             {businesses.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
