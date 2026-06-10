@@ -124,25 +124,25 @@ export default function AdminPage() {
           <div className="flex items-center gap-2">
             <a
               href="/admin/my-companies"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               Firmalarim
             </a>
             <a
               href="/admin/debt-migration"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               Borc Migration
             </a>
             <a
               href="/admin/recurring"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               Recurring
             </a>
             <a
               href="/admin/audit"
-              className="px-3 py-2 text-sm rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 transition-colors"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               Audit Log
             </a>

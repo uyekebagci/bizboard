@@ -442,7 +442,7 @@ export function FirmDetailModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer">
           {!isReadOnly ? (
             <>
               <button type="button" onClick={handleCancel} disabled={saving}
@@ -500,7 +500,7 @@ export function FirmDetailModal({
           </p>
           <div className="flex gap-2">
             <button onClick={() => setConfirmDelete(false)} disabled={saving}
-              className="flex-1 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium">
+              className="btn-secondary flex-1 py-2 text-sm">
               Vazgeç
             </button>
             <button onClick={handleDelete} disabled={saving}

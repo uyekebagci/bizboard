@@ -311,9 +311,9 @@ export function ClosureQuickAddModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-2 p-3 border-t border-surface-700">
+        <div className="modal-footer">
           <button type="button" onClick={onClose} disabled={submitting}
-            className="flex-1 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium disabled:opacity-50">
+            className="btn-secondary flex-1 py-2 text-sm">
             İptal
           </button>
           <button type="submit" disabled={submitting || parsedAmount <= 0}

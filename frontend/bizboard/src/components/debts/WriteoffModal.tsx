@@ -247,7 +247,7 @@ export function WriteoffModal({
 
         {/* Footer */}
         {eligibleDebts.length > 0 && (
-          <div className="flex items-center gap-2 p-4 border-t border-surface-700">
+          <div className="modal-footer">
             <button
               onClick={onClose}
               disabled={submitting}
@@ -292,7 +292,7 @@ export function WriteoffModal({
             </p>
             <div className="flex gap-2">
               <button onClick={() => setShowConfirm(false)} disabled={submitting}
-                className="flex-1 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium disabled:opacity-50">
+                className="btn-secondary flex-1 py-2 text-sm">
                 Vazgeç
               </button>
               <button onClick={handleSubmit} disabled={submitting}

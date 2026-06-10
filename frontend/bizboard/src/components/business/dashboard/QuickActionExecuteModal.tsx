@@ -248,7 +248,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer">
           <button
             type="button"
             onClick={onClose}

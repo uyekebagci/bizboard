@@ -464,7 +464,7 @@ function CreateFixedCostModal({
           )}
 
           <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1 py-3">
               Vazgec
             </button>
             <button
@@ -544,7 +544,7 @@ function DeleteFixedCostModal({
           )}
 
           <div className="flex gap-3">
-            <button onClick={onClose} className="flex-1 py-3 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">
+            <button onClick={onClose} className="btn-secondary flex-1 py-3">
               Vazgec
             </button>
             <button

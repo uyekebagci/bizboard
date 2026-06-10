@@ -140,7 +140,7 @@ export function EditGroupModal({ group, onClose, onUpdated, onDeleted }: Props) 
           )}
         </div>
 
-        <div className="flex items-center gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer">
           <button type="button" onClick={() => setConfirmDelete(true)} disabled={submitting}
             className="px-3 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-300 text-sm font-semibold inline-flex items-center gap-1.5 border border-red-500/30 disabled:opacity-50">
             <Trash2 size={14} /> Sil
@@ -172,7 +172,7 @@ export function EditGroupModal({ group, onClose, onUpdated, onDeleted }: Props) 
           </p>
           <div className="flex gap-2">
             <button onClick={() => setConfirmDelete(false)} disabled={submitting}
-              className="flex-1 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium">
+              className="btn-secondary flex-1 py-2 text-sm">
               Vazgeç
             </button>
             <button onClick={handleDelete} disabled={submitting}

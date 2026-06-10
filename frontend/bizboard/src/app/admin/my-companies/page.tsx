@@ -278,7 +278,7 @@ export default function AdminMyCompaniesPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
+                className="btn-secondary px-4 py-2 text-sm"
               >
                 Iptal
               </button>
@@ -506,7 +506,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
+            className="btn-secondary px-4 py-2 text-sm"
           >
             Iptal
           </button>

@@ -157,9 +157,9 @@ export function QuickCounterpartModal({ businessId, onClose, onCreated }: Props)
           )}
         </div>
 
-        <div className="flex gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer">
           <button type="button" onClick={onClose} disabled={submitting}
-            className="flex-1 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium border border-surface-600 disabled:opacity-50">
+            className="btn-secondary flex-1 py-2.5 text-sm">
             Vazgeç
           </button>
           <button type="submit" disabled={submitting || !name.trim() || !businessId}

@@ -472,7 +472,7 @@ function VehicleDetailModal({
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">
-            <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors">
+            <button onClick={onClose} className="btn-secondary flex-1 px-4 py-2.5 text-sm">
               Kapat
             </button>
             <button onClick={onEdit} className="px-4 py-2.5 bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
@@ -748,7 +748,7 @@ function CreateVehicleModal({
           )}
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1 py-3">
               Vazgec
             </button>
             <button type="submit" disabled={saving || !plateNumber.trim()}
@@ -814,7 +814,7 @@ function DeleteVehicleModal({
             </div>
           )}
           <div className="flex gap-3">
-            <button onClick={onClose} className="flex-1 py-3 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">
+            <button onClick={onClose} className="btn-secondary flex-1 py-3">
               Vazgec
             </button>
             <button onClick={handleDelete} disabled={isDeleting}

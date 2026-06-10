@@ -470,7 +470,7 @@ function DeleteModal({
           )}
 
           <div className="flex gap-3 mt-4">
-            <button onClick={onClose} className="flex-1 py-3 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">
+            <button onClick={onClose} className="btn-secondary flex-1 py-3">
               Vazgec
             </button>
             <button

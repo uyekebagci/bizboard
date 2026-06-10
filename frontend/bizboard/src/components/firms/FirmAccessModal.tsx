@@ -176,7 +176,7 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer flex-wrap">
           <button type="button" onClick={() => setShowAdd(true)} disabled={busy}
             className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-50">
             <Plus size={14} /> Kullanıcı Ekle
@@ -219,7 +219,7 @@ export function FirmAccessModal({ firm, allFirms, onClose }: Props) {
           </p>
           <div className="flex gap-2">
             <button onClick={() => setConfirmClear(false)} disabled={busy}
-              className="flex-1 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium">
+              className="btn-secondary flex-1 py-2 text-sm">
               Vazgeç
             </button>
             <button onClick={clearAll} disabled={busy}
@@ -403,7 +403,7 @@ function AddUsersSubmodal({
           )}
         </div>
 
-        <div className="flex gap-2 p-4 border-t border-surface-700">
+        <div className="modal-footer">
           <button onClick={onClose} disabled={submitting}
             className="flex-1 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium">
             Vazgeç

@@ -454,7 +454,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           <div className="flex gap-3 pt-2">
             {editing ? (
               <>
-                <button onClick={() => setEditing(false)} className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors">Vazgec</button>
+                <button onClick={() => setEditing(false)} className="btn-secondary flex-1 px-4 py-2.5 text-sm">Vazgec</button>
                 <button onClick={handleSave} disabled={saving || !editName}
                   className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Kaydet
@@ -462,7 +462,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
               </>
             ) : (
               <>
-                <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors">Kapat</button>
+                <button onClick={onClose} className="btn-secondary flex-1 px-4 py-2.5 text-sm">Kapat</button>
                 <button onClick={handleDelete} disabled={deleting}
                   className="px-4 py-2.5 bg-red-500/15 hover:bg-red-500/20 text-red-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
                   {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Sil

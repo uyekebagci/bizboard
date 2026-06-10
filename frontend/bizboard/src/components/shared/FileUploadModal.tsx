@@ -288,7 +288,7 @@ export function FileUploadModal({
           <div className="flex gap-3 pt-2">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium transition-colors"
+              className="btn-secondary flex-1 px-4 py-2.5 text-sm"
             >
               {uploaded ? "Kapat" : "Iptal"}
             </button>
