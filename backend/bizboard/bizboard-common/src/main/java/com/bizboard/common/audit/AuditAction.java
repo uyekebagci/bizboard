@@ -84,4 +84,10 @@ public final class AuditAction {
     public static final String POS_UNSETTLED               = "POS_UNSETTLED";
     public static final String HIGHLIGHT_POS_SETTLED       = "POS_SETTLED";
     public static final String HIGHLIGHT_POS_UNSETTLED     = "POS_UNSETTLED";
+
+    // ── Kategori (cat-be WP): gelir/gider kategori CRUD ───────────────────
+    public static final String CATEGORY_CREATE = "CATEGORY_CREATE";
+    public static final String CATEGORY_UPDATE = "CATEGORY_UPDATE";
+    /** Soft-delete: kategori pasif (active=false); bağlı tx'ler korunur. */
+    public static final String CATEGORY_DELETE = "CATEGORY_DELETE";
 }

@@ -8,7 +8,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,9 +29,12 @@ public class CreateTransactionRequest {
     private LocalDate date;
 
     @JsonProperty("category_id")
+    @NotNull
     private UUID categoryId;
 
-    private List<String> tags;
+    // cat-be WP: `tags` request alanı KALDIRILDI (server-side). Gelen JSON'da
+    // varsa Jackson tarafından sessizce yoksayılır; yeni tx'lerde yazılmaz.
+    // (DB kolonu ve eski veri korunur.)
 
     private Map<String, Object> metadata;
 
