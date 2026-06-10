@@ -11,6 +11,7 @@ import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.BankAccountService;
 import com.bizboard.service.BusinessAccessGuard;
+import com.bizboard.service.OperatorStatementService;
 import com.bizboard.service.SubCashAggregateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,9 @@ public class BankAccountController {
     private final BusinessAccessGuard accessGuard;
     // v1.6.23.27 (UI Fix WP TODO d884a0ec): MAIN/SUB için computed aggregate.
     private final SubCashAggregateService aggregateService;
+    // Ledger v2 (Faz C — BUG-2 görüntü): operatör kâr-merkezi (PROFIT_CENTER)
+    // SUB_CASH bakiyesi üye-aggregate değil POSTING-türetilmiş değerle gösterilir.
+    private final OperatorStatementService operatorStatementService;
 
     /**
      * v1.7.0 (prod-fix TODO lazy-init): @Transactional(readOnly=true) eklendi.
@@ -79,7 +83,16 @@ public class BankAccountController {
                             && b.getBusiness() != null) {
                         override = mainByBiz.get(b.getBusiness().getId());
                     } else if (b.getType() == com.bizboard.common.enums.BankAccountType.SUB_CASH) {
-                        override = subAgg.getOrDefault(b.getId(), java.math.BigDecimal.ZERO);
+                        // Ledger v2 (Faz C — BUG-2): operatör kâr-merkezi (PROFIT_CENTER)
+                        // hesabının bakiyesi üye-kasa aggregate'inden (0) DEĞİL,
+                        // POSTING-türetilmiş değerden gösterilir — kâr postingleri
+                        // SUB_CASH'e yazılıyor ama aggregate üye-hesaptan hesaplandığı
+                        // için 0 görünüyordu. Klasik AGGREGATE alt-kasalar değişmez.
+                        if (b.isProfitCenter()) {
+                            override = operatorStatementService.profitCenterBalance(b.getId());
+                        } else {
+                            override = subAgg.getOrDefault(b.getId(), java.math.BigDecimal.ZERO);
+                        }
                     }
                     return BankAccountService.toDto(b, override);
                 })

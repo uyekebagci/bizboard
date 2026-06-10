@@ -38,6 +38,27 @@ public class OperatorStatementService {
     private final BankAccountRepository bankAccountRepository;
     private final BusinessAccessGuard accessGuard;
 
+    /**
+     * Ledger v2 (Faz C — BUG-2 görüntü): bir operatör kâr-merkezi (PROFIT_CENTER)
+     * hesabının POSTING-TÜRETİLMİŞ bakiyesi.
+     *
+     * <p>SUB_CASH {@code current_balance} üye-hesap aggregate'inden hesaplandığı
+     * için operatör kâr-kasaları (üye hesabı yok) arayüzde 0 görünüyordu — hesap
+     * DOĞRU (kâr postingleri SUB_CASH'e yazılıyor), yalnız GÖSTERİM eksikti. Bu
+     * metot {@link #buildStatement} ile AYNI türetmeyi kullanır:</p>
+     * <pre>
+     *   bakiye = Σ(−posting.amount)   // kâr-merkezi KREDİ-NORMAL (kâr −, ödeme +)
+     * </pre>
+     * <p>FE bakiye gösterimi (PROFIT_CENTER tipinde) bu değeri kullanır; üye-kasa
+     * aggregate yerine. Σ=0 invariant'ı / current_balance facade'i etkilenmez.</p>
+     */
+    @Transactional(readOnly = true)
+    public BigDecimal profitCenterBalance(UUID accountId) {
+        if (accountId == null) return BigDecimal.ZERO;
+        BigDecimal sum = postingRepository.sumAmountByAccountId(accountId);
+        return (sum != null ? sum : BigDecimal.ZERO).negate();
+    }
+
     /** Bir işletmenin operatör kâr-merkezi (PROFIT_CENTER) hesapları. */
     @Transactional(readOnly = true)
     public List<BankAccount> profitCenters(UUID businessId) {
