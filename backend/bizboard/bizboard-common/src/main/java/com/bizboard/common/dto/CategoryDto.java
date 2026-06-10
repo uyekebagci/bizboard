@@ -18,6 +18,14 @@ public class CategoryDto {
 
     private String name;
     private String direction;
+
+    /**
+     * Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik —
+     * {@code BOTH} / {@code INCOME_ONLY} / {@code EXPENSE_ONLY}.
+     * İşlem formu o anki yöne göre kategorileri bununla süzer.
+     */
+    private String applicability;
+
     private String icon;
     private String color;
 

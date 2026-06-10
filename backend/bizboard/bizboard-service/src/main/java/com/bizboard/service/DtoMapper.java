@@ -151,6 +151,10 @@ public final class DtoMapper {
                 // Paylaşımlı (yön-bağımsız) model: direction NULL olabilir.
                 .direction(c.getDirection() != null
                         ? c.getDirection().name().toLowerCase(java.util.Locale.ENGLISH) : null)
+                // Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik (default BOTH).
+                .applicability(c.getApplicability() != null
+                        ? c.getApplicability().name()
+                        : com.bizboard.common.enums.CategoryApplicability.BOTH.name())
                 .icon(c.getIcon())
                 .color(c.getColor())
                 .sortOrder(c.getSortOrder())

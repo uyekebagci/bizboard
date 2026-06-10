@@ -25,6 +25,13 @@ public class CreateCategoryRequest {
      */
     private String direction;
 
+    /**
+     * Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik —
+     * {@code BOTH} (default) / {@code INCOME_ONLY} / {@code EXPENSE_ONLY}.
+     * Verilmez/geçersizse {@code BOTH} (paylaşımlı, kırılma yok).
+     */
+    private String applicability;
+
     private String icon;
 
     private String color;

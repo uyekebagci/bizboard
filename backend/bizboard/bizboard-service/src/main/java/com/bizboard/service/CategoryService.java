@@ -7,6 +7,7 @@ import com.bizboard.common.dto.UpdateCategoryRequest;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.Category;
 import com.bizboard.common.entity.User;
+import com.bizboard.common.enums.CategoryApplicability;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CategoryRepository;
 import com.bizboard.repository.UserRepository;
@@ -62,6 +63,9 @@ public class CategoryService {
                 .business(business)
                 .name(name)
                 .direction(null) // paylaşımlı (yön-bağımsız)
+                // Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik — default BOTH.
+                .applicability(parseApplicability(
+                        request.getApplicability(), CategoryApplicability.BOTH))
                 .icon(request.getIcon())
                 .color(request.getColor())
                 .sortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0)
@@ -110,6 +114,14 @@ public class CategoryService {
         if (request.getSortOrder() != null) {
             category.setSortOrder(request.getSortOrder());
         }
+        // Ledger v2 (Faz A, §3.9): tek-tarafa-kilit kullanıcı kararı (STRICT).
+        // Verilmezse mevcut değer korunur; geçersiz değer yok sayılır.
+        if (request.getApplicability() != null) {
+            CategoryApplicability appl = parseApplicability(request.getApplicability(), null);
+            if (appl != null) {
+                category.setApplicability(appl);
+            }
+        }
 
         category = categoryRepository.save(category);
 
@@ -144,6 +156,23 @@ public class CategoryService {
 
     // ───────── helpers ─────────
 
+    /**
+     * Ledger v2 (Faz A, §3.9): istemci string'ini {@link CategoryApplicability}'ye
+     * çevirir. Null/boş/geçersiz değerde {@code fallback} döner (validation
+     * yumuşak — STRICT kilit yalnız geçerli değerle uygulanır).
+     */
+    private CategoryApplicability parseApplicability(String raw, CategoryApplicability fallback) {
+        if (raw == null || raw.isBlank()) {
+            return fallback;
+        }
+        try {
+            return CategoryApplicability.valueOf(raw.trim().toUpperCase(java.util.Locale.ENGLISH));
+        } catch (IllegalArgumentException e) {
+            log.warn("[category] gecersiz applicability='{}' — fallback={}", raw, fallback);
+            return fallback;
+        }
+    }
+
     private void recordAudit(String action, UUID userId, UUID businessId,
                              String businessName, Category category, String detail) {
         User user = userRepository.findById(userId).orElse(null);
@@ -157,6 +186,8 @@ public class CategoryService {
                         "categoryName", category.getName(),
                         "direction", category.getDirection() != null
                                 ? category.getDirection().name() : "SHARED",
+                        "applicability", category.getApplicability() != null
+                                ? category.getApplicability().name() : "BOTH",
                         "active", category.isActive()
                 ));
     }

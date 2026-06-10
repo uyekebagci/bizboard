@@ -123,11 +123,24 @@ export interface BusinessModule {
   created_at: string;
 }
 
+/**
+ * Ledger v2 (Faz A, §3.9): kategori hibrit uygulanabilirliği.
+ * BOTH (paylaşımlı, default) / INCOME_ONLY / EXPENSE_ONLY.
+ */
+export type CategoryApplicability = "BOTH" | "INCOME_ONLY" | "EXPENSE_ONLY";
+
 export interface Category {
   id: string;
   business_id: string;
   name: string;
+  /** @deprecated paylaşımlı modelde yön-bağımsız; applicability kullanın. */
   direction: TransactionDirection;
+  /**
+   * Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik. İşlem formu o anki yöne
+   * göre kategorileri bununla süzer (BOTH her zaman + yöne uygun olan).
+   * Eski API'lerde alan yoksa BOTH varsayılır.
+   */
+  applicability?: CategoryApplicability;
   icon: string | null;
   color: string | null;
   sort_order: number;

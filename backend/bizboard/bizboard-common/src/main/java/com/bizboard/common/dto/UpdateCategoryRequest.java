@@ -15,6 +15,13 @@ public class UpdateCategoryRequest {
 
     private String name;
 
+    /**
+     * Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik güncellemesi —
+     * {@code BOTH} / {@code INCOME_ONLY} / {@code EXPENSE_ONLY}. Verilmezse
+     * mevcut değer korunur. Tek-tarafa-kilit kullanıcı kararıdır (STRICT).
+     */
+    private String applicability;
+
     private String icon;
 
     private String color;
