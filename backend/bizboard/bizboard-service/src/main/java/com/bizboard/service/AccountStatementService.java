@@ -49,6 +49,27 @@ public class AccountStatementService {
         return amountConverter.toTry(d, base);
     }
 
+    /**
+     * WP currency-display: borcun ORİJİNAL cinsindeki kalan tutarı.
+     *
+     * <p>{@code original_amount} kaynak gerçeğidir (USD adedi / gram altın).
+     * Kalan, TL bazlı remaining/amount oranıyla orantılanır — kısmi ödemede
+     * orijinal cinste kalan da doğru daralır. original yoksa (legacy) null.</p>
+     */
+    private BigDecimal remainingOriginal(Debt d) {
+        BigDecimal original = d.getOriginalAmount();
+        if (original == null) return null;
+        BigDecimal amountTl = d.getAmount();
+        BigDecimal remTl = d.getRemainingAmount();
+        // Oran hesaplanamıyorsa (amount yok/0 veya remaining null) tam original döner.
+        if (amountTl == null || amountTl.signum() == 0 || remTl == null
+                || remTl.compareTo(amountTl) == 0) {
+            return original;
+        }
+        BigDecimal ratio = remTl.divide(amountTl, 8, java.math.RoundingMode.HALF_UP);
+        return original.multiply(ratio).setScale(4, java.math.RoundingMode.HALF_UP);
+    }
+
     @Transactional(readOnly = true)
     public AccountStatementDto getAccountStatement(UUID counterpartId, LocalDate from, LocalDate to,
                                                     UUID actorUserId) {
@@ -139,6 +160,10 @@ public class AccountStatementService {
                     // USD/GOLD → güncel kurla TL (stale amount yerine). TRY aynen.
                     .originalAmount(amountConverter.fullToTry(d))
                     .remainingAmount(remainingTry(d))
+                    // WP currency-display: orijinal cinsteki tutarlar (gösterim için).
+                    .currency(d.getCurrency())
+                    .originalCurrencyAmount(d.getOriginalAmount())
+                    .remainingCurrencyAmount(remainingOriginal(d))
                     .status(d.getStatus())
                     .dueDate(d.getDueDate())
                     .description(d.getDescription())

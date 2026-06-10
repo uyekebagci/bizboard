@@ -77,6 +77,123 @@ export function maskAmount(
   return `${symbol}${CENSOR_MASK}`;
 }
 
+/**
+ * WP currency-display: gram altın ağırlık formatı — TEK kaynak.
+ *
+ * <p>1000 grama ulaşınca "kg"a geçer; altında "gram" kalır. Tutar tr-TR
+ * binlik/ondalık ayraçla yazılır.</p>
+ *
+ * <ul>
+ *   <li>999  → "999 gram"</li>
+ *   <li>1000 → "1 kg"</li>
+ *   <li>1500 → "1,5 kg"</li>
+ *   <li>2350 → "2,35 kg"</li>
+ * </ul>
+ *
+ * @param grams gram cinsinden ağırlık (pozitif beklenir)
+ */
+export function formatGoldWeight(
+  grams: number | null | undefined,
+  locale: string = "tr-TR",
+): string {
+  const g = typeof grams === "number" ? grams : Number(grams);
+  if (g == null || !isFinite(g)) return "—";
+  if (Math.abs(g) >= 1000) {
+    const kg = g / 1000;
+    // kg değerini en fazla 3 ondalıkla göster (gram hassasiyeti korunur), gereksiz sıfır atılır.
+    const formatted = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3,
+    }).format(kg);
+    return `${formatted} kg`;
+  }
+  // 1000 altı: gram — ondalık varsa en fazla 2 hane göster.
+  const formatted = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(g);
+  return `${formatted} gram`;
+}
+
+/** WP currency-display: borcun orijinal cinsi GOLD/altın mı? */
+export function isGoldCurrency(currency: string | null | undefined): boolean {
+  if (!currency) return false;
+  const c = currency.toUpperCase();
+  return c === "GOLD" || c.startsWith("GOLD_");
+}
+
+/**
+ * WP currency-display: borç tutarını ORİJİNAL para biriminde formatla — TEK kaynak.
+ *
+ * <ul>
+ *   <li>USD → "$40.000" (en-US sembol + tr-TR binlik gösterimi yerine Intl USD)</li>
+ *   <li>GOLD → {@link formatGoldWeight} ("999 gram" / "1,5 kg")</li>
+ *   <li>TRY / bilinmeyen → {@link formatCurrency} (₺)</li>
+ * </ul>
+ *
+ * <p>Bu sadece GÖSTERİM içindir; TL toplama her zaman çevrilmiş amount eklenir.</p>
+ */
+export function formatOriginalAmount(
+  amount: number | null | undefined,
+  currency: string | null | undefined,
+  locale: string = "tr-TR",
+): string {
+  const n = typeof amount === "number" ? amount : Number(amount);
+  if (n == null || !isFinite(n)) return "—";
+  if (isGoldCurrency(currency)) return formatGoldWeight(n, locale);
+  const c = (currency || "TRY").toUpperCase();
+  if (c === "TRY") return formatCurrency(n, "TRY", locale);
+  // USD ve diğer ISO döviz kodları → Intl currency (sembol + locale binlik).
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: c,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(n);
+  } catch {
+    // Geçersiz/desteklenmeyen kod → kod + sayı.
+    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(n)} ${c}`;
+  }
+}
+
+/**
+ * WP currency-display: TL toplamının USD karşılığını formatla.
+ *
+ * @param tryTotal   TL toplam (>= 0 beklenir; negatifte mutlak değer)
+ * @param usdRate    1 USD = ? TL (ExchangeRate.rate_to_try). null/0 → null döner.
+ * @returns "$1.234" gibi formatlı string, kur yoksa null.
+ */
+export function usdEquivalent(
+  tryTotal: number,
+  usdRate: number | null | undefined,
+  locale: string = "tr-TR",
+): string | null {
+  const rate = typeof usdRate === "number" ? usdRate : Number(usdRate);
+  if (!rate || !isFinite(rate) || rate <= 0) return null;
+  const usd = tryTotal / rate;
+  return formatOriginalAmount(usd, "USD", locale);
+}
+
+/**
+ * WP currency-display: TL toplamının gram altın karşılığını formatla.
+ *
+ * @param tryTotal  TL toplam (>= 0 beklenir; negatifte mutlak değer)
+ * @param gramRate  1 gram altın = ? TL (ExchangeRate.rate_to_try, code=GOLD).
+ *                  null/0 → null döner (altın fiyatı kaynağı yoksa placeholder).
+ * @returns "1,5 kg" / "999 gram" gibi string, kur yoksa null.
+ */
+export function goldEquivalent(
+  tryTotal: number,
+  gramRate: number | null | undefined,
+  locale: string = "tr-TR",
+): string | null {
+  const rate = typeof gramRate === "number" ? gramRate : Number(gramRate);
+  if (!rate || !isFinite(rate) || rate <= 0) return null;
+  const grams = tryTotal / rate;
+  return formatGoldWeight(grams, locale);
+}
+
 // Format compact number (e.g., 1.2M, 450K)
 export function formatCompact(amount: number): string {
   if (Math.abs(amount) >= 1_000_000) {

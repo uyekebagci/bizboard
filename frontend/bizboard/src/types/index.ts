@@ -1248,8 +1248,20 @@ export interface AccountStatement {
   open_debts: Array<{
     id: string;
     direction: "RECEIVABLE" | "PAYABLE";
+    /** GÜNCEL kurla TL tam tutar (totals/ödeme için — geriye uyumlu). */
     original_amount: number;
+    /** GÜNCEL kurla TL kalan tutar (totals/ödeme için — geriye uyumlu). */
     remaining_amount: number;
+    /**
+     * WP currency-display: borcun orijinal para birimi (TRY/USD/GOLD).
+     * Gösterim için: USD borç "$40.000", GOLD "gram/kg". TL toplama
+     * çevrilmiş haliyle ({@link original_amount}) eklenmeye devam eder.
+     */
+    currency?: string | null;
+    /** WP currency-display: orijinal cinsindeki tam tutar (USD adedi / gram). */
+    original_currency_amount?: number | null;
+    /** WP currency-display: orijinal cinsindeki kalan tutar. */
+    remaining_currency_amount?: number | null;
     status: DebtStatus;
     due_date?: string | null;
     description?: string | null;

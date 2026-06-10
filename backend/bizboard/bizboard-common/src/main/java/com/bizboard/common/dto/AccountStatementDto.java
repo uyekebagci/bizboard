@@ -81,8 +81,23 @@ public class AccountStatementDto {
     public static class OpenDebt {
         private UUID id;
         private String direction;
+        /** GÜNCEL kurla TL tam tutar (totals/ödeme baz alır — geriye uyumlu). */
         @JsonProperty("original_amount") private BigDecimal originalAmount;
+        /** GÜNCEL kurla TL kalan tutar (totals/ödeme baz alır — geriye uyumlu). */
         @JsonProperty("remaining_amount") private BigDecimal remainingAmount;
+        /**
+         * WP currency-display: borcun orijinal para birimi (TRY/USD/GOLD).
+         * Gösterim için — USD borç "$40.000", GOLD gram/kg gösterilir; TL toplama
+         * çevrilmiş {@link #originalAmount} eklenmeye devam eder.
+         */
+        private String currency;
+        /** WP currency-display: orijinal cinsindeki tam tutar (USD adedi / gram altın). */
+        @JsonProperty("original_currency_amount") private BigDecimal originalCurrencyAmount;
+        /**
+         * WP currency-display: orijinal cinsindeki kalan tutar. remaining/amount
+         * oranı korunarak {@code originalCurrencyAmount}'tan türetilir.
+         */
+        @JsonProperty("remaining_currency_amount") private BigDecimal remainingCurrencyAmount;
         private String status;
         @JsonProperty("due_date") private LocalDate dueDate;
         private String description;

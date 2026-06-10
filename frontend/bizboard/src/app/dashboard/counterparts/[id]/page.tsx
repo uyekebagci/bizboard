@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, formatOriginalAmount, isGoldCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import type {
@@ -576,6 +576,11 @@ function DebtListTab({
     <div className="glass-card divide-y divide-surface-700">
       {debts.map((d) => {
         const isPartial = d.remaining_amount < d.original_amount && d.remaining_amount > 0;
+        // WP currency-display: USD/GOLD borç → orijinal cinsi göster (kaç bin dolar /
+        // kaç gram altın). TL toplama yine çevrilmiş remaining_amount eklenir.
+        const isForeign = !!d.currency && d.currency.toUpperCase() !== "TRY";
+        const remOriginal = d.remaining_currency_amount ?? d.original_currency_amount ?? null;
+        const fullOriginal = d.original_currency_amount ?? null;
         return (
           <div key={d.id} className="p-3 flex items-center gap-3">
             <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
@@ -590,14 +595,37 @@ function DebtListTab({
                     Kısmi
                   </span>
                 )}
+                {/* Döviz/altın rozeti — orijinal cinsi belirt. */}
+                {isForeign && (
+                  <span className={cn(
+                    "ml-2 text-[10px] px-1.5 py-0.5 rounded border",
+                    isGoldCurrency(d.currency)
+                      ? "bg-yellow-500/15 text-yellow-300 border-yellow-500/30"
+                      : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+                  )}>
+                    {isGoldCurrency(d.currency) ? "Altın" : (d.currency || "").toUpperCase()}
+                  </span>
+                )}
               </p>
-              <p className="text-[11px] text-surface-400">
-                Kalan: <span className={cn("font-semibold", tone === "positive" ? "text-emerald-300" : "text-red-300")}>
-                  {formatCurrency(d.remaining_amount, "TRY")}
-                </span>
-                {isPartial && ` · Orijinal ${formatCurrency(d.original_amount, "TRY")}`}
-                {` · Vade ${d.due_date ? formatDate(d.due_date) : "belli değil"}`}
-              </p>
+              {/* USD/GOLD borçta orijinal cinsteki tutar ÖNDE/öne çıkar; TL karşılığı yanında. */}
+              {isForeign && remOriginal != null ? (
+                <p className="text-[11px] text-surface-400">
+                  Kalan: <span className={cn("font-semibold", tone === "positive" ? "text-emerald-300" : "text-red-300")}>
+                    {formatOriginalAmount(remOriginal, d.currency)}
+                  </span>
+                  <span className="text-surface-500"> ({formatCurrency(d.remaining_amount, "TRY")})</span>
+                  {isPartial && fullOriginal != null && ` · Orijinal ${formatOriginalAmount(fullOriginal, d.currency)}`}
+                  {` · Vade ${d.due_date ? formatDate(d.due_date) : "belli değil"}`}
+                </p>
+              ) : (
+                <p className="text-[11px] text-surface-400">
+                  Kalan: <span className={cn("font-semibold", tone === "positive" ? "text-emerald-300" : "text-red-300")}>
+                    {formatCurrency(d.remaining_amount, "TRY")}
+                  </span>
+                  {isPartial && ` · Orijinal ${formatCurrency(d.original_amount, "TRY")}`}
+                  {` · Vade ${d.due_date ? formatDate(d.due_date) : "belli değil"}`}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <button onClick={() => onEdit(d)}

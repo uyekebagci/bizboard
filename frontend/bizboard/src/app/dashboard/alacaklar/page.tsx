@@ -23,6 +23,8 @@ import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart, Busines
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 import { NotesModule } from "@/components/business/NotesModule";
 import { ExchangeRateBar } from "@/components/debts/ExchangeRateBar";
+import { CurrencyEquivalentLine } from "@/components/debts/CurrencyEquivalentLine";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
 
@@ -99,6 +101,9 @@ export default function AlacaklarPage() {
 
   const total = rows.reduce((a, r) => a + (r.total_amount || 0), 0);
   const totalCount = rows.reduce((a, r) => a + (r.count || 0), 0);
+
+  // WP currency-display: TL toplamın USD + gram altın karşılığı için güncel kur.
+  const { usdRate, goldRate } = useExchangeRates();
 
   const sorted = useMemo(() => {
     const out = [...rows];
@@ -179,7 +184,15 @@ export default function AlacaklarPage() {
               <div className="glass-card p-4">
                 <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <p className={cn("text-2xl font-bold text-amber-300", censorCls)}>
+                  {/* Ek istek: alacaklı (pozitif) → yeşil; 0 → nötr; negatif → uyarı (kırmızı).
+                      İşaret-bazlı renk, çift tema uyumlu (emerald/red-300 hem dark hem light okunaklı). */}
+                  <p className={cn(
+                    "text-2xl font-bold",
+                    total > 0 ? "text-emerald-400"
+                      : total < 0 ? "text-red-400"
+                      : "text-surface-200",
+                    censorCls,
+                  )}>
                     {maskAmount(total, censored, "TRY")}
                   </p>
                   {/* Sansür toggle (privacy) — maskelenen tutarın hemen yanında. */}
@@ -193,6 +206,13 @@ export default function AlacaklarPage() {
                     {censored ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {/* WP currency-display: TL toplamın altında USD + gram altın karşılığı. */}
+                <CurrencyEquivalentLine
+                  tryTotal={Math.abs(total)}
+                  usdRate={usdRate}
+                  goldRate={goldRate}
+                  censored={censored}
+                />
               </div>
               <div className="glass-card p-4">
                 <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>

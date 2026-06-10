@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users, Plus, Pencil, Trash2, X, Search, ArrowRight,
-  CircleUserRound, Package, RefreshCw, ArrowLeft,
+  CircleUserRound, Package, RefreshCw, ArrowLeft, Loader2,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -13,6 +13,9 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { Counterpart, CounterpartRole, Business } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { CurrencyEquivalentLine } from "@/components/debts/CurrencyEquivalentLine";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { useAppStore } from "@/lib/store";
 
 // ── Role helpers ─────────────────────────────────────────
 const ROLES: { value: CounterpartRole; label: string; badge: string; icon: typeof CircleUserRound }[] = [
@@ -91,6 +94,11 @@ export default function CounterpartsPage() {
   const [businessFilter, setBusinessFilter] = useState<string>("ALL");
   const [groupBy, setGroupBy] = useState<"business" | "none">("business");
 
+  // WP currency-display: güncel kur (USD + gram altın karşılığı) + "Kuru Güncelle".
+  // Mevcut mekanizma (ExchangeRateBar ile aynı endpoint) — yeni mantık icat edilmez.
+  const { triggerRefresh } = useAppStore();
+  const { usdRate, goldRate, refreshing, onCooldown, refresh } = useExchangeRates();
+
   useEffect(() => {
     api.get<Business[]>("/businesses")
       .then((r) => {
@@ -137,6 +145,13 @@ export default function CounterpartsPage() {
     }
     return out;
   }, [list, search, businessFilter]);
+
+  // WP currency-display: Cari Hesap toplam tutarı — net cari bakiyelerin toplamı
+  // (filtreye saygı duyar). İşaretli: pozitif = net alacaklı, negatif = net borçlu.
+  const netTotal = useMemo(
+    () => filtered.reduce((a, c) => a + (c.current_balance ?? 0), 0),
+    [filtered],
+  );
 
   // v1.7.x: gruplama — businessId → counterpart[]
   const grouped = useMemo(() => {
@@ -270,6 +285,45 @@ export default function CounterpartsPage() {
         <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
           {error}
         </div>
+      )}
+
+      {/* WP currency-display: Cari toplam + USD/gram-altın karşılığı + Kuru Güncelle.
+          Toplam tutarın ALTINA daha küçük fontla karşılıklar (alacaklar deseniyle aynı). */}
+      {!loading && filtered.length > 0 && (
+        <section className="glass-card p-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] text-surface-400 uppercase tracking-wider">
+              {netTotal >= 0 ? "Toplam Net Alacak" : "Toplam Net Verecek"}
+            </p>
+            {/* İşaret-bazlı renk: pozitif (alacaklı) → yeşil; 0 → nötr; negatif → uyarı. */}
+            <p className={cn(
+              "mt-1 text-2xl font-bold",
+              netTotal > 0 ? "text-emerald-400"
+                : netTotal < 0 ? "text-red-400"
+                : "text-surface-200",
+            )}>
+              {formatCurrency(Math.abs(netTotal), "TRY")}
+            </p>
+            {/* TL toplamın altında USD + gram altın karşılığı. */}
+            <CurrencyEquivalentLine
+              tryTotal={Math.abs(netTotal)}
+              usdRate={usdRate}
+              goldRate={goldRate}
+            />
+          </div>
+          {/* "Kuru Güncelle" — mevcut mekanizma (canlı kur çek + bakiyeleri recompute).
+              Cooldown'lu (arka arkaya basışı engelle); başarınca cari listesini tazele. */}
+          <button
+            type="button"
+            onClick={() => refresh(() => { triggerRefresh(); fetchList(); })}
+            disabled={refreshing || onCooldown}
+            title={onCooldown ? "Az önce güncellendi — biraz bekleyin" : "Canlı kuru çek ve bakiyeleri güncelle"}
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            Kuru Güncelle
+          </button>
+        </section>
       )}
 
       {/* Filters */}
