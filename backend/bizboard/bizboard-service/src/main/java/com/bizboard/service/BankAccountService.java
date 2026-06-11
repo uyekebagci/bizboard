@@ -533,6 +533,56 @@ public class BankAccountService {
         return mainCash;
     }
 
+    /**
+     * BUG-3: Yeni işletmeye sistem "Genel Nakit" ({@code is_system=true},
+     * {@code CASH_HOLDER}) hesabını oluşturur — İDEMPOTENT. Bu hesap NAKIT (ve POS
+     * gelir) tx'lerinin bank_account_id boş geldiğinde route edildiği varsayılan
+     * kasadır ({@link TransactionMutationService} + {@link LedgerPostingService}
+     * fallback'leri {@code is_system && CASH_HOLDER} filtreler). Hesap yoksa NAKIT
+     * tx'ler {@code account=NULL} kalıyor, posting türetilemiyor (FLAGGED) → gün-
+     * kapanışı/mutabakata girmiyordu.
+     *
+     * <p>İdempotent: business için zaten bir sistem CASH_HOLDER varsa yeniden
+     * oluşturmaz (mevcut olanı döner). {@code holder_person_id}/holderName
+     * sistem hesapta NULL olabilir (entity validation izin verir).</p>
+     *
+     * @return mevcut ya da yeni oluşturulan sistem "Genel Nakit" CASH_HOLDER.
+     */
+    @Transactional
+    public BankAccount createSystemCashHolderForBusiness(Business business, UUID actorUserId) {
+        BankAccount existing = repository
+                .findByBusinessIdAndTypeOrderByNameAsc(business.getId(), BankAccountType.CASH_HOLDER)
+                .stream()
+                .filter(BankAccount::isSystem)
+                .findFirst()
+                .orElse(null);
+        if (existing != null) {
+            return existing; // idempotent — no-op
+        }
+        BankAccount genelNakit = BankAccount.builder()
+                .business(business)
+                .name("Genel Nakit")
+                .type(BankAccountType.CASH_HOLDER)
+                .system(true)
+                .currency("TRY")
+                .currentBalance(BigDecimal.ZERO)
+                .active(true)
+                .build();
+        genelNakit = repository.save(genelNakit);
+
+        User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+        auditLogService.recordEntityAction(
+                "BANK_ACCOUNT_CREATED",
+                actorUserId, actor != null ? actor.getUsername() : null,
+                "BANK_ACCOUNT", genelNakit.getId(),
+                "Genel Nakit (sistem) otomatik olusturuldu — isletme: " + business.getName(),
+                Map.of("auto", true, "type", "CASH_HOLDER", "system", true,
+                        "businessId", business.getId().toString()));
+        log.info("System CASH_HOLDER 'Genel Nakit' auto-created for business={} id={}",
+                business.getName(), genelNakit.getId());
+        return genelNakit;
+    }
+
     // ───────────────────────── DETAIL (v1.6.23.19) ─────────────────────────
 
     /**

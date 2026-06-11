@@ -180,6 +180,12 @@ public class BusinessService {
         // (örn. retry race) deny edilir; bu yüzden ek try-catch'e gerek yok.
         bankAccountService.createMainCashForBusiness(business, owner.getId());
 
+        // BUG-3: ayrıca sistem "Genel Nakit" CASH_HOLDER hesabını seed et (idempotent).
+        // NAKIT/POS-gelir tx'leri bank_account_id boş geldiğinde buraya route edilir;
+        // hesap yoksa account=NULL kalıp posting türetilemiyor (FLAGGED) → gün-kapanışı/
+        // mutabakata girmiyordu. Aynı transaction içinde — atomik.
+        bankAccountService.createSystemCashHolderForBusiness(business, owner.getId());
+
         // v1.5.7: yeni wizard manuel akışı — setup_costs[] ve monthly_fixed_costs[]
         // her ikisi de aynı transaction içinde üretilir; biri patlarsa rollback.
         int wizardSetupTxs = 0;
