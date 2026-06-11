@@ -107,11 +107,15 @@ public class AdminManualSendService {
                 }
                 String html = buildHtml(title, body);
                 for (String chatId : chatIds) {
-                    NotificationChannelBinding binding = bindingRepository
+                    // findByChannelAndExternalIdAndVerifiedTrue returns List to avoid
+                    // IncorrectResultSizeDataAccessException: the same group chat can be
+                    // bound by multiple users (unique constraint is on user_id+channel, not
+                    // on channel+external_id). An empty list means unknown/unverified chat.
+                    boolean verified = !bindingRepository
                             .findByChannelAndExternalIdAndVerifiedTrue(
                                     NotificationChannelType.TELEGRAM, chatId)
-                            .orElse(null);
-                    if (binding == null) {
+                            .isEmpty();
+                    if (!verified) {
                         telegramTargets.add(target(chatId, "UNKNOWN_TARGET"));
                         failed++;
                         continue;
