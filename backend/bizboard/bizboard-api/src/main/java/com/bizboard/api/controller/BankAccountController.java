@@ -59,11 +59,23 @@ public class BankAccountController {
     @GetMapping
     public ResponseEntity<List<BankAccountDto>> list(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(name = "include_inactive", defaultValue = "false") boolean includeInactive) {
+            @RequestParam(name = "include_inactive", defaultValue = "false") boolean includeInactive,
+            @RequestParam(name = "business_id", required = false) UUID businessId) {
         // v1.6.23.19 (Security WP TODO 809834ef): multi-tenant filter.
         List<UUID> allowed = accessGuard.accessibleBusinessIds(principal.getId());
         if (allowed.isEmpty()) {
             return ResponseEntity.ok(List.of());
+        }
+        // bug 0a0709e6: business_id param eskiden YOKSAYILIYORDU — kullanıcı bir
+        // işletme seçse bile tüm erişilebilir işletmelerin hesapları dönüyordu
+        // (counterparts-leak deseni). Param verildiyse o tek işletmeye daralt;
+        // erişim accessGuard üzerinden kontrol edilir (cross-tenant fish → boş liste,
+        // existence reveal kapalı).
+        if (businessId != null) {
+            if (!allowed.contains(businessId)) {
+                return ResponseEntity.ok(List.of());
+            }
+            allowed = List.of(businessId);
         }
         List<BankAccount> all = includeInactive
                 ? repository.findByBusinessIdInOrderByActiveDescNameAsc(allowed)
