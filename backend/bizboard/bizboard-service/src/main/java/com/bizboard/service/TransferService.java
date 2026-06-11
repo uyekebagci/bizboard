@@ -5,12 +5,15 @@ import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.common.dto.TransferDto;
 import com.bizboard.common.entity.BankAccount;
 import com.bizboard.common.entity.Business;
+import com.bizboard.common.entity.Category;
 import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.BankAccountType;
+import com.bizboard.common.enums.CategoryApplicability;
 import com.bizboard.common.enums.TransactionDirection;
 import com.bizboard.common.enums.TransactionKind;
 import com.bizboard.repository.BankAccountRepository;
+import com.bizboard.repository.CategoryRepository;
 import com.bizboard.repository.TransactionRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +58,7 @@ public class TransferService {
     private final TransactionRepository transactionRepository;
     private final BankAccountRepository bankAccountRepository;
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
     // Ledger v2 (Faz A): transfer tx'leri için senkron çift-giriş Posting türetme.
@@ -65,6 +69,17 @@ public class TransferService {
     /** Transfer kaynağı/hedefi olamayacak tipler. */
     private static final EnumSet<BankAccountType> INELIGIBLE_TYPES =
             EnumSet.of(BankAccountType.MAIN_CASH, BankAccountType.SUB_CASH);
+
+    /**
+     * Transfer tx'lerinin (kind=TRANSFER) sistem kategorisi. {@code transactions.category_id}
+     * NOT NULL kısıtını ({@link CategoryRequiredMigrationRunner}) karşılamak için zorunlu —
+     * eski kod transfer tx'lerini {@code category=null} ile yaratıyordu, NOT NULL ihlali
+     * commit anında {@code UnexpectedRollbackException}'a yol açıp internal transfer'i 500
+     * yapıyordu. Posting türetiminde TRANSFER yalnız {@code LOCATION_MOVE} bacağı üretir →
+     * bu kategori P&L (Net Kâr) kırılımına GİRMEZ; raporlar {@code kind!=NORMAL} ile zaten
+     * dışlar. {@link LoanService#CATEGORY_LOAN} ile aynı desen.
+     */
+    public static final String CATEGORY_TRANSFER = "Transfer (Hesaplar Arası)";
 
     @Transactional
     public TransferDto create(CreateTransferRequest req, UUID actorUserId) {
@@ -144,6 +159,8 @@ public class TransferService {
         String currency = java.util.Optional.ofNullable(from.getCurrency()).orElse("TRY");
         String description = req.getDescription();
         BigDecimal amount = req.getAmount();
+        // transactions.category_id NOT NULL → sistem "Transfer" kategorisi (P&L'e girmez).
+        Category transferCategory = resolveTransferCategory(business);
 
         // OUT tx (kaynak — direction=EXPENSE, kind=TRANSFER)
         Transaction outTx = Transaction.builder()
@@ -155,6 +172,7 @@ public class TransferService {
                 .currency(currency)
                 .description(description)
                 .date(req.getDate())
+                .category(transferCategory)
                 .paymentMethod("HESAPDAN")
                 .bankAccount(from)
                 .createdBy(actor)
@@ -171,6 +189,7 @@ public class TransferService {
                 .currency(currency)
                 .description(description)
                 .date(req.getDate())
+                .category(transferCategory)
                 .paymentMethod("HESAPDAN")
                 .bankAccount(to)
                 .createdBy(actor)
@@ -347,6 +366,8 @@ public class TransferService {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("external_target", externalName);
         metadata.put("transfer_mode", "external");
+        // transactions.category_id NOT NULL → sistem "Transfer" kategorisi (P&L'e girmez).
+        Category transferCategory = resolveTransferCategory(business);
 
         // Tek OUT tx — pair_id NULL (paired değil)
         Transaction outTx = Transaction.builder()
@@ -358,6 +379,7 @@ public class TransferService {
                 .currency(currency)
                 .description(description)
                 .date(req.getDate())
+                .category(transferCategory)
                 .paymentMethod("HESAPDAN")
                 .bankAccount(from)
                 .metadata(metadata)
@@ -414,6 +436,25 @@ public class TransferService {
     }
 
     // ─────────────────────── helpers ───────────────────────
+
+    /**
+     * Transfer tx'i için sistem kategorisi lookup-or-create (idempotent),
+     * {@link LoanService#resolveLoanCategory} ile aynı desen. {@code transactions.category_id}
+     * NOT NULL kısıtını karşılar; {@code BOTH} applicability (OUT=gider yönü, IN=gelir yönü).
+     * TRANSFER posting'i P&L bacağı üretmediği için bu kategori Net Kâr kırılımına yansımaz.
+     */
+    private Category resolveTransferCategory(Business business) {
+        return categoryRepository
+                .findFirstByBusinessIdAndNameIgnoreCaseAndActiveTrue(business.getId(), CATEGORY_TRANSFER)
+                .orElseGet(() -> {
+                    Category c = new Category();
+                    c.setBusiness(business);
+                    c.setName(CATEGORY_TRANSFER);
+                    c.setApplicability(CategoryApplicability.BOTH);
+                    c.setActive(true);
+                    return categoryRepository.save(c);
+                });
+    }
 
     /**
      * Ledger v2 (Faz A): bir transfer tx'i için dengeli Posting'i senkron türetir.
