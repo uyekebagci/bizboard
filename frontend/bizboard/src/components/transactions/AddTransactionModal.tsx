@@ -11,13 +11,14 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Receipt, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react";
+import { X, Receipt, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, HandCoins } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { cn } from "@/lib/utils";
 import { AddTransactionForm } from "./AddTransactionForm";
 import { TransferForm } from "./TransferForm";
+import { LoanForm } from "./LoanForm";
 
-type Tab = "income" | "expense" | "transfer";
+type Tab = "income" | "expense" | "transfer" | "loan";
 
 interface Props {
   open: boolean;
@@ -66,6 +67,7 @@ export function AddTransactionModal({
   if (!open || !mounted) return null;
 
   const isTransfer = tab === "transfer";
+  const isLoan = tab === "loan";
 
   // v1.7.x hotfix: Modal'ı document.body'ye PORTAL ediyoruz.
   // Önceden modal, ata <section className="glass-card"> içinde render
@@ -101,8 +103,8 @@ export function AddTransactionModal({
           </button>
         </div>
 
-        {/* v1.7.0-beta: 3'lü toggle */}
-        <div className="px-4 py-2 border-b border-surface-700 shrink-0 grid grid-cols-3 gap-2">
+        {/* v1.7.0-beta: 3'lü toggle. Çatı v1.2: + Borç (verilen/alınan). */}
+        <div className="px-4 py-2 border-b border-surface-700 shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2">
           <TabBtn
             active={tab === "income"}
             onClick={() => setTab("income")}
@@ -124,6 +126,13 @@ export function AddTransactionModal({
             icon={<ArrowLeftRight size={14} />}
             label="Transfer"
           />
+          <TabBtn
+            active={tab === "loan"}
+            onClick={() => setTab("loan")}
+            tone="amber"
+            icon={<HandCoins size={14} />}
+            label="Borç"
+          />
         </div>
 
         <div className="overflow-y-auto flex-1 p-4">
@@ -131,6 +140,16 @@ export function AddTransactionModal({
             <TransferForm
               compact
               preselectedFromId={preselectedTransferFromId}
+              onCancel={onClose}
+              onSuccess={() => {
+                onSuccess?.();
+                onClose();
+              }}
+            />
+          ) : isLoan ? (
+            <LoanForm
+              compact
+              businessId={businessId}
               onCancel={onClose}
               onSuccess={() => {
                 onSuccess?.();
@@ -162,7 +181,7 @@ function TabBtn({
 }: {
   active: boolean;
   onClick: () => void;
-  tone: "emerald" | "red" | "blue";
+  tone: "emerald" | "red" | "blue" | "amber";
   icon: React.ReactNode;
   label: string;
 }) {
@@ -170,6 +189,7 @@ function TabBtn({
     emerald: "bg-emerald-500/15 border-emerald-500/50 text-emerald-300",
     red:     "bg-red-500/15 border-red-500/50 text-red-300",
     blue:    "bg-blue-500/15 border-blue-500/50 text-blue-300",
+    amber:   "bg-amber-500/15 border-amber-500/50 text-amber-300",
   }[tone];
   return (
     <button
