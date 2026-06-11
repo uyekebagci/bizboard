@@ -10,8 +10,10 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 
@@ -109,6 +111,28 @@ public class GlobalExceptionHandler {
             builder.allow(e.getSupportedHttpMethods().toArray(new org.springframework.http.HttpMethod[0]));
         }
         return builder.body(Map.of("message", "Bu kaynak icin '" + e.getMethod() + "' metodu desteklenmiyor"));
+    }
+
+    /**
+     * Zorunlu query/path parametresi eksik (ör. business_id gönderilmedi) → 400.
+     * Yakalanmazsa Spring generic 500'e düşürür.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, String>> handleMissingParam(
+            MissingServletRequestParameterException e) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", "Zorunlu parametre eksik: " + e.getParameterName()));
+    }
+
+    /**
+     * Query/path parametresi yanlış tipte (ör. geçersiz UUID formatı) → 400.
+     * Yakalanmazsa generic 500'e düşer.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, String>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException e) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", "Gecersiz parametre degeri: " + e.getName()));
     }
 
     /**
