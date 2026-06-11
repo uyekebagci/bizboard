@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users, Plus, Pencil, Trash2, X, Search, ArrowRight,
@@ -177,65 +177,30 @@ export default function CounterpartsPage() {
     return ordered;
   }, [filtered, groupBy, businessFilter, businesses]);
 
+  // Performans (perf/frontend-quickwins): kart artık React.memo'lu
+  // `CounterpartCard` (dosya altında). Liste arama/filtre yazarken sık
+  // re-render oluyor; stabil handler'lar + memo ile değişmeyen kartlar atlanır.
+  // Handler'lar useCallback ile stabil referans alır (counterpart'ı geri verir).
+  const handleOpen = useCallback(
+    (c: Counterpart) => router.push(`/dashboard/counterparts/${c.id}`),
+    [router],
+  );
+  const handleEdit = useCallback((c: Counterpart) => setEditing(c), []);
+  const handleDeleteConfirm = useCallback((c: Counterpart) => setDeleteConfirm(c), []);
+
   // v1.7.x: hem grouped hem flat list aynı card markup'ını kullansın
-  function renderCard(c: Counterpart) {
-    const m = roleMeta(c.role);
-    const Icon = m.icon;
-    const balance = c.current_balance ?? 0;
-    return (
-      <div
+  const renderCard = useCallback(
+    (c: Counterpart) => (
+      <CounterpartCard
         key={c.id}
-        onClick={() => router.push(`/dashboard/counterparts/${c.id}`)}
-        className="glass-card glass-hover p-4 cursor-pointer transition-all active:scale-[0.98] group"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", m.badge)}>
-              <Icon size={18} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-surface-100 text-sm leading-tight truncate">
-                {c.name}
-              </h3>
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded", m.badge)}>
-                  {m.label}
-                </span>
-                {c.tax_id && (
-                  <span className="text-[10px] text-surface-400">{c.tax_id}</span>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <div className={cn(
-              "text-sm font-bold whitespace-nowrap",
-              balance > 0 ? "text-green-400" : balance < 0 ? "text-red-400" : "text-surface-300"
-            )}>
-              {formatCurrency(balance)}
-            </div>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => { e.stopPropagation(); setEditing(c); }}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-surface-400 hover:text-white"
-                title="Duzenle"
-              >
-                <Pencil size={14} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setDeleteConfirm(c); }}
-                className="p-1.5 rounded-lg hover:bg-red-500/20 text-surface-400 hover:text-red-400"
-                title="Sil"
-              >
-                <Trash2 size={14} />
-              </button>
-              <ArrowRight size={14} className="text-surface-500 ml-1" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+        counterpart={c}
+        onOpen={handleOpen}
+        onEdit={handleEdit}
+        onDelete={handleDeleteConfirm}
+      />
+    ),
+    [handleOpen, handleEdit, handleDeleteConfirm],
+  );
 
   async function handleDelete(id: string) {
     try {
@@ -518,6 +483,81 @@ export default function CounterpartsPage() {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────
+// Cari kartı — React.memo (perf/frontend-quickwins)
+// Markup, eski inline `renderCard` ile birebir aynı. Tek fark: prop'lardan
+// gelen stabil handler'lar (onOpen/onEdit/onDelete) sayesinde parent
+// re-render'larında değişmeyen kartlar yeniden çizilmez.
+// ─────────────────────────────────────────────────────────
+
+const CounterpartCard = memo(function CounterpartCard({
+  counterpart: c,
+  onOpen,
+  onEdit,
+  onDelete,
+}: {
+  counterpart: Counterpart;
+  onOpen: (c: Counterpart) => void;
+  onEdit: (c: Counterpart) => void;
+  onDelete: (c: Counterpart) => void;
+}) {
+  const m = roleMeta(c.role);
+  const Icon = m.icon;
+  const balance = c.current_balance ?? 0;
+  return (
+    <div
+      onClick={() => onOpen(c)}
+      className="glass-card glass-hover p-4 cursor-pointer transition-all active:scale-[0.98] group"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", m.badge)}>
+            <Icon size={18} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-surface-100 text-sm leading-tight truncate">
+              {c.name}
+            </h3>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded", m.badge)}>
+                {m.label}
+              </span>
+              {c.tax_id && (
+                <span className="text-[10px] text-surface-400">{c.tax_id}</span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className={cn(
+            "text-sm font-bold whitespace-nowrap",
+            balance > 0 ? "text-green-400" : balance < 0 ? "text-red-400" : "text-surface-300"
+          )}>
+            {formatCurrency(balance)}
+          </div>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(c); }}
+              className="p-1.5 rounded-lg hover:bg-white/10 text-surface-400 hover:text-white"
+              title="Duzenle"
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(c); }}
+              className="p-1.5 rounded-lg hover:bg-red-500/20 text-surface-400 hover:text-red-400"
+              title="Sil"
+            >
+              <Trash2 size={14} />
+            </button>
+            <ArrowRight size={14} className="text-surface-500 ml-1" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 // ─────────────────────────────────────────────────────────
 // Form modal

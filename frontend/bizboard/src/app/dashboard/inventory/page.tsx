@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Search, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,6 +46,10 @@ function InventoryPage() {
 
   const [detailItem, setDetailItem] = useState<InventoryItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Performans (perf/frontend-quickwins): stabil satır handler'ı — memo'lu
+  // InventoryRow'un gereksiz re-render'ını önler (referans değişmez).
+  const handleSelectItem = useCallback((item: InventoryItem) => setDetailItem(item), []);
 
   useEffect(() => { fetchData(); }, [refreshKey, filterBusiness]);
 
@@ -196,7 +200,7 @@ function InventoryPage() {
       ) : (
         <div className="glass-card divide-y divide-surface-700 overflow-hidden">
           {filtered.map((item) => (
-            <InventoryRow key={item.id} item={item} onClick={() => setDetailItem(item)} showBusiness={!filterBusiness} />
+            <InventoryRow key={item.id} item={item} onSelect={handleSelectItem} showBusiness={!filterBusiness} />
           ))}
         </div>
       )}

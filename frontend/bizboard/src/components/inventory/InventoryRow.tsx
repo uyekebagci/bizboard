@@ -5,12 +5,28 @@
 // (R3 god-component bolme: page.tsx'ten cikarildi)
 // ══════════════════════════════════════════════════════════
 
+import { memo } from "react";
 import { MapPin, User, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { InventoryItem } from "@/types";
 import { getCategoryDef, STATUS_LABELS, UNIT_LABELS } from "./constants";
 
-export function InventoryRow({ item, onClick, showBusiness }: { item: InventoryItem; onClick: () => void; showBusiness: boolean }) {
+// Performans (perf/frontend-quickwins): satır React.memo'ya alındı. Parent
+// (inventory page) arama/filtre yazarken liste sık re-render oluyor; satır
+// prop'ları (item/showBusiness) ile `onSelect` referansı stabil olduğunda
+// değişmeyen satırlar yeniden render edilmez. Görünüm/davranış birebir aynı.
+//
+// `onSelect(item)` imzası: parent tek bir useCallback handler verir; her satır
+// için ayrı inline closure üretilmez → referans stabilitesi memo'yu etkin kılar.
+function InventoryRowBase({
+  item,
+  onSelect,
+  showBusiness,
+}: {
+  item: InventoryItem;
+  onSelect: (item: InventoryItem) => void;
+  showBusiness: boolean;
+}) {
   const catDef = getCategoryDef(item.category);
   const Icon = catDef.icon;
   const statusCfg = STATUS_LABELS[item.status] || STATUS_LABELS.ACTIVE;
@@ -18,7 +34,7 @@ export function InventoryRow({ item, onClick, showBusiness }: { item: InventoryI
   const isLowStock = item.needs_reorder;
 
   return (
-    <div onClick={onClick} className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group">
+    <div onClick={() => onSelect(item)} className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group">
       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", catDef.bg)}>
         <Icon size={18} className={catDef.color} />
       </div>
@@ -58,3 +74,5 @@ export function InventoryRow({ item, onClick, showBusiness }: { item: InventoryI
     </div>
   );
 }
+
+export const InventoryRow = memo(InventoryRowBase);
