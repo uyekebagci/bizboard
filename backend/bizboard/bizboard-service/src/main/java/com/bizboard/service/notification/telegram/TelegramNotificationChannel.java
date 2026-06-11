@@ -4,6 +4,7 @@ import com.bizboard.common.dto.NotificationMessage;
 import com.bizboard.common.entity.NotificationChannelBinding;
 import com.bizboard.common.enums.NotificationChannelType;
 import com.bizboard.repository.NotificationChannelBindingRepository;
+import com.bizboard.repository.TelegramChatEventPreferenceRepository;
 import com.bizboard.service.notification.NotificationChannel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class TelegramNotificationChannel implements NotificationChannel {
     private final TelegramProperties props;
     private final TelegramClient client;
     private final NotificationChannelBindingRepository bindingRepository;
+    private final TelegramChatEventPreferenceRepository chatPrefRepository;
 
     @Override
     public NotificationChannelType type() {
@@ -48,6 +50,17 @@ public class TelegramNotificationChannel implements NotificationChannel {
         if (binding == null || !binding.isVerified()
                 || binding.getExternalId() == null || binding.getExternalId().isBlank()) {
             return;
+        }
+
+        // CHT-2 / GRP-3: per-chat event tercihi VARSA ona uy (geriye-uyumlu —
+        // tercih kaydı yoksa mevcut davranış: per-user preference zaten dispatch
+        // katmanında süzüldü, burada geçer). m.getEvent() null olabilir (savunmacı).
+        if (m.getEvent() != null) {
+            var chatPref = chatPrefRepository
+                    .findByBindingIdAndEvent(binding.getId(), m.getEvent());
+            if (chatPref.isPresent() && !chatPref.get().isEnabled()) {
+                return; // bu chat bu event'i açıkça kapatmış.
+            }
         }
 
         TelegramClient.SendResult r = client.sendMessage(binding.getExternalId(), buildHtml(m));

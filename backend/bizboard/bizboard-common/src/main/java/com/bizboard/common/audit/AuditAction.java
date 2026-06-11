@@ -55,6 +55,14 @@ public final class AuditAction {
 
     // ── Notifications ────────────────────────────────────────────────────
     public static final String NOTIFICATION_SENT  = "NOTIFICATION_SENT";
+    /**
+     * MAN-1 (Telegram Admin Hedefli Gönderim): admin serbest metin/şablon
+     * bildirim gönderdi. Geri alınamaz işlem — kim, kaç hedef, hangi kanal,
+     * gönderim sonucu metadata'da. ADMIN-only.
+     */
+    public static final String ADMIN_MANUAL_NOTIFICATION_SENT = "ADMIN_MANUAL_NOTIFICATION_SENT";
+    /** CHT-2: admin bir chat'in event tercihini değiştirdi. */
+    public static final String TELEGRAM_CHAT_PREF_CHANGED = "TELEGRAM_CHAT_PREF_CHANGED";
 
     // ── MyCompany (legal entity) ─────────────────────────────────────────
     public static final String MY_COMPANY_CREATE  = "MY_COMPANY_CREATE";

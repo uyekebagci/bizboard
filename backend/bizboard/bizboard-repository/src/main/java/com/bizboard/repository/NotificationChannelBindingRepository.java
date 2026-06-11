@@ -19,4 +19,16 @@ public interface NotificationChannelBindingRepository extends JpaRepository<Noti
 
     Optional<NotificationChannelBinding> findByUserIdAndChannel(
             UUID userId, NotificationChannelType channel);
+
+    /**
+     * CHT-1: Bağlı chat listesi — belirli kanaldaki doğrulanmış tüm binding'ler.
+     */
+    List<NotificationChannelBinding> findByChannelAndVerifiedTrue(NotificationChannelType channel);
+
+    /**
+     * Tek chat_id → binding (webhook + manuel gönderim hedef doğrulaması).
+     * Design notu §5.4: lineer tarama yerine indexli sorgu.
+     */
+    Optional<NotificationChannelBinding> findByChannelAndExternalIdAndVerifiedTrue(
+            NotificationChannelType channel, String externalId);
 }
