@@ -71,6 +71,21 @@ public enum NotificationEvent {
      */
     HIGH_EXPENSE_ALERT,
 
+    /**
+     * Tier 3 (EVT-2): zamanlanmış HAFTALIK finansal özet (önceki hafta Pzt–Pzr).
+     * Pazartesi sabahı işletme-başına net kâr/gelir/gider/kasa/top kategoriler/
+     * kaçak özeti. <b>İŞLETME-BAŞINA OPT-IN, DEFAULT KAPALI</b> (spam-kaçın);
+     * {@code PeriodicSummaryService} per-business {@code SystemSetting} ile yönetir.
+     */
+    WEEKLY_SUMMARY,
+
+    /**
+     * Tier 3 (EVT-2): zamanlanmış AYLIK finansal özet (önceki tam ay). Ayın 1'i
+     * sabahı işletme-başına net kâr/gelir/gider/kasa/top kategoriler/kaçak özeti.
+     * <b>İŞLETME-BAŞINA OPT-IN, DEFAULT KAPALI</b> (spam-kaçın).
+     */
+    MONTHLY_SUMMARY,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

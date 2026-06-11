@@ -82,6 +82,16 @@ public class NotificationTemplateRegistry {
                     NotificationType.ALERT,
                     "⚠ BÜYÜK HARCAMA: {business}",
                     "{business} — {amount} {currency} gider{category}{description}. Eşik: {threshold} {currency}.")),
+            // Tier 3 (EVT-2): zamanlanmış finansal özetler (INFO seviye; opt-in).
+            // {summary} çok satırlı gövdeyi PeriodicSummaryService hazırlar.
+            Map.entry(NotificationEvent.WEEKLY_SUMMARY, new Template(
+                    NotificationType.INFO,
+                    "📊 Haftalık Özet: {business} ({period})",
+                    "{summary}")),
+            Map.entry(NotificationEvent.MONTHLY_SUMMARY, new Template(
+                    NotificationType.INFO,
+                    "📊 Aylık Özet: {business} ({period})",
+                    "{summary}")),
             Map.entry(NotificationEvent.OTP, new Template(
                     NotificationType.INFO,
                     "Doğrulama kodu",
@@ -114,6 +124,11 @@ public class NotificationTemplateRegistry {
         }
         // Doldurulmamış {placeholder}'ları temizle (yarım metin görünmesin).
         out = out.replaceAll("\\{[a-zA-Z0-9_]+\\}", "");
-        return out.trim().replaceAll("\\s{2,}", " ");
+        // Yatay boşluk tekrarlarını sadeleştir; SATIR SONLARINI KORU. Tier 3
+        // (EVT-2) çok satırlı özet gövdeleri "\n" ile gelir — eski genel
+        // {@code \s{2,}} sadeleştirmesi bunları tek satıra ezerdi. Mevcut tek-satır
+        // şablonlar etkilenmez (içlerinde \n yok).
+        out = out.replaceAll("[ \\t\\x0B\\f]{2,}", " ");
+        return out.trim();
     }
 }

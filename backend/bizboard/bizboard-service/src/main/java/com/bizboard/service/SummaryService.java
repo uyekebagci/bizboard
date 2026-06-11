@@ -69,6 +69,31 @@ public class SummaryService {
                 range.start, range.end, transactions, isClosed, fixedCostTotal);
     }
 
+    /**
+     * Tier 3 (EVT-2): SİSTEM aktörü için işletme özeti — kullanıcı erişim guard'ı
+     * YOK (zamanlanmış {@code PeriodicSummaryService} tarafından çağrılır; alıcı
+     * filtresi dispatch katmanında / opt-in konfigürasyonunda zaten uygulanır).
+     *
+     * <p>Mevcut {@link #buildPeriodSummary} hesaplama mantığını birebir yeniden
+     * kullanır (Σ tutarlılığı korunur; TRANSFER/LOAN dışlanır, POS profit semantiği,
+     * sabit gider oranlaması). HİÇBİR yeni hesap yolu eklemez.</p>
+     *
+     * @param businessId hedef işletme
+     * @param period     etiket ("weekly"/"monthly"); yalnız DTO {@code period} alanına yazılır
+     * @param from       dönem başı (dahil)
+     * @param to         dönem sonu (dahil)
+     */
+    @Transactional(readOnly = true)
+    public PeriodSummaryDto getBusinessSummaryForSystem(UUID businessId, String period,
+                                                        LocalDate from, LocalDate to) {
+        List<Transaction> transactions = transactionRepository
+                .findByBusinessIdAndDateBetween(businessId, from, to);
+        boolean isClosed = isClosedPeriod(to);
+        BigDecimal fixedCostTotal = calculateFixedCostForPeriod(businessId, from, to);
+        return buildPeriodSummary(businessId, period != null ? period : "custom",
+                from, to, transactions, isClosed, fixedCostTotal);
+    }
+
     // ─── Portfolio Özeti (Tüm İşletmeler) ───────────────────────────────
 
     @Transactional(readOnly = true)

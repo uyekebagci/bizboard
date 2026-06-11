@@ -41,11 +41,13 @@ public class NotificationPreferenceConstraintRepair implements ApplicationRunner
     public void run(ApplicationArguments args) {
         dropConstraint("notification_preferences", "notification_preferences_event_check", "event");
         dropConstraint("notification_preferences", "notification_preferences_channel_check", "channel");
-        // Tier 2 (EVT-1): telegram_chat_event_preferences (CHT-2) event kolonu da
-        // enum-genişlemesinden etkilenebilir. Tablo columnDefinition ile CHECK
-        // üretimini engelleyerek oluşturuldu (legacy CHECK olası değil), ama yeni
-        // event (BALANCE_BELOW_THRESHOLD/HIGH_EXPENSE_ALERT) ekleniyor — defansif
-        // olarak burada da varsa eski CHECK'i düşürürüz (idempotent + non-fatal).
+        // Tier 2 (EVT-1) + Tier 3 (EVT-2): telegram_chat_event_preferences (CHT-2)
+        // event kolonu da enum-genişlemesinden etkilenebilir. Tablo columnDefinition
+        // ile CHECK üretimini engelleyerek oluşturuldu (legacy CHECK olası değil), ama
+        // yeni event ekleniyor (BALANCE_BELOW_THRESHOLD/HIGH_EXPENSE_ALERT — Tier 2;
+        // WEEKLY_SUMMARY/MONTHLY_SUMMARY — Tier 3) — defansif olarak burada da varsa
+        // eski CHECK'i düşürürüz (idempotent + non-fatal). Aynı drop notification_
+        // preferences için yukarıda; yeni Tier 3 değerleri de o CHECK'i ihlal etmez.
         dropConstraint("telegram_chat_event_preferences",
                 "telegram_chat_event_preferences_event_check", "event");
     }

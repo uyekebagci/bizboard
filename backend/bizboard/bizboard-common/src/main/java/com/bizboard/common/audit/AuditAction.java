@@ -160,6 +160,10 @@ public final class AuditAction {
     /** İşletme-başına finansal alarm eşikleri admin tarafından güncellendi. */
     public static final String FINANCIAL_ALERT_THRESHOLD_UPDATE = "FINANCIAL_ALERT_THRESHOLD_UPDATE";
 
+    // ── Tier 3 (EVT-2): zamanlanmış finansal özet konfigürasyonu (per-business) ──
+    /** İşletme-başına haftalık/aylık özet bildirim tercihi admin tarafından güncellendi. */
+    public static final String PERIODIC_SUMMARY_CONFIG_UPDATE = "PERIODIC_SUMMARY_CONFIG_UPDATE";
+
     // Highlight rozetleri (UI vurgu)
     public static final String HIGHLIGHT_DAY_OPEN          = "DAY_OPEN";
     public static final String HIGHLIGHT_DAY_OPEN_ROUNDING = "DAY_OPEN_ROUNDING";
