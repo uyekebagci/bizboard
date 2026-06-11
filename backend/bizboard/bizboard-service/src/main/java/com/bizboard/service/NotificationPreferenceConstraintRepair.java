@@ -39,18 +39,25 @@ public class NotificationPreferenceConstraintRepair implements ApplicationRunner
 
     @Override
     public void run(ApplicationArguments args) {
-        dropConstraint("notification_preferences_event_check", "event");
-        dropConstraint("notification_preferences_channel_check", "channel");
+        dropConstraint("notification_preferences", "notification_preferences_event_check", "event");
+        dropConstraint("notification_preferences", "notification_preferences_channel_check", "channel");
+        // Tier 2 (EVT-1): telegram_chat_event_preferences (CHT-2) event kolonu da
+        // enum-genişlemesinden etkilenebilir. Tablo columnDefinition ile CHECK
+        // üretimini engelleyerek oluşturuldu (legacy CHECK olası değil), ama yeni
+        // event (BALANCE_BELOW_THRESHOLD/HIGH_EXPENSE_ALERT) ekleniyor — defansif
+        // olarak burada da varsa eski CHECK'i düşürürüz (idempotent + non-fatal).
+        dropConstraint("telegram_chat_event_preferences",
+                "telegram_chat_event_preferences_event_check", "event");
     }
 
-    private void dropConstraint(String constraint, String column) {
+    private void dropConstraint(String table, String constraint, String column) {
         try {
             jdbc.execute(
-                    "ALTER TABLE notification_preferences DROP CONSTRAINT IF EXISTS " + constraint);
-            log.info("[notif-pref-repair] eski enum CHECK kaldırıldı (varsa): {} ({} kolonu).",
-                    constraint, column);
+                    "ALTER TABLE " + table + " DROP CONSTRAINT IF EXISTS " + constraint);
+            log.info("[notif-pref-repair] eski enum CHECK kaldırıldı (varsa): {}.{} ({} kolonu).",
+                    table, constraint, column);
         } catch (Exception e) {
-            log.warn("[notif-pref-repair] {} düşürme atlandı: {}", constraint, e.getMessage());
+            log.warn("[notif-pref-repair] {}.{} düşürme atlandı: {}", table, constraint, e.getMessage());
         }
     }
 }

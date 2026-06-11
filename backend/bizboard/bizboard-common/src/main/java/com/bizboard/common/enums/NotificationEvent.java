@@ -56,6 +56,21 @@ public enum NotificationEvent {
      */
     INSTRUMENT_BOUNCED,
 
+    /**
+     * Tier 2 (EVT-1, §2.2): işlem sonrası işletme toplam bakiyesi admin'in
+     * tanımladığı eşiğin ALTINA DÜŞTÜĞÜNDE — proaktif finansal alarm. ALERT
+     * seviye; admin'lere in-app + (opt-in) Telegram. Debounce: yalnız eşiği
+     * AŞAĞI geçişte bir kez fire eder ({@code FinancialAlertService}).
+     */
+    BALANCE_BELOW_THRESHOLD,
+
+    /**
+     * Tier 2 (EVT-1, §2.4): tek bir gerçek GİDER işlemi (kind=NORMAL, LOAN değil)
+     * tutarı işletme-başına eşiği aştığında — büyük harcama uyarısı. ALERT seviye;
+     * admin'lere in-app + (opt-in) Telegram. Anlık ({@code FinancialAlertService}).
+     */
+    HIGH_EXPENSE_ALERT,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

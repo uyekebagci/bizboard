@@ -156,6 +156,10 @@ public final class AuditAction {
     /** AÇILMAMIŞ güne işlem girişi bloklandı (enforcement; teşhis izi). */
     public static final String DAY_OPEN_BLOCKED_ENTRY   = "DAY_OPEN_BLOCKED_ENTRY";
 
+    // ── Tier 2 (EVT-1): proaktif finansal alarm eşikleri (per-business config) ──
+    /** İşletme-başına finansal alarm eşikleri admin tarafından güncellendi. */
+    public static final String FINANCIAL_ALERT_THRESHOLD_UPDATE = "FINANCIAL_ALERT_THRESHOLD_UPDATE";
+
     // Highlight rozetleri (UI vurgu)
     public static final String HIGHLIGHT_DAY_OPEN          = "DAY_OPEN";
     public static final String HIGHLIGHT_DAY_OPEN_ROUNDING = "DAY_OPEN_ROUNDING";

@@ -62,6 +62,9 @@ public class TransactionMutationService {
     private final CounterpartRepository counterpartRepository;
     private final PosDeviceRepository posDeviceRepository;
     private final NotificationDispatchService dispatchService;
+    // Tier 2 (EVT-1): proaktif finansal alarmlar (HIGH_EXPENSE + BALANCE_BELOW).
+    // best-effort/non-fatal; eşik 0/null ise no-op (DEFAULT KAPALI).
+    private final FinancialAlertService financialAlertService;
     // Ledger v2 (Faz A): tx mutasyonunda senkron çift-giriş Posting türetme.
     // current_balance snapshot facade'i AYNEN korunur; bunun YANINDA JournalEntry/
     // Posting türetilir → gün-kapanışı posting-tabanlı totalIn/totalOut API yoluyla
@@ -207,6 +210,10 @@ public class TransactionMutationService {
                 "TRANSACTION", transactionId,
                 business.getName() + " — islem silindi: " + deleteLog.getAmount() + " " + deleteLog.getCurrency() + " (sebep: " + reason + ")",
                 meta);
+
+        // Tier 2 (EVT-1): silme bank balance'ı geri çevirdi → işletme toplamı
+        // eşik altına yeni geçtiyse BALANCE_BELOW alarmı (debounce). best-effort.
+        financialAlertService.onBalanceChanged(business);
     }
 
     @Transactional
@@ -472,6 +479,13 @@ public class TransactionMutationService {
                     "/dashboard/transactions",
                     business.getId());
         }
+
+        // Tier 2 (EVT-1): proaktif finansal alarmlar. best-effort/non-fatal;
+        // eşik 0/null ise no-op. HIGH_EXPENSE: bu gider tutarı eşiği aşarsa.
+        // BALANCE_BELOW: bank balance güncellendikten sonra işletme toplamı
+        // eşik altına yeni geçtiyse (debounce).
+        financialAlertService.onTransactionCreated(transaction, business);
+        financialAlertService.onBalanceChanged(business);
 
         return DtoMapper.toTransactionDto(transaction);
     }
@@ -841,6 +855,11 @@ public class TransactionMutationService {
         // yeniden hesaplansın (eski sil + yeniden hesapla).
         subCashInclusionService.onTransactionUpdated(
                 transaction, oldCounterpartId, oldPosDeviceId, oldBankAccountIdForInclusion);
+
+        // Tier 2 (EVT-1): bank balance reconcile sonrası işletme toplamı eşik
+        // altına yeni geçtiyse BALANCE_BELOW alarmı (debounce). HIGH_EXPENSE
+        // yalnız create'te değerlendirilir (edit'te tekrar fire etmeyiz).
+        financialAlertService.onBalanceChanged(transaction.getBusiness());
 
         TransactionDto dto = DtoMapper.toTransactionDto(transaction);
         dto.setBusinessName(transaction.getBusiness().getName());

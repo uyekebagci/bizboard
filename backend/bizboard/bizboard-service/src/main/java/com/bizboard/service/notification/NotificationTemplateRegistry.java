@@ -73,6 +73,15 @@ public class NotificationTemplateRegistry {
                     NotificationType.ALERT,
                     "⚠ KARŞILIKSIZ ÇEK/SENET: {counterparty}",
                     "{counterparty} — {amount} {currency} — vade {dueDate} karşılıksız çıktı.")),
+            // Tier 2 (EVT-1, §2.2 / §2.4): proaktif finansal alarmlar (ALERT seviye).
+            Map.entry(NotificationEvent.BALANCE_BELOW_THRESHOLD, new Template(
+                    NotificationType.ALERT,
+                    "⚠ DÜŞÜK BAKİYE: {business}",
+                    "{business} bakiyesi {balance} {currency} — eşik {threshold} {currency} altına düştü.")),
+            Map.entry(NotificationEvent.HIGH_EXPENSE_ALERT, new Template(
+                    NotificationType.ALERT,
+                    "⚠ BÜYÜK HARCAMA: {business}",
+                    "{business} — {amount} {currency} gider{category}{description}. Eşik: {threshold} {currency}.")),
             Map.entry(NotificationEvent.OTP, new Template(
                     NotificationType.INFO,
                     "Doğrulama kodu",
