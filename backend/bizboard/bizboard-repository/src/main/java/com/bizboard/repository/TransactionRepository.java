@@ -2,6 +2,7 @@ package com.bizboard.repository;
 
 import com.bizboard.common.entity.Transaction;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,17 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
+
+    /*
+     * Performans (N+1 fix): {@code DtoMapper.toTransactionDto}'nun lazy eriştiği
+     * to-ONE ilişkileri liste sorgularına {@code @EntityGraph(attributePaths = {...})}
+     * ile eager fetch edilir. Hepsi {@code @ManyToOne} olduğu için LEFT JOIN
+     * kartezyen patlama YAPMAZ — satır sayısı/sonuç AYNI kalır, yalnız ek
+     * per-row SELECT'ler elenir. attributePaths annotation argümanı derleme-zamanı
+     * sabit olmak zorunda olduğundan her metoda inline yazılır (paylaşılan paths:
+     * business, category, bankAccount, relatedBankAccount, targetCounterpart,
+     * createdBy, posDevice, posDevice.ownerMyCompany).
+     */
 
     /** WP 08617251: closure session'a etiketli tx'ler (rollback/finalize için). */
     List<Transaction> findByClosureSessionId(UUID closureSessionId);
@@ -25,6 +37,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
      * Beta v1.1 fix: Son İşlemler widget'ı için date DESC + createdAt DESC
      * tie-breaker. Aynı gün eklenen tx'ler arasında en son insert üstte.
      */
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
     @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId " +
             "ORDER BY t.date DESC, t.createdAt DESC")
     List<Transaction> findByBusinessIdOrderByDateDescCreatedAtDesc(
@@ -37,16 +51,37 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("year") int year,
             @Param("month") int month);
 
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
     @Query("SELECT t FROM Transaction t WHERE t.business.id IN :businessIds ORDER BY t.createdAt DESC")
     List<Transaction> findByBusinessIdInOrderByCreatedAtDesc(
             @Param("businessIds") List<UUID> businessIds, Pageable pageable);
 
     // Tüm işlemler (limitsiz, tarih sıralı) - birden fazla işletme
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
     @Query("SELECT t FROM Transaction t WHERE t.business.id IN :businessIds ORDER BY t.date DESC")
     List<Transaction> findByBusinessIdInOrderByDateDesc(@Param("businessIds") List<UUID> businessIds);
 
     // Tek işletme tüm işlemler
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
     List<Transaction> findByBusinessIdOrderByDateDesc(UUID businessId);
+
+    /**
+     * Performans (AccountStatementService N+1/full-scan fix): bir işletmenin
+     * BELİRLİ counterpart'a bağlı tx'leri. Önce tüm business tx'i çekip bellekte
+     * {@code targetCounterpart.id} filtrelemek yerine DB'de filtrele — SONUÇ AYNI,
+     * çok daha az satır. {@code @EntityGraph} ile to-ONE'lar eager (toTransactionDto).
+     */
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
+    @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId " +
+            "AND t.targetCounterpart.id = :counterpartId " +
+            "ORDER BY t.date DESC")
+    List<Transaction> findByBusinessIdAndTargetCounterpartIdOrderByDateDesc(
+            @Param("businessId") UUID businessId,
+            @Param("counterpartId") UUID counterpartId);
 
     // Dinamik tarih aralığı sorgusu - tek işletme
     @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId " +
@@ -113,6 +148,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
      * cash closing hesabı için — business filtresi yok).
      */
     List<Transaction> findByDate(LocalDate date);
+
+    /**
+     * Performans (ClosingCalculator full-scan fix): bir işletmenin belirli
+     * günündeki tx'leri. Önce tüm gün tx'ini ({@code findByDate}) çekip bellekte
+     * {@code business.id} filtrelemek yerine DB'de filtrele — SONUÇ AYNI, çok daha
+     * az satır (özellikle çok-tenant büyüdükçe). business-scoped kapanış için.
+     */
+    List<Transaction> findByBusinessIdAndDate(UUID businessId, LocalDate date);
 
     /**
      * v1.6.20 (WP-3): "Hesaptan Harcama" widget — gün + paymentMethod + direction.

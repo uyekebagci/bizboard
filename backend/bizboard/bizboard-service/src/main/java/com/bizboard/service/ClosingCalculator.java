@@ -119,10 +119,13 @@ public class ClosingCalculator {
      */
     @Transactional(readOnly = true)
     public BigDecimal sumCashFlowForDate(UUID businessId, LocalDate date) {
-        List<Transaction> txs = transactionRepository.findByDate(date);
+        // Performans: tüm gün tx'ini çekip bellekte business filtrelemek yerine
+        // DB'de business+date filtrele (sonuç aynı — zaten business'a filtreleniyordu).
+        List<Transaction> txs = transactionRepository.findByBusinessIdAndDate(businessId, date);
         BigDecimal income = BigDecimal.ZERO;
         BigDecimal expense = BigDecimal.ZERO;
         for (Transaction t : txs) {
+            // Defansif (no-op): DB zaten business'a filtreledi.
             if (t.getBusiness() == null || !businessId.equals(t.getBusiness().getId())) continue;
             // v1.7.0-beta: TRANSFER tx'leri kasa akışına girmez.
             if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) continue;

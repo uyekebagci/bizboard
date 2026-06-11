@@ -124,11 +124,11 @@ public class AccountStatementService {
                 .findByBusinessIdAndCounterpartIdOrderByPaymentDateAscCreatedAtAsc(businessId, counterpartId);
 
         // ── Transactions linked to this counterpart ─────────────────
-        List<Transaction> txs = transactionRepository.findByBusinessIdOrderByDateDesc(businessId);
-        List<Transaction> cpTxs = txs.stream()
-                .filter(t -> t.getTargetCounterpart() != null
-                        && counterpartId.equals(t.getTargetCounterpart().getId()))
-                .toList();
+        // Performans: tüm business tx'i çekip bellekte filtrelemek yerine DB'de
+        // counterpart filtresi (sonuç aynı — targetCounterpart.id = counterpartId,
+        // targetCounterpart NULL olanlar zaten join'de elenir).
+        List<Transaction> cpTxs = transactionRepository
+                .findByBusinessIdAndTargetCounterpartIdOrderByDateDesc(businessId, counterpartId);
 
         // ── Build DTOs ──────────────────────────────────────────────
         AccountStatementDto.CounterpartSummary summary =

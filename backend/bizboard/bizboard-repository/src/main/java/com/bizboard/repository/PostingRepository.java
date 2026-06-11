@@ -1,6 +1,7 @@
 package com.bizboard.repository;
 
 import com.bizboard.common.entity.Posting;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -193,6 +194,10 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
      * Tarih sırası (eski → yeni). P&L bacakları (account NULL) hariç — rapor
      * "hangi hesaba ne girdi/çıktı" gösterir.
      */
+    // Performans (N+1 fix): daybook döngüsü p.journalEntry / p.account / p.category
+    // lazy erişiyor. Hepsi @ManyToOne — LEFT JOIN kartezyen patlama YAPMAZ, sonuç
+    // AYNI (satır = posting). Ek per-posting SELECT'ler elenir.
+    @EntityGraph(attributePaths = {"journalEntry", "account", "category"})
     @Query("SELECT p FROM Posting p " +
             "WHERE p.journalEntry.business.id = :businessId " +
             "AND p.journalEntry.entryDate >= :from AND p.journalEntry.entryDate <= :to " +
