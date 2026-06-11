@@ -93,7 +93,10 @@ public class LedgerPostingService {
         if (tx == null || tx.getId() == null || tx.getBusiness() == null) {
             return Optional.empty();
         }
-        JournalSourceType sourceType = isTransfer(tx)
+        // LOAN (verilen/alınan borç) ve TRANSFER aynı kategoride: bilanço
+        // hareketi (P&L'e girmez). İdempotency + reversal için TRANSFER source
+        // type'ı paylaşırlar (reversePostingsForTransaction ikisini de tarar).
+        JournalSourceType sourceType = (isTransfer(tx) || isLoan(tx))
                 ? JournalSourceType.TRANSFER : JournalSourceType.MANUAL_TX;
 
         // İdempotency: bu tx için entry zaten varsa tekrar üretme.
@@ -192,6 +195,10 @@ public class LedgerPostingService {
         return tx.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER;
     }
 
+    private boolean isLoan(Transaction tx) {
+        return tx.getKind() == com.bizboard.common.enums.TransactionKind.LOAN;
+    }
+
     /**
      * Tx'in payment_method / direction / kind kombinasyonundan dengeli bacak
      * taslakları üretir. Çözülemeyen kombinasyon → boş liste (FLAGGED).
@@ -204,6 +211,22 @@ public class LedgerPostingService {
         }
         boolean income = tx.getDirection() == TransactionDirection.INCOME;
         BankAccount loc = resolveLocationAccount(tx);
+
+        if (isLoan(tx)) {
+            // LOAN (Verilen/Alınan Borç): kasa ↔ cari (alacak/verecek) arası
+            // TRANSFER. Verilen borç → nakit ÇIKAR (direction=EXPENSE, kasa −);
+            // alınan borç → nakit ARTAR (direction=INCOME, kasa +). Karşı bacak
+            // bir cari (alacak/verecek) hareketidir → KONUM bacağı (LOCATION_MOVE),
+            // account NULL (cari bakiyesi Debt entity'sinden okunur; posting çift
+            // sayım yapmasın diye RECEIVABLE/PAYABLE hesabı AÇMIYORUZ). P&L bacağı
+            // YOK → Net Kâr'a girmez. Σ=0 dengeli. Karşı bacak counterpart taşır
+            // (iz/drill-down). Bakiye yalnız gerçek kasa hesabına (loc) yansır.
+            if (loc == null) return legs;
+            BigDecimal signedLoc = income ? amount : amount.negate();
+            legs.add(PostingDraft.location(loc, signedLoc));
+            legs.add(PostingDraft.clearingWithCounterpart(signedLoc.negate()));
+            return legs;
+        }
 
         if (isTransfer(tx)) {
             // TRANSFER bacağı: tek bir tx tek yönü temsil eder (OUT veya IN).
@@ -324,6 +347,15 @@ public class LedgerPostingService {
 
         static PostingDraft clearing(BigDecimal amount, PostingLegKind kind) {
             return new PostingDraft(null, amount, kind, false, false);
+        }
+
+        /**
+         * LOAN karşı bacağı: cari (alacak/verecek) konum hareketi. account NULL
+         * (RECEIVABLE/PAYABLE hesabı açılmaz; cari bakiye Debt'ten okunur →
+         * çift sayım yok), {@code LOCATION_MOVE} (P&L'e girmez), counterpart taşır.
+         */
+        static PostingDraft clearingWithCounterpart(BigDecimal amount) {
+            return new PostingDraft(null, amount, PostingLegKind.LOCATION_MOVE, false, true);
         }
     }
 }

@@ -50,6 +50,8 @@ public final class AuditAction {
     /** WP a9da4e9d: ödeme almadan manuel düşüm (af/iskonto/mutabakat). */
     public static final String DEBT_WRITEOFF      = "DEBT_WRITEOFF";
     public static final String DEBT_WRITEOFF_REVERSE = "DEBT_WRITEOFF_REVERSE";
+    /** Çatı v1.2: Verilen/Alınan Borç (kasa ↔ alacak/verecek TRANSFER'i). */
+    public static final String LOAN_CREATE        = "LOAN_CREATE";
 
     // ── Notifications ────────────────────────────────────────────────────
     public static final String NOTIFICATION_SENT  = "NOTIFICATION_SENT";
