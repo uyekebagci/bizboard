@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import {
   Wallet, Package, Users, FolderKanban, FileText,
@@ -14,14 +15,65 @@ import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
 import { useAppStore } from "@/lib/store";
 import type { Business, ModuleType } from "@/types";
-import { DebtModule } from "@/components/business/DebtModule";
-import { NotesModule } from "@/components/business/NotesModule";
-import { DocumentsModule } from "@/components/business/DocumentsModule";
-import { PersonnelModule } from "@/components/business/PersonnelModule";
-import { VehicleModule } from "@/components/business/VehicleModule";
-import { InventoryModule } from "@/components/business/InventoryModule";
-import { FinanceModule } from "@/components/business/FinanceModule";
-import { FixedCostsWidget } from "@/components/business/FixedCostsWidget";
+
+// ── Performans: modülleri code-split et (perf/frontend-quickwins) ───────────
+// Önceki sürüm 8 modülü de EAGER import ediyordu → /business/[id] First Load JS
+// gereksiz şişiyordu (sadece bir tab aktifken hepsi bundle'a giriyordu). Artık
+// her modül `next/dynamic` ile lazy yüklenir; SADECE aktif tab'in chunk'ı
+// indirilir, diğerleri tab'a tıklanınca on-demand gelir. Davranış aynen korunur.
+//
+// ssr:false → modüller client-only render edilir. Bu component zaten "use client"
+// ve modüller içeride `createPortal` / browser API'leri (window, document)
+// kullanan alt-modal'lar barındırıyor; SSR'a gerek yok ve sunucu HTML'ini
+// hafifletir. Tab içeriği zaten kullanıcı etkileşimiyle (veya açılışta tek tab)
+// görünür, prerender gereksinimi yok.
+const loadingFallback = () => <ModuleLoadingSkeleton />;
+
+const FinanceModule = dynamic(
+  () => import("@/components/business/FinanceModule").then((m) => m.FinanceModule),
+  { loading: loadingFallback, ssr: false },
+);
+const InventoryModule = dynamic(
+  () => import("@/components/business/InventoryModule").then((m) => m.InventoryModule),
+  { loading: loadingFallback, ssr: false },
+);
+const DebtModule = dynamic(
+  () => import("@/components/business/DebtModule").then((m) => m.DebtModule),
+  { loading: loadingFallback, ssr: false },
+);
+const PersonnelModule = dynamic(
+  () => import("@/components/business/PersonnelModule").then((m) => m.PersonnelModule),
+  { loading: loadingFallback, ssr: false },
+);
+const VehicleModule = dynamic(
+  () => import("@/components/business/VehicleModule").then((m) => m.VehicleModule),
+  { loading: loadingFallback, ssr: false },
+);
+const DocumentsModule = dynamic(
+  () => import("@/components/business/DocumentsModule").then((m) => m.DocumentsModule),
+  { loading: loadingFallback, ssr: false },
+);
+const NotesModule = dynamic(
+  () => import("@/components/business/NotesModule").then((m) => m.NotesModule),
+  { loading: loadingFallback, ssr: false },
+);
+const FixedCostsWidget = dynamic(
+  () => import("@/components/business/FixedCostsWidget").then((m) => m.FixedCostsWidget),
+  { loading: loadingFallback, ssr: false },
+);
+
+// Modül lazy-load fallback'i — mevcut modüllerin (FinanceModule vb.) iç
+// skeleton desenini (space-y + animate-pulse + surface placeholder) taklit eder,
+// böylece chunk inerken görsel zıplama olmaz.
+function ModuleLoadingSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-32 bg-surface-700 rounded-2xl" />
+      <div className="h-36 bg-surface-700 rounded-2xl" />
+      <div className="h-40 bg-surface-700 rounded-2xl" />
+    </div>
+  );
+}
 
 const moduleConfig: Record<
   ModuleType,
