@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, ArrowDownLeft, ArrowUpRight, Search, Filter,
@@ -30,6 +30,16 @@ export default function AllTransactionsPage() {
   const [filterDirection, setFilterDirection] = useState<"" | "income" | "expense">("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
+
+  // Performans (perf/frontend-quickwins): arama debounce'u. `searchQuery` input'a
+  // anlık yansır (controlled), filtreleme ise 280ms gecikmeli `debouncedQuery`
+  // üzerinden çalışır → her tuş-vuruşunda tüm listeyi yeniden filtrelemekten
+  // kaynaklanan jank ortadan kalkar. Sonuç davranışı aynı.
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 280);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   // Modals
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
@@ -75,34 +85,45 @@ export default function AllTransactionsPage() {
     if (!loading) fetchData();
   }, [filterBusiness, filterDirection]);
 
-  // Client-side filtering (search + month)
-  const filtered = transactions.filter((tx) => {
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      const descMatch = tx.description?.toLowerCase().includes(q);
-      const catMatch = tx.category?.name?.toLowerCase().includes(q);
-      const bizMatch = tx.business_name?.toLowerCase().includes(q);
-      if (!descMatch && !catMatch && !bizMatch) return false;
-    }
-    if (filterMonth) {
-      const txMonth = tx.date.substring(0, 7); // YYYY-MM
-      if (txMonth !== filterMonth) return false;
-    }
-    return true;
-  });
+  // Client-side filtering (search + month) — memoized.
+  // Performans (perf/frontend-quickwins): önceden HER render'da tüm liste yeniden
+  // filtreleniyordu (modal aç/kapa, debounce vb. de tetikliyordu). Artık yalnızca
+  // gerçek bağımlılıklar (veri + debounce'lu arama + ay) değişince hesaplanır.
+  const filtered = useMemo(() => {
+    return transactions.filter((tx) => {
+      if (debouncedQuery) {
+        const q = debouncedQuery.toLowerCase();
+        const descMatch = tx.description?.toLowerCase().includes(q);
+        const catMatch = tx.category?.name?.toLowerCase().includes(q);
+        const bizMatch = tx.business_name?.toLowerCase().includes(q);
+        if (!descMatch && !catMatch && !bizMatch) return false;
+      }
+      if (filterMonth) {
+        const txMonth = tx.date.substring(0, 7); // YYYY-MM
+        if (txMonth !== filterMonth) return false;
+      }
+      return true;
+    });
+  }, [transactions, debouncedQuery, filterMonth]);
 
-  // Stats
-  const totalIncome = filtered
-    .filter((t) => t.direction === "income")
-    .reduce((s, t) => s + t.amount, 0);
-  const totalExpense = filtered
-    .filter((t) => t.direction === "expense")
-    .reduce((s, t) => s + t.amount, 0);
+  // Stats — memoized (tek geçişte gelir/gider toplamı; önceki 2× filter+reduce
+  // her render'da çalışıyordu).
+  const { totalIncome, totalExpense } = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+    for (const t of filtered) {
+      if (t.direction === "income") income += t.amount;
+      else if (t.direction === "expense") expense += t.amount;
+    }
+    return { totalIncome: income, totalExpense: expense };
+  }, [filtered]);
 
-  // Sabit gider toplamı (aylık)
-  const totalFixedCostMonthly = fixedCosts
-    .filter((fc) => !filterBusiness || fc.businessId === filterBusiness)
-    .reduce((s, fc) => s + (fc.summary?.total_monthly_cost || 0), 0);
+  // Sabit gider toplamı (aylık) — memoized.
+  const totalFixedCostMonthly = useMemo(() => {
+    return fixedCosts
+      .filter((fc) => !filterBusiness || fc.businessId === filterBusiness)
+      .reduce((s, fc) => s + (fc.summary?.total_monthly_cost || 0), 0);
+  }, [fixedCosts, filterBusiness]);
   const totalWithFixed = totalExpense + totalFixedCostMonthly;
 
   if (loading) {
