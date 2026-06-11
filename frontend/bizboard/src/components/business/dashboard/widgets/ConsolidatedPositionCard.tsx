@@ -4,7 +4,6 @@
 // (R3 god-component bolme: ConsolidatedWidgets.tsx'ten cikarildi)
 
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
 import { WidgetDetailModal } from "../WidgetDetailModal";
@@ -26,13 +25,10 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
       setReceivableCensor(localStorage.getItem("cati-alacaklar-censor") === "1");
     } catch { /* ignore */ }
   }, []);
-  // v1.6.23.13 (TODO bb3fceb5): net=0 nötr, 0'ı yeşil sayma.
-  const sign: "pos" | "neg" | "zero" = c.net > 0 ? "pos" : c.net < 0 ? "neg" : "zero";
   // v1.6.23.9 (TODO 8c7ffaac): bekleyen POS tahsilatı (settle olunca eklenecek).
   const pendingPos = c.pending_pos_receivables ?? 0;
-  const expectedNet = c.expected_net ?? c.net;
   // v1.6.23.15 (TODO d0ccb7f0): widget tıklanabilir → detay modal
-  // v1.6.23.24: 50% width layout için kompakt versiyon. Net + Genel Kasa
+  // v1.6.23.24: 50% width layout için kompakt versiyon. Genel Kasa
   // (= toplam nakit + bank bakiyesi) öne çıkar; KK/Kredi sub-stat'leri detay
   // modal'a taşındı.
   const [showDetail, setShowDetail] = useState(false);
@@ -49,29 +45,13 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
     >
       <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-2">Konsolide DGR</p>
 
-      {/* Net + Genel Kasa — yan yana iki primary metric.
-          v1.7.x WP TODO b92d05fe: Konsolide Net = ekonomik gelir (POS profit
-          + non-POS gross − giderler). Genel Kasa = fiziksel para (bank+nakit).
-          Aynı sayı OLMAMASI normal. */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Konsolide Net</p>
-          <p className="num text-2xl font-bold truncate" title={formatCurrency(c.net, "TRY")}>
-            {formatCurrency(c.net, "TRY")}
-          </p>
-          <div className="mt-1 flex items-center gap-1 text-[10px] text-brand-200">
-            {sign === "pos" && <><TrendingUp size={10} /> pozitif</>}
-            {sign === "neg" && <><TrendingDown size={10} /> negatif</>}
-            {sign === "zero" && <>— sıfır</>}
-          </div>
-        </div>
-        <div>
-          <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Genel Kasa</p>
-          <p className="num text-2xl font-bold truncate" title={formatCurrency(genelKasa, "TRY")}>
-            {formatCurrency(genelKasa, "TRY")}
-          </p>
-          <p className="mt-1 text-[10px] text-brand-200">nakit + banka</p>
-        </div>
+      {/* Genel Kasa — tek primary metric (nakit + banka). */}
+      <div>
+        <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Genel Kasa</p>
+        <p className="num text-2xl font-bold truncate" title={formatCurrency(genelKasa, "TRY")}>
+          {formatCurrency(genelKasa, "TRY")}
+        </p>
+        <p className="mt-1 text-[10px] text-brand-200">nakit + banka</p>
       </div>
 
       {/* Sub-stat row: 3 küçük metric */}
@@ -110,16 +90,8 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
         <DetailRow label="Verecekler (DGR'den gidecek)" value={-Math.abs(c.payables)} tone="neg" censor={payableCensor} />
         <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" censor={payableCensor} />
         <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" censor={payableCensor} />
-        <div className="pt-2 border-t border-surface-700">
-          <DetailRow label="Konsolide Net (ekonomik gelir)" value={c.net} tone={sign === "pos" ? "pos" : sign === "neg" ? "neg" : "neutral"} bold />
-          {pendingPos > 0 && (
-            <DetailRow label="Beklenen Net (settle sonrası)" value={expectedNet} tone="pos" bold />
-          )}
-        </div>
         {/* Beta v1.1: komisyon kaldırıldı — formül sadeleşti. */}
         <p className="text-[11px] text-surface-400 pt-2">
-          <strong>Konsolide Net</strong> = Σ POS hacim + Σ non-POS gelir − Σ gider
-          (transfer 0). Alacak/verecek bu hesaba DAHİL DEĞİL; ayrı satırda görünür.{" "}
           <strong>Genel Kasa</strong> = nakit + banka bakiyeleri (fiziksel para).
           Bekleyen POS settle olunca Genel Kasa'ya geçer.
         </p>
