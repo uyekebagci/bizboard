@@ -6,6 +6,7 @@ import com.bizboard.common.dto.UpdateUserRequest;
 import com.bizboard.common.dto.UserDto;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.User;
+import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,8 @@ public class AdminUserService {
     // v1.7.x: user delete öncesi FK temizleme için
     private final com.bizboard.repository.NotificationRepository notificationRepository;
     private final com.bizboard.repository.RefreshTokenRepository refreshTokenRepository;
+    // Tier 3 (EVT-3): firma erişimi verilince FIRM_ACCESS_GRANTED dispatch için.
+    private final com.bizboard.service.notification.NotificationDispatchService dispatchService;
 
     @Transactional(readOnly = true)
     public List<UserDto> getAllUsers() {
@@ -76,6 +79,10 @@ public class AdminUserService {
                         "businessIdsCount", request.getBusinessIds().size()
                 ));
 
+        // Tier 3 (EVT-3): yeni kullanıcıya verilen tüm firma erişimleri için
+        // FIRM_ACCESS_GRANTED dispatch (oluşturma = tümü yeni). Non-fatal.
+        dispatchFirmAccessGranted(user, parseBusinessIds(businessIdsStr));
+
         return toUserDto(user);
     }
 
@@ -87,6 +94,10 @@ public class AdminUserService {
         Map<String, Object> changes = new HashMap<>();
         String oldRole = user.getRole();
         String newRole = null;
+        // Tier 3 (EVT-3): değişiklik commit'inden ÖNCE eski erişim seti — yalnız
+        // YENİ EKLENEN firmalar için bildirim (idempotent: mevcut erişim tekrar etmez).
+        Set<UUID> oldAccessIds = parseBusinessIds(user.getAccessibleBusinesses());
+        Set<UUID> newlyGranted = new HashSet<>();
 
         if (request.getFullName() != null && !request.getFullName().isBlank()
                 && !Objects.equals(request.getFullName(), user.getFullName())) {
@@ -123,6 +134,12 @@ public class AdminUserService {
                         "from", oldBusinesses != null ? oldBusinesses : "",
                         "to", newBusinesses));
                 user.setAccessibleBusinesses(newBusinesses);
+                // EVT-3: yeni eklenen = yeni set − eski set. "all" (admin) atlanır;
+                // her firma için tek tek bildirim sadece açık id listesinde anlamlı.
+                Set<UUID> newAccessIds = parseBusinessIds(newBusinesses);
+                for (UUID id : newAccessIds) {
+                    if (!oldAccessIds.contains(id)) newlyGranted.add(id);
+                }
             }
         }
 
@@ -162,6 +179,9 @@ public class AdminUserService {
                 "USER", user.getId(),
                 "Kullanici guncellendi: " + user.getUsername() + " (" + changes.size() + " alan)",
                 meta);
+
+        // Tier 3 (EVT-3): yalnız bu güncellemede YENİ eklenen firmalar için dispatch.
+        dispatchFirmAccessGranted(user, newlyGranted);
 
         return toUserDto(user);
     }
@@ -233,6 +253,63 @@ public class AdminUserService {
                 .filter(java.util.Objects::nonNull)
                 .map(UUID::toString)
                 .collect(Collectors.joining(","));
+    }
+
+    /**
+     * Tier 3 (EVT-3): verilen firmalara erişimi tanımlanan kullanıcıya
+     * {@link NotificationEvent#FIRM_ACCESS_GRANTED} dispatch eder (firma başına bir
+     * bildirim). Mevcut kanal-agnostik dispatch altyapısı (in-app + opt-in Telegram)
+     * kullanılır.
+     *
+     * <p><b>İdempotent:</b> yalnız YENİ eklenen firmalar geçilir (çağıran diff
+     * hesaplar); aynı erişim ikinci kez verilmez → tekrar bildirim olmaz.
+     * <b>Non-fatal:</b> bildirim hatası kullanıcı oluşturma/güncelleme tx'ini
+     * BOZMAZ (yakalanır, loglanır). "all" (admin) firmaları burada listelenmez.</p>
+     */
+    private void dispatchFirmAccessGranted(User user, Set<UUID> grantedBusinessIds) {
+        if (user == null || grantedBusinessIds == null || grantedBusinessIds.isEmpty()) return;
+        try {
+            List<Business> businesses = businessRepository.findAllById(grantedBusinessIds);
+            for (Business b : businesses) {
+                try {
+                    dispatchService.dispatchToUser(
+                            NotificationEvent.FIRM_ACCESS_GRANTED,
+                            user.getId(),
+                            Map.of("business", b.getName() != null ? b.getName() : ""),
+                            "/dashboard",
+                            b.getId());
+                } catch (Exception inner) {
+                    log.warn("[firm-access] dispatch hatası (izole) user={} business={}: {}",
+                            user.getId(), b.getId(), inner.getMessage());
+                }
+            }
+            log.info("[firm-access] FIRM_ACCESS_GRANTED dispatch user={} firma sayısı={}",
+                    user.getId(), businesses.size());
+        } catch (Exception e) {
+            log.warn("[firm-access] FIRM_ACCESS_GRANTED değerlendirme hatası (izole): {}", e.getMessage());
+        }
+    }
+
+    /**
+     * {@code accessible_businesses} CSV'sini geçerli {@link UUID} setine çevirir.
+     * {@code null}/boş/"all" → boş set (admin "all" per-firma bildirim üretmez;
+     * geçersiz token sessizce atlanır). Sıra önemsiz olduğu için Set.
+     */
+    private static Set<UUID> parseBusinessIds(String csv) {
+        if (csv == null || csv.isBlank() || "all".equalsIgnoreCase(csv.trim())) {
+            return new HashSet<>();
+        }
+        Set<UUID> out = new HashSet<>();
+        for (String token : csv.split(",")) {
+            String t = token.trim();
+            if (t.isEmpty()) continue;
+            try {
+                out.add(UUID.fromString(t));
+            } catch (IllegalArgumentException ignored) {
+                // bozuk token — atla (defansif)
+            }
+        }
+        return out;
     }
 
     private UserDto toUserDto(User user) {
