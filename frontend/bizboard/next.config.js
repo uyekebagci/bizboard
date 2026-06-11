@@ -68,6 +68,10 @@ const nextConfig = {
       dynamic: 30,
       static: 180,
     },
+    // Performans (perf/frontend-quickwins): lucide-react barrel import'unu
+    // optimize et — yalnızca gerçekten kullanılan ikon modülleri bundle'a girer,
+    // ağaç-sarsma (tree-shaking) tüm icon set'ini çekme riskini ortadan kaldırır.
+    optimizePackageImports: ["lucide-react"],
   },
   async headers() {
     return [
