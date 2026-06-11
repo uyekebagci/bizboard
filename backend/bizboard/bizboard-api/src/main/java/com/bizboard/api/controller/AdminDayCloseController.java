@@ -2,6 +2,7 @@ package com.bizboard.api.controller;
 
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.CashClosingToDayCloseMigrationRunner;
+import com.bizboard.service.DayOpenBackfillRunner;
 import com.bizboard.service.LedgerFeatureFlagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ public class AdminDayCloseController {
 
     private final CashClosingToDayCloseMigrationRunner migrationRunner;
     private final LedgerFeatureFlagService featureFlags;
+    private final DayOpenBackfillRunner dayOpenBackfillRunner;
 
     @PostMapping("/migrate")
     public ResponseEntity<CashClosingToDayCloseMigrationRunner.MigrationReport> migrate(
@@ -65,5 +67,45 @@ public class AdminDayCloseController {
         return ResponseEntity.ok(Map.of(
                 "key", LedgerFeatureFlagService.KEY_BACKDATE_ENABLED,
                 "enabled", enabled));
+    }
+
+    // ── Gün Açılışı: işlem-giriş enforcement bayrağı (NON-BREAKING, default kapalı) ──
+
+    @GetMapping("/enforce-flag")
+    public ResponseEntity<Map<String, Object>> getEnforceFlag() {
+        return ResponseEntity.ok(Map.of(
+                "key", LedgerFeatureFlagService.KEY_DAY_OPEN_ENFORCE,
+                "enabled", featureFlags.isDayOpenEnforceEnabled()));
+    }
+
+    @PostMapping("/enforce-flag")
+    public ResponseEntity<Map<String, Object>> setEnforceFlag(
+            @RequestParam(name = "enabled") boolean enabled,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        featureFlags.setDayOpenEnforceEnabled(enabled, principal != null ? principal.getId() : null);
+        return ResponseEntity.ok(Map.of(
+                "key", LedgerFeatureFlagService.KEY_DAY_OPEN_ENFORCE,
+                "enabled", enabled));
+    }
+
+    // ── Gün Açılışı: geriye-uyum backfill (CLOSE_SYNC; idempotent + reversible) ──
+
+    @PostMapping("/dayopen-backfill")
+    public ResponseEntity<DayOpenBackfillRunner.BackfillReport> dayOpenBackfill(
+            @RequestParam(name = "dryRun", defaultValue = "true") boolean dryRun,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        var report = dayOpenBackfillRunner.backfill(dryRun,
+                principal != null ? principal.getId() : null,
+                principal != null ? principal.getUsername() : null);
+        return ResponseEntity.ok(report);
+    }
+
+    @PostMapping("/dayopen-backfill/reverse")
+    public ResponseEntity<Map<String, Object>> dayOpenBackfillReverse(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        int removed = dayOpenBackfillRunner.reverse(
+                principal != null ? principal.getId() : null,
+                principal != null ? principal.getUsername() : null);
+        return ResponseEntity.ok(Map.of("removed", removed));
     }
 }
