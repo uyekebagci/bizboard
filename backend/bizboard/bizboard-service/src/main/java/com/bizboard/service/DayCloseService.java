@@ -58,6 +58,8 @@ public class DayCloseService {
     private final AuditLogService auditLogService;
     /** Faz D (§9/TODO 4): kaçak eşik aşımı → bildirim (in-app + opt-in Telegram). */
     private final com.bizboard.service.notification.NotificationDispatchService dispatchService;
+    /** Gün Açılışı: kapanış sonrası DayOpen durumunu CLOSED'a senkronla (best-effort). */
+    private final DayOpenService dayOpenService;
 
     /**
      * Recompute kilidi: bir business'in zincirini aynı anda iki recompute/edit
@@ -190,6 +192,15 @@ public class DayCloseService {
 
             if (alarm) {
                 fireAlarm(dc, user);
+            }
+
+            // Gün Açılışı: kapanış → DayOpen durumunu CLOSED'a senkronla (state
+            // machine: AÇIK → KAPALI). Best-effort/non-fatal — kapanışı bozmaz.
+            try {
+                dayOpenService.onDayClosed(businessId, date, userId, user.getUsername());
+            } catch (Exception e) {
+                log.warn("[day-close] DayOpen CLOSED senkron hatası (izole, atlandı): {}",
+                        e.getMessage());
             }
 
             // §4.1: bugün-DIŞI bir kapanış zincirde ileri günleri etkiler →

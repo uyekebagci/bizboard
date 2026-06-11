@@ -2,9 +2,11 @@ package com.bizboard.service;
 
 import com.bizboard.common.entity.BankAccount;
 import com.bizboard.common.entity.DayClose;
+import com.bizboard.common.entity.DayOpen;
 import com.bizboard.common.enums.DayCloseStatus;
 import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.repository.DayCloseRepository;
+import com.bizboard.repository.DayOpenRepository;
 import com.bizboard.repository.PostingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +44,8 @@ public class DayCloseCalculator {
     private final PostingRepository postingRepository;
     private final BankAccountRepository bankAccountRepository;
     private final DayCloseRepository dayCloseRepository;
+    /** Gün Açılışı: opening artık DayOpen'ın yuvarlanmış değerinden gelir (varsa). */
+    private final DayOpenRepository dayOpenRepository;
 
     /**
      * Bir işletmenin gün-kapanışına dahil edilecek "parası olan" (posting-
@@ -64,13 +68,33 @@ public class DayCloseCalculator {
     }
 
     /**
-     * ÖNCEKİ KASA (opening): {@code date}'ten ÖNCEKİ en yakın CLOSED DayClose'un
-     * {@code actualTotal}'ı (otomatik devir, §4 madde 6). Yoksa
-     * {@code computedClosing}; o da yoksa 0. Boşluk (atlanmış gün) varsa zincir
-     * kopmaz — en yakın önceki CLOSED'a düşer (§4.1 fallback).
+     * ÖNCEKİ KASA (opening) — Gün Açılışı entegrasyonu (KAPSAM §4):
+     *
+     * <ol>
+     *   <li><b>Birincil:</b> o gün için bir {@link DayOpen} kaydı varsa opening
+     *       artık onun <b>yuvarlanmış</b> ({@code roundedTotal}) değeridir — ham
+     *       prior-actual'dan DEĞİL. Devir-yuvarlama farkı zaten Σ=0 posting ile
+     *       hesap bakiyelerine yansıdığından SAĞLAMA HESAP tutarlı kalır
+     *       ({@code recomputeChainFrom} uyumlu).</li>
+     *   <li><b>Fallback (gün açılmamış / eski veri):</b> {@code date}'ten ÖNCEKİ
+     *       en yakın CLOSED DayClose'un {@code actualTotal}'ı (otomatik devir,
+     *       §4 madde 6); yoksa {@code computedClosing}; o da yoksa 0. Boşluk
+     *       (atlanmış gün) zinciri kopartmaz — en yakın önceki CLOSED'a düşer.</li>
+     * </ol>
      */
     @Transactional(readOnly = true)
     public BigDecimal openingFor(UUID businessId, LocalDate date) {
+        Optional<DayOpen> dayOpen = dayOpenRepository.findByBusinessIdAndOpenDate(businessId, date);
+        if (dayOpen.isPresent()) {
+            DayOpen d = dayOpen.get();
+            // OPEN ya da CLOSED — her iki durumda da kullanıcının onayladığı
+            // yuvarlanmış açılış o günün opening'idir. CLOSE_SYNC kaydı (gün hiç
+            // açılmamış, kapanışta türetilmiş) roundedTotal=0 taşır → fallback'e düş.
+            if (d.getCreatedVia() != com.bizboard.common.enums.DayOpenCreatedVia.CLOSE_SYNC
+                    && d.getRoundedTotal() != null) {
+                return d.getRoundedTotal();
+            }
+        }
         Optional<DayClose> prev = dayCloseRepository
                 .findFirstByBusinessIdAndStatusAndCloseDateLessThanOrderByCloseDateDesc(
                         businessId, DayCloseStatus.CLOSED, date);

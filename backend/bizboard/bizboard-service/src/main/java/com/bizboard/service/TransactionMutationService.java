@@ -68,6 +68,9 @@ public class TransactionMutationService {
     // da dolar (boot/admin backfill ile aynı kurallar, idempotent marker
     // source_type+source_ref_id). create→derive, update→reverse+rederive, delete→reverse.
     private final LedgerPostingService ledgerPostingService;
+    // Gün Açılışı: işlem-giriş enforcement (feature-flag arkasında, NON-BREAKING).
+    // create/update'te ilgili işletme+tarih için gün AÇIK değilse 409 reddi.
+    private final DayOpenService dayOpenService;
 
     @Transactional
     public void deleteTransaction(UUID transactionId, UUID userId, String reason) {
@@ -215,6 +218,12 @@ public class TransactionMutationService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         accessGuard.assertCanAccessBusiness(userId, businessId);
+
+        // Gün Açılışı enforcement (feature-flag arkasında, NON-BREAKING): işlem
+        // yalnız AÇIK güne girilebilir. Flag kapalıyken no-op (mevcut canlı akış
+        // korunur). İşlem tarihi null ise bugün varsayılır.
+        LocalDate entryDate = request.getDate() != null ? request.getDate() : LocalDate.now();
+        dayOpenService.assertDayOpenForEntry(businessId, entryDate);
 
         // Kategori ZORUNLU + sıkı doğrulama. categoryId verilmeli; verilen
         // kategori business'a ait ve aktif olmalı. Paylaşımlı modelde yön-eşleşme
@@ -476,6 +485,13 @@ public class TransactionMutationService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         accessGuard.assertCanAccessBusiness(userId, transaction.getBusiness().getId());
+
+        // Gün Açılışı enforcement (feature-flag arkasında, NON-BREAKING): düzenleme
+        // de yalnız AÇIK güne yapılabilir. Tarih değişiyorsa YENİ tarih, değilse
+        // mevcut tarih gating'e girer. Flag kapalıyken no-op.
+        LocalDate effectiveDate = request.getDate() != null
+                ? request.getDate() : transaction.getDate();
+        dayOpenService.assertDayOpenForEntry(transaction.getBusiness().getId(), effectiveDate);
 
         // v1.6.23.4 (BUG-1 fix): HESAPDAN tx update için bank balance reversal/apply.
         // Eski state'i yakala — sonrasında reverse + apply yapacağız.

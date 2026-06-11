@@ -54,12 +54,18 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
      * toplamı = o günün NET konum hareketi. Pozitif = net giriş, negatif = çıkış.
      *
      * <p>SAĞLAMA HESAP: net hareket = totalIn − totalOut. computed = opening + net.</p>
+     *
+     * <p><b>Gün Açılışı:</b> devir-yuvarlama düzeltmesi ({@code DAY_CLOSE_ADJUST})
+     * günün opening'ine ZATEN baked'tır (DayOpen.roundedTotal) — gün İÇİ harekete
+     * DAHİL EDİLMEZ, aksi halde çift sayılırdı (opening + flow). Bu yüzden tüm
+     * in/out/flow toplamları {@code DAY_CLOSE_ADJUST} kaynağını HARİÇ tutar.</p>
      */
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Posting p " +
             "WHERE p.journalEntry.business.id = :businessId " +
             "AND p.journalEntry.entryDate = :date " +
             "AND p.account.id IN :accountIds " +
-            "AND p.legKind = com.bizboard.common.enums.PostingLegKind.LOCATION_MOVE")
+            "AND p.legKind = com.bizboard.common.enums.PostingLegKind.LOCATION_MOVE " +
+            "AND p.journalEntry.sourceType <> com.bizboard.common.enums.JournalSourceType.DAY_CLOSE_ADJUST")
     BigDecimal sumLocationFlowForDate(@Param("businessId") UUID businessId,
                                       @Param("date") LocalDate date,
                                       @Param("accountIds") List<UUID> accountIds);
@@ -73,6 +79,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             "AND p.journalEntry.entryDate = :date " +
             "AND p.account.id IN :accountIds " +
             "AND p.legKind = com.bizboard.common.enums.PostingLegKind.LOCATION_MOVE " +
+            "AND p.journalEntry.sourceType <> com.bizboard.common.enums.JournalSourceType.DAY_CLOSE_ADJUST " +
             "AND p.amount > 0")
     BigDecimal sumLocationInForDate(@Param("businessId") UUID businessId,
                                     @Param("date") LocalDate date,
@@ -87,6 +94,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             "AND p.journalEntry.entryDate = :date " +
             "AND p.account.id IN :accountIds " +
             "AND p.legKind = com.bizboard.common.enums.PostingLegKind.LOCATION_MOVE " +
+            "AND p.journalEntry.sourceType <> com.bizboard.common.enums.JournalSourceType.DAY_CLOSE_ADJUST " +
             "AND p.amount < 0")
     BigDecimal sumLocationOutForDate(@Param("businessId") UUID businessId,
                                      @Param("date") LocalDate date,
