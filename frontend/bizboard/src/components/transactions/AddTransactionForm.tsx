@@ -81,6 +81,10 @@ export function AddTransactionForm({
   const [isLoadingCat, setIsLoadingCat] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Gün Açılışı enforcement: gün AÇIK değilken işlem reddedildiğinde (409
+  // [DAY_NOT_OPEN]) "Günü Aç" yönlendirmesi göster (NON-BREAKING — flag kapalıyken
+  // bu hata hiç oluşmaz).
+  const [dayNotOpen, setDayNotOpen] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const [businessId, setBusinessId] = useState(preselectedBusinessId);
@@ -273,6 +277,7 @@ export function AddTransactionForm({
 
     setIsSubmitting(true);
     setError(null);
+    setDayNotOpen(null);
 
     try {
       // Beta v1.1: POS komisyon alanları UI'dan kaldırıldı. Body'ye
@@ -360,7 +365,14 @@ export function AddTransactionForm({
         setTimeout(() => onSuccess(tx.id), compact ? 400 : 1200);
       }
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Islem eklenirken bir hata olustu"));
+      const msg = getErrorMessage(err, "Islem eklenirken bir hata olustu");
+      // Gün Açılışı enforcement reddi → özel "Günü Aç" yönlendirmesi.
+      if (msg.includes("[DAY_NOT_OPEN]")) {
+        setDayNotOpen(msg.replace("[DAY_NOT_OPEN]", "").trim());
+        setError(null);
+      } else {
+        setError(msg);
+      }
       toast.error(err);
     } finally {
       setIsSubmitting(false);
@@ -816,6 +828,19 @@ export function AddTransactionForm({
           </div>
         )}
       </div>
+
+      {/* Gün Açılışı enforcement → "Günü Aç" yönlendirmesi */}
+      {dayNotOpen && (
+        <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3 flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-sky-200 text-sm">{dayNotOpen}</p>
+            <a href="/dashboard/gun-kapanisi"
+              className="inline-block mt-2 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold transition-colors">
+              Günü Aç sayfasına git
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (

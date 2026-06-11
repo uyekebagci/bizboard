@@ -16,13 +16,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Loader2, CalendarCheck, Lock, ShieldAlert, Search, FileEdit,
-  RefreshCw, CheckCircle2, XCircle, History,
+  RefreshCw, CheckCircle2, XCircle, History, Sunrise, Unlock,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { useDayClose } from "@/hooks/useDayClose";
+import { useDayOpen } from "@/hooks/useDayOpen";
 import { useDayCloseEdit } from "@/hooks/useDayCloseEdit";
 import { CloseDayModal } from "@/components/dayclose/CloseDayModal";
+import { OpenDayModal } from "@/components/dayclose/OpenDayModal";
 import { DrillDownModal } from "@/components/dayclose/DrillDownModal";
 import { EditRequestModal } from "@/components/dayclose/EditRequestModal";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -38,16 +40,28 @@ export default function GunKapanisiPage() {
   const businessId = businesses?.[0]?.id ?? null;
 
   const { preview, closings, loading, error, refresh, drillDown, recompute } = useDayClose(businessId);
+  const {
+    preview: openPreview, status: dayStatus, refresh: refreshOpen,
+  } = useDayOpen(businessId);
   const { requests, approve, reject } = useDayCloseEdit(businessId);
 
   const [showClose, setShowClose] = useState(false);
+  const [showOpen, setShowOpen] = useState(false);
   const [drillDate, setDrillDate] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<DayClose | null>(null);
   const { request: submitEdit } = useDayCloseEdit(businessId);
 
   const today = preview;
   const todayClosed = today?.status === "CLOSED";
+  const lifecycle = dayStatus?.lifecycle_status ?? "UNOPENED";
+  const isUnopened = lifecycle === "UNOPENED";
+  const isOpen = lifecycle === "OPEN";
+  const enforcement = dayStatus?.enforcement_enabled ?? false;
   const pendingEdits = requests.filter((r) => r.status === "PENDING");
+
+  async function refreshAll() {
+    await Promise.all([refresh(), refreshOpen()]);
+  }
 
   async function handleRecompute() {
     if (!businessId) return;
@@ -93,6 +107,58 @@ export default function GunKapanisiPage() {
           </button>
         )}
       </div>
+
+      {/* Gün Açılışı durumu — state machine: AÇILMAMIŞ → AÇIK → KAPALI */}
+      {dayStatus && !todayClosed && (
+        <section className={cn(
+          "card p-4 border",
+          isUnopened && "border-sky-500/30 bg-sky-500/5",
+          isOpen && "border-emerald-500/20 bg-emerald-500/5",
+        )}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                {isOpen
+                  ? <Unlock size={14} className="text-emerald-400" />
+                  : <Sunrise size={14} className="text-sky-400" />}
+                <h2 className="text-sm font-semibold text-white">
+                  {isOpen ? "Bugün Açık" : "Bugün Henüz Açılmadı"}
+                </h2>
+                <LifecycleBadge status={lifecycle} />
+                {enforcement && (
+                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-surface-700 text-surface-300 border border-surface-600">
+                    Kilit Aktif
+                  </span>
+                )}
+              </div>
+              {isUnopened ? (
+                <p className="text-[11px] text-surface-400 mt-0.5">
+                  {enforcement
+                    ? "İşlem girebilmek için önce günü açın (devir + yuvarlama)."
+                    : "Devir + yuvarlama ile günü açabilirsiniz. (İşlem kilidi kapalı.)"}
+                </p>
+              ) : (
+                <p className="text-2xl font-bold text-white num">
+                  {formatCurrency(openPreview?.rounded_total ?? 0, "TRY")}
+                  <span className="text-[11px] font-normal text-surface-400 ml-2">açılış</span>
+                </p>
+              )}
+            </div>
+            {isUnopened && (
+              <button onClick={() => setShowOpen(true)}
+                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold transition-colors shrink-0 flex items-center gap-1.5">
+                <Sunrise size={15} /> Günü Aç
+              </button>
+            )}
+            {isOpen && (
+              <button onClick={() => setShowOpen(true)}
+                className="btn-secondary px-3 py-2 text-xs shrink-0">
+                Açılışı Düzenle
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Bugünün durumu */}
       {today && (
@@ -202,9 +268,12 @@ export default function GunKapanisiPage() {
       )}
 
       {/* Modal'lar */}
+      <OpenDayModal preview={showOpen ? openPreview : null} businessId={businessId ?? ""}
+        isAdmin={isAdmin} onClose={() => setShowOpen(false)}
+        onOpened={() => { void refreshAll(); }} />
       <CloseDayModal preview={showClose ? preview : null} businessId={businessId ?? ""}
         isAdmin={isAdmin} onClose={() => setShowClose(false)}
-        onClosed={() => { void refresh(); }} />
+        onClosed={() => { void refreshAll(); }} />
       <DrillDownModal date={drillDate} load={drillDown} onClose={() => setDrillDate(null)} />
       <EditRequestModal dayClose={editTarget} submit={submitEdit} onClose={() => setEditTarget(null)} />
     </div>
@@ -268,6 +337,20 @@ function DayCloseRow({ dc, isAdmin, onDrill, onEdit }: {
         </div>
       </div>
     </div>
+  );
+}
+
+function LifecycleBadge({ status }: { status: string }) {
+  const cls = status === "OPEN"
+    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+    : status === "CLOSED"
+      ? "bg-surface-700 text-surface-300 border-surface-600"
+      : "bg-sky-500/20 text-sky-300 border-sky-500/30";
+  const label = status === "OPEN" ? "AÇIK" : status === "CLOSED" ? "KAPALI" : "AÇILMAMIŞ";
+  return (
+    <span className={cn("text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border", cls)}>
+      {label}
+    </span>
   );
 }
 

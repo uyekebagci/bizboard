@@ -689,6 +689,47 @@ export interface DayCloseDrillDown {
   movements: DayCloseDrillDownMovement[];
 }
 
+// ---- Ledger v2 (Faz B — Gün Açılışı): DayOpen / devir yuvarlama / state machine ----
+
+/** Birleşik gün yaşam-döngüsü: AÇILMAMIŞ → AÇIK → KAPALI. */
+export type DayLifecycleStatus = "UNOPENED" | "OPEN" | "CLOSED";
+export type DayOpenStatus = "OPEN" | "CLOSED";
+export type DayOpenCreatedVia = "MANUAL" | "BACKDATED" | "AUTO" | "CLOSE_SYNC";
+
+export interface DayOpenAccountOpening {
+  id?: string;
+  account_id: string;
+  account_name?: string;
+  account_type?: string;
+  carried_over: number;   // otomatik devir (önceki gün CLOSED actual)
+  rounded: number;        // kullanıcının yuvarladığı açılış
+  rounding_delta: number; // rounded - carried_over
+}
+
+export interface DayOpen {
+  id: string | null;
+  open_date: string;
+  status: DayOpenStatus | string | null;
+  lifecycle_status: DayLifecycleStatus | string;
+  carried_over_total: number;
+  rounded_total: number;
+  rounding_delta: number;
+  rounding_entry_id?: string | null;
+  reason_note?: string | null;
+  is_backdated: boolean;
+  created_via?: DayOpenCreatedVia | string;
+  opened_by?: string | null;
+  opened_at?: string | null;
+  account_openings: DayOpenAccountOpening[];
+}
+
+export interface DayStatus {
+  date: string;
+  lifecycle_status: DayLifecycleStatus | string;
+  enforcement_enabled: boolean;
+  can_add_transaction: boolean;
+}
+
 export interface DayCloseEditRequest {
   id: string;
   day_close_id: string;
