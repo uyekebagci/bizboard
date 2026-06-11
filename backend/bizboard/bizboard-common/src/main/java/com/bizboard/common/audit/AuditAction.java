@@ -130,6 +130,27 @@ public final class AuditAction {
     /** §8.5 CashClosing → DayClose migrate (idempotent). */
     public static final String DAY_CLOSE_MIGRATED      = "DAY_CLOSE_MIGRATED";
 
+    // ── Ledger v2 (Faz B — Gün Açılışı): state machine + devir yuvarlama ──────
+    /** Gün açıldı (hesap açılışları + devir yuvarlama onaylandı). */
+    public static final String DAY_OPEN_OPENED          = "DAY_OPEN_OPENED";
+    /** Admin geçmiş tarihe gün açtı (feature flag arkasında). */
+    public static final String DAY_OPEN_BACKDATED       = "DAY_OPEN_BACKDATED";
+    /** Devir-yuvarlama düzeltme posting'i üretildi (Σ=0, DAY_CLOSE_ADJUST). */
+    public static final String DAY_OPEN_ROUNDING_POSTED = "DAY_OPEN_ROUNDING_POSTED";
+    /** Gün açılışı geri alındı/yeniden açıldı (yuvarlama posting reverse). */
+    public static final String DAY_OPEN_REVERTED        = "DAY_OPEN_REVERTED";
+    /** DayClose finalize → DayOpen CLOSED senkronu (geriye-uyum backfill dahil). */
+    public static final String DAY_OPEN_CLOSED_SYNC     = "DAY_OPEN_CLOSED_SYNC";
+    /** İşlem-giriş enforcement bayrağı admin tarafından değiştirildi. */
+    public static final String DAY_OPEN_ENFORCE_TOGGLE  = "DAY_OPEN_ENFORCE_TOGGLE";
+    /** AÇILMAMIŞ güne işlem girişi bloklandı (enforcement; teşhis izi). */
+    public static final String DAY_OPEN_BLOCKED_ENTRY   = "DAY_OPEN_BLOCKED_ENTRY";
+
+    // Highlight rozetleri (UI vurgu)
+    public static final String HIGHLIGHT_DAY_OPEN          = "DAY_OPEN";
+    public static final String HIGHLIGHT_DAY_OPEN_ROUNDING = "DAY_OPEN_ROUNDING";
+    public static final String HIGHLIGHT_DAY_OPEN_BACKDATED = "DAY_OPEN_BACKDATED";
+
     // ── Ledger v2 (Faz B, §4.2): onaylı kapanış düzenleme ─────────────────────
     public static final String DAY_CLOSE_EDIT_REQUESTED = "DAY_CLOSE_EDIT_REQUESTED";
     public static final String DAY_CLOSE_EDIT_APPROVED  = "DAY_CLOSE_EDIT_APPROVED";
