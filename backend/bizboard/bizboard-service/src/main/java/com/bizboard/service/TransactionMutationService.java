@@ -263,16 +263,26 @@ public class TransactionMutationService {
         }
         if ("NAKIT".equals(pm) && bankAccount == null) {
             // Default "Genel Nakit" (is_system=true CASH_HOLDER) bul.
-            bankAccount = bankAccountRepository
-                    .findByActiveTrueAndBusinessIdInOrderByNameAsc(java.util.List.of(businessId))
-                    .stream()
-                    .filter(ba -> ba.isSystem()
-                            && ba.getType() == com.bizboard.common.enums.BankAccountType.CASH_HOLDER)
-                    .findFirst()
-                    .orElse(null);
+            bankAccount = resolveSystemCashHolder(businessId);
             if (bankAccount == null) {
                 log.warn("[tx-create] NAKIT tx — business={} icin 'Genel Nakit' sistem hesabi bulunamadi; " +
                         "tx bank_account NULL kayit ediliyor (legacy fallback)", businessId);
+            }
+        }
+        // BUG-2 (POS bank_account): POS GELİR tx'i create anında bir konum hesabına
+        // bağlanmazsa (FE eskiden bank_account_id GÖNDERMİYORDU) posting türetiminde
+        // resolveLocationAccount NULL döner → tx FLAGGED → posting üretilmez → POS
+        // geliri gün-kapanışı/mutabakata GİRMEZ. Kullanıcı kasa seçtiyse (request.
+        // getBankAccountId) o hesaba; seçmediyse NAKIT ile aynı sistem "Genel Nakit"
+        // CASH_HOLDER fallback'ine route et → POS geliri doğru kasaya düşer + mutabakata
+        // girer. (POS GİDER kendi pos_tx_subtype/related_bank_account akışını kullanır;
+        // burada yalnız GELİR yönü ele alınır.)
+        if ("POS".equals(pm) && bankAccount == null
+                && "INCOME".equalsIgnoreCase(request.getDirection())) {
+            bankAccount = resolveSystemCashHolder(businessId);
+            if (bankAccount == null) {
+                log.warn("[tx-create] POS gelir tx — business={} icin 'Genel Nakit' sistem hesabi " +
+                        "bulunamadi; tx bank_account NULL — posting FLAGGED riski.", businessId);
             }
         }
 
@@ -889,6 +899,24 @@ public class TransactionMutationService {
             log.warn("[tx-mutation] tx={} senkron posting turetme hatasi (izole, atlandi): {}",
                     txId, e.getMessage());
         }
+    }
+
+    /**
+     * Bir işletmenin sistem-managed "Genel Nakit" ({@code is_system=true},
+     * {@code CASH_HOLDER}) hesabını döner; yoksa {@code null}. NAKIT ve POS-gelir
+     * tx'leri bank_account_id belirtilmediğinde buraya route edilir → her tx bir
+     * konum hesabına bağlanır, posting türetilebilir, gün-kapanışı/mutabakata girer.
+     * {@link LedgerPostingService#resolveLocationAccount} NAKIT fallback'i ile aynı
+     * filtre.
+     */
+    private com.bizboard.common.entity.BankAccount resolveSystemCashHolder(UUID businessId) {
+        return bankAccountRepository
+                .findByActiveTrueAndBusinessIdInOrderByNameAsc(java.util.List.of(businessId))
+                .stream()
+                .filter(ba -> ba.isSystem()
+                        && ba.getType() == com.bizboard.common.enums.BankAccountType.CASH_HOLDER)
+                .findFirst()
+                .orElse(null);
     }
 
     // ───────── shared mutation helpers (create + update; R3) ─────────

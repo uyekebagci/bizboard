@@ -296,7 +296,16 @@ public class LedgerPostingService {
         }
         String pm = tx.getPaymentMethod() != null ? tx.getPaymentMethod() : "NAKIT";
         // NAKIT fallback: business sistem "Genel Nakit" CASH_HOLDER.
-        if ("NAKIT".equals(pm) && tx.getBusiness() != null) {
+        // BUG-2 (POS bank_account): bankAccount belirtilmemiş POS GELİR tx'i de
+        // (eski FE bank_account_id göndermiyordu → bankAccount NULL → FLAGGED →
+        // posting yok → gün-kapanışı/mutabakata girmez) aynı sistem "Genel Nakit"
+        // CASH_HOLDER fallback'ine route edilir. Böylece create akışı düzeltilmeden
+        // ÖNCE oluşmuş FLAGGED POS gelirleri admin/boot backfill ile kurtarılabilir.
+        // (POS GİDER kendi pos_tx_subtype akışını kullanır — burada hariç.)
+        boolean nakit = "NAKIT".equals(pm);
+        boolean posIncome = "POS".equals(pm)
+                && tx.getDirection() == TransactionDirection.INCOME;
+        if ((nakit || posIncome) && tx.getBusiness() != null) {
             return bankAccountRepository
                     .findByActiveTrueAndBusinessIdInOrderByNameAsc(
                             List.of(tx.getBusiness().getId()))

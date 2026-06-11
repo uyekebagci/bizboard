@@ -130,6 +130,10 @@ export function AddTransactionForm({
 
   const [posDevices, setPosDevices] = useState<PosDeviceListItem[]>([]);
   const [posDeviceId, setPosDeviceId] = useState<string>("");
+  // BUG-2 (POS bank_account): POS GELİR'in düşeceği kasa/hesap seçimi. Boş
+  // bırakılırsa backend sistem "Genel Nakit" kasasına route eder (gün-kapanışı/
+  // mutabakata girer); seçilirse POS geliri belirtilen kasaya düşer.
+  const [posIncomeBankAccountId, setPosIncomeBankAccountId] = useState<string>("");
 
   // v1.7.x hotfix: compact (modal) modunda outer 3'lü toggle Gelir/Gider arası
   // geçince form'un internal direction state'i de sync olmalı (initial useState
@@ -292,6 +296,12 @@ export function AddTransactionForm({
         payment_method: paymentMethod,
         target_counterpart_id: targetCounterpartId || null,
         pos_device_id: paymentMethod === "POS" && posDeviceId ? posDeviceId : null,
+        // BUG-2 (POS bank_account): POS GELİR için seçilen kasa/hesap. Boşsa
+        // backend sistem "Genel Nakit" kasasına route eder (gün-kapanışı/mutabakat).
+        bank_account_id:
+          paymentMethod === "POS" && direction === "income" && posIncomeBankAccountId
+            ? posIncomeBankAccountId
+            : null,
         // WP b446c696 (Beta v1.1 Hotfix): POS+EXPENSE ve NAKIT+EXPENSE için subtype.
         pos_tx_subtype:
           direction === "expense" && (paymentMethod === "POS" || paymentMethod === "NAKIT")
@@ -505,6 +515,28 @@ export function AddTransactionForm({
                 applied_pos_rate / applied_our_commission_rate backend tarafında
                 NULL kaydedilir. KONSOLİDE NET formülü legacy-aware: eski rate'li
                 tx'ler profit hesaplar, yeni'ler tam tutar income'a katkı yapar. */}
+
+            {/* BUG-2 (POS bank_account): POS GELİR'in düşeceği kasa/hesap seçimi.
+                Eskiden hiç gönderilmiyordu → POS geliri kasaya bağlanmıyor, gün-
+                kapanışı/mutabakata girmiyordu. Boş = sistem "Genel Nakit" fallback. */}
+            {direction === "income" && (
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-surface-300 mb-1.5">
+                  Kasa / Hesap (POS geliri buraya düşer)
+                </label>
+                <DarkSelect
+                  value={posIncomeBankAccountId}
+                  onChange={setPosIncomeBankAccountId}
+                  placeholder="Genel Nakit (varsayılan)"
+                  searchable={relatedBankAccounts.length > 6}
+                  options={relatedBankAccounts.map((a) => ({
+                    value: a.id,
+                    label: a.name,
+                    meta: a.type,
+                  }))}
+                />
+              </div>
+            )}
 
           </>
         )}
