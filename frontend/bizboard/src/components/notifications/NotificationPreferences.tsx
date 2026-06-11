@@ -31,6 +31,9 @@ const EVENTS: { key: string; label: string }[] = [
   // Ledger v2 (Faz D) — kaçak/anomali alarmları
   { key: "DAY_CLOSE_VARIANCE_ALERT", label: "Kaçak alarmı (gün kapanışı farkı)" },
   { key: "INSTRUMENT_BOUNCED", label: "Karşılıksız çek/senet" },
+  // Tier 2 (EVT-1) — proaktif finansal alarmlar
+  { key: "BALANCE_BELOW_THRESHOLD", label: "Bakiye eşik altına düştü" },
+  { key: "HIGH_EXPENSE_ALERT", label: "Büyük harcama uyarısı" },
 ];
 
 // Default (kayıt yoksa): In-App açık, Telegram kapalı (backend ile aynı semantik).
