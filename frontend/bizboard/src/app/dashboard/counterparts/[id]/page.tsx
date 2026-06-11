@@ -8,8 +8,8 @@
  * Açık Verecekler, Çek/Senet, İşlemler).</p>
  */
 
-import { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useMemo, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronLeft, Plus, ArrowDownLeft, ArrowUpRight, TrendingUp, TrendingDown,
   FileText, Scroll, Check, AlertTriangle, RefreshCw, Loader2, Trash2,
@@ -48,8 +48,19 @@ function formatDateTime(iso: string | null | undefined): string {
 }
 
 export default function CounterpartDetailPage() {
+  // cari-tahsilat-ux: useSearchParams (deep-link ?action=) bir Suspense
+  // sınırı gerektirir (Next 14 static-render kuralı). Diğer sayfalarla aynı desen.
+  return (
+    <Suspense>
+      <CounterpartDetailInner />
+    </Suspense>
+  );
+}
+
+function CounterpartDetailInner() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const id = params?.id;
   const { profile, refreshKey, triggerRefresh } = useAppStore();
   const isAdmin = profile?.role === "admin";
@@ -95,6 +106,28 @@ export default function CounterpartDetailPage() {
   }
 
   useEffect(() => { void refresh(); /* eslint-disable-next-line */ }, [id, refreshKey]);
+
+  // cari-tahsilat-ux: İşlem formundaki "Tahsilat/Ödeme olarak gir" kısayolu
+  // bu sayfaya ?action=collect|pay ile yönlendirir → ilgili PaymentModal'ı
+  // otomatik açar. NON-BREAKING: param yoksa hiçbir şey olmaz. Bir kez tetiklenir
+  // (deep-link guard), sonra URL'den temizlenir ki refresh/back tekrar açmasın.
+  const deepLinkHandled = useRef(false);
+  useEffect(() => {
+    if (deepLinkHandled.current || !statement) return;
+    const action = searchParams?.get("action");
+    if (action === "collect") {
+      deepLinkHandled.current = true;
+      setTab("receivables");
+      setPaymentModal({ direction: "RECEIVED" });
+      router.replace(`/dashboard/counterparts/${id}`);
+    } else if (action === "pay") {
+      deepLinkHandled.current = true;
+      setTab("payables");
+      setPaymentModal({ direction: "PAID" });
+      router.replace(`/dashboard/counterparts/${id}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statement, searchParams, id]);
 
   async function handleDeleteInstrument(inst: PaymentInstrumentDto) {
     if (!confirm("Bu çek/senet kaydını silmek istiyor musun? (Yalnız PORTFOLIO statu silinebilir)")) return;

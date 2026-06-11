@@ -16,12 +16,13 @@
 import { useEffect, useState } from "react";
 import {
   ArrowDownLeft, ArrowUpRight, Calendar, Clock, Tag, FileText,
-  Loader2, CreditCard, Banknote, Plus,
+  Loader2, CreditCard, Banknote, Plus, HandCoins, ArrowRight,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
-import { cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
+import { cn, formatMoneyInput, parseMoneyInput, formatCurrency } from "@/lib/utils";
+import type { AccountStatement } from "@/types";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { InlineFileUpload } from "@/components/shared/FileUploadButton";
@@ -128,6 +129,16 @@ export function AddTransactionForm({
   const [targetCounterpartId, setTargetCounterpartId] = useState<string>("");
   const [showCreateCounterpart, setShowCreateCounterpart] = useState(false);
 
+  // cari-tahsilat-ux: Seçili karşı tarafın AÇIK alacak/verecek özeti.
+  // Düz gelir/gider yerine yanlışlıkla tahsilat/ödeme girmeyi önlemek için
+  // AKILLI YÖNLENDİRME katmanı besler. Mevcut /account-statement endpoint'i
+  // reuse edilir (yeni ağır endpoint açılmaz); param yoksa öneri çıkmaz.
+  const [cariOpen, setCariOpen] = useState<{
+    receivable: number;
+    payable: number;
+  } | null>(null);
+  const [cariLoading, setCariLoading] = useState(false);
+
   const [posDevices, setPosDevices] = useState<PosDeviceListItem[]>([]);
   const [posDeviceId, setPosDeviceId] = useState<string>("");
   // BUG-2 (POS bank_account): POS GELİR'in düşeceği kasa/hesap seçimi. Boş
@@ -190,6 +201,34 @@ export function AddTransactionForm({
       .then((r) => setCounterparts(r || []))
       .catch(() => { /* silent */ });
   }, []);
+
+  // cari-tahsilat-ux: Karşı taraf seçilince açık alacak/verecek özetini çek.
+  // /counterparts/{id}/account-statement reuse — open_debts içinden RECEIVABLE
+  // ve PAYABLE kalan tutarları toplar (kısmi ödeme aware: remaining_amount).
+  // Hata/boş → öneri gösterme (silent, NON-BREAKING). Karşı taraf yoksa temizle.
+  useEffect(() => {
+    if (!targetCounterpartId) {
+      setCariOpen(null);
+      return;
+    }
+    let cancelled = false;
+    setCariLoading(true);
+    api.get<AccountStatement>(`/counterparts/${targetCounterpartId}/account-statement`)
+      .then((s) => {
+        if (cancelled) return;
+        const debts = s?.open_debts ?? [];
+        const receivable = debts
+          .filter((d) => d.direction === "RECEIVABLE")
+          .reduce((sum, d) => sum + (d.remaining_amount || 0), 0);
+        const payable = debts
+          .filter((d) => d.direction === "PAYABLE")
+          .reduce((sum, d) => sum + (d.remaining_amount || 0), 0);
+        setCariOpen({ receivable, payable });
+      })
+      .catch(() => { if (!cancelled) setCariOpen(null); })
+      .finally(() => { if (!cancelled) setCariLoading(false); });
+    return () => { cancelled = true; };
+  }, [targetCounterpartId]);
 
   useEffect(() => {
     api.get<PosDeviceListItem[]>("/pos-devices")
@@ -269,6 +308,40 @@ export function AddTransactionForm({
           selectedCat.applicability === "INCOME_ONLY" ? "yalnız gelir" : "yalnız gider"
         } için işaretli — bu ${direction === "income" ? "gelir" : "gider"} işlemine yine de izin verilir.`
       : null;
+
+  // cari-tahsilat-ux: AKILLI YÖNLENDİRME (engelleme değil).
+  // GELİR + açık ALACAK → "Bu bir tahsilat mı?" önerisi.
+  // GİDER + açık VERECEK → "Bu bir ödeme mi?" önerisi.
+  // Kullanıcı yine de düz gelir/gider girebilir (zorlama yok).
+  const cariSuggestion =
+    !targetCounterpartId || cariLoading || !cariOpen
+      ? null
+      : direction === "income" && cariOpen.receivable > 0
+        ? {
+            kind: "collect" as const,
+            amount: cariOpen.receivable,
+            title: "Bu bir TAHSİLAT olabilir",
+            body: `Bu carinin ${formatCurrency(cariOpen.receivable, "TRY")} açık alacağı var. Düz gelir yerine Alacaklar'dan kapatmak (tahsilat) defteri doğru tutar — tahsilat P&L'i şişirmez.`,
+            cta: "Tahsilat olarak gir",
+          }
+        : direction === "expense" && cariOpen.payable > 0
+          ? {
+              kind: "pay" as const,
+              amount: cariOpen.payable,
+              title: "Bu bir ÖDEME olabilir",
+              body: `Bu carinin ${formatCurrency(cariOpen.payable, "TRY")} açık vereceği var. Düz gider yerine Verecekler'den kapatmak (ödeme) defteri doğru tutar — ödeme P&L'i şişirmez.`,
+              cta: "Ödeme olarak gir",
+            }
+          : null;
+
+  function goToPaymentFlow() {
+    if (!cariSuggestion || !targetCounterpartId) return;
+    const action = cariSuggestion.kind === "collect" ? "collect" : "pay";
+    const url = `/dashboard/counterparts/${targetCounterpartId}?action=${action}`;
+    // Modal (compact) içindeyse önce parent'a kapan sinyali ver, sonra yönlendir.
+    if (onCancel) onCancel();
+    window.location.href = url;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -667,6 +740,35 @@ export function AddTransactionForm({
             onClick: () => setShowCreateCounterpart(true),
           }}
         />
+
+        {/* cari-tahsilat-ux: AKILLI YÖNLENDİRME — açık alacak/verecek varsa
+            tahsilat/ödeme akışına yumuşak öneri (zorlama YOK, kısayol VAR). */}
+        {cariSuggestion && (
+          <div className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
+            <div className="flex items-start gap-2.5">
+              <HandCoins size={18} className="text-amber-300 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-200">
+                  {cariSuggestion.title}
+                </p>
+                <p className="mt-0.5 text-[12px] leading-snug text-amber-100/90">
+                  {cariSuggestion.body}
+                </p>
+                <button
+                  type="button"
+                  onClick={goToPaymentFlow}
+                  className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition-colors"
+                >
+                  {cariSuggestion.cta}
+                  <ArrowRight size={14} />
+                </button>
+                <p className="mt-2 text-[10px] text-amber-200/70">
+                  İstersen yine de düz {direction === "income" ? "gelir" : "gider"} olarak girebilirsin.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Category — ZORUNLU. Form akışında öne çıkarıldı (kalın çerçeveli kart). */}
