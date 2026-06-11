@@ -43,12 +43,15 @@ public class CategoryController {
      * Kategori güncelleme. PUT ve PATCH aynı kısmi-güncelleme semantiğine sahiptir
      * ({@link UpdateCategoryRequest} tüm alanları opsiyonel — verilen alanlar
      * güncellenir). FE bazı yerlerde PATCH kullandığı için (bug 4b679467) her iki
-     * verb de map'lenir; aksi halde PATCH için handler yokken Spring
-     * {@code HttpRequestMethodNotSupportedException} fırlatır ve eskiden
-     * yakalanmayan bu hata generic handler üzerinden 500 dönerdi.
+     * verb de map'lenir.
+     *
+     * <p>NOT: Önceden {@code @PutMapping} ve {@code @PatchMapping} aynı metoda
+     * yığılıydı; Spring meta-anotasyon birleştirmede ikinci {@code @RequestMapping}
+     * türevini yok saydığı için PATCH gerçekte register olmuyor ve 405 dönüyordu
+     * (bug 1 kalıntısı). Tek bir {@code @RequestMapping} ile her iki method
+     * açıkça tanımlanır.</p>
      */
-    @PutMapping("/categories/{id}")
-    @PatchMapping("/categories/{id}")
+    @RequestMapping(value = "/categories/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     public ResponseEntity<CategoryDto> update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateCategoryRequest request,
