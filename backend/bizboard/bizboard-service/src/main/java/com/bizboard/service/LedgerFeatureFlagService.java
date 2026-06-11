@@ -29,12 +29,26 @@ public class LedgerFeatureFlagService {
     public static final String KEY_BACKDATE_ENABLED = "day_close.backdate_enabled";
 
     /**
-     * Gün Açılışı: işlem-giriş enforcement kapısı. Açıkken yalnız AÇIK güne
+     * Gün Açılışı: işlem-giriş enforcement kapısı.
+     *
+     * <p><b>PER-BUSINESS (işletme-başına).</b> Açıkken yalnız AÇIK güne
      * (DayOpen.OPEN) işlem girilebilir; AÇILMAMIŞ gün → "Günü Aç" gerekir,
-     * KAPALI gün → kilitli. <b>DEFAULT KAPALI</b> (NON-BREAKING) — mevcut canlı
-     * giriş akışı anında kırılmaz; geçiş döneminde admin açar.
+     * KAPALI gün → kilitli. <b>HER İŞLETMEDE DEFAULT KAPALI</b> (NON-BREAKING) —
+     * mevcut canlı giriş akışı anında kırılmaz; DGR dahil hiçbir işletme
+     * etkilenmez. Geçiş döneminde admin tek bir işletmede (örn. TEST) açıp
+     * gün-açılışını DGR'yi etkilemeden E2E test edebilir.</p>
+     *
+     * <p>Önceden bu key GLOBAL ({@code SystemSetting} tek satır) idi; tek
+     * işletmede açmak tüm işletmeleri (DGR dahil) etkiliyordu. Artık işletme-başına:
+     * key = {@code day_open.enforce_enabled:<businessId>}. Satır yoksa = KAPALI.
+     * Eski global satır okunmaz (per-business default off galip gelir).</p>
      */
     public static final String KEY_DAY_OPEN_ENFORCE = "day_open.enforce_enabled";
+
+    /** İşletme-başına enforcement key'i: {@code day_open.enforce_enabled:<businessId>}. */
+    public static String dayOpenEnforceKey(UUID businessId) {
+        return KEY_DAY_OPEN_ENFORCE + ":" + businessId;
+    }
 
     private final SystemSettingRepository settingRepository;
     private final AuditLogService auditLogService;
@@ -61,19 +75,27 @@ public class LedgerFeatureFlagService {
     }
 
     /**
-     * Gün Açılışı enforcement. DEFAULT KAPALI (NON-BREAKING). Ayar yoksa false;
-     * "true"/"1"/"on" açıkça açar.
+     * Gün Açılışı enforcement — İŞLETME-BAŞINA. O işletmenin bayrağına bakar
+     * (global değil). HER İŞLETMEDE DEFAULT KAPALI (NON-BREAKING) — satır yoksa
+     * false. DGR dahil hiçbir işletme, kendi satırı açılmadıkça etkilenmez.
+     *
+     * @param businessId null ise (defansif) false döner — gating'e takılmasın.
      */
     @Transactional(readOnly = true)
-    public boolean isDayOpenEnforceEnabled() {
-        return getBoolean(KEY_DAY_OPEN_ENFORCE, false);
+    public boolean isDayOpenEnforceEnabled(UUID businessId) {
+        if (businessId == null) return false;
+        return getBoolean(dayOpenEnforceKey(businessId), false);
     }
 
-    /** Admin enforcement bayrağını değiştirir. */
+    /** Admin enforcement bayrağını İŞLETME-BAŞINA değiştirir (audit + businessId). */
     @Transactional
-    public void setDayOpenEnforceEnabled(boolean enabled, UUID actorUserId) {
-        SystemSetting s = settingRepository.findById(KEY_DAY_OPEN_ENFORCE)
-                .orElseGet(() -> SystemSetting.builder().key(KEY_DAY_OPEN_ENFORCE).build());
+    public void setDayOpenEnforceEnabled(UUID businessId, boolean enabled, UUID actorUserId) {
+        if (businessId == null) {
+            throw new IllegalArgumentException("business_id zorunlu (per-business enforcement)");
+        }
+        String key = dayOpenEnforceKey(businessId);
+        SystemSetting s = settingRepository.findById(key)
+                .orElseGet(() -> SystemSetting.builder().key(key).build());
         s.setValue(Boolean.toString(enabled));
         s.setUpdatedBy(actorUserId);
         s.setUpdatedAt(LocalDateTime.now());
@@ -81,9 +103,10 @@ public class LedgerFeatureFlagService {
         auditLogService.recordEntityAction(
                 AuditAction.DAY_OPEN_ENFORCE_TOGGLE, actorUserId, "admin",
                 "SYSTEM_SETTING", null,
-                "Gün açılışı işlem-giriş enforcement = " + enabled,
-                java.util.Map.of("key", KEY_DAY_OPEN_ENFORCE, "enabled", enabled), null);
-        log.info("[feature-flag] {} = {} by={}", KEY_DAY_OPEN_ENFORCE, enabled, actorUserId);
+                "Gün açılışı işlem-giriş enforcement = " + enabled + " (business=" + businessId + ")",
+                java.util.Map.of("key", key, "businessId", businessId.toString(), "enabled", enabled),
+                null);
+        log.info("[feature-flag] {} = {} by={}", key, enabled, actorUserId);
     }
 
     private boolean getBoolean(String key, boolean defaultValue) {

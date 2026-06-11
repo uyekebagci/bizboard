@@ -277,8 +277,8 @@ public class DayOpenService {
      */
     @Transactional(readOnly = true)
     public void assertDayOpenForEntry(UUID businessId, LocalDate date) {
-        if (!featureFlags.isDayOpenEnforceEnabled()) return; // flag kapalı → serbest
-        if (businessId == null || date == null) return;      // defansif — gating'e takılmasın
+        if (businessId == null || date == null) return;             // defansif — gating'e takılmasın
+        if (!featureFlags.isDayOpenEnforceEnabled(businessId)) return; // o işletmenin flag'i kapalı → serbest
         DayLifecycleStatus status = lifecycleStatus(businessId, date);
         if (status == DayLifecycleStatus.OPEN) return;
         if (status == DayLifecycleStatus.CLOSED) {
@@ -356,7 +356,7 @@ public class DayOpenService {
         accessGuard.assertCanReadBusiness(userId, businessId);
         LocalDate d = date != null ? date : LocalDate.now();
         DayLifecycleStatus lifecycle = lifecycleStatus(businessId, d);
-        boolean enforce = featureFlags.isDayOpenEnforceEnabled();
+        boolean enforce = featureFlags.isDayOpenEnforceEnabled(businessId);
         boolean canAdd = !enforce || lifecycle == DayLifecycleStatus.OPEN;
         return DayStatusDto.builder()
                 .date(d)

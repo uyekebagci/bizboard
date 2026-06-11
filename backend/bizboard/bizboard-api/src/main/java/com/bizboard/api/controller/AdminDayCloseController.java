@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Ledger v2 (Faz B) — ADMIN-only gün-kapanışı operasyonları.
@@ -69,22 +70,29 @@ public class AdminDayCloseController {
                 "enabled", enabled));
     }
 
-    // ── Gün Açılışı: işlem-giriş enforcement bayrağı (NON-BREAKING, default kapalı) ──
+    // ── Gün Açılışı: işlem-giriş enforcement bayrağı (PER-BUSINESS, default kapalı) ──
+    // NON-BREAKING: işletme-başına; business_id zorunlu. DGR dahil hiçbir işletme
+    // kendi satırı açılmadıkça etkilenmez (audit'li toggle).
 
     @GetMapping("/enforce-flag")
-    public ResponseEntity<Map<String, Object>> getEnforceFlag() {
+    public ResponseEntity<Map<String, Object>> getEnforceFlag(
+            @RequestParam(name = "business_id") UUID businessId) {
         return ResponseEntity.ok(Map.of(
-                "key", LedgerFeatureFlagService.KEY_DAY_OPEN_ENFORCE,
-                "enabled", featureFlags.isDayOpenEnforceEnabled()));
+                "key", LedgerFeatureFlagService.dayOpenEnforceKey(businessId),
+                "businessId", businessId.toString(),
+                "enabled", featureFlags.isDayOpenEnforceEnabled(businessId)));
     }
 
     @PostMapping("/enforce-flag")
     public ResponseEntity<Map<String, Object>> setEnforceFlag(
+            @RequestParam(name = "business_id") UUID businessId,
             @RequestParam(name = "enabled") boolean enabled,
             @AuthenticationPrincipal UserPrincipal principal) {
-        featureFlags.setDayOpenEnforceEnabled(enabled, principal != null ? principal.getId() : null);
+        featureFlags.setDayOpenEnforceEnabled(
+                businessId, enabled, principal != null ? principal.getId() : null);
         return ResponseEntity.ok(Map.of(
-                "key", LedgerFeatureFlagService.KEY_DAY_OPEN_ENFORCE,
+                "key", LedgerFeatureFlagService.dayOpenEnforceKey(businessId),
+                "businessId", businessId.toString(),
                 "enabled", enabled));
     }
 
