@@ -321,8 +321,12 @@ public class SummaryService {
 
     private BigDecimal sumByDirection(List<Transaction> transactions, TransactionDirection dir) {
         // v1.7.0-beta (Bankalar WP TODO d0567538): TRANSFER tx dışla.
+        // Çatı v1.2: LOAN (verilen/alınan borç) tx dışla — gelir/gider DEĞİL,
+        // bilanço hareketi (kasa ↔ alacak/verecek). Net Kâr/gelir-gider raporuna
+        // girmemeli (karşılığı Alacaklar/Verecekler'de gösterilir).
         return transactions.stream()
-                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .filter(t -> t.getDirection() == dir)
                 .map(SummaryService::effectiveAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -362,6 +366,11 @@ public class SummaryService {
         Map<String, Map<String, BigDecimal>> breakdown = new HashMap<>();
 
         for (Transaction t : transactions) {
+            // Çatı v1.2: TRANSFER/LOAN gelir-gider kategorisi DEĞİL — pie'a girmez.
+            if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                    || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
+                continue;
+            }
             String catName = t.getCategory() != null ? t.getCategory().getName() : "Kategorisiz";
             String dirKey = t.getDirection() == TransactionDirection.INCOME ? "income" : "expense";
 

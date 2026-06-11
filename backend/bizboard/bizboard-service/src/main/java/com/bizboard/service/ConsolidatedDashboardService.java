@@ -379,7 +379,11 @@ public class ConsolidatedDashboardService {
     private static BigDecimal incomeContribution(Transaction t) {
         if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
         // Transfer (kind=TRANSFER) → 0 (paired veya external fark etmez)
-        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+        // LOAN (verilen/alınan borç) → 0: bilanço hareketi (kasa ↔ alacak/verecek);
+        // ekonomik gelir/gider DEĞİL. Net Kâr'a girmediği gibi konsolide net'e de
+        // girmez (karşılığı alacak/verecek widget'ında ayrı gösterilir).
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
             return BigDecimal.ZERO;
         }
         // Beta v1.1: KOMİSYON YOK — POS gelir dahil tüm income tam tutar.
