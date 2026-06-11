@@ -1,5 +1,6 @@
 package com.bizboard.service;
 
+import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.entity.SystemSetting;
 import com.bizboard.repository.SystemSettingRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,16 @@ public class LedgerFeatureFlagService {
     /** §4.1: geri dönük kapanış + geçmiş düzenleme kapısı. */
     public static final String KEY_BACKDATE_ENABLED = "day_close.backdate_enabled";
 
+    /**
+     * Gün Açılışı: işlem-giriş enforcement kapısı. Açıkken yalnız AÇIK güne
+     * (DayOpen.OPEN) işlem girilebilir; AÇILMAMIŞ gün → "Günü Aç" gerekir,
+     * KAPALI gün → kilitli. <b>DEFAULT KAPALI</b> (NON-BREAKING) — mevcut canlı
+     * giriş akışı anında kırılmaz; geçiş döneminde admin açar.
+     */
+    public static final String KEY_DAY_OPEN_ENFORCE = "day_open.enforce_enabled";
+
     private final SystemSettingRepository settingRepository;
+    private final AuditLogService auditLogService;
 
     /**
      * §4.1 default AÇIK (geçiş dönemi). Ayar yoksa true döner; "false"/"0"/"off"
@@ -48,6 +58,32 @@ public class LedgerFeatureFlagService {
         s.setUpdatedAt(LocalDateTime.now());
         settingRepository.save(s);
         log.info("[feature-flag] {} = {} by={}", KEY_BACKDATE_ENABLED, enabled, actorUserId);
+    }
+
+    /**
+     * Gün Açılışı enforcement. DEFAULT KAPALI (NON-BREAKING). Ayar yoksa false;
+     * "true"/"1"/"on" açıkça açar.
+     */
+    @Transactional(readOnly = true)
+    public boolean isDayOpenEnforceEnabled() {
+        return getBoolean(KEY_DAY_OPEN_ENFORCE, false);
+    }
+
+    /** Admin enforcement bayrağını değiştirir. */
+    @Transactional
+    public void setDayOpenEnforceEnabled(boolean enabled, UUID actorUserId) {
+        SystemSetting s = settingRepository.findById(KEY_DAY_OPEN_ENFORCE)
+                .orElseGet(() -> SystemSetting.builder().key(KEY_DAY_OPEN_ENFORCE).build());
+        s.setValue(Boolean.toString(enabled));
+        s.setUpdatedBy(actorUserId);
+        s.setUpdatedAt(LocalDateTime.now());
+        settingRepository.save(s);
+        auditLogService.recordEntityAction(
+                AuditAction.DAY_OPEN_ENFORCE_TOGGLE, actorUserId, "admin",
+                "SYSTEM_SETTING", null,
+                "Gün açılışı işlem-giriş enforcement = " + enabled,
+                java.util.Map.of("key", KEY_DAY_OPEN_ENFORCE, "enabled", enabled), null);
+        log.info("[feature-flag] {} = {} by={}", KEY_DAY_OPEN_ENFORCE, enabled, actorUserId);
     }
 
     private boolean getBoolean(String key, boolean defaultValue) {
