@@ -146,6 +146,12 @@ export default function AdminPage() {
             >
               Audit Log
             </a>
+            <a
+              href="/admin/telegram"
+              className="btn-secondary px-3 py-2 text-sm"
+            >
+              Telegram
+            </a>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-colors"
