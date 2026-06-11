@@ -38,6 +38,13 @@ public class CategoryService {
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
 
+    /**
+     * Sistem backfill kategorisinin adı ({@code CategoryRequiredMigrationRunner}
+     * ile aynı). Live veride hem "Diğer" (Türkçe ğ) hem "Diger" (ASCII) varyantı
+     * görülebildiği için eşleştirme her ikisini de kabul eder ({@link #isOtherName}).
+     */
+    private static final String OTHER_NAME = "Diğer";
+
     @Transactional
     public CategoryDto createCategory(UUID businessId, CreateCategoryRequest request, UUID userId) {
         Business business = businessRepository.findById(businessId)
@@ -88,6 +95,16 @@ public class CategoryService {
 
         Business business = category.getBusiness();
         accessGuard.assertCanAccessBusiness(userId, business.getId());
+
+        // Sistem "Diğer" kategorisi koruması: migration-yönetimli backfill
+        // kategorisidir (CategoryRequiredMigrationRunner). Adı değiştirilemez —
+        // aksi halde NULL-kategorili tx backfill hedefi kaybolur ve restart'ta
+        // mükerrer "Diğer" oluşur. icon/color/sort_order/applicability serbest.
+        if (isSystemOtherCategory(category) && request.getName() != null
+                && !isOtherName(request.getName())) {
+            throw new IllegalStateException(
+                    "Sistem '" + OTHER_NAME + "' kategorisinin adi degistirilemez");
+        }
 
         if (request.getName() != null) {
             String newName = request.getName().trim();
@@ -143,6 +160,13 @@ public class CategoryService {
         Business business = category.getBusiness();
         accessGuard.assertCanAccessBusiness(userId, business.getId());
 
+        // Sistem "Diğer" kategorisi koruması: silinemez (soft-delete dahil).
+        // tx backfill hedefi + NOT NULL category_id zorunluluğu buna bağlı.
+        if (isSystemOtherCategory(category)) {
+            throw new IllegalStateException(
+                    "Sistem '" + OTHER_NAME + "' kategorisi silinemez");
+        }
+
         if (!category.isActive()) {
             // Idempotent: zaten pasif — no-op.
             return;
@@ -155,6 +179,22 @@ public class CategoryService {
     }
 
     // ───────── helpers ─────────
+
+    /**
+     * Migration-yönetimli sistem "Diğer" kategorisi mi? Ada göre tespit edilir
+     * (case-insensitive; "Diğer"/"Diger" varyantları). Rename/delete koruması
+     * yalnız aktif kayıt için anlamlı; pasif kalıntılar zaten dokunulmaz.
+     */
+    private boolean isSystemOtherCategory(Category category) {
+        return category != null && category.isActive() && isOtherName(category.getName());
+    }
+
+    /** "Diğer" / "Diger" (ASCII fallback) eşleştirmesi — case-insensitive. */
+    private boolean isOtherName(String raw) {
+        if (raw == null) return false;
+        String n = raw.trim().toLowerCase(java.util.Locale.forLanguageTag("tr"));
+        return n.equals("diğer") || n.equals("diger");
+    }
 
     /**
      * Ledger v2 (Faz A, §3.9): istemci string'ini {@link CategoryApplicability}'ye

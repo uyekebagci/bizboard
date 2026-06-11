@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -92,6 +93,22 @@ public class GlobalExceptionHandler {
         log.error("[data integrity -> 409] message={}", e.getMostSpecificCause().getMessage(), e);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("message", "Kayit kaydedilemedi: veri butunlugu kisitlamasi"));
+    }
+
+    /**
+     * Desteklenmeyen HTTP method → <b>405 Method Not Allowed</b> (eskiden bu
+     * exception yakalanmıyor, generic handler üzerinden 500 dönüyordu — bkz.
+     * bug 4b679467, {@code PATCH /categories/{id}} 500). İzin verilen method'lar
+     * {@code Allow} header'ında döner; istemciye iç detay sızmaz.
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, String>> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException e) {
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED);
+        if (e.getSupportedHttpMethods() != null && !e.getSupportedHttpMethods().isEmpty()) {
+            builder.allow(e.getSupportedHttpMethods().toArray(new org.springframework.http.HttpMethod[0]));
+        }
+        return builder.body(Map.of("message", "Bu kaynak icin '" + e.getMethod() + "' metodu desteklenmiyor"));
     }
 
     /**
