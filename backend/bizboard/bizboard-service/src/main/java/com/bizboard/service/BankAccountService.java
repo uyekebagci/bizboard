@@ -63,6 +63,9 @@ public class BankAccountService {
     // v1.6.23.27 (UI Fix WP TODO 63229465): SUB_CASH silinmeden önce
     // assignment'lar cascade kaldırılır (entity'ler Ana Kasa'ya iade).
     private final com.bizboard.repository.SubCashAssignmentRepository subCashAssignmentRepository;
+    // Tier 2 (EVT-1): manuel bakiye düzeltmesi sonrası BALANCE_BELOW alarmı
+    // (debounce'lı, best-effort/non-fatal; eşik 0/null ise no-op).
+    private final FinancialAlertService financialAlertService;
 
     @Transactional
     public BankAccountDto toggleActive(UUID id, BankAccountToggleRequest req, UUID actorUserId) {
@@ -212,6 +215,10 @@ public class BankAccountService {
                 a.getId(), a.getName(), type, oldBalance.toPlainString(),
                 newBalance.toPlainString(), currency, diff.toPlainString(),
                 actor != null ? actor.getUsername() : actorUserId, reason);
+
+        // Tier 2 (EVT-1): manuel düzeltme işletme toplamını eşik altına yeni
+        // geçirdiyse BALANCE_BELOW alarmı (debounce). best-effort/non-fatal.
+        financialAlertService.onBalanceChanged(a.getBusiness());
 
         return toDto(a);
     }
