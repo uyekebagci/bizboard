@@ -4,6 +4,7 @@ import com.bizboard.common.dto.CreatePaymentRequest;
 import com.bizboard.common.dto.PaymentResponseDto;
 import com.bizboard.common.entity.*;
 import com.bizboard.common.enums.BankAccountType;
+import com.bizboard.common.enums.CategoryApplicability;
 import com.bizboard.common.enums.DebtDirection;
 import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.common.enums.TransactionDirection;
@@ -50,6 +51,10 @@ public class PaymentService {
     private final CounterpartLedgerService counterpartLedger;
     // WP f1fa3cd5 (otomasyon): ödeme alındı → PAYMENT_RECEIVED dispatch.
     private final NotificationDispatchService dispatchService;
+    // Çatı v1.2: cari kapatma tx'i kind=LOAN → dengeli Posting türetme + sistem
+    // "Borç" kategorisi (category_id NOT NULL kısıtı; P&L'e girmez).
+    private final CategoryRepository categoryRepository;
+    private final LedgerPostingService ledgerPostingService;
 
     private static final EnumSet<BankAccountType> ELIGIBLE_BANK_TYPES =
             EnumSet.of(BankAccountType.CHECKING, BankAccountType.SAVINGS, BankAccountType.CASH_HOLDER);
@@ -185,15 +190,22 @@ public class PaymentService {
             TransactionDirection txDir = "RECEIVED".equals(dir)
                     ? TransactionDirection.INCOME : TransactionDirection.EXPENSE;
             String txPm = "NAKIT".equals(pm) ? "NAKIT" : "HESAPDAN";
+            // Çatı v1.2: cari tahsilat/ödeme = alacak/verecek KAPATMA = kasa ↔ cari
+            // bilanço hareketi (gelir/gider DEĞİL). kind=LOAN ile P&L'e GİRMEZ
+            // (Net Kâr'a yansımaz; gelir/satış zaten orijinal işlemde tanındı).
+            // category_id NOT NULL kısıtı için sistem "Borç" kategorisi (P&L'e
+            // girmez — LOAN posting'i yalnız LOCATION_MOVE bacağı üretir).
+            Category loanCat = resolveLoanCategory(business);
             Transaction tx = Transaction.builder()
                     .business(business)
                     .direction(txDir)
-                    .kind(TransactionKind.NORMAL)
+                    .kind(TransactionKind.LOAN)
                     .amount(req.getAmount())
                     .currency(counterpart.getBusiness().getCurrency() != null
                             ? counterpart.getBusiness().getCurrency() : "TRY")
                     .paymentMethod(txPm)
                     .bankAccount(txBank)
+                    .category(loanCat)
                     .targetCounterpart(counterpart)
                     .date(req.getPaymentDate())
                     .description(buildPaymentDescription(req, counterpart))
@@ -201,6 +213,15 @@ public class PaymentService {
                     .build();
             tx = transactionRepository.save(tx);
             linkedTx = tx;
+
+            // Ledger v2: dengeli çift-giriş Posting türet (kind=LOAN → iki
+            // LOCATION_MOVE bacağı, PNL YOK, Σ=0). Non-fatal — ödeme akışını bozmaz.
+            try {
+                ledgerPostingService.deriveForTransactionId(tx.getId());
+            } catch (Exception e) {
+                log.warn("[payment] tx={} posting türetme hatası (izole, atlandı): {}",
+                        tx.getId(), e.getMessage());
+            }
 
             // Bank balance update
             if (txBank != null) {
@@ -415,20 +436,32 @@ public class PaymentService {
         String descPrefix = "CHEQUE".equals(inst.getInstrumentType())
                 ? ("Çek tahsil: " + (inst.getChequeNumber() != null ? inst.getChequeNumber() : "?"))
                 : ("Senet tahsil: " + (inst.getNoteSerial() != null ? inst.getNoteSerial() : "?"));
+        // Çatı v1.2: çek/senet tahsili = cari kapatma = bilanço hareketi (kind=LOAN,
+        // P&L'e girmez) + sistem "Borç" kategorisi (category_id NOT NULL kısıtı).
+        Category instCat = resolveLoanCategory(inst.getBusiness());
         Transaction tx = Transaction.builder()
                 .business(inst.getBusiness())
                 .direction(txDir)
-                .kind(TransactionKind.NORMAL)
+                .kind(TransactionKind.LOAN)
                 .amount(inst.getAmount())
                 .currency(inst.getCurrency())
                 .paymentMethod("HESAPDAN")
                 .bankAccount(bank)
+                .category(instCat)
                 .targetCounterpart(inst.getCounterpart())
                 .date(when.toLocalDate())
                 .description(descPrefix)
                 .createdBy(actor)
                 .build();
         tx = transactionRepository.save(tx);
+
+        // Ledger v2: dengeli Posting türet (kind=LOAN → LOCATION_MOVE, PNL YOK).
+        try {
+            ledgerPostingService.deriveForTransactionId(tx.getId());
+        } catch (Exception e) {
+            log.warn("[instrument-clear] tx={} posting türetme hatası (izole): {}",
+                    tx.getId(), e.getMessage());
+        }
 
         // Instrument state
         inst.setStatus("CLEARED");
@@ -599,6 +632,25 @@ public class PaymentService {
                 .createdBy(actor)
                 .build();
         debtPaymentRepository.save(dp);
+    }
+
+    /**
+     * Çatı v1.2: cari kapatma tx'leri için sistem "Borç" kategorisi
+     * (lookup-or-create, idempotent). {@link LoanService#CATEGORY_LOAN} ile AYNI
+     * kategori — borç verme/alma ve kapatma tek isim altında toplanır. LOAN
+     * posting'i P&L bacağı üretmediği için Net Kâr kırılımına yansımaz.
+     */
+    private Category resolveLoanCategory(Business business) {
+        return categoryRepository
+                .findFirstByBusinessIdAndNameIgnoreCaseAndActiveTrue(business.getId(), LoanService.CATEGORY_LOAN)
+                .orElseGet(() -> {
+                    Category c = new Category();
+                    c.setBusiness(business);
+                    c.setName(LoanService.CATEGORY_LOAN);
+                    c.setApplicability(CategoryApplicability.BOTH);
+                    c.setActive(true);
+                    return categoryRepository.save(c);
+                });
     }
 
     private String buildPaymentDescription(CreatePaymentRequest req, Counterpart counterpart) {
