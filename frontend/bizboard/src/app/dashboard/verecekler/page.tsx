@@ -22,10 +22,14 @@ import { api } from "@/lib/api/client";
 import { maskAmount, cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
-import type { Debt, Counterpart } from "@/types";
+import type { Debt, Counterpart, Business } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
+
+/** İşletme filtresi (salt-görüntü) — Alacaklar ile simetrik. */
+const ALL_BUSINESSES = "ALL";
 
 interface PayableAggregate {
   counterpart_id: string | null;
@@ -34,6 +38,8 @@ interface PayableAggregate {
   currency: string;
   last_due_date: string | null;
   count: number;
+  /** Tenant binding — işletme filtresi için (Debt.business_id'den türetilir). */
+  business_id: string | null;
 }
 
 export default function VereceklerPage() {
@@ -43,6 +49,9 @@ export default function VereceklerPage() {
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
   const [showAddModal, setShowAddModal] = useState(false);
+  // İşletme filtresi (salt-görüntü) — Alacaklar ile simetrik.
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [businessFilter, setBusinessFilter] = useState<string>(ALL_BUSINESSES);
   // Sansür (privacy) — alacaklar ile aynı: ayrı localStorage anahtarı.
   const [censored, setCensored] = useState(false);
   useEffect(() => {
@@ -94,6 +103,9 @@ export default function VereceklerPage() {
               currency: d.currency || "TRY",
               last_due_date: d.due_date,
               count: 1,
+              // Debt.business_id doğrudan tenant binding taşır — işletme filtresi
+              // için otoritatif (counterpart per-business).
+              business_id: d.business_id || null,
             });
           }
         }
@@ -121,11 +133,52 @@ export default function VereceklerPage() {
     load();
   }, [refreshKey]);
 
-  const total = rows.reduce((a, r) => a + (r.total_amount || 0), 0);
-  const totalCount = rows.reduce((a, r) => a + (r.count || 0), 0);
+  // İşletme filtresi için işletme listesi (Alacaklar ile simetrik). Tenant-scope:
+  // /businesses zaten kullanıcının erişebildiği işletmeleri döner.
+  useEffect(() => {
+    api.get<Business[]>("/businesses")
+      .then((r) => setBusinesses(r || []))
+      .catch(() => { /* sessiz — filtre görünmez, konsolide görünüm kalır */ });
+  }, []);
+
+  // İşletme filtresi (salt-görüntü): "ALL" → tüm satırlar; aksi → yalnız seçilen
+  // işletmenin verecekleri. Legacy free-text satırlar Debt.business_id taşıdığından
+  // burada da doğru işletmeye atfedilir.
+  const visibleRows = useMemo(() => {
+    if (businessFilter === ALL_BUSINESSES) return rows;
+    return rows.filter((r) => r.business_id === businessFilter);
+  }, [rows, businessFilter]);
+
+  const total = visibleRows.reduce((a, r) => a + (r.total_amount || 0), 0);
+  const totalCount = visibleRows.reduce((a, r) => a + (r.count || 0), 0);
+
+  // İşletme başına verecek özeti (breakdown) — yalnız "Tüm İşletmeler" + >1 işletme.
+  const businessBreakdown = useMemo(() => {
+    if (businessFilter !== ALL_BUSINESSES || businesses.length <= 1) return null;
+    const nameById = new Map(businesses.map((b) => [b.id, b.name]));
+    const sums = new Map<string, { total: number; count: number }>();
+    for (const r of rows) {
+      const key = r.business_id ?? "_none";
+      const acc = sums.get(key) ?? { total: 0, count: 0 };
+      acc.total += r.total_amount || 0;
+      acc.count += 1;
+      sums.set(key, acc);
+    }
+    const out: Array<{ key: string; name: string; total: number; count: number }> = [];
+    for (const [key, v] of sums.entries()) {
+      out.push({
+        key,
+        name: key === "_none" ? "İşletme bağlantısı yok" : (nameById.get(key) ?? "Bilinmeyen işletme"),
+        total: v.total,
+        count: v.count,
+      });
+    }
+    out.sort((a, b) => b.total - a.total);
+    return out.length > 1 ? out : null;
+  }, [rows, businessFilter, businesses]);
 
   const sorted = useMemo(() => {
-    const out = [...rows];
+    const out = [...visibleRows];
     if (sortMode === "amount_desc") {
       out.sort((a, b) => b.total_amount - a.total_amount);
     } else if (sortMode === "due_asc") {
@@ -138,7 +191,7 @@ export default function VereceklerPage() {
       out.sort((a, b) => a.counterpart_name.localeCompare(b.counterpart_name, "tr"));
     }
     return out;
-  }, [rows, sortMode]);
+  }, [visibleRows, sortMode]);
 
   return (
     <div className="space-y-5 pb-24">
@@ -170,6 +223,54 @@ export default function VereceklerPage() {
         </button>
       </div>
 
+      {/* İşletme filtresi (salt-görüntü) — Alacaklar ile simetrik. */}
+      {!loading && businesses.length > 1 && (
+        <section className="flex items-center gap-2">
+          <label className="text-xs text-surface-400 shrink-0">İşletme:</label>
+          <div className="min-w-[200px]">
+            <DarkSelect
+              value={businessFilter}
+              onChange={setBusinessFilter}
+              placeholder="Tüm İşletmeler"
+              aria-label="İşletmeye göre filtrele"
+              searchable={businesses.length > 6}
+              options={[
+                { value: ALL_BUSINESSES, label: "Tüm İşletmeler" },
+                ...businesses.map((b) => ({ value: b.id, label: b.name })),
+              ]}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* İşletme başına özet (breakdown) — "Tüm İşletmeler" görünümünde her
+          işletmenin açık verecek toplamı. Tıklanınca o işletmeye filtreler. */}
+      {!loading && businessFilter === ALL_BUSINESSES && businessBreakdown && (
+        <section className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {businessBreakdown.map((g) => (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => g.key !== "_none" && setBusinessFilter(g.key)}
+              disabled={g.key === "_none"}
+              className={cn(
+                "glass-card p-3 text-left transition-colors",
+                g.key === "_none"
+                  ? "cursor-default opacity-80"
+                  : "hover:border-red-500/40 cursor-pointer",
+              )}
+              title={g.key === "_none" ? undefined : `${g.name} vereceklerini göster`}
+            >
+              <p className="text-[11px] text-surface-400 truncate" title={g.name}>{g.name}</p>
+              <p className={cn("mt-0.5 text-sm font-semibold text-red-300", censorCls)}>
+                {maskAmount(g.total, censored, "TRY")}
+              </p>
+              <p className="text-[10px] text-surface-400">{g.count} kişi/firma</p>
+            </button>
+          ))}
+        </section>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={28} className="animate-spin text-red-400" />
@@ -187,6 +288,18 @@ export default function VereceklerPage() {
           >
             <Plus size={16} />
             Verecek Ekle
+          </button>
+        </div>
+      ) : visibleRows.length === 0 ? (
+        // İşletme filtresi aktif ama bu işletmede açık verecek yok.
+        <div className="glass-card p-8 text-center">
+          <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
+          <p className="text-surface-300 font-medium">Bu işletmede açık verecek yok</p>
+          <button
+            onClick={() => setBusinessFilter(ALL_BUSINESSES)}
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-semibold"
+          >
+            Tüm İşletmeleri Göster
           </button>
         </div>
       ) : (
@@ -215,7 +328,7 @@ export default function VereceklerPage() {
               <p className="text-[11px] text-surface-400 uppercase tracking-wider">Açık Kayıt</p>
               <p className="mt-1 text-2xl font-bold text-surface-100">{totalCount}</p>
               <p className="text-[11px] text-surface-400 mt-0.5">
-                {rows.length} farklı kişi/firma
+                {visibleRows.length} farklı kişi/firma
               </p>
             </div>
           </section>
