@@ -14,8 +14,12 @@ import { toast } from "@/lib/toast";
 import type { Counterpart, CounterpartRole, Business } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { CurrencyEquivalentLine } from "@/components/debts/CurrencyEquivalentLine";
+import { InfiniteScrollSentinel } from "@/components/shared/InfiniteScrollSentinel";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useAppStore } from "@/lib/store";
+
+const PAGE_SIZE = 40;
 
 // ── Role helpers ─────────────────────────────────────────
 const ROLES: { value: CounterpartRole; label: string; badge: string; icon: typeof CircleUserRound }[] = [
@@ -74,8 +78,6 @@ function formFromCp(c: Counterpart): FormState {
 
 export default function CounterpartsPage() {
   const router = useRouter();
-  const [list, setList] = useState<Counterpart[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<CounterpartRole | "ALL">("ALL");
@@ -110,41 +112,48 @@ export default function CounterpartsPage() {
       .catch(() => { /* silent */ });
   }, []);
 
+  // PERF (perf/frontend-pagination): cari listesi artık server-pagination ile
+  // sayfalı çekilir. role + businessFilter SERVER-SIDE param (BE DB'de uygular);
+  // search CLIENT-SIDE (BE bu uçta desteklemiyor) — yüklenen sayfalar üzerinde.
+  // businessFilter !== "ALL" → BE yalnız o işletmeyi döndürür (gruplama zaten
+  // kapalı); "ALL" → tüm işletmeler sayfalı, gruplama yüklenen kayıtlar üzerinde.
+  const {
+    items: list,
+    totalElements,
+    loading,
+    loadingMore,
+    hasNext,
+    loadMore,
+    error: pageError,
+    reload: reloadList,
+  } = usePaginatedList<Counterpart>(
+    (page, size) => {
+      const p = new URLSearchParams();
+      p.set("page", String(page));
+      p.set("size", String(size));
+      if (roleFilter !== "ALL") p.set("role", roleFilter);
+      if (businessFilter !== "ALL") p.set("businessId", businessFilter);
+      return `/counterparts?${p.toString()}`;
+    },
+    [roleFilter, businessFilter],
+    { size: PAGE_SIZE, label: "Counterparts" },
+  );
+
   async function fetchList() {
-    setLoading(true);
-    try {
-      const path = roleFilter === "ALL" ? "/counterparts" : `/counterparts?role=${roleFilter}`;
-      const data = await api.get<Counterpart[]>(path);
-      setList(data || []);
-      setError(null);
-    } catch (e) {
-      setError(getErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
+    reloadList();
   }
 
-  useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roleFilter]);
-
+  const hasSearch = Boolean(search.trim());
   const filtered = useMemo(() => {
-    let out = list;
-    // v1.7.x: business filter
-    if (businessFilter !== "ALL") {
-      out = out.filter((c) => c.business_id === businessFilter);
-    }
-    if (search.trim()) {
-      const q = search.toLocaleLowerCase("tr");
-      out = out.filter(
-        (c) =>
-          c.name.toLocaleLowerCase("tr").includes(q) ||
-          (c.tax_id && c.tax_id.includes(search.trim()))
-      );
-    }
-    return out;
-  }, [list, search, businessFilter]);
+    // businessFilter artık server-side; burada yalnız client-side search.
+    if (!hasSearch) return list;
+    const q = search.toLocaleLowerCase("tr");
+    return list.filter(
+      (c) =>
+        c.name.toLocaleLowerCase("tr").includes(q) ||
+        (c.tax_id && c.tax_id.includes(search.trim()))
+    );
+  }, [list, search, hasSearch]);
 
   // WP currency-display: Cari Hesap toplam tutarı — net cari bakiyelerin toplamı
   // (filtreye saygı duyar). İşaretli: pozitif = net alacaklı, negatif = net borçlu.
@@ -246,9 +255,9 @@ export default function CounterpartsPage() {
         </div>
       </section>
 
-      {error && (
+      {(error || pageError) && (
         <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-          {error}
+          {error || pageError}
         </div>
       )}
 
@@ -259,6 +268,7 @@ export default function CounterpartsPage() {
           <div className="min-w-0">
             <p className="text-[11px] text-surface-400 uppercase tracking-wider">
               {netTotal >= 0 ? "Toplam Net Alacak" : "Toplam Net Verecek"}
+              {hasNext && <span className="text-surface-500 normal-case"> (yuklenen)</span>}
             </p>
             {/* İşaret-bazlı renk: pozitif (alacaklı) → yeşil; 0 → nötr; negatif → uyarı. */}
             <p className={cn(
@@ -375,30 +385,61 @@ export default function CounterpartsPage() {
           {list.length === 0
             ? 'Henuz karsi firma yok. "Yeni" ile ilk kaydi ekleyebilirsin.'
             : "Aramaya uyan kayit bulunamadi."}
+          {/* arama eşleşmesi yok ama daha fazla sayfa var → manuel yükle. */}
+          {hasSearch && hasNext && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium transition-colors disabled:opacity-50"
+              >
+                {loadingMore ? "Yukleniyor..." : "Daha fazla kayit ara"}
+              </button>
+            </div>
+          )}
         </div>
       ) : grouped ? (
         // v1.7.x: business-bazlı gruplama
-        <div className="space-y-4">
-          {grouped.map((g) => (
-            <section key={g.businessId}>
-              <div className="flex items-center gap-2 mb-2 px-1">
-                <div className="w-1 h-4 bg-brand-500 rounded-full" />
-                <h3 className="text-xs font-semibold text-surface-200 uppercase tracking-wider">
-                  {g.businessName}
-                </h3>
-                <span className="text-[10px] text-surface-400">({g.items.length})</span>
-                <div className="flex-1 border-b border-surface-700 ml-2" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {g.items.map((c) => renderCard(c))}
-              </div>
-            </section>
-          ))}
-        </div>
+        <>
+          <div className="space-y-4">
+            {grouped.map((g) => (
+              <section key={g.businessId}>
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <div className="w-1 h-4 bg-brand-500 rounded-full" />
+                  <h3 className="text-xs font-semibold text-surface-200 uppercase tracking-wider">
+                    {g.businessName}
+                  </h3>
+                  <span className="text-[10px] text-surface-400">({g.items.length})</span>
+                  <div className="flex-1 border-b border-surface-700 ml-2" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {g.items.map((c) => renderCard(c))}
+                </div>
+              </section>
+            ))}
+          </div>
+          <InfiniteScrollSentinel
+            hasNext={hasNext}
+            loadingMore={loadingMore}
+            loadMore={loadMore}
+            loadedCount={list.length}
+            totalCount={totalElements}
+          />
+        </>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filtered.map((c) => renderCard(c))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {filtered.map((c) => renderCard(c))}
+          </div>
+          <InfiniteScrollSentinel
+            hasNext={hasNext}
+            loadingMore={loadingMore}
+            loadMore={loadMore}
+            loadedCount={list.length}
+            totalCount={totalElements}
+          />
+        </>
       )}
 
       {/* Create */}

@@ -15,6 +15,10 @@ import type { CategoryDef } from "@/components/inventory/constants";
 import { InventoryRow } from "@/components/inventory/InventoryRow";
 import { InventoryDetailModal } from "@/components/inventory/InventoryDetailModal";
 import { CreateInventoryModal } from "@/components/inventory/CreateInventoryModal";
+import { InfiniteScrollSentinel } from "@/components/shared/InfiniteScrollSentinel";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
+
+const PAGE_SIZE = 40;
 
 // ══════════════════════════════════════════════════════════
 // Ana Sayfa
@@ -35,9 +39,7 @@ function InventoryPage() {
 
   const presetBusiness = searchParams.get("business") || "";
 
-  const [items, setItems] = useState<InventoryItem[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [filterBusiness, setFilterBusiness] = useState(presetBusiness);
@@ -51,26 +53,37 @@ function InventoryPage() {
   // InventoryRow'un gereksiz re-render'ını önler (referans değişmez).
   const handleSelectItem = useCallback((item: InventoryItem) => setDetailItem(item), []);
 
-  useEffect(() => { fetchData(); }, [refreshKey, filterBusiness]);
+  // PERF (perf/frontend-pagination): envanter artık server-pagination ile sayfalı
+  // çekilir. business_id + category SERVER-SIDE param (BE DB'de uygular);
+  // status + arama CLIENT-SIDE (BE bu uçta desteklemiyor) — yüklenen sayfalar üstünde.
+  const {
+    items,
+    totalElements,
+    loading,
+    loadingMore,
+    hasNext,
+    loadMore,
+  } = usePaginatedList<InventoryItem>(
+    (page, size) => {
+      const p = new URLSearchParams();
+      p.set("page", String(page));
+      p.set("size", String(size));
+      if (filterBusiness) p.set("business_id", filterBusiness);
+      if (activeCategory !== "ALL") p.set("category", activeCategory);
+      return `/portfolio/inventory?${p.toString()}`;
+    },
+    [filterBusiness, activeCategory, refreshKey],
+    { size: PAGE_SIZE, label: "Inventory" },
+  );
 
-  async function fetchData() {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (filterBusiness) params.set("business_id", filterBusiness);
-
-      const [itemsData, bizData] = await Promise.all([
-        api.get<InventoryItem[]>(`/portfolio/inventory?${params.toString()}`),
-        api.get<Business[]>("/businesses"),
-      ]);
-      setItems(itemsData || []);
-      setBusinesses(bizData || []);
-    } catch (err) {
-      logger.error("api", "Inventory fetch error", undefined, err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // İşletme listesi — items'tan bağımsız (tek sefer / refreshKey).
+  useEffect(() => {
+    let alive = true;
+    api.get<Business[]>("/businesses")
+      .then((r) => { if (alive) setBusinesses(r || []); })
+      .catch((err) => logger.error("api", "Inventory businesses fetch error", undefined, err));
+    return () => { alive = false; };
+  }, [refreshKey]);
 
   const selectedBiz = businesses.find((b) => b.id === filterBusiness);
   const availableCategories = useMemo(() => {
@@ -93,9 +106,12 @@ function InventoryPage() {
     }
   }, [availableCategories, activeCategory]);
 
+  // category artık server-side; burada yalnız client-side status + arama
+  // (BE bu ikisini desteklemiyor) — yüklenmiş sayfalar üzerinde.
+  const hasClientFilter = Boolean(filterStatus || searchQuery);
   const filtered = useMemo(() => {
+    if (!hasClientFilter) return items;
     return items.filter((item) => {
-      if (activeCategory !== "ALL" && item.category !== activeCategory) return false;
       if (filterStatus && item.status !== filterStatus) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -106,9 +122,11 @@ function InventoryPage() {
       }
       return true;
     });
-  }, [items, activeCategory, filterStatus, searchQuery]);
+  }, [items, filterStatus, searchQuery, hasClientFilter]);
 
-  const totalCount = filtered.length;
+  // "X kalem": client-filtre yokken gerçek toplam (total_elements);
+  // client-filtre varken yüklenmiş eşleşme sayısı.
+  const totalCount = hasClientFilter ? filtered.length : totalElements;
   const brokenCount = filtered.filter((i) => i.status === "BROKEN").length;
   // Akıllı reorder: backend needs_reorder (eşik = manuel ya da minimum+lead tamponu). (WP f4fe6d82)
   const lowStockCount = filtered.filter((i) => i.needs_reorder).length;
@@ -196,13 +214,34 @@ function InventoryPage() {
           <p className="text-surface-400 text-sm">
             {items.length === 0 ? "Henuz envanter kalemi yok" : "Filtreye uygun kalem bulunamadi"}
           </p>
+          {hasClientFilter && hasNext && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium transition-colors disabled:opacity-50"
+              >
+                {loadingMore ? "Yukleniyor..." : "Daha fazla kalem ara"}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="glass-card divide-y divide-surface-700 overflow-hidden">
-          {filtered.map((item) => (
-            <InventoryRow key={item.id} item={item} onSelect={handleSelectItem} showBusiness={!filterBusiness} />
-          ))}
-        </div>
+        <>
+          <div className="glass-card divide-y divide-surface-700 overflow-hidden">
+            {filtered.map((item) => (
+              <InventoryRow key={item.id} item={item} onSelect={handleSelectItem} showBusiness={!filterBusiness} />
+            ))}
+          </div>
+          <InfiniteScrollSentinel
+            hasNext={hasNext}
+            loadingMore={loadingMore}
+            loadMore={loadMore}
+            loadedCount={items.length}
+            totalCount={totalElements}
+          />
+        </>
       )}
 
       {/* Detail Modal */}
