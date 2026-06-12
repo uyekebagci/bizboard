@@ -208,6 +208,42 @@ public class InstrumentService {
         return toDto(ins);
     }
 
+    // ──────────────────────────── UNCASH (tahsil/ödeme geri al — reverse) ────────────────────────────
+
+    /**
+     * Çek/senet ↔ nakit tahsilat BAĞINI KOPAR (reverse): başarılı tahsil/ödeme
+     * yanlış girilmişse geri alır. CASHED → CONFIRMED; Σ=0 posting entry'si
+     * silinir (para hesabı bakiyesi geri döner). BOUNCED/iade DEĞİL — bu yalnız
+     * "yanlış bağladım" düzeltmesidir. Idempotent: zaten CONFIRMED ise no-op.
+     *
+     * <p><b>P&L-NÖTR:</b> silinen entry'de PNL bacağı yoktu (tahsil gelir
+     * yazmaz); dolayısıyla Net Kâr Δ=0 (bağlamada da, kopartmada da).</p>
+     */
+    @Transactional
+    public InstrumentDto uncash(UUID userId, UUID businessId, UUID id) {
+        Instrument ins = loadForMutate(userId, businessId, id);
+        // Idempotent: zaten portföydeyse (bağ yok) sessizce dön.
+        if (ins.getStatus() == InstrumentStatus.CONFIRMED && ins.getJournalEntryId() == null) {
+            return toDto(ins);
+        }
+        if (ins.getStatus() != InstrumentStatus.CASHED) {
+            throw new IllegalStateException(
+                    "Sadece tahsil/ödeme edilmiş (CASHED) evrakın bağı kopartılabilir (status="
+                            + ins.getStatus() + ")");
+        }
+        String prevAccount = ins.getCashedAccount() != null ? ins.getCashedAccount().getName() : "—";
+        reverseCashEntry(ins);              // Σ=0 entry sil + cashed* alanları temizle
+        ins.setStatus(InstrumentStatus.CONFIRMED);
+        ins = instrumentRepository.save(ins);
+        audit(AuditAction.INSTRUMENT_UNCASH, userId, loadUser(userId), ins,
+                (ins.getDirection() == InstrumentDirection.RECEIVED ? "Tahsil" : "Ödeme")
+                        + " bağı kopartıldı (geri portföye) — " + ins.getAmount()
+                        + " ↩ " + prevAccount, null);
+        log.info("[instrument] uncashed id={} dir={} amount={}",
+                ins.getId(), ins.getDirection(), ins.getAmount());
+        return toDto(ins);
+    }
+
     // ──────────────────────────── BOUNCE (karşılıksız) ────────────────────────────
 
     @Transactional
@@ -305,6 +341,25 @@ public class InstrumentService {
                 .orElseThrow(() -> new IllegalArgumentException("Çek/senet bulunamadı"));
         assertSameBusiness(ins.getBusiness(), businessId, "Çek/senet");
         return toDto(ins);
+    }
+
+    /**
+     * Çek/senet ↔ nakit tahsilat bağlama (tx-form öneri kartı): bir cari'nin
+     * AÇIK (CONFIRMED) evrakları, yöne göre. İşlem formunda nakit/banka GİRİŞİ
+     * için RECEIVED (alacak), ÇIKIŞI için GIVEN (borç) önerilir. Boş liste →
+     * öneri çıkmaz (NON-BREAKING).
+     */
+    @Transactional(readOnly = true)
+    public List<InstrumentDto> listOpenByCounterpart(UUID userId, UUID businessId,
+                                                     UUID counterpartId, String direction) {
+        accessGuard.assertCanReadBusiness(userId, businessId);
+        if (counterpartId == null) {
+            return List.of();
+        }
+        InstrumentDirection dir = parseDirection(direction);
+        return instrumentRepository
+                .findOpenByCounterpart(businessId, counterpartId, dir)
+                .stream().map(this::toDto).toList();
     }
 
     // ──────────────────────────── HELPERS ────────────────────────────

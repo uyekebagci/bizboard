@@ -21,10 +21,12 @@ import java.util.UUID;
  *
  * <ul>
  *   <li>{@code GET  /instruments?business_id=&status=}        — portföy listesi</li>
+ *   <li>{@code GET  /instruments/open?business_id=&counterpart_id=&direction=} — bir cari'nin açık evrakları (tx-form öneri)</li>
  *   <li>{@code GET  /instruments/{id}?business_id=}           — tek evrak</li>
  *   <li>{@code POST /instruments?business_id=}                — manuel giriş</li>
  *   <li>{@code POST /instruments/{id}/confirm?business_id=}   — OCR onayı</li>
  *   <li>{@code POST /instruments/{id}/cash?business_id=}      — tahsil/ödeme (Σ=0 posting)</li>
+ *   <li>{@code POST /instruments/{id}/uncash?business_id=}    — tahsil/ödeme bağını kopar (reverse → CONFIRMED)</li>
  *   <li>{@code POST /instruments/{id}/bounce?business_id=}    — karşılıksız</li>
  *   <li>{@code POST /instruments/{id}/endorse?business_id=}   — ciro/devir</li>
  * </ul>
@@ -45,6 +47,28 @@ public class InstrumentController {
             @RequestParam(required = false) String status) {
         try {
             return ResponseEntity.ok(service.list(principal.getId(), businessId, status));
+        } catch (SecurityException e) {
+            return forbidden();
+        }
+    }
+
+    /**
+     * Çek/senet ↔ nakit tahsilat bağlama (tx-form öneri kartı): bir cari'nin
+     * AÇIK (CONFIRMED) evrakları, yöne göre. İşlem formunda nakit/banka girişi
+     * girilirken "bu bir çek/senet tahsilatı mı?" önerisini besler.
+     * {@code direction} = RECEIVED (gelir → alacak) | GIVEN (gider → borç).
+     */
+    @GetMapping("/open")
+    public ResponseEntity<?> openByCounterpart(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
+            @RequestParam(name = "counterpart_id") UUID counterpartId,
+            @RequestParam(name = "direction", defaultValue = "RECEIVED") String direction) {
+        try {
+            return ResponseEntity.ok(service.listOpenByCounterpart(
+                    principal.getId(), businessId, counterpartId, direction));
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
         } catch (SecurityException e) {
             return forbidden();
         }
@@ -94,6 +118,14 @@ public class InstrumentController {
             @PathVariable UUID id,
             @Valid @RequestBody CashInstrumentRequest req) {
         return mutate(() -> service.cash(principal.getId(), businessId, id, req));
+    }
+
+    @PostMapping("/{id}/uncash")
+    public ResponseEntity<?> uncash(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
+            @PathVariable UUID id) {
+        return mutate(() -> service.uncash(principal.getId(), businessId, id));
     }
 
     @PostMapping("/{id}/bounce")

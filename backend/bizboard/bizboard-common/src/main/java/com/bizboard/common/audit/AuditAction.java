@@ -211,6 +211,8 @@ public final class AuditAction {
     public static final String INSTRUMENT_CONFIRM     = "INSTRUMENT_CONFIRM";
     /** Çek/senet tahsil/ödeme (CASHED) — para hesabına Σ=0 posting. */
     public static final String INSTRUMENT_CASH        = "INSTRUMENT_CASH";
+    /** Çek/senet tahsil/ödeme GERİ ALMA (CASHED → CONFIRMED) — Σ=0 posting silinir (reverse). */
+    public static final String INSTRUMENT_UNCASH      = "INSTRUMENT_UNCASH";
     /** Çek/senet karşılıksız (BOUNCED). */
     public static final String INSTRUMENT_BOUNCE      = "INSTRUMENT_BOUNCE";
     /** Çek/senet ciro/devir (ENDORSED) — başka counterpart'a aktarım. */
