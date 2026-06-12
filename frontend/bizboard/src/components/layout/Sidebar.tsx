@@ -67,6 +67,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3,       group: "genel" },
   { href: "/dashboard/reports",          label: "Raporlar",      icon: BarChart3,       group: "genel" },
   { href: "/dashboard/ai",               label: "AI Asistan",    icon: Bot,             group: "genel" },
+  { href: "/dashboard/e-fatura",         label: "e-Fatura",      icon: Receipt,         group: "genel" },
   // ── Cari & Borçlar ──
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users,           group: "cari" },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins,       group: "cari" },

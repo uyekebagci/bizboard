@@ -1791,3 +1791,116 @@ export interface OcrConfirmRequest {
   serial_no?: string | null;
   issuer_counterpart_id?: string | null;
 }
+
+// ──────────────────────────────────────────────────────────────────
+// e-Fatura modülü (Çatı v1.1, entegratör-pluggable)
+// ──────────────────────────────────────────────────────────────────
+
+export type InvoiceScenario = "TEMEL" | "TICARI";
+export type InvoiceType =
+  | "SATIS"
+  | "IADE"
+  | "TEVKIFAT"
+  | "ISTISNA"
+  | "OZELMATRAH";
+export type InvoiceStatus =
+  | "DRAFT"
+  | "SIGNED"
+  | "SENT"
+  | "ACCEPTED"
+  | "REJECTED"
+  | "CANCELLED"
+  | "ERROR";
+
+export interface InvoiceLine {
+  id?: string;
+  line_number: number;
+  item_name: string;
+  description?: string | null;
+  unit_code: string;
+  quantity: number;
+  unit_price: number;
+  vat_rate: number;
+  discount_amount: number;
+  line_extension_amount: number;
+  vat_amount: number;
+}
+
+export interface Invoice {
+  id: string;
+  business_id: string | null;
+  business_name: string | null;
+  invoice_number: string;
+  ettn: string;
+  issue_date: string;
+  issue_time?: string | null;
+  scenario: InvoiceScenario;
+  invoice_type: InvoiceType;
+  status: InvoiceStatus;
+  currency: string;
+  // satıcı
+  supplier_tax_id: string | null;
+  supplier_title: string | null;
+  supplier_tax_office: string | null;
+  supplier_address: string | null;
+  supplier_city: string | null;
+  supplier_district: string | null;
+  supplier_country: string | null;
+  // alıcı
+  customer_tax_id: string | null;
+  customer_title: string | null;
+  customer_tax_office: string | null;
+  customer_address: string | null;
+  customer_city: string | null;
+  customer_district: string | null;
+  customer_country: string | null;
+  // toplamlar
+  line_extension_amount: number;
+  tax_exclusive_amount: number;
+  tax_inclusive_amount: number;
+  total_tax_amount: number;
+  allowance_total_amount: number;
+  payable_amount: number;
+  notes: string | null;
+  // entegratör
+  integrator_key: string | null;
+  integrator_ref: string | null;
+  integrator_status: string | null;
+  integrator_error: string | null;
+  has_xml: boolean;
+  generated_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+  lines?: InvoiceLine[];
+}
+
+export interface CreateInvoiceLineInput {
+  item_name: string;
+  description?: string | null;
+  unit_code?: string;
+  quantity: number;
+  unit_price: number;
+  vat_rate?: number;
+  discount_amount?: number;
+}
+
+export interface CreateInvoiceInput {
+  business_id: string;
+  supplier_company_id?: string | null;
+  customer_counterpart_id?: string | null;
+  customer_tax_id?: string | null;
+  customer_title?: string | null;
+  customer_tax_office?: string | null;
+  customer_address?: string | null;
+  customer_city?: string | null;
+  customer_district?: string | null;
+  customer_country?: string | null;
+  invoice_number?: string | null;
+  issue_date?: string | null;
+  scenario?: InvoiceScenario;
+  invoice_type?: InvoiceType;
+  currency?: string;
+  notes?: string | null;
+  lines: CreateInvoiceLineInput[];
+}

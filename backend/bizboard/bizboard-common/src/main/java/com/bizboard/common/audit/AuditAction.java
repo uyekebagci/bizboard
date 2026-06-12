@@ -259,4 +259,20 @@ public final class AuditAction {
     public static final String AI_ANOMALY_DETECTED = "AI_ANOMALY_DETECTED";
     /** İşletme-başına AI anomali tespiti opt-in bayrağı admin tarafından değişti. */
     public static final String AI_ANOMALY_CONFIG_UPDATE = "AI_ANOMALY_CONFIG_UPDATE";
+
+    // ── e-Fatura modülü (Çatı v1.1, entegratör-pluggable) ─────────────────
+    /** e-Fatura taslağı oluşturuldu. */
+    public static final String INVOICE_CREATE          = "INVOICE_CREATE";
+    /** e-Fatura güncellendi (yalnız DRAFT). */
+    public static final String INVOICE_UPDATE          = "INVOICE_UPDATE";
+    /** e-Fatura silindi (yalnız DRAFT). */
+    public static final String INVOICE_DELETE          = "INVOICE_DELETE";
+    /** UBL-TR XML üretildi (+ varsa mali mühür imzalandı). */
+    public static final String INVOICE_XML_GENERATED   = "INVOICE_XML_GENERATED";
+    /** Entegratöre gönderildi (veya entegratör yapılandırılmadığı için atlandı). */
+    public static final String INVOICE_SENT            = "INVOICE_SENT";
+    /** Entegratörden durum sorgulandı. */
+    public static final String INVOICE_STATUS_QUERIED  = "INVOICE_STATUS_QUERIED";
+    /** Fatura iptal edildi. */
+    public static final String INVOICE_CANCELLED       = "INVOICE_CANCELLED";
 }
