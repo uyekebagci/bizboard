@@ -3,11 +3,14 @@ package com.bizboard.api.controller;
 import com.bizboard.common.dto.CounterpartDto;
 import com.bizboard.common.dto.CounterpartStatementDto;
 import com.bizboard.common.dto.CreateCounterpartRequest;
+import com.bizboard.common.dto.PagedResponseDto;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.CounterpartLedgerService;
 import com.bizboard.service.CounterpartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +33,33 @@ public class CounterpartController {
     private final CounterpartService service;
     private final CounterpartLedgerService ledgerService;
 
+    /**
+     * Karşı firma listesi — opsiyonel {@code role}/{@code kind}/{@code businessId} filtreli.
+     *
+     * <p>PERF (server-pagination, non-breaking): {@code page} parametresi GELMEZSE
+     * eski davranış AYNEN korunur — {@code List<CounterpartDto>} JSON dizisi döner
+     * (mevcut FE kırılmaz). {@code page} GELİRSE {@link PagedResponseDto} zarfı döner.
+     * Filtreler/sıralama ({@code name ASC}) ikisinde de aynı. {@code size} clamp:
+     * 1..200, default 50.</p>
+     */
     @GetMapping
-    public ResponseEntity<List<CounterpartDto>> list(
+    public ResponseEntity<?> list(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String kind,
-            @RequestParam(required = false) UUID businessId) {
-        return ResponseEntity.ok(service.list(role, kind, businessId, principal.getId()));
+            @RequestParam(required = false) UUID businessId,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size) {
+
+        if (page == null) {
+            return ResponseEntity.ok(service.list(role, kind, businessId, principal.getId()));
+        }
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size == null ? 50 : size, 1), 200);
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        return ResponseEntity.ok(PagedResponseDto.of(
+                service.list(role, kind, businessId, principal.getId(), pageable)));
     }
 
     @GetMapping("/{id}")
