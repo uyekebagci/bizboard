@@ -10,6 +10,9 @@ import com.bizboard.service.storage.StoredFile;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -241,6 +244,42 @@ public class FileStorageService {
                 .filter(f -> canRead(userId, false, f))
                 .map(this::toDto)
                 .toList();
+    }
+
+    /**
+     * PERF (server-pagination, non-breaking): {@link #getAllFiles}'in sayfalı eşi.
+     * {@code ?page=&size=} geldiğinde controller bunu çağırır; parametre yoksa ESKİ
+     * {@code getAllFiles} aynen kullanılır.
+     *
+     * <p>Yetkilendirme/içerik eski metotla BİREBİR korunur:</p>
+     * <ul>
+     *   <li><b>admin</b>: DB-seviyesinde sayfalı ({@code findAllByOrderByCreatedAtDesc(pageable)})
+     *       — gerçek pagination, tüm payload çekilmez;</li>
+     *   <li><b>non-admin</b>: {@link #canRead} per-row elemesi sayfa boyutunu
+     *       bozacağından DB-pagination uygulanamaz. Aday set ({@code adminOnly=false})
+     *       çekilir, {@code canRead} ile elenir, sonra bellekte sayfa penceresi
+     *       (slice) alınır — SONUÇ içeriği {@code getAllFiles}'la aynı; kazanç,
+     *       tek-shot tüm DTO'ları SERİLEŞTİRİP göndermek yerine yalnız sayfayı
+     *       göndermektir (FE'deki asıl yük).</li>
+     * </ul>
+     */
+    @Transactional(readOnly = true)
+    public Page<FileUploadDto> getAllFilesPaged(UUID userId, boolean isAdmin, Pageable pageable) {
+        if (isAdmin) {
+            Page<FileUpload> page = fileUploadRepository.findAllByOrderByCreatedAtDesc(pageable);
+            List<FileUploadDto> dtos = page.getContent().stream().map(this::toDto).toList();
+            return new PageImpl<>(dtos, pageable, page.getTotalElements());
+        }
+        // Non-admin: canRead per-row → bellekte filtre + slice (içerik birebir).
+        List<FileUpload> visible = fileUploadRepository.findByAdminOnlyFalseOrderByCreatedAtDesc()
+                .stream()
+                .filter(f -> canRead(userId, false, f))
+                .toList();
+        long total = visible.size();
+        int from = (int) Math.min((long) pageable.getPageNumber() * pageable.getPageSize(), total);
+        int to = (int) Math.min(from + (long) pageable.getPageSize(), total);
+        List<FileUploadDto> dtos = visible.subList(from, to).stream().map(this::toDto).toList();
+        return new PageImpl<>(dtos, pageable, total);
     }
 
     @Transactional(readOnly = true)

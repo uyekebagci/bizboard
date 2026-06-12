@@ -1,11 +1,14 @@
 package com.bizboard.api.controller;
 
+import com.bizboard.common.dto.PagedResponseDto;
 import com.bizboard.common.dto.PortfolioSummaryDto;
 import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.SummaryService;
 import com.bizboard.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -67,15 +70,36 @@ public class PortfolioController {
     }
 
     /**
-     * Tum islemler — filtreleme destekli
-     * GET /portfolio/transactions/all?business_id=xxx&direction=income
+     * Tum islemler — filtreleme destekli.
+     *
+     * <p>GET /portfolio/transactions/all?business_id=xxx&direction=income</p>
+     *
+     * <p>PERF (server-pagination, non-breaking): {@code page} parametresi
+     * GELMEZSE eski davranış AYNEN korunur — tüm tx'ler {@code List<TransactionDto>}
+     * JSON dizisi olarak döner (mevcut FE çağrıları kırılmaz). {@code page}
+     * GELİRSE {@link PagedResponseDto} zarfı döner ({@code items + total_elements
+     * + ...}) ve direction filtresi DB'de uygulanır. {@code size} clamp: 1..200,
+     * default 50. Sonuç kümesi/sırası ikisinde de aynı ({@code date DESC}).</p>
      */
     @GetMapping("/transactions/all")
-    public ResponseEntity<List<TransactionDto>> getAllTransactions(
+    public ResponseEntity<?> getAllTransactions(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(value = "business_id", required = false) java.util.UUID businessId,
-            @RequestParam(value = "direction", required = false) String direction) {
-        return ResponseEntity.ok(
-                transactionService.getAllTransactionsForUser(principal.getId(), businessId, direction));
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size) {
+
+        // Geriye uyumluluk: page yoksa eski tam-liste davranışı.
+        if (page == null) {
+            return ResponseEntity.ok(
+                    transactionService.getAllTransactionsForUser(principal.getId(), businessId, direction));
+        }
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size == null ? 50 : size, 1), 200);
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        return ResponseEntity.ok(PagedResponseDto.of(
+                transactionService.getAllTransactionsForUserPaged(
+                        principal.getId(), businessId, direction, pageable)));
     }
 }

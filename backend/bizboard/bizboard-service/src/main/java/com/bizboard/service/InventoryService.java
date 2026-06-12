@@ -13,6 +13,9 @@ import com.bizboard.repository.MaintenanceLogRepository;
 import com.bizboard.repository.UserRepository;
 import com.bizboard.service.inventory.ReorderCalculator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -264,6 +267,65 @@ public class InventoryService {
             dto.setBusinessName(item.getBusiness().getName());
             return dto;
         }).toList();
+    }
+
+    /**
+     * PERF (server-pagination, non-breaking): {@link #getAllInventoryForUser}'in
+     * sayfalı eşi. {@code ?page=&size=} geldiğinde controller bunu çağırır; parametre
+     * yoksa ESKİ {@code getAllInventoryForUser} aynen kullanılır.
+     *
+     * <p>İşletme çözümü (admin → tümü, aksi halde {@code accessibleBusinesses} parse)
+     * ve {@code filterBusinessId} erişim kontrolü eski metotla BİREBİR. Tek fark:
+     * kategori filtresi DB'de tek {@code IN} sorgusuna iner (eskiden business-başı
+     * döngü) ve sonuç global {@code createdAt DESC} sıralı sayfa olarak döner
+     * ({@code Page<>}: içerik + {@code totalElements}). {@code @EntityGraph(business)}
+     * ile {@code toDto} N+1'i de elenir.</p>
+     */
+    @Transactional(readOnly = true)
+    public Page<InventoryItemDto> getAllInventoryForUserPaged(
+            UUID userId, String category, UUID filterBusinessId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        List<Business> businesses;
+        if ("admin".equalsIgnoreCase(user.getRole())) {
+            businesses = businessRepository.findAll();
+        } else {
+            String accessible = user.getAccessibleBusinesses();
+            if (accessible != null && !accessible.isBlank() && !"all".equalsIgnoreCase(accessible.trim())) {
+                List<UUID> ids = java.util.Arrays.stream(accessible.split(","))
+                        .map(String::trim).filter(s -> !s.isEmpty())
+                        .map(UUID::fromString).toList();
+                businesses = businessRepository.findByIdIn(ids);
+            } else {
+                businesses = businessRepository.findAll();
+            }
+        }
+
+        List<UUID> businessIds = businesses.stream().map(Business::getId).toList();
+
+        if (filterBusinessId != null) {
+            if (!businessIds.contains(filterBusinessId)) return Page.empty(pageable);
+            businessIds = List.of(filterBusinessId);
+        }
+        if (businessIds.isEmpty()) return Page.empty(pageable);
+
+        Page<InventoryItem> page;
+        if (category != null && !category.isBlank()) {
+            String cat = category.toUpperCase(java.util.Locale.ENGLISH);
+            page = inventoryItemRepository
+                    .findByBusinessIdInAndCategoryAndActiveTrueOrderByCreatedAtDesc(businessIds, cat, pageable);
+        } else {
+            page = inventoryItemRepository
+                    .findByBusinessIdInAndActiveTrueOrderByCreatedAtDesc(businessIds, pageable);
+        }
+
+        List<InventoryItemDto> dtos = page.getContent().stream().map(item -> {
+            InventoryItemDto dto = toDto(item);
+            dto.setBusinessName(item.getBusiness().getName());
+            return dto;
+        }).toList();
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
     }
 
     // ── Bakım Kayıtları ──

@@ -68,6 +68,54 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
     List<Transaction> findByBusinessIdOrderByDateDesc(UUID businessId);
 
+    /*
+     * PERF (server-pagination, non-breaking): {@code /portfolio/transactions/all}
+     * için sayfalı + DB-seviyesinde direction filtreli varyantlar. Eski parametresiz
+     * uçlar AYNEN korunur (yukarıdaki {@code findByBusinessIdInOrderByDateDesc}
+     * vb. silinmedi); bu metodlar yalnız {@code ?page=&size=} geldiğinde kullanılır.
+     *
+     * <p>Direction filtresi artık bellekte değil DB'de ({@code WHERE t.direction = ...}):
+     * eskiden tüm tx çekilip {@code stream().filter()} ile direction eleniyordu —
+     * SONUÇ aynı kalır, payload/IO {@code WHERE} ile düşer. Sıralama
+     * {@code date DESC} (eski davranışla birebir). to-ONE {@code @EntityGraph}
+     * eager (toTransactionDto N+1 fix); to-ONE oldukları için {@code Pageable}
+     * ile DB-seviyesi sayfalama doğru çalışır (kartezyen patlama yok).</p>
+     */
+
+    // — birden fazla işletme, direction filtresiz, sayfalı —
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
+    @Query("SELECT t FROM Transaction t WHERE t.business.id IN :businessIds ORDER BY t.date DESC")
+    org.springframework.data.domain.Page<Transaction> findByBusinessIdIn(
+            @Param("businessIds") List<UUID> businessIds, Pageable pageable);
+
+    // — birden fazla işletme, direction DB'de filtreli, sayfalı —
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
+    @Query("SELECT t FROM Transaction t WHERE t.business.id IN :businessIds " +
+            "AND t.direction = :direction ORDER BY t.date DESC")
+    org.springframework.data.domain.Page<Transaction> findByBusinessIdInAndDirection(
+            @Param("businessIds") List<UUID> businessIds,
+            @Param("direction") com.bizboard.common.enums.TransactionDirection direction,
+            Pageable pageable);
+
+    // — tek işletme, direction filtresiz, sayfalı —
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
+    @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId ORDER BY t.date DESC")
+    org.springframework.data.domain.Page<Transaction> findByBusinessId(
+            @Param("businessId") UUID businessId, Pageable pageable);
+
+    // — tek işletme, direction DB'de filtreli, sayfalı —
+    @EntityGraph(attributePaths = {"business", "category", "bankAccount", "relatedBankAccount",
+            "targetCounterpart", "createdBy", "posDevice", "posDevice.ownerMyCompany"})
+    @Query("SELECT t FROM Transaction t WHERE t.business.id = :businessId " +
+            "AND t.direction = :direction ORDER BY t.date DESC")
+    org.springframework.data.domain.Page<Transaction> findByBusinessIdAndDirection(
+            @Param("businessId") UUID businessId,
+            @Param("direction") com.bizboard.common.enums.TransactionDirection direction,
+            Pageable pageable);
+
     /**
      * Performans (AccountStatementService N+1/full-scan fix): bir işletmenin
      * BELİRLİ counterpart'a bağlı tx'leri. Önce tüm business tx'i çekip bellekte

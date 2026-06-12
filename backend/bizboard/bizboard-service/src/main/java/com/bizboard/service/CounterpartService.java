@@ -14,6 +14,9 @@ import com.bizboard.repository.DebtRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +91,46 @@ public class CounterpartService {
             base = base.filter(c -> c.getKind() == k);
         }
         return base.map(this::toDto).toList();
+    }
+
+    /**
+     * PERF (server-pagination, non-breaking): {@link #list(String, String, UUID, UUID)}'in
+     * sayfalı eşi. {@code ?page=&size=} geldiğinde controller bunu çağırır; parametre
+     * yoksa ESKİ {@code list} aynen kullanılır.
+     *
+     * <p>Tenant-scope, filtre semantiği ve sıralama ({@code name ASC}) eski metotla
+     * BİREBİR korunur — tek fark {@code role+kind} kombinasyonunun bellekte değil
+     * DB'de filtrelenmesi (sayfalama doğruluğu için) ve {@code Page<>} (içerik +
+     * {@code totalElements}) dönüşü. {@code @EntityGraph(business)} ile {@code toDto}
+     * N+1'i de elenir.</p>
+     */
+    @Transactional(readOnly = true)
+    public Page<CounterpartDto> list(String role, String kind, UUID businessId,
+                                     UUID actorUserId, Pageable pageable) {
+        List<UUID> allowed = resolveAllowedBusinessIds(businessId, actorUserId);
+        if (allowed.isEmpty()) return Page.empty(pageable);
+
+        boolean hasRole = role != null && !role.isBlank();
+        boolean hasKind = kind != null && !kind.isBlank();
+        com.bizboard.common.enums.CounterpartKind k = hasKind
+                ? com.bizboard.common.enums.CounterpartKind.valueOf(
+                        kind.trim().toUpperCase(java.util.Locale.ENGLISH))
+                : null;
+
+        Page<Counterpart> page;
+        if (hasRole && hasKind) {
+            page = repository.findByBusinessIdInAndRoleAndKindOrderByNameAsc(
+                    allowed, parseRole(role), k, pageable);
+        } else if (hasRole) {
+            page = repository.findByBusinessIdInAndRoleOrderByNameAsc(allowed, parseRole(role), pageable);
+        } else if (hasKind) {
+            page = repository.findByBusinessIdInAndKindOrderByNameAsc(allowed, k, pageable);
+        } else {
+            page = repository.findByBusinessIdInOrderByNameAsc(allowed, pageable);
+        }
+
+        List<CounterpartDto> dtos = page.getContent().stream().map(this::toDto).toList();
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
     }
 
     /** v1.6.20 (WP-3) + v1.6.23.20: Alt firmalar — tenant filtreli. */

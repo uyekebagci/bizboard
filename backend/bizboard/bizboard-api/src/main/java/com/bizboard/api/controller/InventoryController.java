@@ -5,6 +5,8 @@ import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.InventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -111,12 +113,32 @@ public class InventoryController {
 
     // ── Tüm işletmelerin envanteri (portfolio) ──
 
+    /**
+     * Portfolio envanteri — opsiyonel {@code category}/{@code business_id} filtreli.
+     *
+     * <p>PERF (server-pagination, non-breaking): {@code page} parametresi GELMEZSE
+     * eski davranış AYNEN korunur — {@code List<InventoryItemDto>} JSON dizisi döner
+     * (mevcut FE kırılmaz). {@code page} GELİRSE {@link PagedResponseDto} zarfı döner;
+     * kategori filtresi DB'de uygulanır, sıralama {@code createdAt DESC}. {@code size}
+     * clamp: 1..200, default 50.</p>
+     */
     @GetMapping("/portfolio/inventory")
-    public ResponseEntity<List<InventoryItemDto>> getAllInventory(
+    public ResponseEntity<?> getAllInventory(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) UUID business_id,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(inventoryService.getAllInventoryForUser(
-                principal.getId(), category, business_id));
+
+        if (page == null) {
+            return ResponseEntity.ok(inventoryService.getAllInventoryForUser(
+                    principal.getId(), category, business_id));
+        }
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size == null ? 50 : size, 1), 200);
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        return ResponseEntity.ok(PagedResponseDto.of(inventoryService.getAllInventoryForUserPaged(
+                principal.getId(), category, business_id, pageable)));
     }
 }
