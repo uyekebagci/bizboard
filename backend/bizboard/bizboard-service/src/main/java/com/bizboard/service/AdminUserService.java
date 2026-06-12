@@ -30,6 +30,8 @@ public class AdminUserService {
     // v1.7.x: user delete öncesi FK temizleme için
     private final com.bizboard.repository.NotificationRepository notificationRepository;
     private final com.bizboard.repository.RefreshTokenRepository refreshTokenRepository;
+    // Standalone hatırlatıcı: user delete öncesi FK temizleme.
+    private final com.bizboard.repository.ReminderRepository reminderRepository;
     // Tier 3 (EVT-3): firma erişimi verilince FIRM_ACCESS_GRANTED dispatch için.
     private final com.bizboard.service.notification.NotificationDispatchService dispatchService;
 
@@ -203,8 +205,10 @@ public class AdminUserService {
         // (audit_logs.user_id NULLABLE olduğu için orada cascade gerekmez.)
         int notif = notificationRepository.deleteByUserId(userId);
         int rt = refreshTokenRepository.deleteByUserId(userId);
-        if (notif > 0 || rt > 0) {
-            log.info("[user-delete] FK cleanup — notifications: {}, refresh_tokens: {}", notif, rt);
+        int rem = reminderRepository.deleteByOwnerId(userId);
+        if (notif > 0 || rt > 0 || rem > 0) {
+            log.info("[user-delete] FK cleanup — notifications: {}, refresh_tokens: {}, reminders: {}",
+                    notif, rt, rem);
         }
 
         userRepository.delete(user);

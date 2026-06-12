@@ -40,6 +40,10 @@ public class NotificationTemplateRegistry {
                     NotificationType.SUCCESS,
                     "Ödeme alındı: {counterparty}",
                     "{counterparty} tarafından {amount} {currency} ödeme alındı.")),
+            Map.entry(NotificationEvent.PAYMENT_MADE, new Template(
+                    NotificationType.SUCCESS,
+                    "Ödeme yapıldı: {counterparty}",
+                    "{counterparty} tarafına {amount} {currency} ödeme yapıldı.")),
             Map.entry(NotificationEvent.CASH_CLOSING_REMINDER, new Template(
                     NotificationType.INFO,
                     "Kasa kapanışı hatırlatması",
@@ -64,6 +68,10 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "Firma erişimi verildi: {business}",
                     "{business} işletmesine erişiminiz tanımlandı.")),
+            Map.entry(NotificationEvent.FIRM_ACCESS_REVOKED, new Template(
+                    NotificationType.INFO,
+                    "Firma erişimi kaldırıldı: {business}",
+                    "{business} işletmesine erişiminiz kaldırıldı.")),
             Map.entry(NotificationEvent.DAY_CLOSE_VARIANCE_ALERT, new Template(
                     NotificationType.ALERT,
                     "⚠ KAÇAK ALARMI — {date}",
@@ -103,6 +111,12 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "Doğrulama kodu",
                     "Doğrulama kodunuz: {code}. {ttl} dakika geçerlidir.")),
+            // Standalone hatırlatıcı: kullanıcı-tanımlı başlık/gövde. Gövde boşsa
+            // yalnız başlık görünür (interpolate boş {message}'ı temizler).
+            Map.entry(NotificationEvent.REMINDER_DUE, new Template(
+                    NotificationType.INFO,
+                    "⏰ Hatırlatma: {title}",
+                    "{message}")),
             // Onay (Approval) modülü v1.1: yetkiliye "onay bekliyor" bildirimi.
             Map.entry(NotificationEvent.APPROVAL_REQUESTED, new Template(
                     NotificationType.WARNING,
