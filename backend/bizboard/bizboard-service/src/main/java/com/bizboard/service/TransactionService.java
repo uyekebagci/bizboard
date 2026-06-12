@@ -56,6 +56,14 @@ public class TransactionService {
         return transactionQueryService.getAllTransactionsForUser(userId, filterBusinessId, filterDirection);
     }
 
+    /** PERF: bkz. {@link TransactionQueryService#getAllTransactionsForUserPaged}. */
+    public org.springframework.data.domain.Page<TransactionDto> getAllTransactionsForUserPaged(
+            UUID userId, UUID filterBusinessId, String filterDirection,
+            org.springframework.data.domain.Pageable pageable) {
+        return transactionQueryService.getAllTransactionsForUserPaged(
+                userId, filterBusinessId, filterDirection, pageable);
+    }
+
     // ───────── CREATE / UPDATE / DELETE → TransactionMutationService ─────────
 
     /** R3: bkz. {@link TransactionMutationService#createTransaction}. */
