@@ -227,4 +227,14 @@ public final class AuditAction {
     public static final String HIGHLIGHT_POS_DEAL       = "POS_DEAL";
     /** Faz D: çek/senet karşılıksız (kritik — vurgu). */
     public static final String HIGHLIGHT_INSTRUMENT_BOUNCE = "INSTRUMENT_BOUNCE";
+
+    // ── AI modülü (v1.1): embedding / RAG / anomali ───────────────────────
+    /** Bir işletmenin finansal verisi yeniden embed/indeks edildi (admin tetik). */
+    public static final String AI_REINDEX = "AI_REINDEX";
+    /** RAG sorgusu çalıştırıldı (business-scoped, soru + context sayısı metadata). */
+    public static final String AI_RAG_QUERY = "AI_RAG_QUERY";
+    /** AI anomali tespit edildi ve bildirim gönderildi (kategori/tutar/sapma metadata). */
+    public static final String AI_ANOMALY_DETECTED = "AI_ANOMALY_DETECTED";
+    /** İşletme-başına AI anomali tespiti opt-in bayrağı admin tarafından değişti. */
+    public static final String AI_ANOMALY_CONFIG_UPDATE = "AI_ANOMALY_CONFIG_UPDATE";
 }

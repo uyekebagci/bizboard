@@ -71,6 +71,42 @@ app:
       bot-username: ${APP_NOTIFICATIONS_TELEGRAM_BOT_USERNAME:}
       webhook-secret: ${APP_NOTIFICATIONS_TELEGRAM_WEBHOOK_SECRET:}
 
+  # AI modülü (v1.1) — SECRET REPO'DA TUTULMAZ; yalnız env placeholder'ları.
+  # Tüm anahtarlar boş varsayılan: anahtar yoksa ilgili sağlayıcı graceful kapanır
+  # (app çökmez). Ana bayrak DEFAULT KAPALI — açıkça açılmadıkça hiçbir AI davranışı
+  # tetiklenmez. Yönetici Sevalla env'lerinden set eder.
+  ai:
+    enabled: ${APP_AI_ENABLED:false}
+    llm:
+      # Anthropic Claude (Messages API) anahtarı. Boşsa LLM/RAG kapalı.
+      api-key: ${ANTHROPIC_API_KEY:}
+      base-url: ${APP_AI_LLM_BASE_URL:https://api.anthropic.com/v1/messages}
+      model: ${APP_AI_LLM_MODEL:claude-opus-4-8}
+      anthropic-version: ${APP_AI_LLM_ANTHROPIC_VERSION:2023-06-01}
+      max-tokens: ${APP_AI_LLM_MAX_TOKENS:1500}
+      timeout-seconds: ${APP_AI_LLM_TIMEOUT_SECONDS:60}
+    embedding:
+      # Sağlayıcı: voyage (Anthropic-önerilen) veya openai. Anthropic embedding
+      # endpoint'i SUNMAZ; bu yüzden pluggable. Anahtar boşsa embedding kapalı.
+      provider: ${APP_AI_EMBEDDING_PROVIDER:voyage}
+      api-key: ${AI_EMBEDDING_API_KEY:}
+      voyage-base-url: ${APP_AI_EMBEDDING_VOYAGE_URL:https://api.voyageai.com/v1/embeddings}
+      openai-base-url: ${APP_AI_EMBEDDING_OPENAI_URL:https://api.openai.com/v1/embeddings}
+      model: ${APP_AI_EMBEDDING_MODEL:voyage-3}
+      timeout-seconds: ${APP_AI_EMBEDDING_TIMEOUT_SECONDS:30}
+      batch-size: ${APP_AI_EMBEDDING_BATCH_SIZE:32}
+    rag:
+      enabled: ${APP_AI_RAG_ENABLED:true}
+      top-k: ${APP_AI_RAG_TOP_K:8}
+    anomaly:
+      # Anomali tespit job'ı — DEFAULT KAPALI (spam-kaçın). Ayrıca işletme-başına
+      # opt-in gerekir (SystemSetting ai.anomaly.enabled:<businessId>).
+      enabled: ${APP_AI_ANOMALY_ENABLED:false}
+      cron: ${APP_AI_ANOMALY_CRON:0 15 7 * * *}
+      stdev-factor: ${APP_AI_ANOMALY_STDEV_FACTOR:3.0}
+      lookback-days: ${APP_AI_ANOMALY_LOOKBACK_DAYS:90}
+      min-samples: ${APP_AI_ANOMALY_MIN_SAMPLES:8}
+
   jwt:
     secret: ${JWT_SECRET:bizboard-super-secret-key-that-is-at-least-256-bits-long-for-hs256}
     # Access token TTL — 30 dakika. Refresh akışı eklendi (v1.1.0); access kısa
