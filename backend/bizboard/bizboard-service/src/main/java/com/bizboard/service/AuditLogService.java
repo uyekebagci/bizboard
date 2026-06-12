@@ -33,22 +33,45 @@ public class AuditLogService {
 
     private final AuditLogRepository repository;
     private final ObjectProvider<HttpServletRequest> requestProvider;
+    private final AuditChainService chainService;
+    private final ObjectProvider<AuditStreamService> streamServiceProvider;
 
     @Autowired
     public AuditLogService(AuditLogRepository repository,
-                           ObjectProvider<HttpServletRequest> requestProvider) {
+                           ObjectProvider<HttpServletRequest> requestProvider,
+                           AuditChainService chainService,
+                           ObjectProvider<AuditStreamService> streamServiceProvider) {
         this.repository = repository;
         this.requestProvider = requestProvider;
+        this.chainService = chainService;
+        this.streamServiceProvider = streamServiceProvider;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(AuditLog entry) {
         try {
-            repository.save(entry);
+            // mod-audit: tamper-proof hash-chain. Additive + non-fatal — assign
+            // içi kendi hatasını yutar (zincirsiz yazar), buradaki save asla
+            // hash yüzünden başarısız olmaz.
+            chainService.assignChainFields(entry);
+            AuditLog saved = repository.save(entry);
+            publishToStream(saved);
         } catch (Exception e) {
             // Audit must never fail the business request.
             log.warn("[audit] failed to persist entry action={} resourceId={}: {}",
                     entry.getAction(), entry.getResourceId(), e.getMessage());
+        }
+    }
+
+    /** mod-audit: canlı SSE akışına yayınla (best-effort, asla iş akışını bozmaz). */
+    private void publishToStream(AuditLog saved) {
+        try {
+            AuditStreamService stream = streamServiceProvider.getIfAvailable();
+            if (stream != null) {
+                stream.publish(saved);
+            }
+        } catch (Exception e) {
+            log.debug("[audit] stream publish failed (ignored): {}", e.getMessage());
         }
     }
 
