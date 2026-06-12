@@ -107,6 +107,70 @@ public class DebtService {
                 .toList();
     }
 
+    // ─── Krediler (v1.1, salt görüntü) ────────────────────────
+    //
+    // Kredi = Verilen/Alınan Borç (LoanService) tarafından üretilen Debt kaydı.
+    // Mevcut Debt altyapısını (DTO + tenant guard) yeniden kullanır; YENİ
+    // finansal hesap/mutasyon YOK. Sadece description öneki ile filtrelenen
+    // bir alt küme döner ({@link DebtRepository#findLoansByBusiness}).
+
+    /** v1.1: bir işletmenin kredi-kaynaklı borçları (alacak/verecek). */
+    @Transactional(readOnly = true)
+    public List<DebtDto> getLoansForBusiness(UUID businessId, UUID userId) {
+        accessGuard.assertCanReadBusiness(userId, businessId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        List<Debt> loans;
+        if ("admin".equalsIgnoreCase(user.getRole())) {
+            loans = debtRepository.findLoansByBusiness(businessId);
+        } else {
+            loans = debtRepository.findLoansByBusinessAndAdminOnlyFalse(businessId);
+        }
+
+        return loans.stream().map(this::toDto).toList();
+    }
+
+    /** v1.1: kullanıcının erişebildiği tüm işletmelerin kredi-kaynaklı borçları. */
+    @Transactional(readOnly = true)
+    public List<DebtDto> getLoansForUser(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if ("admin".equalsIgnoreCase(user.getRole())) {
+            return debtRepository.findAllByOrderByCreatedAtDesc().stream()
+                    .filter(DebtService::isLoanOriginated)
+                    .map(this::toDto)
+                    .toList();
+        }
+
+        String accessible = user.getAccessibleBusinesses();
+        if (accessible == null || accessible.isBlank()) {
+            return List.of();
+        }
+
+        List<UUID> businessIds = Arrays.stream(accessible.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(UUID::fromString)
+                .toList();
+
+        return debtRepository.findLoansByBusinessIdInAndAdminOnlyFalse(businessIds).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    /**
+     * Kredi-kaynaklı borç işareti — {@link LoanService}'in description önekleri.
+     * Repository LIKE sorgularıyla aynı kuralı uygular; admin "tümü" yolunda
+     * (entity DB'den çekilmiş) JVM tarafı filtre için kullanılır.
+     */
+    private static boolean isLoanOriginated(Debt d) {
+        String desc = d.getDescription();
+        return desc != null
+                && (desc.startsWith("Verilen borç:") || desc.startsWith("Alınan borç:"));
+    }
+
     // ─── Borç oluştur ─────────────────────────────────────────
 
     @Transactional
