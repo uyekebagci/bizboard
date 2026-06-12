@@ -156,3 +156,10 @@ info:
   app:
     name: ${spring.application.name}
     profile: ${spring.profiles.active}
+
+# v1.1 small-win: requestId/correlation-id'yi dev loglarına da bas.
+# RequestIdFilter MDC'ye "requestId" koyar; %X{requestId:-} bunu yazar
+# (yoksa "-"). Prod pattern application-prod.yml'de tanımlı.
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{requestId:-}] %logger{36} - %msg%n"

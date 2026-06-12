@@ -28,6 +28,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RequestIdFilter requestIdFilter;
 
     /**
      * Comma-separated allowed origins for CORS.
@@ -92,7 +93,10 @@ public class SecurityConfig {
                             }
                         })
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // v1.1 small-win: requestId/correlation-id — JWT'den de ÖNCE
+                // çalışsın ki auth/yetki/hata loglarının hepsi requestId taşısın.
+                .addFilterBefore(requestIdFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
@@ -113,7 +117,9 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Content-Disposition"));
+        // v1.1 small-win: X-Request-Id'yi tarayıcıya expose et ki frontend
+        // correlation-id'yi okuyup log'layabilsin (CORS olmadan gizli kalır).
+        configuration.setExposedHeaders(List.of("Content-Disposition", RequestIdFilter.REQUEST_ID_HEADER));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
