@@ -26,6 +26,7 @@ import { api } from "@/lib/api/client";
 import { formatCurrency, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { Donut, type DonutSegment } from "@/components/shared/charts/Donut";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
@@ -216,6 +217,10 @@ export default function PosCihazlariPage() {
             </div>
           </section>
 
+          {/* v1.1 small-win: POS hacim dağılımı (pasta/donut) — mevcut
+              özet verisinden (total_gross) türetilir, yeni hesap yok. */}
+          <PosDistributionCard summaries={summaries} totalGross={totalGross} />
+
           {/* Business filter chips */}
           <section>
             <h2 className="text-sm font-semibold text-surface-200 mb-2">Isletme</h2>
@@ -344,6 +349,105 @@ export default function PosCihazlariPage() {
         </>
       )}
     </div>
+  );
+}
+
+// ─── v1.1 small-win: POS hacim dağılımı (donut/pasta) ───────────────
+// İşletme bazlı POS brüt hacminin yüzdesel dağılımı. SALT SUNUM —
+// mevcut `summaries` verisindeki total_gross alanını kullanır, yeni
+// finansal hesap eklemez. Donut bileşeni stroke-dasharray ile saf SVG.
+const POS_PIE_COLORS = [
+  "#6366f1", // indigo
+  "#22c55e", // emerald
+  "#f59e0b", // amber
+  "#ec4899", // pink
+  "#06b6d4", // cyan
+  "#8b5cf6", // violet
+  "#f97316", // orange
+  "#64748b", // slate (kalan/diğer)
+];
+
+function PosDistributionCard({
+  summaries,
+  totalGross,
+}: {
+  summaries: PosBusinessSummary[];
+  totalGross: number;
+}) {
+  // Tek işletme veya veri yoksa pasta anlamsız — gösterme.
+  if (summaries.length < 2 || totalGross <= 0) return null;
+
+  // En büyük 7 işletmeyi göster, kalanı "Diğer" diliminde topla.
+  const sorted = [...summaries]
+    .filter((s) => (s.total_gross || 0) > 0)
+    .sort((a, b) => (b.total_gross || 0) - (a.total_gross || 0));
+  if (sorted.length < 2) return null;
+
+  const MAX_SLICES = 7;
+  const head = sorted.slice(0, MAX_SLICES);
+  const tail = sorted.slice(MAX_SLICES);
+  const tailGross = tail.reduce((a, s) => a + (s.total_gross || 0), 0);
+
+  type Slice = { label: string; gross: number; color: string };
+  const slices: Slice[] = head.map((s, i) => ({
+    label: s.business_name,
+    gross: s.total_gross || 0,
+    color: POS_PIE_COLORS[i % POS_PIE_COLORS.length],
+  }));
+  if (tailGross > 0) {
+    slices.push({
+      label: `Diğer (${tail.length})`,
+      gross: tailGross,
+      color: POS_PIE_COLORS[POS_PIE_COLORS.length - 1],
+    });
+  }
+
+  const segments: DonutSegment[] = slices.map((s) => ({
+    color: s.color,
+    pct: (s.gross / totalGross) * 100,
+  }));
+
+  // En büyük dilimin payı — donut ortasında vurgulanır.
+  const topPct = segments.length > 0 ? Math.round(segments[0].pct) : 0;
+
+  return (
+    <section className="glass-card p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <CreditCard size={14} className="text-indigo-300" />
+        <h2 className="text-sm font-semibold text-surface-100">POS Hacim Dağılımı</h2>
+        <span className="text-[10px] text-surface-400">işletme bazlı brüt</span>
+      </div>
+      <div className="flex flex-col sm:flex-row items-center gap-5">
+        <Donut
+          segments={segments}
+          centerBig={`%${topPct}`}
+          centerSmall={slices[0]?.label}
+          centerColorClass="text-indigo-300"
+          className="w-36 h-36 shrink-0"
+        />
+        <ul className="flex-1 w-full space-y-1.5">
+          {slices.map((s) => {
+            const pct = (s.gross / totalGross) * 100;
+            return (
+              <li key={s.label} className="flex items-center gap-2 text-sm">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: s.color }}
+                  aria-hidden="true"
+                />
+                <span className="text-surface-200 truncate flex-1 min-w-0">{s.label}</span>
+                <span className="text-surface-100 font-medium tabular-nums shrink-0">
+                  {formatCurrency(s.gross, "TRY")}
+                </span>
+                <span className="text-surface-400 text-[11px] tabular-nums shrink-0 w-10 text-right">
+                  %{pct.toFixed(1)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
   );
 }
 
