@@ -193,6 +193,12 @@ app:
   audit:
     # Toggle audit logging of file downloads.
     log-file-downloads: ${AUDIT_LOG_FILE_DOWNLOADS:true}
+    # Retention: bu günden eski kayıtlar silinir (0 = süresiz sakla).
+    retention-days: ${APP_AUDIT_RETENTION_DAYS:90}
+    # mod-audit (KVKK): bu günden eski kayıtların PII alanları silmeden ÖNCE
+    # anonimleştirilir (0 = kapalı). Genelde retention-days'ten KISA tutulur:
+    # PII erken kaldırılır, yapısal forensik iz daha uzun saklanır.
+    anonymize-after-days: ${APP_AUDIT_ANONYMIZE_AFTER_DAYS:0}
 
   external-integrations:
     # Disable in test environment to prevent emails/SMS/webhooks reaching real users.
