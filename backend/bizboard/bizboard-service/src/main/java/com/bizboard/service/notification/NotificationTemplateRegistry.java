@@ -92,6 +92,13 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "📊 Aylık Özet: {business} ({period})",
                     "{summary}")),
+            // Raporlar v1.1 (R7): bütçe-eşik aşımı uyarısı (WARNING; opt-in/debounce).
+            Map.entry(NotificationEvent.BUDGET_THRESHOLD_EXCEEDED, new Template(
+                    NotificationType.WARNING,
+                    "⚠ BÜTÇE AŞILDI: {category}",
+                    "{business} — {category} kategorisi {period} bütçesini aştı: "
+                            + "harcama {spent} {currency} / bütçe {budget} {currency} "
+                            + "(%{usagePct}).")),
             Map.entry(NotificationEvent.OTP, new Template(
                     NotificationType.INFO,
                     "Doğrulama kodu",

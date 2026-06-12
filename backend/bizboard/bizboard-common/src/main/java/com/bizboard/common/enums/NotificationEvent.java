@@ -102,6 +102,15 @@ public enum NotificationEvent {
      */
     AI_ANOMALY_DETECTED,
 
+    /**
+     * Raporlar v1.1 (R7): kategori/dönem bütçe eşiği AŞILDIĞINDA — proaktif
+     * bütçe uyarısı. WARNING seviye; admin'lere in-app + (opt-in) Telegram.
+     * <b>İŞLETME+KATEGORİ-BAŞINA OPT-IN, DEFAULT KAPALI</b> (spam-kaçın);
+     * yalnız bütçe set edilmiş kategorilerde, eşiği AŞAĞI→YUKARI geçişte
+     * (debounce) bir kez fire eder ({@code BudgetThresholdService}).
+     */
+    BUDGET_THRESHOLD_EXCEEDED,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

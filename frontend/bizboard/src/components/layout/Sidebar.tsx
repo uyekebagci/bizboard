@@ -24,7 +24,7 @@ import {
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
   Search, X, Smartphone, Pin, Landmark, Tags, Sparkles, Lock, PieChart, Bot,
-  ClipboardCheck, ScanLine,
+  ClipboardCheck, ScanLine, TrendingUp,
 } from "lucide-react";
 import { SidebarBusinessesSection } from "./SidebarBusinessesSection";
 import type { LucideIcon } from "lucide-react";
@@ -68,6 +68,8 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/reports",          label: "Raporlar",      icon: BarChart3,       group: "genel" },
   { href: "/dashboard/ai",               label: "AI Asistan",    icon: Bot,             group: "genel" },
   { href: "/dashboard/e-fatura",         label: "e-Fatura",      icon: Receipt,         group: "genel" },
+  { href: "/dashboard/reports/forecast", label: "Nakit Tahmin",  icon: TrendingUp,      group: "genel" },
+  { href: "/dashboard/reports/butce",    label: "Butce",         icon: Wallet,          group: "genel" },
   // ── Cari & Borçlar ──
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users,           group: "cari" },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins,       group: "cari" },
