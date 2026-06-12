@@ -125,6 +125,18 @@ public enum NotificationEvent {
     BUDGET_THRESHOLD_EXCEEDED,
 
     /**
+     * GUN-1..4 (Gün Kapanışı → Telegram Grubu Özeti): bir işletmenin gün-kapanışı
+     * FINALIZE edildiğinde (DayClose CLOSED) bağlı Telegram GRUBUNA gönderilen
+     * "✅ Gün kapanışı yapıldı" + patron-okur Excel-vari gün özeti (işletme, tarih,
+     * SON KASA, OLMASI GEREKEN, fark/variance, gün Net Kâr, gelir/gider, POS).
+     * <b>İŞLETME-BAŞINA OPT-IN, DEFAULT KAPALI</b> (spam-kaçın) — kullanıcı Telegram
+     * grubunu kurup bağlayınca aktive eder. Flag kapalıyken hiç gönderim yok
+     * (non-breaking). {@code summary} çok-satırlı gövdeyi
+     * {@code DayClosingNotificationService} hazırlar. INFO/SUCCESS seviye.
+     */
+    DAY_CLOSING_COMPLETED,
+
+    /**
      * Kullanıcı-tanımlı standalone hatırlatıcı tetiklendi. Genel amaçlı tek-sefer
      * veya tekrarlı (DAILY/WEEKLY/MONTHLY) hatırlatma; {@code ReminderScheduler}
      * vadesi gelen hatırlatıcıları tarar ve sahibine in-app bildirim atar.
