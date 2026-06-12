@@ -9,9 +9,10 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   TrendingUp, Activity, Layers, Wallet, FileText, FileSpreadsheet, Loader2, Building2,
-  Landmark, BookOpen, PieChart, CreditCard, AlertTriangle, Lock,
+  Landmark, BookOpen, PieChart, CreditCard, AlertTriangle, Lock, ChevronRight,
 } from "lucide-react";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { API_URL, getToken, refreshAccessToken, isTokenExpiringSoon } from "@/lib/api/client";
@@ -173,6 +174,32 @@ export default function ReportsPage() {
           Rapor seçin, dönem/işletme filtreleyin, PDF veya Excel indirin.
         </p>
       </section>
+
+      {/* v1.1 Analitik — interaktif tahmin + bütçe (yeni) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Link href="/dashboard/reports/forecast"
+          className="glass-card glass-hover p-4 flex items-center gap-3 group">
+          <div className="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-brand-500/15">
+            <TrendingUp size={22} className="text-brand-300" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-surface-100 h-display">13-Haftalık Nakit Tahmini</h3>
+            <p className="text-xs text-surface-400 mt-0.5">İleriye projeksiyon + What-If senaryo motoru</p>
+          </div>
+          <ChevronRight size={18} className="text-surface-500 group-hover:text-brand-300 transition-colors" />
+        </Link>
+        <Link href="/dashboard/reports/butce"
+          className="glass-card glass-hover p-4 flex items-center gap-3 group">
+          <div className="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-amber-500/15">
+            <Wallet size={22} className="text-amber-400" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-surface-100 h-display">Bütçe-Eşik Ayarları</h3>
+            <p className="text-xs text-surface-400 mt-0.5">Kategori aylık bütçe + aşım uyarısı (opt-in)</p>
+          </div>
+          <ChevronRight size={18} className="text-surface-500 group-hover:text-brand-300 transition-colors" />
+        </Link>
+      </div>
 
       {/* Filtreler */}
       <section className="glass-card p-3 flex flex-wrap items-center gap-3">
