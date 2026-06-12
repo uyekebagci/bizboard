@@ -17,6 +17,10 @@ import java.util.UUID;
  *   <li>diğer metin → kısa yardım</li>
  * </ul>
  *
+ * <p>Ayrıca {@code callback_query} (inline-keyboard buton tıklaması) —
+ * bakiye-düzeltme onay akışı butonları {@link TelegramApprovalCallbackService}'e
+ * yönlendirilir.</p>
+ *
  * <p>Tüm yanıtlar {@link TelegramClient} ile bota gider. Best-effort; istisna
  * yutulur (webhook 200 dönmeli ki Telegram retry fırtınası olmasın).</p>
  */
@@ -27,10 +31,18 @@ public class TelegramWebhookService {
 
     private final TelegramLinkService linkService;
     private final TelegramClient client;
+    private final TelegramApprovalCallbackService approvalCallbackService;
 
     /** Telegram update JSON'unu işle. Güvenlik (secret header) controller'da yapılır. */
     public void handleUpdate(JsonNode update) {
         try {
+            // Inline-keyboard buton tıklaması (onay akışı) — text message'tan önce kontrol et.
+            JsonNode callback = update.path("callback_query");
+            if (!callback.isMissingNode()) {
+                handleCallbackQuery(callback);
+                return;
+            }
+
             JsonNode message = update.path("message");
             if (message.isMissingNode()) return; // MVP: yalnız text message
             String text = message.path("text").asText("").trim();
@@ -49,6 +61,20 @@ public class TelegramWebhookService {
         } catch (Exception e) {
             log.warn("[telegram-webhook] update işleme hatası: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Inline-keyboard buton tıklaması → onay servisine devret. {@code data}
+     * ("apv:&lt;token&gt;:A|R") ve tıklayan chat_id çözülür; yetki/replay/TTL
+     * kontrolleri {@link TelegramApprovalCallbackService}'tedir.
+     */
+    private void handleCallbackQuery(JsonNode callback) {
+        String callbackQueryId = callback.path("id").asText("");
+        String data = callback.path("data").asText("");
+        // Buton hangi chat'teki mesajda? message.chat.id (grup ya da DM).
+        String fromChatId = callback.path("message").path("chat").path("id").asText("");
+        if (callbackQueryId.isBlank()) return;
+        approvalCallbackService.handleCallback(callbackQueryId, data, fromChatId);
     }
 
     private void handleStart(String text, String chatId) {

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -65,6 +66,91 @@ public class TelegramClient {
             log.warn("[telegram] sendMessage hata chat={}: {}", chatId, e.getMessage());
             return SendResult.TRANSIENT_ERROR;
         }
+    }
+
+    /**
+     * Inline-keyboard butonlu HTML mesaj gönderir (onay akışı: Onayla/Reddet).
+     * Başarılıysa gönderilen mesajın {@code message_id}'si döner (sonradan
+     * düzenlemek için); başarısızsa boş.
+     *
+     * @param buttons satır-satır butonlar; her buton {@code [etiket, callback_data]}.
+     */
+    public Optional<Long> sendMessageWithButtons(String chatId, String html,
+                                                 List<List<String[]>> buttons) {
+        if (!props.isConfigured() || chatId == null || chatId.isBlank()) return Optional.empty();
+        try {
+            JsonNode body = http.post()
+                    .uri("/bot{token}/sendMessage", props.getBotToken())
+                    .body(Map.of(
+                            "chat_id", chatId,
+                            "text", html,
+                            "parse_mode", "HTML",
+                            "disable_web_page_preview", true,
+                            "reply_markup", Map.of("inline_keyboard", toKeyboard(buttons))))
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (body == null || !body.path("ok").asBoolean(false)) return Optional.empty();
+            long messageId = body.path("result").path("message_id").asLong(0L);
+            return messageId > 0 ? Optional.of(messageId) : Optional.empty();
+        } catch (Exception e) {
+            log.warn("[telegram] sendMessageWithButtons hata chat={}: {}", chatId, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Var olan bir mesajın metnini günceller ve inline-keyboard'u kaldırır
+     * (onay sonuçlanınca "işlendi" görünümü). Best-effort — sessiz başarısızlık.
+     */
+    public void editMessageText(String chatId, Long messageId, String html) {
+        if (!props.isConfigured() || chatId == null || messageId == null) return;
+        try {
+            http.post()
+                    .uri("/bot{token}/editMessageText", props.getBotToken())
+                    .body(Map.of(
+                            "chat_id", chatId,
+                            "message_id", messageId,
+                            "text", html,
+                            "parse_mode", "HTML",
+                            "disable_web_page_preview", true))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception e) {
+            log.debug("[telegram] editMessageText başarısız chat={} msg={}: {}",
+                    chatId, messageId, e.getMessage());
+        }
+    }
+
+    /**
+     * Buton tıklamasına anlık geri bildirim (Telegram istemcisinde toast).
+     * {@code callback_query} 'i mutlaka cevaplamak gerekir yoksa istemci
+     * "yükleniyor" döner. Best-effort.
+     */
+    public void answerCallbackQuery(String callbackQueryId, String text, boolean alert) {
+        if (!props.isConfigured() || callbackQueryId == null || callbackQueryId.isBlank()) return;
+        try {
+            Map<String, Object> b = new java.util.HashMap<>();
+            b.put("callback_query_id", callbackQueryId);
+            if (text != null && !text.isBlank()) b.put("text", text);
+            if (alert) b.put("show_alert", true);
+            http.post()
+                    .uri("/bot{token}/answerCallbackQuery", props.getBotToken())
+                    .body(b)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception e) {
+            log.debug("[telegram] answerCallbackQuery başarısız id={}: {}",
+                    callbackQueryId, e.getMessage());
+        }
+    }
+
+    /** [[ {text, callback_data}, ... ], ...] Telegram inline_keyboard yapısına çevirir. */
+    private static List<List<Map<String, String>>> toKeyboard(List<List<String[]>> buttons) {
+        return buttons.stream()
+                .map(row -> row.stream()
+                        .map(b -> Map.of("text", b[0], "callback_data", b[1]))
+                        .toList())
+                .toList();
     }
 
     /**
