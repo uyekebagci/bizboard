@@ -23,7 +23,7 @@ import {
   LayoutDashboard, Building2, BarChart3, User, HandCoins,
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
-  Search, X, Smartphone, Pin, Landmark, Tags, Sparkles, Lock, PieChart,
+  Search, X, Smartphone, Pin, Landmark, Tags, Sparkles, Lock, PieChart, Bot,
   ClipboardCheck, ScanLine,
 } from "lucide-react";
 import { SidebarBusinessesSection } from "./SidebarBusinessesSection";
@@ -66,6 +66,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/categories",       label: "Kategoriler",   icon: Tags,            group: "genel" },
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3,       group: "genel" },
   { href: "/dashboard/reports",          label: "Raporlar",      icon: BarChart3,       group: "genel" },
+  { href: "/dashboard/ai",               label: "AI Asistan",    icon: Bot,             group: "genel" },
   // ── Cari & Borçlar ──
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users,           group: "cari" },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins,       group: "cari" },

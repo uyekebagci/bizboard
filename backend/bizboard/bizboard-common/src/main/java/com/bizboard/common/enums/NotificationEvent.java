@@ -93,6 +93,15 @@ public enum NotificationEvent {
      */
     APPROVAL_REQUESTED,
 
+    /**
+     * AI modülü (v1.1): anomali tespit job'ı alışılmadık bir gider/işlem tespit
+     * etti. ALERT seviye; admin'lere in-app + (opt-in) Telegram. <b>İŞLETME-BAŞINA
+     * DEFAULT KAPALI</b> (spam-kaçın) — yalnız işletmenin AI anomali bayrağı
+     * açıksa fire eder. YENİ finansal hesap mantığı yoktur; yalnız mevcut gider
+     * verisinin istatistiksel sapmasını bildirir.
+     */
+    AI_ANOMALY_DETECTED,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

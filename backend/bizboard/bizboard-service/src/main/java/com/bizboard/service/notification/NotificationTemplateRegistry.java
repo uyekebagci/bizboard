@@ -101,6 +101,12 @@ public class NotificationTemplateRegistry {
                     NotificationType.WARNING,
                     "Onay bekliyor: {title}",
                     "{business} — {title}. Talep eden: {requestedBy}. Onay kuyruğundan inceleyin.")),
+            // AI modülü (v1.1): anomali tespiti (ALERT). {detail} job tarafından
+            // hazırlanır (kategori, tutar, ortalamaya göre kaç kat sapma).
+            Map.entry(NotificationEvent.AI_ANOMALY_DETECTED, new Template(
+                    NotificationType.ALERT,
+                    "🤖 AI ANOMALİ: {business}",
+                    "{business} — alışılmadık gider tespit edildi. {detail}")),
             Map.entry(NotificationEvent.GENERIC, new Template(
                     NotificationType.INFO,
                     "{title}",
