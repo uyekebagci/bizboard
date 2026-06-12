@@ -56,6 +56,13 @@ public class ApprovalDto {
     @JsonProperty("verified")
     private boolean verified;
 
+    /**
+     * Bu onay için Telegram'a (en az bir admin sohbetine) buton-mesajı
+     * gönderildi mi? Onay kuyruğunda "Telegram'a iletildi" göstergesi için.
+     */
+    @JsonProperty("telegram_sent")
+    private boolean telegramSent;
+
     @JsonProperty("expires_at")
     private LocalDateTime expiresAt;
 
