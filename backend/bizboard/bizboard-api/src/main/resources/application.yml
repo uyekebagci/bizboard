@@ -71,6 +71,22 @@ app:
       bot-username: ${APP_NOTIFICATIONS_TELEGRAM_BOT_USERNAME:}
       webhook-secret: ${APP_NOTIFICATIONS_TELEGRAM_WEBHOOK_SECRET:}
 
+  # Standalone hatırlatıcı scheduler — vadesi gelen kullanıcı-tanımlı
+  # hatırlatıcıları sahibine bildirir. DEFAULT AÇIK (kullanıcı hatırlatıcı
+  # oluşturmadıkça hiçbir şey fire etmez, spam riski yok). Dakikalık kontrol.
+  reminders:
+    scheduler:
+      enabled: ${APP_REMINDERS_SCHEDULER_ENABLED:true}
+      cron: ${APP_REMINDERS_SCHEDULER_CRON:0 * * * * *}
+
+  # Düşük-bakiye periyodik tarama — Tier 2 event-driven alarmı tamamlar.
+  # DEFAULT KAPALI (spam-kaçın); açıkça açılmadıkça çalışmaz. Açık olsa bile
+  # işletme-başına bakiye eşiği set edilmemişse no-op'tur.
+  lowbalance:
+    scan:
+      enabled: ${APP_LOWBALANCE_SCAN_ENABLED:false}
+      cron: ${APP_LOWBALANCE_SCAN_CRON:0 0 8 * * *}
+
   # AI modülü (v1.1) — SECRET REPO'DA TUTULMAZ; yalnız env placeholder'ları.
   # Tüm anahtarlar boş varsayılan: anahtar yoksa ilgili sağlayıcı graceful kapanır
   # (app çökmez). Ana bayrak DEFAULT KAPALI — açıkça açılmadıkça hiçbir AI davranışı
