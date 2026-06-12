@@ -124,4 +124,51 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
             @org.springframework.data.repository.query.Param("businessId") UUID businessId,
             @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
             @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
+
+    // ── v1.1 (Krediler sayfası): kredi-kaynaklı borçlar — salt görüntü ──────
+    //
+    // Verilen/Alınan Borç (LoanService) bir Debt kaydı üretir; tx tarafında
+    // kind=LOAN olur, ancak Debt↔Transaction arasında FK YOKTUR. Tek güvenilir
+    // işaret: LoanService.buildTxDescription'ın description'a yazdığı sabit
+    // önekler ("Verilen borç:" → ALACAK, "Alınan borç:" → VERECEK). Bu sorgular
+    // SADECE OKUR; yeni hesap/mutasyon üretmez. Önekler değişirse buradaki
+    // pattern de güncellenmelidir (LoanService ile çift-kontrol).
+
+    /** v1.1: bir işletmenin kredi-kaynaklı borçları (admin_only dahil). */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id = :businessId " +
+            "  AND (d.description LIKE 'Verilen borç:%' OR d.description LIKE 'Alınan borç:%') " +
+            "ORDER BY d.createdAt DESC")
+    List<Debt> findLoansByBusiness(
+            @org.springframework.data.repository.query.Param("businessId") UUID businessId);
+
+    /** v1.1: bir işletmenin kredi-kaynaklı borçları (admin_only=false). */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id = :businessId " +
+            "  AND d.adminOnly = false " +
+            "  AND (d.description LIKE 'Verilen borç:%' OR d.description LIKE 'Alınan borç:%') " +
+            "ORDER BY d.createdAt DESC")
+    List<Debt> findLoansByBusinessAndAdminOnlyFalse(
+            @org.springframework.data.repository.query.Param("businessId") UUID businessId);
+
+    /** v1.1: birden çok işletmenin kredi-kaynaklı borçları (admin: tümü). */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id IN :businessIds " +
+            "  AND (d.description LIKE 'Verilen borç:%' OR d.description LIKE 'Alınan borç:%') " +
+            "ORDER BY d.createdAt DESC")
+    List<Debt> findLoansByBusinessIdIn(
+            @org.springframework.data.repository.query.Param("businessIds") List<UUID> businessIds);
+
+    /** v1.1: birden çok işletmenin kredi-kaynaklı borçları (admin_only=false). */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT d FROM Debt d " +
+            "WHERE d.business.id IN :businessIds " +
+            "  AND d.adminOnly = false " +
+            "  AND (d.description LIKE 'Verilen borç:%' OR d.description LIKE 'Alınan borç:%') " +
+            "ORDER BY d.createdAt DESC")
+    List<Debt> findLoansByBusinessIdInAndAdminOnlyFalse(
+            @org.springframework.data.repository.query.Param("businessIds") List<UUID> businessIds);
 }

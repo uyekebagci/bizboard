@@ -76,6 +76,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users,           group: "cari" },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins,       group: "cari" },
   { href: "/dashboard/verecekler",       label: "Verecekler",    icon: HandCoins,       group: "cari" },
+  { href: "/dashboard/krediler",         label: "Krediler",      icon: Landmark,        group: "cari" },
   { href: "/dashboard/cekler",           label: "Cekler",        icon: FileText,        group: "cari" },
   { href: "/dashboard/cek-senet",        label: "Cek/Senet (Ledger)", icon: FileText,   group: "cari" },
   // ── Kasa & Banka ──
