@@ -23,6 +23,7 @@ import {
   CheckCheck,
   RefreshCw,
   Clock,
+  Send,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -353,6 +354,14 @@ export default function OnaylarPage() {
                       {verifyPending && (
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-purple-500/15 text-purple-300 border-purple-500/30 inline-flex items-center gap-1">
                           <KeyRound size={11} /> Kod gerekli
+                        </span>
+                      )}
+                      {a.telegram_sent && (
+                        <span
+                          className="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-sky-500/15 text-sky-300 border-sky-500/30 inline-flex items-center gap-1"
+                          title="Onay butonları Telegram'a iletildi"
+                        >
+                          <Send size={11} /> Telegram'a iletildi
                         </span>
                       )}
                     </div>

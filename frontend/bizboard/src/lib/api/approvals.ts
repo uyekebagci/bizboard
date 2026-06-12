@@ -29,6 +29,8 @@ export interface Approval {
   reason: string | null;
   verify_required: boolean;
   verified: boolean;
+  /** Bu onay için Telegram'a (en az bir admin sohbetine) buton-mesajı gönderildi mi? */
+  telegram_sent: boolean;
   expires_at: string | null;
   created_at: string | null;
   decided_at: string | null;

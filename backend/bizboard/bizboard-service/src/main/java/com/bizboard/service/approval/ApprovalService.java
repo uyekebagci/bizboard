@@ -8,11 +8,13 @@ import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.ApprovalStatus;
 import com.bizboard.repository.ApprovalRequestRepository;
 import com.bizboard.repository.BusinessRepository;
+import com.bizboard.repository.TelegramApprovalCallbackRepository;
 import com.bizboard.repository.UserRepository;
 import com.bizboard.service.AuditLogService;
 import com.bizboard.service.BusinessAccessGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +54,8 @@ public class ApprovalService {
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
     private final List<ApprovalExecutor> executors;
+    private final ApplicationEventPublisher eventPublisher;
+    private final TelegramApprovalCallbackRepository telegramCallbackRepository;
 
     // ─────────────────────────── CREATE ────────────────────────────────────
 
@@ -95,6 +99,11 @@ public class ApprovalService {
                 "Onay talebi: " + req.getTitle() + " (tür: " + req.getActionType() + ")");
         log.info("[approval] created id={} business={} action={} verify={} by={}",
                 req.getId(), businessId, actionType, requireVerifyCode, actorUserId);
+
+        // Yan-etki (örn. Telegram buton-mesajı) onay COMMIT olduktan SONRA tetiklensin.
+        // Dinleyici AFTER_COMMIT; Telegram hatası bu onay kaydını geri almaz.
+        eventPublisher.publishEvent(new ApprovalRequestedEvent(
+                req.getId(), business.getId(), req.getActionType()));
         return toDto(req);
     }
 
@@ -262,7 +271,13 @@ public class ApprovalService {
         List<ApprovalRequest> rows = (statusFilter != null)
                 ? repository.findByBusinessIdInAndStatusOrderByCreatedAtDesc(allowed, statusFilter)
                 : repository.findByBusinessIdInOrderByCreatedAtDesc(allowed);
-        return rows.stream().map(this::toDto).toList();
+
+        // Telegram gönderim durumunu tek sorguyla topla (N+1 önleme).
+        List<UUID> ids = rows.stream().map(ApprovalRequest::getId).filter(java.util.Objects::nonNull).toList();
+        java.util.Set<UUID> sentIds = ids.isEmpty()
+                ? java.util.Set.of()
+                : new java.util.HashSet<>(telegramCallbackRepository.findApprovalIdsWithCallback(ids));
+        return rows.stream().map(r -> toDto(r, sentIds.contains(r.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
@@ -326,7 +341,15 @@ public class ApprovalService {
                 "APPROVAL_REQUEST", req.getId(), detail, meta, AuditAction.HIGHLIGHT_APPROVAL);
     }
 
+    /** Tek kayıt — Telegram gönderim durumu DB'den (tek sorgu) okunur. */
     private ApprovalDto toDto(ApprovalRequest r) {
+        boolean telegramSent = r.getId() != null
+                && telegramCallbackRepository.existsByApprovalRequestId(r.getId());
+        return toDto(r, telegramSent);
+    }
+
+    /** Liste yolu için: telegram-sent bilgisi dışarıdan (batch) verilir (N+1 önleme). */
+    private ApprovalDto toDto(ApprovalRequest r, boolean telegramSent) {
         String requestedByName = Optional.ofNullable(r.getRequestedBy())
                 .flatMap(userRepository::findById).map(User::getUsername).orElse(null);
         String approverName = Optional.ofNullable(r.getApprover())
@@ -347,6 +370,7 @@ public class ApprovalService {
                 .reason(r.getReason())
                 .verifyRequired(r.getVerifyCode() != null)
                 .verified(r.getVerifiedAt() != null)
+                .telegramSent(telegramSent)
                 .expiresAt(r.getExpiresAt())
                 .createdAt(r.getCreatedAt())
                 .decidedAt(r.getDecidedAt())
