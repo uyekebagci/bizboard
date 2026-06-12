@@ -19,8 +19,15 @@ public enum NotificationEvent {
     /** Çek/senet vadesi yaklaştı. (Mevcut ChequeReminderScheduler bunu kullanabilir.) */
     CHEQUE_DUE_SOON,
 
-    /** Karşı taraftan ödeme alındı. */
+    /** Karşı taraftan ödeme alındı (tahsilat). */
     PAYMENT_RECEIVED,
+
+    /**
+     * Karşı tarafa ödeme yapıldı (biz ödedik — PAID). {@link #PAYMENT_RECEIVED}
+     * ile simetrik; cari ödeme oluşturulurken {@code payment_direction=PAID}
+     * tarafında fire eder. SUCCESS seviye; admin'lere in-app + (opt-in) Telegram.
+     */
+    PAYMENT_MADE,
 
     /** Günlük kasa kapanışı hatırlatması. */
     CASH_CLOSING_REMINDER,
@@ -42,6 +49,12 @@ public enum NotificationEvent {
 
     /** WP f1fa3cd5: Bir kullanıcıya firma erişimi verildi. */
     FIRM_ACCESS_GRANTED,
+
+    /**
+     * Bir kullanıcının firma erişimi KALDIRILDI (revoke). {@link #FIRM_ACCESS_GRANTED}
+     * ile simetrik; toplu/tekil revoke yolunda etkilenen kullanıcıya in-app bildirim.
+     */
+    FIRM_ACCESS_REVOKED,
 
     /**
      * Ledger v2 (Faz D, §9 / TODO 4): gün kapanışı variance (kaçak) eşik aştı.
@@ -110,6 +123,14 @@ public enum NotificationEvent {
      * (debounce) bir kez fire eder ({@code BudgetThresholdService}).
      */
     BUDGET_THRESHOLD_EXCEEDED,
+
+    /**
+     * Kullanıcı-tanımlı standalone hatırlatıcı tetiklendi. Genel amaçlı tek-sefer
+     * veya tekrarlı (DAILY/WEEKLY/MONTHLY) hatırlatma; {@code ReminderScheduler}
+     * vadesi gelen hatırlatıcıları tarar ve sahibine in-app bildirim atar.
+     * INFO seviye. Başlık/gövde kullanıcının tanımladığı metinden gelir.
+     */
+    REMINDER_DUE,
 
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
