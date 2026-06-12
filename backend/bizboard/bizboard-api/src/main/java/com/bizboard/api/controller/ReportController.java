@@ -1,7 +1,12 @@
 package com.bizboard.api.controller;
 
+import com.bizboard.common.dto.BudgetThresholdDto;
+import com.bizboard.common.dto.CashFlowForecastDto;
+import com.bizboard.common.dto.ForecastScenarioRequest;
 import com.bizboard.security.UserPrincipal;
+import com.bizboard.service.BudgetThresholdService;
 import com.bizboard.service.report.ExcelExporter;
+import com.bizboard.service.report.ForecastService;
 import com.bizboard.service.report.PdfExporter;
 import com.bizboard.service.report.ReportService;
 import com.bizboard.service.report.ReportTable;
@@ -34,6 +39,8 @@ import java.util.UUID;
 public class ReportController {
 
     private final ReportService reportService;
+    private final ForecastService forecastService;
+    private final BudgetThresholdService budgetThresholdService;
     private final PdfExporter pdfExporter;
     private final ExcelExporter excelExporter;
 
@@ -91,6 +98,39 @@ public class ReportController {
             return file(format, "kasa-mutabakat", reportService.cashReconciliationTable(uid, businessId, f, t));
         }
         return ResponseEntity.ok(reportService.cashReconciliationJson(uid, businessId, f, t));
+    }
+
+    // ── R5: 13-Haftalık Nakit-Akış Tahmini (READ-ONLY analitik) ──
+    // GET /reports/forecast?weeks=13&businessId= — baz senaryo projeksiyon.
+    @GetMapping("/forecast")
+    public ResponseEntity<CashFlowForecastDto> forecast(
+            @RequestParam(defaultValue = "13") int weeks,
+            @RequestParam(required = false) UUID businessId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(
+                forecastService.forecast(principal.getId(), businessId, weeks, null));
+    }
+
+    // ── R6: What-if senaryo motoru (READ-ONLY — kalıcı değişiklik YOK) ──
+    // POST /reports/forecast/what-if?weeks=13&businessId= body: ForecastScenarioRequest.
+    @PostMapping("/forecast/what-if")
+    public ResponseEntity<CashFlowForecastDto> whatIf(
+            @RequestParam(defaultValue = "13") int weeks,
+            @RequestParam(required = false) UUID businessId,
+            @RequestBody(required = false) ForecastScenarioRequest scenario,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(
+                forecastService.forecast(principal.getId(), businessId, weeks, scenario));
+    }
+
+    // ── R7: Bütçe-eşik durumu (READ-ONLY) — kategori bütçesi + mevcut ay kullanımı ──
+    // GET /reports/budget?businessId= — businessId zorunlu (kategoriler tenant-scope).
+    @GetMapping("/budget")
+    public ResponseEntity<BudgetThresholdDto> budget(
+            @RequestParam UUID businessId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(
+                budgetThresholdService.getBudgets(principal.getId(), businessId));
     }
 
     // ── helpers ──
