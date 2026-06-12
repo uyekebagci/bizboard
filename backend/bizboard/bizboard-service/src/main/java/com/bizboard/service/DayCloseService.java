@@ -60,6 +60,11 @@ public class DayCloseService {
     private final com.bizboard.service.notification.NotificationDispatchService dispatchService;
     /** Gün Açılışı: kapanış sonrası DayOpen durumunu CLOSED'a senkronla (best-effort). */
     private final DayOpenService dayOpenService;
+    /**
+     * GUN-1..4: gün-kapanışı tamamlanınca bağlı Telegram grubuna özet (additive
+     * listener; per-business opt-in/default-kapalı; best-effort/non-fatal).
+     */
+    private final DayClosingNotificationService dayClosingNotificationService;
 
     /**
      * Recompute kilidi: bir business'in zincirini aynı anda iki recompute/edit
@@ -200,6 +205,17 @@ public class DayCloseService {
                 dayOpenService.onDayClosed(businessId, date, userId, user.getUsername());
             } catch (Exception e) {
                 log.warn("[day-close] DayOpen CLOSED senkron hatası (izole, atlandı): {}",
+                        e.getMessage());
+            }
+
+            // GUN-1..4: gün-kapanışı tamamlandı → bağlı Telegram grubuna "✅ Gün
+            // kapanışı yapıldı" + patron-okur gün özeti. İşletme bayrağı AÇIKSA
+            // gönderilir (default KAPALI; spam-yok). Best-effort/non-fatal — bildirim
+            // hatası kapanışı bozmaz (additive listener).
+            try {
+                dayClosingNotificationService.onDayClosed(dc);
+            } catch (Exception e) {
+                log.warn("[day-close] Telegram grubu gün-özeti gönderimi hatası (izole, atlandı): {}",
                         e.getMessage());
             }
 
