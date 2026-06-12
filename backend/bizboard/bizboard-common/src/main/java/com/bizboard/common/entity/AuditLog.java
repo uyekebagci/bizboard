@@ -22,7 +22,9 @@ import java.util.UUID;
 @Table(name = "audit_logs", indexes = {
         @Index(name = "idx_audit_user_time", columnList = "user_id, created_at"),
         @Index(name = "idx_audit_action_time", columnList = "action, created_at"),
-        @Index(name = "idx_audit_resource", columnList = "resource_type, resource_id")
+        @Index(name = "idx_audit_resource", columnList = "resource_type, resource_id"),
+        // mod-audit v2: zincir ucu (max seq) + sıralı doğrulama sorgusu için.
+        @Index(name = "idx_audit_chain_seq", columnList = "chain_seq")
 })
 @Getter
 @Setter
@@ -82,4 +84,45 @@ public class AuditLog {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
+
+    // ── Tamper-proof hash-chain (mod-audit v2) ───────────────────────────────
+    // KRİTİK login-safety tasarımı: bu alanlar YAZIM yolunda (insert) DOLDURULMAZ.
+    // Insert tam olarak eski (kanıtlanmış-güvenli) baseline gibi davranır:
+    // chain alanları NULL kalır. Zincir, ayrı bir @Scheduled chainer tarafından
+    // insert'TEN SONRA, çağıran iş akışından (özellikle LOGIN) tamamen izole
+    // biçimde hesaplanır. Böylece audit yazımı asla zincir-kaynaklı bir DB
+    // hatasıyla tx'i rollback-only işaretleyip çağıranı 500'e düşüremez.
+    //
+    // Hepsi nullable + index var ama UNIQUE constraint YOK → concurrency/seq
+    // çakışması insert'i ASLA bozamaz (zaten insert chain'e dokunmuyor).
+
+    /**
+     * Bir önceki zincir kaydının {@code recordHash}'i; ilk kayıt için
+     * {@link com.bizboard.common.audit.AuditHashUtil#GENESIS_PREV_HASH}.
+     * Insert'te null; chainer tarafından sonradan atanır.
+     */
+    @Column(name = "prev_hash", length = 64)
+    private String prevHash;
+
+    /**
+     * Bu kaydın kanonik içeriğinin (prev_hash dahil) SHA-256 özeti (64 hex).
+     * Insert'te null; chainer tarafından sonradan atanır.
+     * @see com.bizboard.common.audit.AuditHashUtil#computeRecordHash
+     */
+    @Column(name = "record_hash", length = 64)
+    private String recordHash;
+
+    /**
+     * Zincirdeki monoton-artan sıra numarası (1'den başlar). NULL = "henüz
+     * zincirlenmemiş" (chainer kuyruğu). Insert'te null; chainer atar.
+     */
+    @Column(name = "chain_seq")
+    private Long chainSeq;
+
+    /**
+     * KVKK retention anonimleştirme işareti. true ise PII alanları maskelenmiştir.
+     * İdempotensi sağlar. Default false; null okuma tarafında false sayılır.
+     */
+    @Column(name = "anonymized")
+    private Boolean anonymized;
 }

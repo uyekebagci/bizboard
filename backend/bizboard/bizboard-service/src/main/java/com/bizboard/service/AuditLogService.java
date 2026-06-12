@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,16 +16,35 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Persists audit records.
+ * Persists audit records — <b>login-safe by construction</b> (mod-audit v2).
  *
- * <p>Each record is written in its OWN transaction ({@code REQUIRES_NEW}) so
- * audit logging never rolls back a business operation — a download or upload
- * should still succeed even if the audit insert fails. Failures are logged
- * but swallowed (best-effort audit).</p>
+ * <p><b>INCIDENT GEÇMİŞİ:</b> Önceki audit sürümü prod LOGIN'ini kırdı. Kök neden:
+ * {@code record()} {@code REQUIRES_NEW} bir tx'ti ve içinde hash-chain hesabı
+ * (önce bir DB sorgusu → auto-flush, sonra zincir alanlı save) yapıyordu. Zincir
+ * yolunda bir flush/constraint hatası inner tx'i <i>rollback-only</i> işaretliyor,
+ * lokal try-catch hatayı yutsa BİLE {@code REQUIRES_NEW} commit'i
+ * {@link org.springframework.transaction.UnexpectedRollbackException} atıp çağıran
+ * LOGIN akışını 500'e düşürüyordu (her login bir audit yazdığı için login tamamen
+ * kırıldı).</p>
+ *
+ * <p><b>v2 TASARIM KURALI:</b> audit yazımı + hash-chain, çağıran iş akışını
+ * (özellikle LOGIN) ASLA bozmamalı. Bunu iki katmanla garanti ederiz:</p>
+ * <ol>
+ *   <li><b>Yazım yolu zincirden tamamen ARINMIŞ:</b> {@code persist()} SADECE
+ *       eski (kanıtlanmış-güvenli) baseline gibi {@code repository.save(entry)}
+ *       yapar — hiçbir zincir hesabı, hiçbir ekstra sorgu/flush, hiçbir SSE publish.
+ *       Hash-chain ayrı bir {@code @Scheduled} chainer tarafından insert'TEN SONRA
+ *       hesaplanır (bkz. {@link AuditChainService}). Zincir alanları insert'te null.</li>
+ *   <li><b>Defense-in-depth (commit-time guard):</b> public {@link #record} metodu
+ *       NON-transactional'dır ve {@code REQUIRES_NEW} {@code persist()}'i SELF-proxy
+ *       üzerinden çağırıp HER istisnayı (commit anında atılan
+ *       {@code UnexpectedRollbackException} dahil) yutar. Metod-içi try-catch'in
+ *       yakalayamadığı commit-time hata bile burada durur → çağıranı (login) ASLA
+ *       etkilemez.</li>
+ * </ol>
  *
  * <p>This service auto-captures {@link HttpServletRequest} via a request-scoped
- * Spring proxy ({@link ObjectProvider}), so callers don't need to thread the
- * request through their methods. From non-HTTP contexts (e.g. {@code @Scheduled}
+ * Spring proxy ({@link ObjectProvider}); from non-HTTP contexts (e.g. {@code @Scheduled}
  * jobs) the IP / UA fields are simply left null.</p>
  */
 @Slf4j
@@ -33,23 +53,53 @@ public class AuditLogService {
 
     private final AuditLogRepository repository;
     private final ObjectProvider<HttpServletRequest> requestProvider;
+    /**
+     * Self-referans (lazy → constructor döngüsü yok). public {@link #record}
+     * non-transactional; {@code @Transactional} {@code persist()}'i proxy üzerinden
+     * çağırmak ZORUNLU — aynı bean'de self-invocation proxy'yi bypass eder ve
+     * REQUIRES_NEW devreye girmezdi. Proxy üzerinden çağrı + dıştaki try-catch,
+     * commit-time {@code UnexpectedRollbackException}'ı çağıranın ulaşamayacağı
+     * yerde durdurur.
+     */
+    private final AuditLogService self;
 
     @Autowired
     public AuditLogService(AuditLogRepository repository,
-                           ObjectProvider<HttpServletRequest> requestProvider) {
+                           ObjectProvider<HttpServletRequest> requestProvider,
+                           @Lazy AuditLogService self) {
         this.repository = repository;
         this.requestProvider = requestProvider;
+        this.self = self;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /**
+     * Audit kaydını best-effort yazar. NON-transactional + tüm istisnaları yutar.
+     *
+     * <p>Çağıran iş akışına (LOGIN) İSTİSNA SIZDIRMAZ — ne {@code persist()} içindeki
+     * hata, ne de {@code REQUIRES_NEW} commit'inin atabileceği
+     * {@code UnexpectedRollbackException}. {@code self} proxy'si üzerinden çağrı,
+     * REQUIRES_NEW tx'inin commit/rollback'inin bu try bloğunun İÇİNDE gerçekleşmesini
+     * sağlar; böylece commit-time hata da burada yakalanır.</p>
+     */
     public void record(AuditLog entry) {
         try {
-            repository.save(entry);
-        } catch (Exception e) {
-            // Audit must never fail the business request.
-            log.warn("[audit] failed to persist entry action={} resourceId={}: {}",
-                    entry.getAction(), entry.getResourceId(), e.getMessage());
+            self.persist(entry);
+        } catch (Throwable t) {
+            // Audit ASLA iş akışını (login) bozmamalı — commit-time
+            // UnexpectedRollbackException dahil her şey burada durur.
+            log.warn("[audit] persist swallowed (business flow protected) action={} resourceId={}: {}",
+                    entry.getAction(), entry.getResourceId(), t.toString());
         }
+    }
+
+    /**
+     * Tek-satır insert, kendi tx'inde ({@code REQUIRES_NEW}). SADECE save —
+     * zincir/stream YOK. Bu metod {@link #record} dışından doğrudan çağrılmamalı;
+     * {@code public} olması yalnız Spring proxy görünürlüğü içindir.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void persist(AuditLog entry) {
+        repository.save(entry);
     }
 
     /**
