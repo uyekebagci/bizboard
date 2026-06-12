@@ -1,22 +1,42 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Search,
   Loader2,
   ChevronLeft,
   ChevronRight,
   Filter,
   Clock,
   User as UserIcon,
+  ShieldCheck,
+  ShieldAlert,
+  Radio,
+  Download,
 } from "lucide-react";
-import { api, ApiError } from "@/lib/api/client";
+import {
+  api,
+  ApiError,
+  API_URL,
+  getToken,
+  refreshAccessToken,
+} from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import type { AuditLog, PagedResponse } from "@/types";
+
+/** mod-audit: tamper-proof zincir doğrulama cevabı (backend record alanları). */
+interface ChainVerification {
+  valid: boolean;
+  verifiedCount: number;
+  unchainedCount: number;
+  brokenAtSeq: number | null;
+  brokenRecordId: string | null;
+  brokenPosition: number | null;
+  message: string;
+}
 
 const PAGE_SIZE = 50;
 
@@ -37,6 +57,19 @@ export default function AdminAuditPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  // mod-audit: tamper-proof zincir doğrulama
+  const [verifying, setVerifying] = useState(false);
+  const [chain, setChain] = useState<ChainVerification | null>(null);
+
+  // mod-audit: canlı SSE akışı
+  const [live, setLive] = useState(false);
+  const [liveItems, setLiveItems] = useState<AuditLog[]>([]);
+  const [liveConnected, setLiveConnected] = useState(false);
+  const esRef = useRef<EventSource | null>(null);
+
+  // mod-audit: export menüsü
+  const [exporting, setExporting] = useState(false);
 
   // Sadece admin'lerin erisimine izin ver — backend zaten kontrol ediyor.
   useEffect(() => {
@@ -91,39 +124,143 @@ export default function AdminAuditPage() {
     setPage(0);
   }
 
-  function exportCsv() {
-    if (!data) return;
-    const header = [
-      "occurred_at",
-      "actor_username",
-      "action",
-      "entity_type",
-      "entity_id",
-      "business_id",
-      "ip",
-      "trace_id",
-    ].join(",");
-    const rows = data.items.map((r) =>
-      [
-        r.occurred_at,
-        csvEscape(r.actor_username ?? ""),
-        csvEscape(r.action),
-        csvEscape(r.entity_type ?? ""),
-        r.entity_id ?? "",
-        r.business_id ?? "",
-        csvEscape(r.ip ?? ""),
-        r.trace_id ?? "",
-      ].join(",")
-    );
-    const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `audit-logs-${Date.now()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // mod-audit: tamper-proof zincir doğrulama.
+  async function verifyChain() {
+    setVerifying(true);
+    setChain(null);
+    try {
+      const res = await api.post<ChainVerification>("/admin/audit/verify-chain", {});
+      setChain(res);
+    } catch (err) {
+      setChain({
+        valid: false,
+        verifiedCount: 0,
+        unchainedCount: 0,
+        brokenAtSeq: null,
+        brokenRecordId: null,
+        brokenPosition: null,
+        message:
+          err instanceof ApiError || err instanceof Error
+            ? getErrorMessage(err)
+            : "Zincir doğrulanamadı",
+      });
+      logger.error("api", "Audit chain verify failed", undefined, err);
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  // mod-audit: filtreli server-side export (CSV/JSON). Authenticated fetch → blob.
+  const serverExport = useCallback(
+    async (format: "csv" | "json") => {
+      setExporting(true);
+      try {
+        // Token süresi yakınsa sessiz yenile (büyük export sırasında 401 olmasın).
+        if (getToken()) {
+          try {
+            await refreshAccessToken();
+          } catch {
+            /* ignore — mevcut token ile dene */
+          }
+        }
+        const params = new URLSearchParams();
+        params.set("format", format);
+        if (actorId) params.set("actor_id", actorId);
+        if (businessId) params.set("business_id", businessId);
+        if (action) params.set("action", action);
+        if (entityType) params.set("entity_type", entityType);
+        if (from) params.set("from", `${from}T00:00:00`);
+        if (to) params.set("to", `${to}T23:59:59`);
+
+        const token = getToken();
+        const res = await fetch(`${API_URL}/admin/audit/export?${params.toString()}`, {
+          credentials: "include",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) {
+          throw new Error(`Export başarısız (HTTP ${res.status})`);
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `audit-export-${Date.now()}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Export başarısız");
+        logger.error("api", "Audit export failed", undefined, err);
+      } finally {
+        setExporting(false);
+      }
+    },
+    [actorId, businessId, action, entityType, from, to]
+  );
+
+  // mod-audit: canlı SSE akışı. EventSource header set edemez → ?access_token=.
+  useEffect(() => {
+    if (!live) {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+      setLiveConnected(false);
+      return;
+    }
+
+    let cancelled = false;
+    async function connect() {
+      // Token taze olsun (15 dk TTL) — uzun-ömürlü SSE için önce yenile.
+      try {
+        await refreshAccessToken();
+      } catch {
+        /* mevcut token ile dene */
+      }
+      if (cancelled) return;
+      const token = getToken();
+      if (!token) {
+        setError("Canlı akış için oturum gerekli");
+        setLive(false);
+        return;
+      }
+      const url = `${API_URL}/admin/audit/stream?access_token=${encodeURIComponent(token)}`;
+      const es = new EventSource(url, { withCredentials: true });
+      esRef.current = es;
+
+      es.addEventListener("connected", () => {
+        if (!cancelled) setLiveConnected(true);
+      });
+      es.addEventListener("audit", (ev: MessageEvent) => {
+        if (cancelled) return;
+        try {
+          const rec = JSON.parse(ev.data) as AuditLog;
+          // En yeni üstte; bellek için son 100 ile sınırla.
+          setLiveItems((prev) => [rec, ...prev].slice(0, 100));
+        } catch {
+          /* malformed event — yoksay */
+        }
+      });
+      es.onerror = () => {
+        // EventSource otomatik reconnect dener; bağlı değil işaretle.
+        if (!cancelled) setLiveConnected(false);
+      };
+    }
+    void connect();
+
+    return () => {
+      cancelled = true;
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+    };
+  }, [live]);
+
+  function toggleLive() {
+    setLiveItems([]);
+    setLive((v) => !v);
   }
 
   return (
@@ -142,14 +279,61 @@ export default function AdminAuditPage() {
           <span className="ml-2 text-xs text-surface-400">
             {data?.total_elements != null ? `${data.total_elements} kayit` : ""}
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            {/* mod-audit: tamper-proof zincir doğrula */}
             <button
               type="button"
-              onClick={exportCsv}
-              disabled={!data || data.items.length === 0}
+              onClick={verifyChain}
+              disabled={verifying}
+              title="Tamper-proof hash-chain doğrula"
+              className="text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              {verifying ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <ShieldCheck size={13} />
+              )}
+              Zinciri doğrula
+            </button>
+
+            {/* mod-audit: canlı SSE akışı toggle */}
+            <button
+              type="button"
+              onClick={toggleLive}
+              title="Canlı audit akışı"
+              className={`text-xs px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 ${
+                live
+                  ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40"
+                  : "bg-surface-700 hover:bg-surface-600"
+              }`}
+            >
+              <Radio size={13} className={live && liveConnected ? "animate-pulse" : ""} />
+              {live ? (liveConnected ? "Canlı" : "Bağlanıyor…") : "Canlı"}
+            </button>
+
+            {/* mod-audit: filtreli server-side export */}
+            <button
+              type="button"
+              onClick={() => serverExport("csv")}
+              disabled={exporting}
+              title="Filtreli tüm kayıtları CSV indir"
+              className="text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              {exporting ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <Download size={13} />
+              )}
+              CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => serverExport("json")}
+              disabled={exporting}
+              title="Filtreli tüm kayıtları JSON indir"
               className="text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 disabled:opacity-50"
             >
-              CSV indir
+              JSON
             </button>
           </div>
         </div>
@@ -212,6 +396,65 @@ export default function AdminAuditPage() {
         {error && (
           <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
             {error}
+          </div>
+        )}
+
+        {/* mod-audit: zincir doğrulama sonucu */}
+        {chain && (
+          <div
+            className={`mb-3 p-3 rounded-xl border text-sm flex items-start gap-2 ${
+              chain.valid
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                : "bg-red-500/10 border-red-500/30 text-red-300"
+            }`}
+          >
+            {chain.valid ? (
+              <ShieldCheck size={16} className="mt-0.5 shrink-0" />
+            ) : (
+              <ShieldAlert size={16} className="mt-0.5 shrink-0" />
+            )}
+            <div className="min-w-0">
+              <p className="font-semibold">
+                {chain.valid ? "Zincir bütünlüğü doğrulandı" : "ZİNCİR KIRIK — olası tahrifat"}
+              </p>
+              <p className="text-xs opacity-90 mt-0.5 break-words">{chain.message}</p>
+              <p className="text-[11px] opacity-70 mt-1">
+                Doğrulanan: {chain.verifiedCount}
+                {chain.unchainedCount > 0 && ` · Zincirsiz: ${chain.unchainedCount}`}
+                {chain.brokenAtSeq != null && ` · Kırılma seq: ${chain.brokenAtSeq}`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* mod-audit: canlı akış paneli */}
+        {live && (
+          <div className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-300 border-b border-emerald-500/20">
+              <Radio size={12} className={liveConnected ? "animate-pulse" : ""} />
+              <span className="font-semibold">Canlı akış</span>
+              <span className="opacity-70">
+                {liveConnected ? "bağlı" : "bağlanıyor…"} · {liveItems.length} yeni kayıt
+              </span>
+            </div>
+            <div className="max-h-60 overflow-y-auto divide-y divide-emerald-500/10">
+              {liveItems.length === 0 && (
+                <p className="text-center text-surface-400 py-4 text-xs">
+                  Yeni audit kaydı bekleniyor…
+                </p>
+              )}
+              {liveItems.map((r) => (
+                <div key={`live-${r.id}`} className="flex items-center gap-2 px-3 py-2 text-[12px]">
+                  <span className="font-medium text-surface-100">{actionLabel(r.action)}</span>
+                  {r.detail && (
+                    <span className="text-surface-400 truncate">— {r.detail}</span>
+                  )}
+                  <span className="ml-auto text-[11px] text-surface-500 shrink-0">
+                    {r.actor_username ?? "Sistem"} · {relativeTime(r.occurred_at)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -411,9 +654,3 @@ function relativeTime(iso: string): string {
   }
 }
 
-function csvEscape(v: string): string {
-  if (v.includes(",") || v.includes('"') || v.includes("\n")) {
-    return `"${v.replace(/"/g, '""')}"`;
-  }
-  return v;
-}
