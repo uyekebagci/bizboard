@@ -358,36 +358,25 @@ public class SummaryService {
     }
 
     /**
-     * v1.6.23.8 (TODO ad8afc6f): Income raporlarında "fiilen elde edilen para".
-     * v1.7.x (POS Komisyon WP TODO 550a3f71): POS dilimi = PROFIT (our − bank).
+     * Income raporlarında "fiilen elde edilen para" — bir işlemin yöne göre
+     * toplanan büyüklüğü.
      *
-     * <ul>
-     *   <li>NAKIT / HESAPDAN: {@code amount} direkt (gross)</li>
-     *   <li>POS (yeni model, our_rate + bank_rate snapshot var):
-     *       {@code profit = amount × (our_rate − bank_rate) / 100}</li>
-     *   <li>POS (backfilled — our=bank): profit=0. Eski POS tx'lerin income
-     *       katkısı 0 (kasıtlı clean break, release notes).</li>
-     * </ul>
+     * <p>Bug a1d58d6e/a90a8d42 fix: bu metod eskiden POS gelirini KÂR (our − bank)
+     * olarak, null-rate POS'u 0 olarak sayıyordu; oysa Beta v1.1 (commit 888edc6,
+     * kullanıcı isteği: "kaç liralık POS işlem yaptıysam o kadar gözüksün gelir
+     * olarak") POS gelirini TAM tutar saymaya geçmişti. Konsolide net tam-tutar,
+     * bu metod kâr verince consolidated ile summary net tutarsızdı. Artık her ikisi
+     * de {@link PosIncomeCalculator}'a bağlı — POS dahil tüm income/expense tam
+     * {@code amount}; TRANSFER/LOAN → 0.</p>
      */
     static BigDecimal effectiveAmount(Transaction t) {
-        if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
-        if (!"POS".equalsIgnoreCase(t.getPaymentMethod())) return t.getAmount();
-        java.math.BigDecimal bankRate = t.getAppliedPosRate() != null
-                ? t.getAppliedPosRate()
-                : (t.getPosRate() != null ? t.getPosRate() : BigDecimal.ZERO);
-        java.math.BigDecimal ourRate = t.getAppliedOurCommissionRate() != null
-                ? t.getAppliedOurCommissionRate()
-                : bankRate; // backfill fallback → profit=0
-        java.math.BigDecimal diffRate = ourRate.subtract(bankRate);
-        if (diffRate.signum() == 0) return BigDecimal.ZERO; // backfilled veya gerçek 0-profit
-        return t.getAmount().multiply(diffRate)
-                .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        return PosIncomeCalculator.effectiveAmount(t);
     }
 
     private Map<String, Map<String, BigDecimal>> buildCategoryBreakdown(List<Transaction> transactions) {
-        // v1.7.x (POS Komisyon WP TODO c0998274): POS tx kategori dağılımına
-        // GROSS değil PROFIT katar — pie dilimleri "Gelir Dağılımı" semantiği
-        // ile uyumlu (= total_income definition: Σ non-POS gross + Σ POS profit).
+        // Bug a1d58d6e/a90a8d42 fix: kategori dağılımı da total_income tanımıyla
+        // hizalı — POS dahil GELİR/GİDER tam tutar ({@link PosIncomeCalculator}).
+        // (Eski yorum "POS = PROFIT" idi; Beta v1.1 tam-tutar modeliyle geçersiz.)
         Map<String, Map<String, BigDecimal>> breakdown = new HashMap<>();
 
         for (Transaction t : transactions) {

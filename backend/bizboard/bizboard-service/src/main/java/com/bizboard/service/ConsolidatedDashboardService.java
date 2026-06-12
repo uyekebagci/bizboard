@@ -372,29 +372,18 @@ public class ConsolidatedDashboardService {
     }
 
     /**
-     * v1.7.x TODO b92d05fe income_contribution CASE statement Java karşılığı.
-     * SummaryService.effectiveAmount yalnız income tarafı için döndürür;
-     * burada expense ve transfer dahil tüm tx tipleri için contribution.
+     * income_contribution: işlemin konsolide net'e işaretli katkısı.
+     *
+     * <p>Bug a1d58d6e/a90a8d42 fix: formül artık {@link PosIncomeCalculator}'da
+     * TEK kaynak olarak tutulur. {@code SummaryService.effectiveAmount} de aynı
+     * yardımcıya bağlandığı için consolidated net ile summary net AYNI POS
+     * muamelesini (tam tutar) kullanır — tutarsızlık ortadan kalkar.</p>
+     *
+     * <p>Model (Beta v1.1): TRANSFER/LOAN → 0; GELİR → +amount (POS dahil tam
+     * tutar); GİDER → −amount.</p>
      */
     private static BigDecimal incomeContribution(Transaction t) {
-        if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
-        // Transfer (kind=TRANSFER) → 0 (paired veya external fark etmez)
-        // LOAN (verilen/alınan borç) → 0: bilanço hareketi (kasa ↔ alacak/verecek);
-        // ekonomik gelir/gider DEĞİL. Net Kâr'a girmediği gibi konsolide net'e de
-        // girmez (karşılığı alacak/verecek widget'ında ayrı gösterilir).
-        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
-                || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
-            return BigDecimal.ZERO;
-        }
-        // Beta v1.1: KOMİSYON YOK — POS gelir dahil tüm income tam tutar.
-        // Eski rate snapshot'ları ignore.
-        if (t.getDirection() == TransactionDirection.INCOME) {
-            return t.getAmount();
-        }
-        if (t.getDirection() == TransactionDirection.EXPENSE) {
-            return t.getAmount().negate();
-        }
-        return BigDecimal.ZERO;
+        return PosIncomeCalculator.incomeContribution(t);
     }
 
     private ConsolidatedDashboardDto.BankAccountSummary toBankSummary(BankAccount b) {

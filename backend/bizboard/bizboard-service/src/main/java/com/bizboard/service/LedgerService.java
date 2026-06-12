@@ -289,7 +289,9 @@ public class LedgerService {
     // ─── Yardımcı Metodlar ──────────────────────────────────────────────
 
     private BigDecimal sumByDirection(List<Transaction> transactions, TransactionDirection dir) {
-        // v1.6.23.8 (TODO ad8afc6f): POS için net (= amount − commission).
+        // Bug a1d58d6e/a90a8d42 fix: ortak {@link PosIncomeCalculator} — POS dahil
+        // tüm gelir/gider TAM tutar (Beta v1.1); konsolide/özet net ile tutarlı.
+        // (Eski yorum "POS net = amount − commission" geçersiz.)
         return transactions.stream()
                 .filter(t -> t.getDirection() == dir)
                 .map(SummaryService::effectiveAmount)
