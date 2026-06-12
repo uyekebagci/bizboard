@@ -11,6 +11,7 @@ import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.repository.NotificationChannelBindingRepository;
 import com.bizboard.repository.SystemSettingRepository;
 import com.bizboard.repository.TelegramChatEventPreferenceRepository;
+import com.bizboard.service.notification.telegram.TelegramApprovalCallbackService;
 import com.bizboard.service.notification.telegram.TelegramClient;
 import com.bizboard.service.notification.telegram.TelegramProperties;
 import lombok.RequiredArgsConstructor;
@@ -33,10 +34,16 @@ import java.util.UUID;
  * bağlı Telegram GRUBUNA "✅ Gün kapanışı yapıldı" + patron-okur, Excel-vari gün
  * özeti gönderir. Hedef: doğrulanmış GRUP-tipi Telegram binding'leri
  * ({@link NotificationChannelBinding} channel=TELEGRAM, chat_type=GROUP) — bireysel
- * DM'lere DEĞİL. Gönderim mevcut {@link TelegramClient} + grup-hedefli desen
- * ({@code AdminManualSendService.TELEGRAM_CHATS} ile birebir) ile yapılır. DayClose
- * finalize akışına EK (additive) bir adımdır — mevcut akışı bozmaz; tüm yollar
- * best-effort/non-fatal.</p>
+ * DM'lere DEĞİL. <b>TENANT-SCOPE:</b> yalnızca binding'i kuran kullanıcının
+ * gün-kapatan işletmeye erişebildiği gruplar mesaj alır
+ * ({@link BusinessAccessGuard#canAccessBusiness} ile filtre; admin bu kontrolde
+ * her zaman geçer). Erişimi olmayan kullanıcıların grupları ATLANIR — A
+ * işletmesinin finansal özeti A'ya erişimi olmayanların gruplarına SIZMAZ. Bu,
+ * {@link TelegramApprovalCallbackService#sendApprovalButtons} ile aynı business-erişim
+ * kapısı desenidir (orada onay admin-aksiyonu olduğu için ek {@code isAdmin}
+ * vardır; burada özet salt-okunur bilgi olduğundan business-erişim kapısı yeterlidir).
+ * Gönderim mevcut {@link TelegramClient} ile yapılır. DayClose finalize akışına EK
+ * (additive) bir adımdır — mevcut akışı bozmaz; tüm yollar best-effort/non-fatal.</p>
  *
  * <p>Per-business aktivasyon bayrağı bu modülün TEK opt-in kapısıdır: bayrak AÇIKSA
  * gruba gönderilir (per-user TELEGRAM tercihi GEREKMEZ — grup kasıtlı hedeftir,
@@ -74,6 +81,7 @@ public class DayClosingNotificationService {
     private final TelegramChatEventPreferenceRepository chatPrefRepository;
     private final TelegramClient telegramClient;
     private final TelegramProperties telegramProperties;
+    private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
 
     // ───────── konfigürasyon (admin) ─────────
@@ -142,9 +150,9 @@ public class DayClosingNotificationService {
             return false;
         }
 
-        List<NotificationChannelBinding> groups = resolveGroupBindings();
+        List<NotificationChannelBinding> groups = resolveGroupBindings(businessId);
         if (groups.isEmpty()) {
-            log.debug("[day-closing-notify] business={} bayrak açık ama bağlı Telegram grubu yok — atlandı.",
+            log.debug("[day-closing-notify] business={} bayrak açık ama erişimli kullanıcının bağlı Telegram grubu yok — atlandı.",
                     businessId);
             return false;
         }
@@ -187,16 +195,32 @@ public class DayClosingNotificationService {
     }
 
     /**
-     * Doğrulanmış GRUP-tipi Telegram binding'leri. Telegram {@code getChat} ile tip
-     * doğrulanır (DM dışlanır); zenginleştirme başarısızsa (best-effort) binding yine
-     * aday olarak alınır — gruba bağlanmış chat_id'ye gönderim güvenli, DM'e gitmesi
-     * pratikte de zararsız (yine de tip belli olanlarda DM elenir).
+     * Gün-kapatan {@code businessId} için hedef GRUP-tipi Telegram binding'leri.
+     *
+     * <p><b>TENANT-SCOPE (sızıntı kapısı):</b> doğrulanmış TÜM binding'ler arasından
+     * yalnızca binding'i kuran kullanıcı ({@code binding.getUserId()}) bu işletmeye
+     * erişebiliyorsa ({@link BusinessAccessGuard#canAccessBusiness}) binding alınır;
+     * aksi halde ATLANIR (continue). Böylece A işletmesinin gün-kapanışı özeti, A'ya
+     * erişimi OLMAYAN kullanıcıların bağladığı gruplara GİTMEZ. Admin
+     * {@code canAccessBusiness} içinde her zaman geçtiğinden tüm işletmelerin özetini
+     * almaya devam eder. Bu, {@link TelegramApprovalCallbackService#sendApprovalButtons}
+     * fan-out'undaki business-erişim kapısıyla aynı desendir (orada onay bir
+     * admin-aksiyonu olduğu için ek {@code isAdmin} de aranır; burada özet salt-okunur
+     * bilgi olduğundan business-erişim kapısı yeterlidir).</p>
+     *
+     * <p>Tip filtresi: Telegram {@code getChat} ile tip doğrulanır (DM dışlanır);
+     * zenginleştirme başarısızsa (best-effort) binding yine aday olarak alınır —
+     * gruba bağlanmış chat_id'ye gönderim güvenli, DM'e gitmesi pratikte de zararsız
+     * (yine de tip belli olanlarda DM elenir).</p>
      */
-    private List<NotificationChannelBinding> resolveGroupBindings() {
+    private List<NotificationChannelBinding> resolveGroupBindings(UUID businessId) {
+        if (businessId == null) return List.of();
         List<NotificationChannelBinding> verified =
                 bindingRepository.findByChannelAndVerifiedTrue(NotificationChannelType.TELEGRAM);
         return verified.stream()
                 .filter(b -> b.getExternalId() != null && !b.getExternalId().isBlank())
+                // TENANT-SCOPE: yalnız bu işletmeye erişebilen kullanıcının binding'i.
+                .filter(b -> accessGuard.canAccessBusiness(b.getUserId(), businessId))
                 .filter(this::isGroupChat)
                 .toList();
     }
