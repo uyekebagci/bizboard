@@ -14,6 +14,7 @@ import {
   ChevronLeft, Plus, ArrowDownLeft, ArrowUpRight, TrendingUp, TrendingDown,
   FileText, Scroll, Check, AlertTriangle, RefreshCw, Loader2, Trash2,
   Wallet, Banknote, Receipt, Scissors, Pencil, CheckCircle2, ArrowLeftRight,
+  Clock, Activity, Gauge,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -288,6 +289,9 @@ function CounterpartDetailInner() {
           tone={bb.net_with_portfolio > 0 ? "positive" : bb.net_with_portfolio < 0 ? "negative" : "neutral"}
           icon={<Wallet size={14} />} primary />
       </section>
+
+      {/* ── Cari-360 — salt görüntü analitiği (mevcut statement'tan türetilir) ── */}
+      <Cari360Panel statement={statement} />
 
       {/* ── Tabs ──────────────────────────────────────────────── */}
       <section>
@@ -585,6 +589,180 @@ function BreakdownCard({
         <p className="text-[10px] text-surface-500 mt-0.5">{count} kayıt</p>
       )}
       {extra && <p className="text-[10px] text-surface-500 mt-0.5 truncate">{extra}</p>}
+    </div>
+  );
+}
+
+// ── Cari-360 — salt görüntü analitiği ──────────────────────────────────────
+//
+// Yeni endpoint/hesap YOK. Tüm metrikler /account-statement yanıtından
+// (open_debts, payment_history, transactions) client-side türetilir. Amaç:
+// yaşlandırma (aging), işlem hacmi ve ödeme özetiyle cariyi tek bakışta
+// 360° görmek. Mevcut sayılar DEĞİŞTİRİLMEZ — yalnız yeniden gruplanır.
+
+type AgingBucket = { label: string; amount: number; count: number; tone: "ok" | "warn" | "danger" };
+
+/** Açık borçları vade tarihine göre yaşlandırma kovalarına dağıt. */
+function buildAging(
+  debts: AccountStatement["open_debts"],
+  direction: "RECEIVABLE" | "PAYABLE",
+): AgingBucket[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const buckets: AgingBucket[] = [
+    { label: "Vadesi yok", amount: 0, count: 0, tone: "ok" },
+    { label: "Güncel", amount: 0, count: 0, tone: "ok" },
+    { label: "1-30 gün geçti", amount: 0, count: 0, tone: "warn" },
+    { label: "31-60 gün geçti", amount: 0, count: 0, tone: "warn" },
+    { label: "60+ gün geçti", amount: 0, count: 0, tone: "danger" },
+  ];
+  for (const d of debts) {
+    if (d.direction !== direction) continue;
+    const amt = d.remaining_amount;
+    if (!d.due_date) { buckets[0].amount += amt; buckets[0].count++; continue; }
+    const due = new Date(d.due_date);
+    if (isNaN(due.getTime())) { buckets[0].amount += amt; buckets[0].count++; continue; }
+    const overdue = Math.round((today.getTime() - due.getTime()) / 86_400_000);
+    if (overdue <= 0) { buckets[1].amount += amt; buckets[1].count++; }
+    else if (overdue <= 30) { buckets[2].amount += amt; buckets[2].count++; }
+    else if (overdue <= 60) { buckets[3].amount += amt; buckets[3].count++; }
+    else { buckets[4].amount += amt; buckets[4].count++; }
+  }
+  return buckets;
+}
+
+function Cari360Panel({ statement }: { statement: AccountStatement }) {
+  // İşlem hacmi: transfer hariç tüm tx'lerin |tutar| toplamı + adet + son tarih.
+  const txStats = useMemo(() => {
+    let volume = 0, count = 0, lastDate: string | null = null;
+    for (const t of statement.transactions) {
+      if (t.kind === "TRANSFER") continue;
+      volume += Math.abs(t.amount);
+      count++;
+      if (t.date && (!lastDate || t.date > lastDate)) lastDate = t.date;
+    }
+    return { volume, count, lastDate };
+  }, [statement.transactions]);
+
+  // Ödeme özeti: tahsil edilen (RECEIVED) vs ödenen (PAID) + son ödeme tarihi.
+  const payStats = useMemo(() => {
+    let received = 0, paid = 0, lastDate: string | null = null;
+    for (const p of statement.payment_history) {
+      if (p.payment_direction === "RECEIVED") received += p.amount;
+      else if (p.payment_direction === "PAID") paid += p.amount;
+      const d = p.payment_date;
+      if (d && (!lastDate || d > lastDate)) lastDate = d;
+    }
+    return { received, paid, count: statement.payment_history.length, lastDate };
+  }, [statement.payment_history]);
+
+  const receivableAging = useMemo(
+    () => buildAging(statement.open_debts, "RECEIVABLE"),
+    [statement.open_debts]);
+  const payableAging = useMemo(
+    () => buildAging(statement.open_debts, "PAYABLE"),
+    [statement.open_debts]);
+
+  const hasReceivableAging = receivableAging.some((b) => b.count > 0);
+  const hasPayableAging = payableAging.some((b) => b.count > 0);
+
+  return (
+    <section className="glass-card p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Gauge size={16} className="text-brand-400" />
+        <h2 className="text-sm font-semibold text-surface-100">Cari 360°</h2>
+        <span className="text-[10px] text-surface-500">salt görüntü · mevcut veriden türetildi</span>
+      </div>
+
+      {/* Özet metrik şeridi */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MiniStat icon={<Activity size={13} />} label="İşlem Hacmi"
+          value={formatCurrency(txStats.volume, "TRY")}
+          sub={`${txStats.count} işlem`} />
+        <MiniStat icon={<Clock size={13} />} label="Son İşlem"
+          value={formatDate(txStats.lastDate)} sub="tarih" />
+        <MiniStat icon={<ArrowDownLeft size={13} className="text-emerald-300" />} label="Tahsil Edilen"
+          value={formatCurrency(payStats.received, "TRY")}
+          sub={`${payStats.count} ödeme`} tone="positive" />
+        <MiniStat icon={<ArrowUpRight size={13} className="text-red-300" />} label="Ödenen"
+          value={formatCurrency(payStats.paid, "TRY")}
+          sub={payStats.lastDate ? `son: ${formatDate(payStats.lastDate)}` : "—"} tone="negative" />
+      </div>
+
+      {/* Yaşlandırma (aging) — alacak + verecek ayrı */}
+      {(hasReceivableAging || hasPayableAging) ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {hasReceivableAging && (
+            <AgingTable title="Alacak Yaşlandırma" buckets={receivableAging} tone="positive" />
+          )}
+          {hasPayableAging && (
+            <AgingTable title="Verecek Yaşlandırma" buckets={payableAging} tone="negative" />
+          )}
+        </div>
+      ) : (
+        <p className="text-xs text-surface-400">Açık borç yok — yaşlandırma boş.</p>
+      )}
+    </section>
+  );
+}
+
+function MiniStat({
+  icon, label, value, sub, tone,
+}: {
+  icon: React.ReactNode; label: string; value: string; sub?: string;
+  tone?: "positive" | "negative";
+}) {
+  const valueCls = tone === "positive" ? "text-emerald-300"
+    : tone === "negative" ? "text-red-300" : "text-surface-100";
+  return (
+    <div className="rounded-lg bg-surface-800/40 border border-surface-700 p-2.5">
+      <div className="flex items-center gap-1.5 text-[10px] text-surface-400 uppercase mb-1">
+        {icon} {label}
+      </div>
+      <p className={cn("text-sm font-bold num truncate", valueCls)}>{value}</p>
+      {sub && <p className="text-[10px] text-surface-500 mt-0.5 truncate">{sub}</p>}
+    </div>
+  );
+}
+
+function AgingTable({
+  title, buckets, tone,
+}: {
+  title: string; buckets: AgingBucket[]; tone: "positive" | "negative";
+}) {
+  const total = buckets.reduce((s, b) => s + b.amount, 0);
+  const accent = tone === "positive" ? "text-emerald-300" : "text-red-300";
+  return (
+    <div className="rounded-lg border border-surface-700 overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-surface-800/40">
+        <span className="text-xs font-medium text-surface-200">{title}</span>
+        <span className={cn("text-xs font-semibold num", accent)}>{formatCurrency(total, "TRY")}</span>
+      </div>
+      <div className="divide-y divide-surface-700/70">
+        {buckets.map((b) => {
+          if (b.count === 0) return null;
+          const pct = total > 0 ? Math.round((b.amount / total) * 100) : 0;
+          const barCls = b.tone === "danger" ? "bg-red-500/70"
+            : b.tone === "warn" ? "bg-amber-500/70" : "bg-emerald-500/60";
+          const labelCls = b.tone === "danger" ? "text-red-300"
+            : b.tone === "warn" ? "text-amber-300" : "text-surface-300";
+          return (
+            <div key={b.label} className="px-3 py-2">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className={cn("text-[11px]", labelCls)}>
+                  {b.label} <span className="text-surface-500">({b.count})</span>
+                </span>
+                <span className="text-[11px] font-medium text-surface-200 num">
+                  {formatCurrency(b.amount, "TRY")}
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-surface-700 overflow-hidden">
+                <div className={cn("h-full rounded-full", barCls)} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
