@@ -14,18 +14,23 @@ import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { TransactionDetailModal } from "@/components/business/TransactionList";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { InfiniteScrollSentinel } from "@/components/shared/InfiniteScrollSentinel";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import type { Business, Transaction, FixedCostSummary } from "@/types";
+
+const PAGE_SIZE = 40;
 
 export default function AllTransactionsPage() {
   const router = useRouter();
   const { triggerRefresh, refreshKey } = useAppStore();
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [fixedCosts, setFixedCosts] = useState<{ businessId: string; businessName: string; summary: FixedCostSummary }[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Filters
+  // business_id + direction → SERVER-SIDE (BE DB'de uygular, sayfa 0'dan tazeler).
+  // search + month → CLIENT-SIDE (BE bu uçta desteklemiyor) — yüklenen sayfalar
+  // üzerinde filtrelenir; kullanıcı kaydırdıkça daha fazla eşleşme yüklenir.
   const [filterBusiness, setFilterBusiness] = useState("");
   const [filterDirection, setFilterDirection] = useState<"" | "income" | "expense">("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,51 +50,60 @@ export default function AllTransactionsPage() {
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
 
+  // PERF (perf/frontend-pagination): işlem listesi artık server-pagination ile
+  // sayfalı çekilir (eski "tüm-listeyi-çek" yerine). business_id + direction
+  // server-side param; refreshKey değişince (silme/yeni işlem) liste tazelenir.
+  const {
+    items: transactions,
+    totalElements,
+    loading,
+    loadingMore,
+    hasNext,
+    loadMore,
+  } = usePaginatedList<Transaction>(
+    (page, size) => {
+      const p = new URLSearchParams();
+      p.set("page", String(page));
+      p.set("size", String(size));
+      if (filterBusiness) p.set("business_id", filterBusiness);
+      if (filterDirection) p.set("direction", filterDirection);
+      return `/portfolio/transactions/all?${p.toString()}`;
+    },
+    [filterBusiness, filterDirection, refreshKey],
+    { size: PAGE_SIZE, label: "Transactions" },
+  );
+
+  // İşletme listesi + sabit giderler — tx listesinden bağımsız (tek sefer / refreshKey).
   useEffect(() => {
-    fetchData();
+    let alive = true;
+    (async () => {
+      try {
+        const bizData = await api.get<Business[]>("/businesses");
+        if (!alive) return;
+        const bizList = bizData || [];
+        setBusinesses(bizList);
+
+        const fcPromises = bizList.map(async (b) => {
+          try {
+            const summary = await api.get<FixedCostSummary>(`/businesses/${b.id}/fixed-costs/summary`);
+            return { businessId: b.id, businessName: b.name, summary };
+          } catch { return null; }
+        });
+        const fcResults = (await Promise.all(fcPromises)).filter(Boolean) as typeof fixedCosts;
+        if (alive) setFixedCosts(fcResults);
+      } catch (err) {
+        logger.error("api", "Transactions meta fetch error", undefined, err);
+      }
+    })();
+    return () => { alive = false; };
   }, [refreshKey]);
 
-  async function fetchData() {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (filterBusiness) params.set("business_id", filterBusiness);
-      if (filterDirection) params.set("direction", filterDirection);
-
-      const [txData, bizData] = await Promise.all([
-        api.get<Transaction[]>(`/portfolio/transactions/all?${params.toString()}`),
-        api.get<Business[]>("/businesses"),
-      ]);
-      setTransactions(txData || []);
-      setBusinesses(bizData || []);
-
-      // Sabit giderleri her işletme için fetch et
-      const bizList = bizData || [];
-      const fcPromises = bizList.map(async (b) => {
-        try {
-          const summary = await api.get<FixedCostSummary>(`/businesses/${b.id}/fixed-costs/summary`);
-          return { businessId: b.id, businessName: b.name, summary };
-        } catch { return null; }
-      });
-      const fcResults = (await Promise.all(fcPromises)).filter(Boolean) as typeof fixedCosts;
-      setFixedCosts(fcResults);
-    } catch (err) {
-      logger.error("api", "Transactions fetch error", undefined, err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Refetch when filters change
-  useEffect(() => {
-    if (!loading) fetchData();
-  }, [filterBusiness, filterDirection]);
-
-  // Client-side filtering (search + month) — memoized.
-  // Performans (perf/frontend-quickwins): önceden HER render'da tüm liste yeniden
-  // filtreleniyordu (modal aç/kapa, debounce vb. de tetikliyordu). Artık yalnızca
-  // gerçek bağımlılıklar (veri + debounce'lu arama + ay) değişince hesaplanır.
+  // Client-side filtering (search + month) — yüklenmiş sayfalar üzerinde.
+  // BE bu iki filtreyi desteklemediğinden client-side kalır; infinite-scroll
+  // sayesinde kullanıcı kaydırdıkça daha fazla eşleşme yüklenir.
+  const hasClientFilter = Boolean(debouncedQuery || filterMonth);
   const filtered = useMemo(() => {
+    if (!hasClientFilter) return transactions;
     return transactions.filter((tx) => {
       if (debouncedQuery) {
         const q = debouncedQuery.toLowerCase();
@@ -104,10 +118,10 @@ export default function AllTransactionsPage() {
       }
       return true;
     });
-  }, [transactions, debouncedQuery, filterMonth]);
+  }, [transactions, debouncedQuery, filterMonth, hasClientFilter]);
 
-  // Stats — memoized (tek geçişte gelir/gider toplamı; önceki 2× filter+reduce
-  // her render'da çalışıyordu).
+  // Stats — yüklenmiş + (client-filtre uygulanmışsa) filtrelenmiş set üzerinden.
+  // Server-pagination'la birlikte toplam, scroll ilerledikçe gerçek toplama yakınsar.
   const { totalIncome, totalExpense } = useMemo(() => {
     let income = 0;
     let expense = 0;
@@ -125,6 +139,12 @@ export default function AllTransactionsPage() {
       .reduce((s, fc) => s + (fc.summary?.total_monthly_cost || 0), 0);
   }, [fixedCosts, filterBusiness]);
   const totalWithFixed = totalExpense + totalFixedCostMonthly;
+
+  // "X islem" sayacı: client-filtre yokken gerçek toplam (total_elements);
+  // client-filtre varken yüklenmiş eşleşme sayısı.
+  const headerCount = hasClientFilter ? filtered.length : totalElements;
+  // Toplam henüz tam yüklenmemişse (daha fazla sayfa var) toplamlar "yuklenen"dir.
+  const partialTotals = hasNext;
 
   if (loading) {
     return (
@@ -153,7 +173,7 @@ export default function AllTransactionsPage() {
           </button>
           <div>
             <h1 className="text-xl font-bold h-display text-surface-100">Tum Islemler</h1>
-            <p className="text-xs text-surface-400">{filtered.length} islem</p>
+            <p className="text-xs text-surface-400">{headerCount} islem</p>
           </div>
         </div>
       </div>
@@ -161,13 +181,17 @@ export default function AllTransactionsPage() {
       {/* Summary cards — Redesign Inc.3: glass + token-correct renkler + .num */}
       <div className="grid grid-cols-3 gap-2">
         <div className="glass-card p-3 text-center">
-          <p className="text-[10px] text-emerald-300 uppercase tracking-wider font-medium">Gelir</p>
+          <p className="text-[10px] text-emerald-300 uppercase tracking-wider font-medium">
+            Gelir{partialTotals && <span className="text-surface-500"> (yuklenen)</span>}
+          </p>
           <p className="num text-sm font-bold text-emerald-300 mt-0.5">
             {formatCurrency(totalIncome)}
           </p>
         </div>
         <div className="glass-card p-3 text-center">
-          <p className="text-[10px] text-rose-300 uppercase tracking-wider font-medium">Gider</p>
+          <p className="text-[10px] text-rose-300 uppercase tracking-wider font-medium">
+            Gider{partialTotals && <span className="text-surface-500"> (yuklenen)</span>}
+          </p>
           <p className="num text-sm font-bold text-rose-300 mt-0.5">
             {formatCurrency(totalWithFixed)}
           </p>
@@ -286,6 +310,14 @@ export default function AllTransactionsPage() {
         )}
       </div>
 
+      {/* Client-filtre aktif + daha fazla sayfa var → kullanıcıyı bilgilendir */}
+      {hasClientFilter && hasNext && (
+        <p className="text-[11px] text-surface-500 -mt-2">
+          Arama/ay filtresi yuklenmis kayitlar uzerinde calisir — devamini gormek icin
+          asagi kaydirin.
+        </p>
+      )}
+
       {/* Transaction List */}
       {filtered.length === 0 ? (
         <div className="glass-card p-8 text-center">
@@ -296,76 +328,87 @@ export default function AllTransactionsPage() {
           </p>
         </div>
       ) : (
-        <div className="glass-card divide-y divide-surface-700/60 overflow-hidden">
-          {filtered.map((tx) => {
-            const isIncome = tx.direction === "income";
-            return (
-              <div
-                key={tx.id}
-                onClick={() => setDetailTarget(tx)}
-                className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group"
-              >
+        <>
+          <div className="glass-card divide-y divide-surface-700/60 overflow-hidden">
+            {filtered.map((tx) => {
+              const isIncome = tx.direction === "income";
+              return (
                 <div
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    isIncome ? "bg-emerald-500/15" : "bg-rose-500/15"
-                  )}
+                  key={tx.id}
+                  onClick={() => setDetailTarget(tx)}
+                  className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group"
                 >
-                  {isIncome ? (
-                    <ArrowDownLeft size={18} className="text-emerald-400" />
-                  ) : (
-                    <ArrowUpRight size={18} className="text-rose-400" />
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-surface-100 truncate">
-                    {tx.description || tx.category?.name || "Islem"}
-                  </p>
-                  <p className="text-xs text-surface-400 mt-0.5">
-                    {tx.business_name && (
-                      <span className="text-brand-500">{tx.business_name} · </span>
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                      isIncome ? "bg-emerald-500/15" : "bg-rose-500/15"
                     )}
-                    {tx.category?.name || "Kategorisiz"} ·{" "}
-                    {new Date(tx.date).toLocaleDateString("tr-TR", {
-                      day: "numeric", month: "short", year: "numeric",
-                    })}
-                  </p>
+                  >
+                    {isIncome ? (
+                      <ArrowDownLeft size={18} className="text-emerald-400" />
+                    ) : (
+                      <ArrowUpRight size={18} className="text-rose-400" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-surface-100 truncate">
+                      {tx.description || tx.category?.name || "Islem"}
+                    </p>
+                    <p className="text-xs text-surface-400 mt-0.5">
+                      {tx.business_name && (
+                        <span className="text-brand-500">{tx.business_name} · </span>
+                      )}
+                      {tx.category?.name || "Kategorisiz"} ·{" "}
+                      {new Date(tx.date).toLocaleDateString("tr-TR", {
+                        day: "numeric", month: "short", year: "numeric",
+                      })}
+                    </p>
+                  </div>
+
+                  <span
+                    className={cn(
+                      "num text-sm font-semibold flex-shrink-0 text-right",
+                      isIncome ? "text-emerald-300" : "text-rose-300"
+                    )}
+                  >
+                    {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net göster. */}
+                    {isIncome ? "+" : "-"}
+                    {formatCurrency(
+                      (tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
+                        ? tx.pos_net
+                        : tx.amount,
+                      tx.currency
+                    )}
+                    {(tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
+                      && tx.pos_net !== tx.amount && (
+                      <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
+                        brüt {formatCurrency(tx.amount, tx.currency)}
+                      </span>
+                    )}
+                  </span>
+
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(tx); }}
+                    className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-500/10
+                               opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
+              );
+            })}
+          </div>
 
-                <span
-                  className={cn(
-                    "num text-sm font-semibold flex-shrink-0 text-right",
-                    isIncome ? "text-emerald-300" : "text-rose-300"
-                  )}
-                >
-                  {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net göster. */}
-                  {isIncome ? "+" : "-"}
-                  {formatCurrency(
-                    (tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
-                      ? tx.pos_net
-                      : tx.amount,
-                    tx.currency
-                  )}
-                  {(tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
-                    && tx.pos_net !== tx.amount && (
-                    <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
-                      brüt {formatCurrency(tx.amount, tx.currency)}
-                    </span>
-                  )}
-                </span>
-
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(tx); }}
-                  className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-500/10
-                             opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
+          {/* Sonsuz kaydırma sentinel'i */}
+          <InfiniteScrollSentinel
+            hasNext={hasNext}
+            loadingMore={loadingMore}
+            loadMore={loadMore}
+            loadedCount={transactions.length}
+            totalCount={totalElements}
+          />
+        </>
       )}
 
       {/* Detail Modal */}
