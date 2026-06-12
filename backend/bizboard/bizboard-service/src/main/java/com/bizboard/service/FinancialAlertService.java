@@ -63,6 +63,18 @@ public class FinancialAlertService {
     /** Bakiye debounce durum bayrağı key prefix'i ({@code <prefix>:<businessId>}). */
     private static final String KEY_BALANCE_STATE = "finalert.balance_state";
 
+    /**
+     * #91647f74: Yeni-işlem (NEW_TRANSACTION) bildirimi eşiği key prefix'i
+     * ({@code <prefix>:<businessId>}). Bu eşiğin ÜSTÜNDEKİ tutarlı işlemlerde
+     * bildirim atılır; spam-kaçın. <b>DEFAULT MAKUL</b> — satır yoksa
+     * {@link #DEFAULT_NEW_TX_NOTIFY_THRESHOLD} (10.000) uygulanır. 0 yazılırsa
+     * "her işlemde bildir" (eşik kapalı) semantiğindedir.
+     */
+    public static final String KEY_NEW_TX_NOTIFY_THRESHOLD = "finalert.new_tx_notify_threshold";
+
+    /** Yeni-işlem bildirimi varsayılan eşiği (TL). Spec #91647f74. */
+    public static final BigDecimal DEFAULT_NEW_TX_NOTIFY_THRESHOLD = new BigDecimal("10000");
+
     /** Debounce durum değerleri. */
     private static final String STATE_BELOW = "BELOW";
     private static final String STATE_OK = "OK";
@@ -83,6 +95,74 @@ public class FinancialAlertService {
     /** İşletme-başına tek-harcama eşiği key'i. */
     public static String highExpenseThresholdKey(UUID businessId) {
         return KEY_HIGH_EXPENSE_THRESHOLD + ":" + businessId;
+    }
+
+    /** İşletme-başına yeni-işlem bildirim eşiği key'i (#91647f74). */
+    public static String newTxNotifyThresholdKey(UUID businessId) {
+        return KEY_NEW_TX_NOTIFY_THRESHOLD + ":" + businessId;
+    }
+
+    /**
+     * #91647f74: Bir işlemin NEW_TRANSACTION bildirimi tetikleyip tetiklemeyeceğine
+     * karar verir. İşlem tutarı (mutlak) işletme-başına eşiği AŞARSA true.
+     *
+     * <p>Eşik semantiği:</p>
+     * <ul>
+     *   <li>Satır YOK → {@link #DEFAULT_NEW_TX_NOTIFY_THRESHOLD} (10.000) uygulanır
+     *       (default-makul, spam-kaçın).</li>
+     *   <li>Değer ≤ 0 → eşik KAPALI → her işlemde bildir (true).</li>
+     *   <li>Değer &gt; 0 → {@code |amount| > eşik} ise bildir.</li>
+     * </ul>
+     *
+     * <p>Best-effort: parse/okuma hatasında varsayılan eşik uygulanır.</p>
+     */
+    @Transactional(readOnly = true)
+    public boolean shouldNotifyNewTransaction(UUID businessId, BigDecimal amount) {
+        BigDecimal threshold = readNewTxNotifyThreshold(businessId);
+        // 0 (veya negatif) → eşik kapalı → her işlemde bildir.
+        if (threshold == null || threshold.signum() <= 0) return true;
+        BigDecimal abs = amount != null ? amount.abs() : BigDecimal.ZERO;
+        return abs.compareTo(threshold) > 0;
+    }
+
+    /**
+     * Etkin yeni-işlem eşiği: ayar varsa onu, yoksa varsayılanı döner. ≤0 yazılmışsa
+     * onu (kapalı semantiği) döner. Admin ekranı için.
+     */
+    @Transactional(readOnly = true)
+    public BigDecimal getNewTxNotifyThreshold(UUID businessId) {
+        BigDecimal v = readNewTxNotifyThreshold(businessId);
+        return v != null ? v : DEFAULT_NEW_TX_NOTIFY_THRESHOLD;
+    }
+
+    /**
+     * İşletme yeni-işlem bildirim eşiğini günceller (audit'li). null → varsayılana
+     * dön (satır silinir). 0 → "her işlemde bildir" olarak saklanır.
+     */
+    @Transactional
+    public BigDecimal setNewTxNotifyThreshold(UUID businessId, BigDecimal threshold, UUID actorUserId) {
+        if (businessId == null) {
+            throw new IllegalArgumentException("business_id zorunlu (per-business eşik)");
+        }
+        String key = newTxNotifyThresholdKey(businessId);
+        if (threshold == null) {
+            // Varsayılana dön — satırı sil.
+            if (settingRepository.existsById(key)) settingRepository.deleteById(key);
+            log.info("[finalert] yeni-işlem eşiği VARSAYILANA döndü business={} by={}", businessId, actorUserId);
+            return DEFAULT_NEW_TX_NOTIFY_THRESHOLD;
+        }
+        BigDecimal norm = threshold.signum() < 0 ? BigDecimal.ZERO : threshold;
+        writeAmountAllowZero(key, norm, actorUserId);
+        auditLogService.recordEntityAction(
+                AuditAction.FINANCIAL_ALERT_THRESHOLD_UPDATE, actorUserId, "admin",
+                "SYSTEM_SETTING", null,
+                "Yeni-işlem bildirim eşiği güncellendi (business=" + businessId + "): " + norm,
+                Map.of(
+                        "businessId", businessId.toString(),
+                        "newTxNotifyThreshold", norm.toPlainString()),
+                null);
+        log.info("[finalert] yeni-işlem eşiği güncellendi business={} eşik={} by={}", businessId, norm, actorUserId);
+        return norm;
     }
 
     /**
@@ -280,6 +360,31 @@ public class FinancialAlertService {
         s.setUpdatedBy(actorUserId);
         s.setUpdatedAt(LocalDateTime.now());
         settingRepository.save(s);
+    }
+
+    /** {@link #writeAmount} ile aynı ama 0 da geçerli değer (eşik kapalı semantiği). */
+    private void writeAmountAllowZero(String key, BigDecimal value, UUID actorUserId) {
+        writeAmount(key, value, actorUserId);
+    }
+
+    /**
+     * #91647f74: Yeni-işlem eşiğini oku. Satır YOK → null (çağıran varsayılanı
+     * uygular). 0/negatif değer → BigDecimal.ZERO (eşik kapalı semantiği — burada
+     * {@link #readPositiveAmount}'tan FARKLI: 0'ı null'a düşürmez). Parse hatası →
+     * null (varsayılana düş, güvenli taraf).
+     */
+    private BigDecimal readNewTxNotifyThreshold(UUID businessId) {
+        String raw = settingRepository.findById(newTxNotifyThresholdKey(businessId))
+                .map(SystemSetting::getValue).orElse(null);
+        if (raw == null || raw.isBlank()) return null; // satır yok → varsayılan
+        try {
+            BigDecimal v = new BigDecimal(raw.trim());
+            return v.signum() < 0 ? BigDecimal.ZERO : v;
+        } catch (NumberFormatException e) {
+            log.warn("[finalert] geçersiz yeni-işlem eşiği business={} value='{}' — varsayılan uygulanır",
+                    businessId, raw);
+            return null;
+        }
     }
 
     private String readState(UUID businessId) {

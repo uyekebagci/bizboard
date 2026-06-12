@@ -472,10 +472,16 @@ public class TransactionMutationService {
                     request.getManualSubCashId(), transaction.getId(), userId);
         }
 
-        // WP f1fa3cd5: yeni işlem → NEW_TRANSACTION dispatch (admin'lere; in-app default açık,
-        // Telegram opt-in). Best-effort — dispatch katmanı hatayı yutar.
-        List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
-                .stream().map(com.bizboard.common.entity.User::getId).toList();
+        // WP f1fa3cd5 + #91647f74: yeni işlem → NEW_TRANSACTION dispatch (admin'lere;
+        // in-app default açık, Telegram opt-in). SPAM-KAÇIN: yalnız tutarı işletme-başına
+        // eşiği AŞAN işlemlerde bildir (default eşik 10.000; 0 yazılırsa her işlemde).
+        // Best-effort — dispatch katmanı hatayı yutar.
+        boolean notifyNewTx = financialAlertService.shouldNotifyNewTransaction(
+                business.getId(), transaction.getAmount());
+        List<UUID> recipients = notifyNewTx
+                ? userRepository.findByRoleIgnoreCase("admin")
+                        .stream().map(com.bizboard.common.entity.User::getId).toList()
+                : List.of();
         if (!recipients.isEmpty()) {
             String desc = transaction.getDescription() != null && !transaction.getDescription().isBlank()
                     ? " · " + transaction.getDescription() : "";
