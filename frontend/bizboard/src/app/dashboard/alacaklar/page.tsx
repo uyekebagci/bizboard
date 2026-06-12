@@ -24,16 +24,34 @@ import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 import { NotesModule } from "@/components/business/NotesModule";
 import { ExchangeRateBar } from "@/components/debts/ExchangeRateBar";
 import { CurrencyEquivalentLine } from "@/components/debts/CurrencyEquivalentLine";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
 
+/**
+ * İşletme filtresi (salt-görüntü): "ALL" = tüm erişilebilir işletmeler (mevcut
+ * konsolide görünüm), aksi takdirde tek bir işletmenin business_id'si. Filtre
+ * counterpart.business_id eşleşmesiyle yapılır — yeni endpoint/hesap yok.
+ */
+const ALL_BUSINESSES = "ALL";
+
+/**
+ * Aggregate satırına eklediğimiz tenant bilgisi. ReceivableAggregate'in kendisi
+ * business_id taşımadığından, counterpart_id → Counterpart.business_id eşlemesiyle
+ * çözülür. Legacy free-text satırlar (counterpart_id yok) çözülemez → sadece
+ * "Tüm İşletmeler" görünümünde listelenir.
+ */
+type ScopedReceivable = ReceivableAggregate & { _business_id: string | null };
+
 export default function AlacaklarPage() {
   const router = useRouter();
   const { refreshKey, triggerRefresh } = useAppStore();
-  const [rows, setRows] = useState<ReceivableAggregate[]>([]);
+  const [rows, setRows] = useState<ScopedReceivable[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
+  // İşletme filtresi (salt-görüntü). "ALL" → konsolide; aksi → tek işletme.
+  const [businessFilter, setBusinessFilter] = useState<string>(ALL_BUSINESSES);
   // v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal
   const [showAddModal, setShowAddModal] = useState(false);
   // Sansür (privacy): göz ikonu ile tutarları blur'la. localStorage persist, default GÖRÜNÜR.
@@ -69,13 +87,22 @@ export default function AlacaklarPage() {
           api.get<Counterpart[]>("/counterparts").catch(() => [] as Counterpart[]),
         ]);
         const balanceById = new Map<string, number>();
-        for (const c of (allCps || [])) balanceById.set(c.id, c.current_balance ?? 0);
+        // counterpart_id → business_id eşlemesi (işletme filtresi için, salt-görüntü).
+        const businessById = new Map<string, string | null>();
+        for (const c of (allCps || [])) {
+          balanceById.set(c.id, c.current_balance ?? 0);
+          businessById.set(c.id, c.business_id ?? null);
+        }
 
-        const netted: ReceivableAggregate[] = [];
+        const netted: ScopedReceivable[] = [];
         for (const r of (recv || [])) {
           const net = r.counterpart_id ? (balanceById.get(r.counterpart_id) ?? r.total_amount) : r.total_amount;
           if (net > 0) {
-            netted.push({ ...r, total_amount: net });
+            netted.push({
+              ...r,
+              total_amount: net,
+              _business_id: r.counterpart_id ? (businessById.get(r.counterpart_id) ?? null) : null,
+            });
           }
         }
         setRows(netted);
@@ -99,14 +126,49 @@ export default function AlacaklarPage() {
       .catch(() => { /* sessiz — notlar bölümü görünmez */ });
   }, []);
 
-  const total = rows.reduce((a, r) => a + (r.total_amount || 0), 0);
-  const totalCount = rows.reduce((a, r) => a + (r.count || 0), 0);
+  // İşletme filtresi (salt-görüntü): "ALL" → tüm satırlar; aksi → yalnız seçilen
+  // işletmeye ait counterpart'lardan gelenler. Legacy free-text satırlar
+  // (_business_id === null) tek-işletme görünümünde gizlenir (sızıntı önleme +
+  // yanlış atıf önleme).
+  const visibleRows = useMemo(() => {
+    if (businessFilter === ALL_BUSINESSES) return rows;
+    return rows.filter((r) => r._business_id === businessFilter);
+  }, [rows, businessFilter]);
+
+  const total = visibleRows.reduce((a, r) => a + (r.total_amount || 0), 0);
+  const totalCount = visibleRows.reduce((a, r) => a + (r.count || 0), 0);
 
   // WP currency-display: TL toplamın USD + gram altın karşılığı için güncel kur.
   const { usdRate, goldRate } = useExchangeRates();
 
+  // İşletme başına alacak özeti (breakdown) — yalnız "Tüm İşletmeler" + >1 işletme
+  // varken anlamlı. Salt-görüntü: mevcut net tutarları işletmeye göre toplar.
+  const businessBreakdown = useMemo(() => {
+    if (businessFilter !== ALL_BUSINESSES || businesses.length <= 1) return null;
+    const nameById = new Map(businesses.map((b) => [b.id, b.name]));
+    const sums = new Map<string, { total: number; count: number }>();
+    for (const r of rows) {
+      const key = r._business_id ?? "_none";
+      const acc = sums.get(key) ?? { total: 0, count: 0 };
+      acc.total += r.total_amount || 0;
+      acc.count += 1;
+      sums.set(key, acc);
+    }
+    const out: Array<{ key: string; name: string; total: number; count: number }> = [];
+    for (const [key, v] of sums.entries()) {
+      out.push({
+        key,
+        name: key === "_none" ? "İşletme bağlantısı yok" : (nameById.get(key) ?? "Bilinmeyen işletme"),
+        total: v.total,
+        count: v.count,
+      });
+    }
+    out.sort((a, b) => b.total - a.total);
+    return out.length > 1 ? out : null;
+  }, [rows, businessFilter, businesses]);
+
   const sorted = useMemo(() => {
-    const out = [...rows];
+    const out = [...visibleRows];
     if (sortMode === "amount_desc") {
       out.sort((a, b) => b.total_amount - a.total_amount);
     } else if (sortMode === "due_asc") {
@@ -119,7 +181,7 @@ export default function AlacaklarPage() {
       out.sort((a, b) => a.counterpart_name.localeCompare(b.counterpart_name, "tr"));
     }
     return out;
-  }, [rows, sortMode]);
+  }, [visibleRows, sortMode]);
 
   return (
     <div className="space-y-5 pb-24">
@@ -154,6 +216,56 @@ export default function AlacaklarPage() {
       {/* WP a9da4e9d (USD+Altın): güncel kur + "Anlık Güncelle". */}
       <ExchangeRateBar onRefreshed={triggerRefresh} />
 
+      {/* İşletme filtresi (salt-görüntü) — yalnız >1 işletme varken anlamlı.
+          Counterparts sayfasıyla aynı desen: DarkSelect + "Tüm İşletmeler". */}
+      {!loading && businesses.length > 1 && (
+        <section className="flex items-center gap-2">
+          <label className="text-xs text-surface-400 shrink-0">İşletme:</label>
+          <div className="min-w-[200px]">
+            <DarkSelect
+              value={businessFilter}
+              onChange={setBusinessFilter}
+              placeholder="Tüm İşletmeler"
+              aria-label="İşletmeye göre filtrele"
+              searchable={businesses.length > 6}
+              options={[
+                { value: ALL_BUSINESSES, label: "Tüm İşletmeler" },
+                ...businesses.map((b) => ({ value: b.id, label: b.name })),
+              ]}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* İşletme başına özet (breakdown) — "Tüm İşletmeler" görünümünde,
+          her işletmenin açık alacak toplamını gösterir. Tıklanınca o işletmeye
+          filtreler. Salt-görüntü. */}
+      {!loading && businessFilter === ALL_BUSINESSES && businessBreakdown && (
+        <section className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {businessBreakdown.map((g) => (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => g.key !== "_none" && setBusinessFilter(g.key)}
+              disabled={g.key === "_none"}
+              className={cn(
+                "glass-card p-3 text-left transition-colors",
+                g.key === "_none"
+                  ? "cursor-default opacity-80"
+                  : "hover:border-amber-500/40 cursor-pointer",
+              )}
+              title={g.key === "_none" ? undefined : `${g.name} alacaklarını göster`}
+            >
+              <p className="text-[11px] text-surface-400 truncate" title={g.name}>{g.name}</p>
+              <p className={cn("mt-0.5 text-sm font-semibold text-amber-300", censorCls)}>
+                {maskAmount(g.total, censored, "TRY")}
+              </p>
+              <p className="text-[10px] text-surface-400">{g.count} kişi/firma</p>
+            </button>
+          ))}
+        </section>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={28} className="animate-spin text-amber-400" />
@@ -171,6 +283,19 @@ export default function AlacaklarPage() {
           >
             <Plus size={16} />
             Alacak Ekle
+          </button>
+        </div>
+      ) : visibleRows.length === 0 ? (
+        // İşletme filtresi aktif ama seçilen işletmede açık alacak yok.
+        // Selector yukarıda görünür kalır; kullanıcı başka işletme seçebilir.
+        <div className="glass-card p-8 text-center">
+          <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
+          <p className="text-surface-300 font-medium">Bu işletmede açık alacak yok</p>
+          <button
+            onClick={() => setBusinessFilter(ALL_BUSINESSES)}
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-semibold"
+          >
+            Tüm İşletmeleri Göster
           </button>
         </div>
       ) : (
@@ -220,7 +345,7 @@ export default function AlacaklarPage() {
                   {totalCount}
                 </p>
                 <p className="text-[11px] text-surface-400 mt-0.5">
-                  {rows.length} farkli kisi/firma
+                  {visibleRows.length} farkli kisi/firma
                 </p>
               </div>
             </section>
