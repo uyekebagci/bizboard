@@ -28,7 +28,11 @@ export interface Instrument {
   due_date: string;
   status: "PENDING_OCR" | "CONFIRMED" | "CASHED" | "BOUNCED" | "ENDORSED";
   endorsed_to_name?: string | null;
+  /** Cross-link: tahsil/ödeme entry'si (CASHED iken) — işlem↔instrument bağı. */
+  journal_entry_id?: string | null;
+  cashed_account_id?: string | null;
   cashed_account_name?: string | null;
+  cashed_at?: string | null;
   source: string;
   photo_url?: string | null;
   notes?: string | null;
@@ -91,6 +95,33 @@ export function useInstruments(businessId?: string | null, status?: string) {
     return d;
   }, [businessId, load]);
 
+  // Çek/senet ↔ nakit tahsilat bağını kopar (reverse → CONFIRMED). P&L-nötr:
+  // silinen entry'de PNL bacağı yoktu → Net Kâr Δ=0; idempotent.
+  const uncash = useCallback(async (id: string) => {
+    if (!businessId) throw new Error("business_id zorunlu");
+    const d = await api.post<Instrument>(`/instruments/${id}/uncash?business_id=${businessId}`, {});
+    await load();
+    return d;
+  }, [businessId, load]);
+
+  // tx-form öneri kartı: bir cari'nin AÇIK (CONFIRMED) evrakları, yöne göre.
+  // direction = RECEIVED (gelir → alacak) | GIVEN (gider → borç). Liste yenilemez.
+  const listOpenByCounterpart = useCallback(
+    async (counterpartId: string, direction: "RECEIVED" | "GIVEN"): Promise<Instrument[]> => {
+      if (!businessId || !counterpartId) return [];
+      try {
+        const rows = await api.get<Instrument[]>(
+          `/instruments/open?business_id=${businessId}&counterpart_id=${counterpartId}&direction=${direction}`,
+        );
+        return rows ?? [];
+      } catch (err) {
+        logger.error("api", "listOpenByCounterpart failed", { counterpartId, direction }, err);
+        return [];
+      }
+    },
+    [businessId],
+  );
+
   const bounce = useCallback(async (id: string) => {
     if (!businessId) throw new Error("business_id zorunlu");
     const d = await api.post<Instrument>(`/instruments/${id}/bounce?business_id=${businessId}`, {});
@@ -108,5 +139,5 @@ export function useInstruments(businessId?: string | null, status?: string) {
     return d;
   }, [businessId, load]);
 
-  return { list, loading, error, reload: load, create, cash, bounce, endorse };
+  return { list, loading, error, reload: load, create, cash, uncash, listOpenByCounterpart, bounce, endorse };
 }

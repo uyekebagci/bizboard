@@ -16,7 +16,7 @@
 import { useEffect, useState } from "react";
 import {
   ArrowDownLeft, ArrowUpRight, Calendar, Clock, Tag, FileText,
-  Loader2, CreditCard, Banknote, Plus, HandCoins, ArrowRight,
+  Loader2, CreditCard, Banknote, Plus, HandCoins, ArrowRight, ScrollText,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -30,6 +30,8 @@ import type { Business, Category, FileUploadInfo, PaymentMethod, Counterpart, Po
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { QuickCounterpartModal } from "@/components/counterparts/QuickCounterpartModal";
 import { QuickCategoryModal } from "@/components/transactions/QuickCategoryModal";
+import type { Instrument } from "@/hooks/useInstruments";
+import { CashLedgerInstrumentModal } from "@/components/instruments/CashLedgerInstrumentModal";
 
 export interface AddTransactionFormProps {
   /** İşletme önceden seçili — modal "/business/[id]" pano'sundan açılırken kullanılır. */
@@ -139,6 +141,14 @@ export function AddTransactionForm({
   } | null>(null);
   const [cariLoading, setCariLoading] = useState(false);
 
+  // çek/senet-tahsilat-ux: seçili cari'nin AÇIK (CONFIRMED) çek/senet evrakları,
+  // yöne göre (income→RECEIVED alacak, expense→GIVEN borç). Nakit/banka GİRİŞİ
+  // girilirken "bu bir çek/senet tahsilatı mı?" önerisini besler. Seçilince
+  // P&L-nötr cash() çağrılır (düz gelir YERİNE — çift sayım yok). Cross-link
+  // bağı kurar (instrument ↔ tahsilat hareketi). Boş liste → öneri çıkmaz.
+  const [openInstruments, setOpenInstruments] = useState<Instrument[]>([]);
+  const [instrumentToCash, setInstrumentToCash] = useState<Instrument | null>(null);
+
   const [posDevices, setPosDevices] = useState<PosDeviceListItem[]>([]);
   const [posDeviceId, setPosDeviceId] = useState<string>("");
   // BUG-2 (POS bank_account): POS GELİR'in düşeceği kasa/hesap seçimi. Boş
@@ -229,6 +239,21 @@ export function AddTransactionForm({
       .finally(() => { if (!cancelled) setCariLoading(false); });
     return () => { cancelled = true; };
   }, [targetCounterpartId]);
+
+  // çek/senet-tahsilat-ux: cari + yön değişince açık çek/senet evraklarını çek.
+  // GET /instruments/open?counterpart_id=&direction=. Hata/boş → öneri yok
+  // (silent, NON-BREAKING). business_id query'de zorunlu.
+  useEffect(() => {
+    if (!targetCounterpartId || !businessId) { setOpenInstruments([]); return; }
+    let cancelled = false;
+    const dir = direction === "income" ? "RECEIVED" : "GIVEN";
+    api.get<Instrument[]>(
+      `/instruments/open?business_id=${businessId}&counterpart_id=${targetCounterpartId}&direction=${dir}`,
+    )
+      .then((rows) => { if (!cancelled) setOpenInstruments(rows ?? []); })
+      .catch(() => { if (!cancelled) setOpenInstruments([]); });
+    return () => { cancelled = true; };
+  }, [targetCounterpartId, businessId, direction]);
 
   useEffect(() => {
     api.get<PosDeviceListItem[]>("/pos-devices")
@@ -769,6 +794,54 @@ export function AddTransactionForm({
             </div>
           </div>
         )}
+
+        {/* çek/senet-tahsilat-ux: AKILLI ÖNERİ — bu cari'nin açık çek/senet'i
+            varsa "bu bir çek/senet tahsilatı mı?" → P&L-nötr bağla (düz gelir
+            yerine). POS'ta gizli (POS = kart/havuz; çek tahsilatı nakit/banka). */}
+        {paymentMethod === "NAKIT" && openInstruments.length > 0 && (
+          <div className="mt-3 rounded-xl border border-sky-500/40 bg-sky-500/10 p-3">
+            <div className="flex items-start gap-2.5">
+              <ScrollText size={18} className="text-sky-300 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-sky-200">
+                  Bu bir ÇEK/SENET {direction === "income" ? "tahsilatı" : "ödemesi"} mi?
+                </p>
+                <p className="mt-0.5 text-[12px] leading-snug text-sky-100/90">
+                  Bu carinin {openInstruments.length} açık çek/senet&apos;i var. Düz {direction === "income" ? "gelir" : "gider"} yerine
+                  evrakı {direction === "income" ? "tahsil" : "ödeme"} olarak bağla — alacak/borç kapanır, P&amp;L şişmez (çift sayım yok).
+                </p>
+                <div className="mt-2.5 space-y-1.5">
+                  {openInstruments.map((ins) => (
+                    <button
+                      key={ins.id}
+                      type="button"
+                      onClick={() => setInstrumentToCash(ins)}
+                      className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-left transition-colors"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs font-semibold text-sky-100 truncate">
+                          {ins.type === "CHECK" ? "Çek" : "Senet"}
+                          {ins.serial_no ? ` #${ins.serial_no}` : ""}
+                          {ins.bank_name ? ` · ${ins.bank_name}` : ""}
+                        </span>
+                        <span className="block text-[10px] text-sky-200/70">
+                          Vade {ins.due_date}
+                        </span>
+                      </span>
+                      <span className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-sky-100">
+                        {formatCurrency(ins.amount, ins.currency || "TRY")}
+                        <ArrowRight size={13} />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[10px] text-sky-200/70">
+                  İstersen yine de düz {direction === "income" ? "gelir" : "gider"} olarak girebilirsin.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Category — ZORUNLU. Form akışında öne çıkarıldı (kalın çerçeveli kart). */}
@@ -1056,6 +1129,30 @@ export function AddTransactionForm({
           });
           setCategoryId(c.id);
           setShowCreateCategory(false);
+        }}
+      />
+    )}
+
+    {/* çek/senet-tahsilat-ux: seçilen evrakı P&L-nötr bağla (düz gelir YERİNE).
+        cash() → POST /instruments/{id}/cash (Σ=0 posting, Net Kâr Δ=0). Başarılı
+        olunca tx formunu KAPAT — bu tahsilat işlemi gelir kaydının yerine geçer. */}
+    {instrumentToCash && (
+      <CashLedgerInstrumentModal
+        instrument={instrumentToCash}
+        onCash={async (id, accountId, cashedDate) => {
+          if (!businessId) throw new Error("İşletme seçili değil");
+          return api.post(`/instruments/${id}/cash?business_id=${businessId}`, {
+            account_id: accountId,
+            cashed_date: cashedDate ?? null,
+          });
+        }}
+        onClose={() => setInstrumentToCash(null)}
+        onSuccess={() => {
+          setInstrumentToCash(null);
+          triggerRefresh();
+          // Bu tahsilat düz gelir/gider'in yerine geçti → formu kapat.
+          if (onSuccess) onSuccess("instrument-cash");
+          else if (onCancel) onCancel();
         }}
       />
     )}

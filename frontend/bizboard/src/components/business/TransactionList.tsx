@@ -16,6 +16,7 @@ import { InlineFileUpload } from "@/components/shared/FileUploadButton";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { TransferDetailModal } from "@/components/transactions/TransferDetailModal";
 import { QuickCategoryModal } from "@/components/transactions/QuickCategoryModal";
+import { FundTrailSection } from "@/components/business/FundTrailSection";
 import type { Transaction, Category, FileUploadInfo, PaymentMethod } from "@/types";
 
 interface Props {
@@ -56,6 +57,20 @@ export function TransactionList({
     }
   }, []);
   const handleDelete = useCallback((tx: Transaction) => setDeleteTarget(tx), []);
+
+  // Para İzi drill-down: bağ satırından karşı işleme git. Karşı tx yüklü
+  // listede varsa detay modalını onunla yeniden açar; yoksa kullanıcıyı bilgilendirir.
+  const handleNavigate = useCallback(
+    (targetId: string) => {
+      const next = transactions.find((t) => t.id === targetId);
+      if (next) {
+        setDetailTarget(next);
+      } else {
+        toast.info("Karşı işlem bu listede görünmüyor (eski/filtreli olabilir).");
+      }
+    },
+    [transactions],
+  );
 
   if (visible.length === 0) {
     return (
@@ -104,6 +119,7 @@ export function TransactionList({
           onClose={() => setDetailTarget(null)}
           onDelete={() => { setDetailTarget(null); setDeleteTarget(detailTarget); }}
           onChange={onChange}
+          onNavigate={handleNavigate}
         />
       )}
 
@@ -238,6 +254,7 @@ export function TransactionDetailModal({
   onClose,
   onDelete,
   onChange,
+  onNavigate,
 }: {
   transaction: Transaction;
   currency?: string;
@@ -245,6 +262,8 @@ export function TransactionDetailModal({
   onDelete?: () => void;
   /** v1.6.23.10: settle/unsettle sonrası parent refresh. */
   onChange?: () => void;
+  /** Para İzi drill-down: karşı işleme git (txId). */
+  onNavigate?: (txId: string) => void;
 }) {
   const { triggerRefresh } = useAppStore();
   const isIncome = transaction.direction === "income";
@@ -800,6 +819,18 @@ export function TransactionDetailModal({
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* Para İzi — çift-yönlü fon-izi (Kaynak + Kullanım/Harcamalar + kalan).
+                    Saf izlenebilirlik: bakiye/Net Kâr DEĞİŞMEZ (metadata). */}
+                {transaction.business_id && transaction.id && (
+                  <FundTrailSection
+                    businessId={transaction.business_id}
+                    txId={transaction.id}
+                    txAmount={transaction.amount}
+                    currency={effectiveCurrency}
+                    onNavigate={onNavigate}
+                  />
                 )}
 
                 {/* Attached Files */}

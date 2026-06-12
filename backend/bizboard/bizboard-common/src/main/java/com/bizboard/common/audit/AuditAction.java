@@ -211,10 +211,22 @@ public final class AuditAction {
     public static final String INSTRUMENT_CONFIRM     = "INSTRUMENT_CONFIRM";
     /** Çek/senet tahsil/ödeme (CASHED) — para hesabına Σ=0 posting. */
     public static final String INSTRUMENT_CASH        = "INSTRUMENT_CASH";
+    /** Çek/senet tahsil/ödeme GERİ ALMA (CASHED → CONFIRMED) — Σ=0 posting silinir (reverse). */
+    public static final String INSTRUMENT_UNCASH      = "INSTRUMENT_UNCASH";
     /** Çek/senet karşılıksız (BOUNCED). */
     public static final String INSTRUMENT_BOUNCE      = "INSTRUMENT_BOUNCE";
     /** Çek/senet ciro/devir (ENDORSED) — başka counterpart'a aktarım. */
     public static final String INSTRUMENT_ENDORSE     = "INSTRUMENT_ENDORSE";
+
+    // ── "Para İzi" (fund-trail): işlem↔işlem fon-bağı (saf izlenebilirlik) ─────
+    /**
+     * Fon-bağı oluşturuldu: bir hedef işlem bir kaynak işleme bağlandı (tahsis).
+     * <b>Bakiye/P&L'i ETKİLEMEZ</b> — metadata-only iz. Metadata: source/target
+     * tx id, tahsis tutarı, kaynaktaki kalan.
+     */
+    public static final String FUND_LINK_CREATE       = "FUND_LINK_CREATE";
+    /** Fon-bağı kopartıldı (unlink) — yine bakiye/P&L değişmez. */
+    public static final String FUND_LINK_DELETE       = "FUND_LINK_DELETE";
 
     // ── Ledger v2 (Faz D, §3.1 / §7): ayni varlık (ASSET) ─────
     /** Ayni varlık edinimi (iş karşılığı araba/mal) → ASSET hesabına Σ=0 posting. */

@@ -13,7 +13,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  FileText, Plus, Loader2, AlertTriangle, Check, XCircle, ArrowRightLeft, BadgeCheck,
+  FileText, Plus, Loader2, AlertTriangle, Check, XCircle, ArrowRightLeft, BadgeCheck, Undo2,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useBusinesses } from "@/hooks/useBusinesses";
@@ -21,6 +21,7 @@ import { useInstruments, type Instrument, type CreateInstrumentInput } from "@/h
 import { formatCurrency, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { BankAccountListItem, Counterpart } from "@/types";
+import { CashLedgerInstrumentModal } from "@/components/instruments/CashLedgerInstrumentModal";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING_OCR: "OCR Bekliyor",
@@ -41,12 +42,14 @@ const STATUS_STYLE: Record<string, string> = {
 export default function InstrumentsPage() {
   const { businesses } = useBusinesses();
   const businessId = businesses?.[0]?.id ?? null;
-  const { list, loading, error, create, cash, bounce, endorse } = useInstruments(businessId);
+  const { list, loading, error, create, cash, uncash, bounce, endorse } = useInstruments(businessId);
 
   const [accounts, setAccounts] = useState<BankAccountListItem[]>([]);
   const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // Çek/senet ↔ nakit tahsilat bağlama modalı (prompt() yerine proper modal).
+  const [cashTarget, setCashTarget] = useState<Instrument | null>(null);
 
   useEffect(() => {
     api.get<BankAccountListItem[]>("/bank-accounts").then((r) => setAccounts(r ?? [])).catch(() => setAccounts([]));
@@ -58,22 +61,19 @@ export default function InstrumentsPage() {
   const totalReceivable = portfolio.filter((i) => i.direction === "RECEIVED").reduce((a, x) => a + (x.amount || 0), 0);
   const totalPayable = portfolio.filter((i) => i.direction === "GIVEN").reduce((a, x) => a + (x.amount || 0), 0);
 
-  async function handleCash(ins: Instrument) {
-    // Para tutan hesaplar (POS havuzu / cari hesapları hariç). String karşılaştırma:
-    // ledger-v2 tipleri (POS_SETTLEMENT/RECEIVABLE/PAYABLE/ASSET) FE union'ında yok.
-    const NON_MONEY = ["POS_SETTLEMENT", "RECEIVABLE", "PAYABLE", "ASSET"];
-    const moneyAccounts = accounts.filter((a) => !NON_MONEY.includes(a.type as string));
-    if (moneyAccounts.length === 0) { toast.error("Para hesabı yok"); return; }
-    const accId = window.prompt(
-      `Tahsil/ödeme hesabı seçin (id):\n${moneyAccounts.map((a) => `${a.name} → ${a.id}`).join("\n")}`,
-      moneyAccounts[0].id,
-    );
-    if (!accId) return;
+  // Tahsil/öde → proper modal (CashLedgerInstrumentModal) aç; modal cash() çağırır.
+  function handleCash(ins: Instrument) {
+    setCashTarget(ins);
+  }
+
+  // Çek/senet ↔ nakit tahsilat BAĞINI KOPAR (reverse → CONFIRMED). P&L-nötr.
+  async function handleUncash(ins: Instrument) {
+    if (!window.confirm(
+      "Tahsil/ödeme bağı kopartılsın mı? Para hesabına yazılan hareket geri alınır, evrak portföye döner. (Karşılıksız DEĞİL — sadece yanlış bağlamayı düzeltir.)",
+    )) return;
     setBusyId(ins.id);
-    try {
-      await cash(ins.id, accId.trim());
-      toast.success(ins.direction === "RECEIVED" ? "Tahsil edildi" : "Ödendi");
-    } catch (e) { toast.error(e); } finally { setBusyId(null); }
+    try { await uncash(ins.id); toast.success("Bağ kopartıldı — portföye döndü"); }
+    catch (e) { toast.error(e); } finally { setBusyId(null); }
   }
 
   async function handleBounce(ins: Instrument) {
@@ -202,7 +202,24 @@ export default function InstrumentsPage() {
                     </div>
                   )}
                   {i.status === "CASHED" && (
-                    <span className="flex items-center gap-1 text-[10px] text-emerald-400"><BadgeCheck size={11} /> Tamamlandı</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                        <BadgeCheck size={11} /> {i.direction === "RECEIVED" ? "Tahsil edildi" : "Ödendi"}
+                      </span>
+                      {/* Cross-link: hangi hesaba bağlandı (tahsilat işlemi) */}
+                      {i.cashed_account_name && (
+                        <span className="text-[9px] text-surface-400">
+                          → {i.cashed_account_name}
+                          {i.cashed_at && ` · ${new Date(i.cashed_at).toLocaleDateString("tr-TR")}`}
+                        </span>
+                      )}
+                      {/* Reverse: bağı kopar (yanlış bağladıysa) — P&L-nötr geri al */}
+                      <button onClick={() => handleUncash(i)} disabled={busyId === i.id}
+                        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 disabled:opacity-50">
+                        {busyId === i.id ? <Loader2 size={10} className="animate-spin" /> : <Undo2 size={10} />}
+                        Bağı Kopar
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -217,6 +234,15 @@ export default function InstrumentsPage() {
           counterparts={counterparts}
           onClose={() => setShowAdd(false)}
           onSubmit={async (input) => { await create(input); setShowAdd(false); toast.success("Çek/senet eklendi"); }}
+        />
+      )}
+
+      {/* Çek/senet ↔ nakit tahsilat BAĞLAMA modalı (P&L-nötr cash()) */}
+      {cashTarget && (
+        <CashLedgerInstrumentModal
+          instrument={cashTarget}
+          onCash={cash}
+          onClose={() => setCashTarget(null)}
         />
       )}
     </div>
