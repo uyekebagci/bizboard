@@ -273,6 +273,34 @@ export interface Notification {
   created_at: string;
 }
 
+/** Standalone hatırlatıcı tekrar sıklığı (backend ReminderRecurrence ile eşleşir). */
+export type ReminderRecurrence = "NONE" | "DAILY" | "WEEKLY" | "MONTHLY";
+
+/** Kullanıcı-tanımlı standalone hatırlatıcı (GET /reminders → ReminderDto). */
+export interface Reminder {
+  id: string;
+  title: string;
+  message: string | null;
+  remind_at: string;
+  recurrence: ReminderRecurrence;
+  business_id: string | null;
+  business_name: string | null;
+  enabled: boolean;
+  last_fired_at: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+/** Hatırlatıcı create/update payload'u (POST/PUT /reminders). */
+export interface ReminderInput {
+  title: string;
+  message?: string | null;
+  remind_at: string;
+  recurrence?: ReminderRecurrence;
+  business_id?: string | null;
+  enabled?: boolean;
+}
+
 /** /admin/audit-logs sonucu. */
 export interface AuditLog {
   id: string;
