@@ -125,6 +125,35 @@ app:
     # Maximum size of a single uploaded file in bytes (10 MB by default).
     max-size-bytes: ${UPLOAD_MAX_SIZE_BYTES:10485760}
 
+  # OCR Modülü (WP 1bdb8116) — belge tarama. SECRET REPO'DA TUTULMAZ; yalnız env
+  # placeholder'ları. MINDEE_API_KEY boşsa Mindee devre dışı → Tesseract fallback
+  # (binary deploy imajında kurulu olmalı) → o da yoksa graceful degrade (FAILED
+  # tarama; kullanıcı alanları manuel girer). Yönetici Sevalla env'lerinden set eder.
+  ocr:
+    enabled: ${APP_OCR_ENABLED:true}
+    # Birincil sağlayıcı: mindee | tesseract.
+    provider: ${APP_OCR_PROVIDER:mindee}
+    # Birincil başarısızsa diğerine düş.
+    fallback-enabled: ${APP_OCR_FALLBACK_ENABLED:true}
+    # Tek dosya üst sınırı (8 MB).
+    max-file-size-bytes: ${APP_OCR_MAX_FILE_SIZE_BYTES:8388608}
+    # Bulk upload tek istekte azami dosya sayısı.
+    bulk-max-files: ${APP_OCR_BULK_MAX_FILES:20}
+    mindee:
+      api-key: ${MINDEE_API_KEY:}
+      base-url: ${APP_OCR_MINDEE_BASE_URL:https://api.mindee.net/v1}
+      account: ${APP_OCR_MINDEE_ACCOUNT:mindee}
+      receipt-model: ${APP_OCR_MINDEE_RECEIPT_MODEL:expense_receipts}
+      receipt-version: ${APP_OCR_MINDEE_RECEIPT_VERSION:5}
+      invoice-model: ${APP_OCR_MINDEE_INVOICE_MODEL:invoices}
+      invoice-version: ${APP_OCR_MINDEE_INVOICE_VERSION:4}
+      timeout-seconds: ${APP_OCR_MINDEE_TIMEOUT_SECONDS:25}
+    tesseract:
+      # Deploy imajına tesseract-ocr + tesseract-ocr-tur KURULU olmalı (OPS NOTU).
+      binary-path: ${APP_OCR_TESSERACT_BINARY:tesseract}
+      languages: ${APP_OCR_TESSERACT_LANGS:tur+eng}
+      timeout-seconds: ${APP_OCR_TESSERACT_TIMEOUT_SECONDS:30}
+
   audit:
     # Toggle audit logging of file downloads.
     log-file-downloads: ${AUDIT_LOG_FILE_DOWNLOADS:true}

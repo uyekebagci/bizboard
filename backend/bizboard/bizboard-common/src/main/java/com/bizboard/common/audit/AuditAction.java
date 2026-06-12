@@ -241,4 +241,12 @@ public final class AuditAction {
     public static final String APPROVAL_VERIFIED  = "APPROVAL_VERIFIED";
     /** UI vurgu rozeti: onay-akışı kritik kaydı için. */
     public static final String HIGHLIGHT_APPROVAL = "APPROVAL";
+
+    // ── OCR Modülü (WP 1bdb8116): belge tarama + onay ─────────────────────────
+    /** Belge tarandı (görüntü/PDF → OCR → alan çıkarımı). Metadata: type/provider/status. */
+    public static final String OCR_SCAN     = "OCR_SCAN";
+    /** OCR taraması onaylandı → transaction/instrument oluşturuldu. */
+    public static final String OCR_CONFIRM  = "OCR_CONFIRM";
+    /** OCR taraması atıldı (kullanıcı vazgeçti). */
+    public static final String OCR_DISCARD  = "OCR_DISCARD";
 }
