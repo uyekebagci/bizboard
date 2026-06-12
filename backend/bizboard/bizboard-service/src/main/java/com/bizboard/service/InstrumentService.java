@@ -191,6 +191,17 @@ public class InstrumentService {
         assertBalanced(entry);
         entry = journalEntryRepository.save(entry); // cascade postings
 
+        // BUG FIX (çek tahsili kasa bakiyesinde görünmüyordu): Σ=0 posting
+        // dengeli yazılıyor ama hedef hesabın denormalize current_balance'ı
+        // güncellenmiyordu → tahsil edilen nakit "Elde Tutulan Nakit" widget'ı
+        // + cash-holders-summary'de görünmüyordu. Diğer servisler
+        // (TransactionMutationService/TransferService/PaymentService/
+        // PosSettlementService) current_balance'ı imperatif tutuyor; biz de
+        // aynı deseni izleyip LOCATION_MOVE bacağı kadar (signed) güncelliyoruz.
+        // P&L NÖTR: PNL bacağı YOK; yalnız konum (bakiye) senkronu. Idempotent:
+        // cash() yalnız isCashable() (CASHED değil) iken çalışır → çift sayım yok.
+        applyBalanceDelta(account, signed);
+
         ins.setStatus(InstrumentStatus.CASHED);
         ins.setCashedAccount(account);
         ins.setCashedAt(LocalDateTime.now());
@@ -376,9 +387,36 @@ public class InstrumentService {
         if (ins.getJournalEntryId() == null) return;
         journalEntryRepository.findById(ins.getJournalEntryId())
                 .ifPresent(journalEntryRepository::delete); // cascade + orphanRemoval
+
+        // BUG FIX (eşli): cash() current_balance'ı signed kadar artırdığı için
+        // bağ koparılınca (uncash) ya da karşılıksız (bounce) geri almalıyız —
+        // tahsilde +amount eklendiyse −amount, ödemede −amount eklendiyse
+        // +amount uygulanır (ters signed). Idempotent: yalnız bir kez yazılan
+        // journalEntryId varken çalışır (yukarıda null guard). P&L NÖTR korunur.
+        if (ins.getCashedAccount() != null && ins.getAmount() != null) {
+            BigDecimal reverseSigned = ins.getDirection() == InstrumentDirection.RECEIVED
+                    ? ins.getAmount().negate() : ins.getAmount();
+            applyBalanceDelta(ins.getCashedAccount(), reverseSigned);
+        }
+
         ins.setJournalEntryId(null);
         ins.setCashedAccount(null);
         ins.setCashedAt(null);
+    }
+
+    /**
+     * Hedef para hesabının denormalize {@code current_balance}'ını {@code signed}
+     * kadar imperatif günceller — diğer servislerdeki ({@link TransactionMutationService}
+     * vb.) desenin birebir aynısı. Aggregate tipler (MAIN_CASH/SUB_CASH) Σ
+     * current_balance üzerinden hesaplandığı için üye hesaba yazma doğru yansır.
+     * Yalnız konum (bakiye) senkronu — gelir/gider ETKİSİ YOK (P&L nötr).
+     */
+    private void applyBalanceDelta(BankAccount account, BigDecimal signed) {
+        if (account == null || signed == null || signed.signum() == 0) return;
+        BigDecimal current = account.getCurrentBalance() != null
+                ? account.getCurrentBalance() : BigDecimal.ZERO;
+        account.setCurrentBalance(current.add(signed));
+        bankAccountRepository.save(account);
     }
 
     private User loadUser(UUID userId) {
