@@ -133,6 +133,21 @@ app:
     # Disable in test environment to prevent emails/SMS/webhooks reaching real users.
     enabled: ${APP_EXTERNAL_INTEGRATIONS_ENABLED:true}
 
+  # e-Fatura modülü (Çatı v1.1) — entegratör-pluggable.
+  # SECRET REPO'DA TUTULMAZ; yalnız env placeholder'ları. Hiçbiri set
+  # edilmezse modül "no-op" çalışır: UBL-TR XML üretimi + önizleme + indirme
+  # tam çalışır, GİB'e gönderim "entegratör yapılandırılmadı" der (graceful).
+  efatura:
+    # Aktif entegratör anahtarı. "noop" (default) = gönderim devre dışı.
+    # Gerçek entegratör eklenince "foriba" / "uyumsoft" / "qnb" gibi set edilir;
+    # o entegratörün EInvoiceIntegrator bean'i credentials'ı kendi env'inden okur.
+    integrator: ${APP_EFATURA_INTEGRATOR:noop}
+    sign:
+      # Mali mühür / e-imza sertifikası (PKCS#12) — kullanıcının ops/legal adımı.
+      # Boşsa imzalama devre dışı; XML imzasız üretilir (önizleme/indirme yeterli).
+      cert-path:     ${APP_EFATURA_SIGN_CERT_PATH:}
+      cert-password: ${APP_EFATURA_SIGN_CERT_PASSWORD:}
+
 management:
   endpoints:
     web:
