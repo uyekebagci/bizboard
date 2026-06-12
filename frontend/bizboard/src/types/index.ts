@@ -1731,3 +1731,63 @@ export interface ProfitShareConfig {
   fatih_margin_pct: number;
   tuncay_spread_pct: number;
 }
+
+// ── OCR Modülü (WP 1bdb8116): belge tarama + review/confirm ──────────────────
+
+export type OcrDocumentType = "RECEIPT" | "CHECK" | "PROMISSORY_NOTE" | "BANK_STATEMENT";
+
+export type OcrScanStatus =
+  | "EXTRACTED"
+  | "LOW_CONFIDENCE"
+  | "FAILED"
+  | "CONFIRMED"
+  | "DISCARDED";
+
+export interface OcrField {
+  key: string;
+  value: string | null;
+  confidence: number | null;
+  low_confidence: boolean;
+}
+
+export interface OcrScan {
+  id: string;
+  file_id: string | null;
+  file_url: string | null;
+  document_type: OcrDocumentType | string;
+  status: OcrScanStatus | string;
+  ocr_provider: string | null;
+  overall_confidence: number | null;
+  has_low_confidence: boolean;
+  note: string | null;
+  fields: OcrField[];
+  result_entity_type: string | null;
+  result_entity_id: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+}
+
+export interface OcrBulkScanResponse {
+  scans: OcrScan[];
+  failed_files: string[];
+}
+
+export interface OcrConfirmRequest {
+  target?: "TRANSACTION" | "INSTRUMENT";
+  amount: number;
+  date?: string | null;
+  description?: string | null;
+  // TRANSACTION (fiş/dekont)
+  direction?: "INCOME" | "EXPENSE";
+  category_id?: string | null;
+  payment_method?: string | null;
+  bank_account_id?: string | null;
+  target_counterpart_id?: string | null;
+  // INSTRUMENT (çek/senet)
+  instrument_type?: "CHECK" | "PROMISSORY_NOTE";
+  instrument_direction?: "RECEIVED" | "GIVEN";
+  due_date?: string | null;
+  bank_name?: string | null;
+  serial_no?: string | null;
+  issuer_counterpart_id?: string | null;
+}

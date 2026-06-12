@@ -24,7 +24,7 @@ import {
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
   Search, X, Smartphone, Pin, Landmark, Tags, Sparkles, Lock, PieChart,
-  ClipboardCheck,
+  ClipboardCheck, ScanLine,
 } from "lucide-react";
 import { SidebarBusinessesSection } from "./SidebarBusinessesSection";
 import type { LucideIcon } from "lucide-react";
@@ -85,6 +85,7 @@ const ALL_LINKS: SidebarLink[] = [
   // ── Operasyon ──
   { href: "/dashboard/inventory",        label: "Envanter",      icon: Package,         group: "operasyon" },
   { href: "/dashboard/ayni-varlik",      label: "Ayni Varlik",   icon: Package,         group: "operasyon" },
+  { href: "/dashboard/belge-tarama",     label: "Belge Tarama (OCR)", icon: ScanLine,   group: "operasyon" },
   { href: "/dashboard/documents",        label: "Belgeler",      icon: FolderOpen,      group: "operasyon" },
   { href: "/dashboard/kisiler",          label: "Kisiler",       icon: User,            group: "operasyon" },
   { href: "/dashboard/telefonlar",       label: "Telefonlar",    icon: Smartphone,      group: "operasyon" },
