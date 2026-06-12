@@ -218,6 +218,16 @@ public final class AuditAction {
     /** Çek/senet ciro/devir (ENDORSED) — başka counterpart'a aktarım. */
     public static final String INSTRUMENT_ENDORSE     = "INSTRUMENT_ENDORSE";
 
+    // ── "Para İzi" (fund-trail): işlem↔işlem fon-bağı (saf izlenebilirlik) ─────
+    /**
+     * Fon-bağı oluşturuldu: bir hedef işlem bir kaynak işleme bağlandı (tahsis).
+     * <b>Bakiye/P&L'i ETKİLEMEZ</b> — metadata-only iz. Metadata: source/target
+     * tx id, tahsis tutarı, kaynaktaki kalan.
+     */
+    public static final String FUND_LINK_CREATE       = "FUND_LINK_CREATE";
+    /** Fon-bağı kopartıldı (unlink) — yine bakiye/P&L değişmez. */
+    public static final String FUND_LINK_DELETE       = "FUND_LINK_DELETE";
+
     // ── Ledger v2 (Faz D, §3.1 / §7): ayni varlık (ASSET) ─────
     /** Ayni varlık edinimi (iş karşılığı araba/mal) → ASSET hesabına Σ=0 posting. */
     public static final String ASSET_ACQUIRE          = "ASSET_ACQUIRE";
