@@ -96,6 +96,11 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "Doğrulama kodu",
                     "Doğrulama kodunuz: {code}. {ttl} dakika geçerlidir.")),
+            // Onay (Approval) modülü v1.1: yetkiliye "onay bekliyor" bildirimi.
+            Map.entry(NotificationEvent.APPROVAL_REQUESTED, new Template(
+                    NotificationType.WARNING,
+                    "Onay bekliyor: {title}",
+                    "{business} — {title}. Talep eden: {requestedBy}. Onay kuyruğundan inceleyin.")),
             Map.entry(NotificationEvent.GENERIC, new Template(
                     NotificationType.INFO,
                     "{title}",

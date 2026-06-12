@@ -86,6 +86,13 @@ public enum NotificationEvent {
      */
     MONTHLY_SUMMARY,
 
+    /**
+     * Onay (Approval) modülü v1.1: hassas/eşik-üstü bir işlem için onay talebi
+     * oluşturuldu — yetkili(ler)e in-app bildirim ("onay bekliyor"). Talep eden
+     * dışındaki admin/yetkili kullanıcılar Onay Kuyruğu'na bakar.
+     */
+    APPROVAL_REQUESTED,
+
     /** Tipi spesifik olmayan serbest bildirim (başlık+mesaj doğrudan verilir). */
     GENERIC
 }

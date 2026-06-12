@@ -227,4 +227,18 @@ public final class AuditAction {
     public static final String HIGHLIGHT_POS_DEAL       = "POS_DEAL";
     /** Faz D: çek/senet karşılıksız (kritik — vurgu). */
     public static final String HIGHLIGHT_INSTRUMENT_BOUNCE = "INSTRUMENT_BOUNCE";
+
+    // ── Onay (Approval) modülü v1.1 ───────────────────────────────────────
+    /** Hassas/eşik-üstü işlem için onay talebi oluşturuldu (PENDING). */
+    public static final String APPROVAL_REQUESTED = "APPROVAL_REQUESTED";
+    /** Onay talebi onaylandı → işaretlenen işlem yürütüldü. */
+    public static final String APPROVAL_APPROVED  = "APPROVAL_APPROVED";
+    /** Onay talebi reddedildi → işlem hiçbir zaman yürütülmedi (gerekçeli). */
+    public static final String APPROVAL_REJECTED  = "APPROVAL_REJECTED";
+    /** Onay talebi talep eden/admin tarafından geri çekildi. */
+    public static final String APPROVAL_CANCELLED = "APPROVAL_CANCELLED";
+    /** Onay talebi verify-code doğrulandı (onaya hazır). */
+    public static final String APPROVAL_VERIFIED  = "APPROVAL_VERIFIED";
+    /** UI vurgu rozeti: onay-akışı kritik kaydı için. */
+    public static final String HIGHLIGHT_APPROVAL = "APPROVAL";
 }
