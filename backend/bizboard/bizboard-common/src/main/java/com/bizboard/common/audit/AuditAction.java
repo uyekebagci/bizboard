@@ -279,4 +279,10 @@ public final class AuditAction {
     public static final String INVOICE_STATUS_QUERIED  = "INVOICE_STATUS_QUERIED";
     /** Fatura iptal edildi. */
     public static final String INVOICE_CANCELLED       = "INVOICE_CANCELLED";
+
+    // ── Audit modülü gelişmiş özellikler (mod-audit, v1.1) ────────────────────
+    /** Tamper-proof hash-chain backfill (geçmiş kayıtları zincirle, idempotent). */
+    public static final String AUDIT_CHAIN_BACKFILL = "AUDIT_CHAIN_BACKFILL";
+    /** KVKK retention anonimleştirme çalıştırıldı (PII maskelendi, kayıt silinmedi). */
+    public static final String AUDIT_ANONYMIZED     = "AUDIT_ANONYMIZED";
 }
