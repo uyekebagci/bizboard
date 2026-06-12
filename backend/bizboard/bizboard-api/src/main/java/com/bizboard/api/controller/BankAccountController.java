@@ -196,8 +196,20 @@ public class BankAccountController {
                             "message", "Bakiye düzeltme yetkisi yalnızca yöneticidedir."));
         }
         try {
-            return ResponseEntity.ok(service.adjustBalance(
-                    id, req.getNewBalance(), req.getDescription(), principal.getId()));
+            // Onay (Approval) modülü v1.1: hesabın işletmesini çöz → onaya-tabi
+            // wrapper'ı (proxy üstünden) çağır. İşletmede onay AÇIK + eşik aşıldıysa
+            // aspect ApprovalPendingException fırlatır (202 "onaya gönderildi");
+            // aksi hâlde (DEFAULT KAPALI) düzeltme mevcut akışla aynen yürür.
+            UUID businessId = service.resolveBusinessId(id);
+            return ResponseEntity.ok(service.adjustBalanceWithApproval(
+                    businessId, id, req.getNewBalance(), req.getDescription(), principal.getId()));
+        } catch (com.bizboard.service.approval.ApprovalPendingException e) {
+            // İşlem onaya gönderildi — henüz yürütülmedi.
+            return ResponseEntity.status(HttpStatus.ACCEPTED)
+                    .body(java.util.Map.of(
+                            "message", "İşlem onaya gönderildi.",
+                            "approval_required", true,
+                            "approval_request_id", e.getApprovalRequestId().toString()));
         } catch (IllegalStateException e) {
             // Aggregate tip (MAIN_CASH/SUB_CASH) — kendi bakiyesi yok.
             return ResponseEntity.status(HttpStatus.CONFLICT)

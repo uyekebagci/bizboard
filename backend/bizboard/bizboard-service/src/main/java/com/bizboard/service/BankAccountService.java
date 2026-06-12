@@ -223,6 +223,53 @@ public class BankAccountService {
         return toDto(a);
     }
 
+    /**
+     * Onay (Approval) modülü v1.1 — bakiye düzeltmenin ONAYA-TABİ sarmalayıcısı.
+     *
+     * <p>Controller bunu (proxy üstünden) çağırır. {@link RequiresApproval}
+     * aspect, işletmede onay gereksinimi AÇIK + |düzeltme| ≥ eşik ise işlemi
+     * doğrudan yapmak yerine bir {@code approval_request} (PENDING) oluşturur ve
+     * {@code ApprovalPendingException} fırlatır (controller 202 döner). Aksi hâlde
+     * (NON-BREAKING varsayılan: bayrak DEFAULT KAPALI) aşağıdaki gövde çalışır ve
+     * mevcut {@link #adjustBalance} akışı HİÇ değişmeden yürür.</p>
+     *
+     * <p>Onaylanınca {@code BalanceAdjustApprovalExecutor} aynı parametrelerle
+     * {@link #adjustBalance} çağırır (executor proxy'yi bypass eder → yeniden
+     * intercept edilmez).</p>
+     *
+     * @param businessId  hesabın işletmesi (aspect tenant + flag çözümü için)
+     * @param id          hesap id'si
+     * @param newBalance  yeni bakiye
+     * @param description zorunlu gerekçe
+     * @param actorUserId aksiyonu yapan kullanıcı
+     */
+    @com.bizboard.service.approval.RequiresApproval(
+            actionType = "BALANCE_ADJUST",
+            title = "Bakiye Düzeltme Onayı",
+            businessIdParam = "businessId",
+            amountExpression = "#newBalance")
+    @Transactional
+    public BankAccountDto adjustBalanceWithApproval(UUID businessId, UUID id,
+                                                    BigDecimal newBalance,
+                                                    String description, UUID actorUserId) {
+        // Aspect onay TETİKLEMEDİYSE buraya girilir → mevcut akış aynen.
+        return adjustBalance(id, newBalance, description, actorUserId);
+    }
+
+    /**
+     * Onay modülü yardımıcısı — bir hesabın işletme id'sini çözer (controller
+     * onaya-tabi çağrı öncesi {@code businessId} parametresini doldurmak için).
+     * Erişim kontrolü {@link #adjustBalance} içinde yapılır.
+     *
+     * @throws IllegalArgumentException hesap yok
+     */
+    @Transactional(readOnly = true)
+    public UUID resolveBusinessId(UUID accountId) {
+        BankAccount a = repository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + accountId));
+        return a.getBusiness() != null ? a.getBusiness().getId() : null;
+    }
+
     // ───────────────────────── CREATE (v1.6.23.4) ─────────────────────────
 
     /**
