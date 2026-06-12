@@ -5,6 +5,7 @@ import { ClientProviders } from "@/components/layout/ClientProviders";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { EnvironmentBanner } from "@/components/layout/EnvironmentBanner";
 import { PwaUpdatePrompt } from "@/components/layout/PwaUpdatePrompt";
+import { WebVitals } from "@/components/layout/WebVitals";
 import { Toaster } from "react-hot-toast";
 
 // Çift tema FAZ 1: FOUC önleyici — ilk boyama ÖNCESİ <html> class'ını
@@ -69,6 +70,8 @@ export default function RootLayout({
       <body className="font-sans">
         <ThemeProvider>
           <ClientProviders>
+            {/* v1.1 small-win: Core Web Vitals → logger "perf" (no-op DOM) */}
+            <WebVitals />
             <EnvironmentBanner />
             {children}
             <PwaUpdatePrompt />
