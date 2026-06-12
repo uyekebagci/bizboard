@@ -209,6 +209,16 @@ app:
   audit:
     # Toggle audit logging of file downloads.
     log-file-downloads: ${AUDIT_LOG_FILE_DOWNLOADS:true}
+    # Retention: bu günden eski kayıtlar silinir (0 = süresiz sakla).
+    retention-days: ${APP_AUDIT_RETENTION_DAYS:90}
+    # mod-audit v2 (KVKK): bu günden eski kayıtların PII alanları silmeden ÖNCE
+    # anonimleştirilir (0 = kapalı). Genelde retention-days'ten KISA tutulur.
+    anonymize-after-days: ${APP_AUDIT_ANONYMIZE_AFTER_DAYS:0}
+    # mod-audit v2: tamper-proof hash-chain'i hesaplayan arka-plan görevi.
+    # Zincir yazım/login yolundan AYRI; bu aralıkta yeni kayıtları zincirler.
+    chain:
+      interval-ms: ${APP_AUDIT_CHAIN_INTERVAL_MS:5000}
+      initial-delay-ms: ${APP_AUDIT_CHAIN_INITIAL_DELAY_MS:15000}
 
   external-integrations:
     # Disable in test environment to prevent emails/SMS/webhooks reaching real users.

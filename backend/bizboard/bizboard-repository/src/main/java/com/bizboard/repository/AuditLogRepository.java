@@ -3,12 +3,14 @@ package com.bizboard.repository;
 import com.bizboard.common.entity.AuditLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
@@ -76,4 +78,70 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
     @Modifying
     @Query("delete from AuditLog a where a.createdAt < :cutoff")
     long deleteCreatedBefore(@Param("cutoff") LocalDateTime cutoff);
+
+    // ── Tamper-proof hash-chain (mod-audit v2) ───────────────────────────────
+    // NOT: bu sorgular yalnız ayrı chainer/verify/anonymize/export akışlarında
+    // çalışır — ASLA audit yazım/login yolunda değil.
+
+    /** Zincir ucundaki kayıt (en yüksek seq) — yeni kayıtların prevHash'i bundan. */
+    AuditLog findFirstByChainSeqIsNotNullOrderByChainSeqDesc();
+
+    /** Zincirlenmemiş kayıt sayısı — chainer/verify raporlama. */
+    long countByChainSeqIsNull();
+
+    /**
+     * Henüz zincirlenmemiş (chainSeq null) kayıtlar, deterministik sırayla
+     * (createdAt, id). Chainer bunları sıra ile zincire ekler.
+     */
+    Slice<AuditLog> findByChainSeqIsNullOrderByCreatedAtAscIdAsc(Pageable pageable);
+
+    /** Zincirlenmiş kayıtlar, seq sırasıyla — doğrulama bu sırayla gezer. */
+    @Query("select a from AuditLog a where a.chainSeq is not null order by a.chainSeq asc")
+    Slice<AuditLog> findChainedOrderBySeq(Pageable pageable);
+
+    /**
+     * {@code fromSeq}'ten (dahil) itibaren zincirlenmiş kayıtlar, seq sırasıyla.
+     * Anonimleştirme sonrası kısmi yeniden-zincirleme ({@code rechainFrom}) için.
+     */
+    @Query("select a from AuditLog a where a.chainSeq is not null and a.chainSeq >= :fromSeq order by a.chainSeq asc")
+    Slice<AuditLog> findChainedFromSeq(@Param("fromSeq") long fromSeq, Pageable pageable);
+
+    /**
+     * Export için filtreli kayıtlar (sayfasız, sıralı, üst-sınırlı). Native +
+     * explicit CAST — {@link #search} ile aynı tip-güvenliği gerekçesiyle.
+     */
+    @Query(
+            value = """
+                    SELECT * FROM audit_logs
+                    WHERE (CAST(:userId AS uuid) IS NULL OR user_id = CAST(:userId AS uuid))
+                      AND (CAST(:action AS text) IS NULL OR action = CAST(:action AS text))
+                      AND (CAST(:resourceType AS text) IS NULL OR resource_type = CAST(:resourceType AS text))
+                      AND (CAST(:businessId AS text) IS NULL OR metadata->>'businessId' = CAST(:businessId AS text))
+                      AND (CAST(:fromTs AS timestamp) IS NULL OR created_at >= CAST(:fromTs AS timestamp))
+                      AND (CAST(:toTs AS timestamp) IS NULL OR created_at < CAST(:toTs AS timestamp))
+                    ORDER BY created_at DESC
+                    LIMIT :maxRows
+                    """,
+            nativeQuery = true)
+    List<AuditLog> findForExport(
+            @Param("userId") UUID userId,
+            @Param("action") String action,
+            @Param("resourceType") String resourceType,
+            @Param("businessId") String businessId,
+            @Param("fromTs") LocalDateTime from,
+            @Param("toTs") LocalDateTime to,
+            @Param("maxRows") int maxRows);
+
+    /**
+     * KVKK retention anonimleştirme adayları: {@code cutoff}'tan eski ve henüz
+     * anonimleştirilmemiş ({@code anonymized} null/false) kayıtlar. Flag idempotensi
+     * sağlar (işlenen kayıt sonraki sorguda düşer → sonsuz döngü yok).
+     */
+    @Query("""
+            select a from AuditLog a
+            where a.createdAt < :cutoff
+              and (a.anonymized is null or a.anonymized = false)
+            order by a.chainSeq asc nulls last, a.createdAt asc
+            """)
+    Slice<AuditLog> findAnonymizationCandidates(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
 }
