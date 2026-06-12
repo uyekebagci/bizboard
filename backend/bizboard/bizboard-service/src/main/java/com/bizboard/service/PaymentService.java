@@ -365,22 +365,25 @@ public class PaymentService {
                         "instrumentId", linkedInstrument != null ? linkedInstrument.getId() : "null",
                         "overpayment", overpayInfo != null));
 
-        // WP f1fa3cd5: yalnız RECEIVED (tahsilat) → "Ödeme alındı" dispatch (in-app + Telegram).
-        if ("RECEIVED".equals(dir)) {
-            List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
-                    .stream().map(User::getId).toList();
-            if (!recipients.isEmpty()) {
-                dispatchService.dispatch(
-                        NotificationEvent.PAYMENT_RECEIVED,
-                        recipients,
-                        Map.of(
-                                "counterparty", counterpart.getName() != null ? counterpart.getName() : "",
-                                "amount", req.getAmount().toPlainString(),
-                                "currency", business.getCurrency() != null ? business.getCurrency() : "TRY"
-                        ),
-                        "/dashboard/counterparts/" + counterpartId,
-                        business.getId());
-            }
+        // WP f1fa3cd5 + #a95afa5e: cari ödeme dispatch — simetrik.
+        // RECEIVED (tahsilat) → "Ödeme alındı"; PAID (biz ödedik) → "Ödeme yapıldı".
+        // İkisi de in-app default açık, Telegram opt-in. Best-effort.
+        NotificationEvent paymentEvent = "RECEIVED".equals(dir)
+                ? NotificationEvent.PAYMENT_RECEIVED
+                : NotificationEvent.PAYMENT_MADE;
+        List<UUID> recipients = userRepository.findByRoleIgnoreCase("admin")
+                .stream().map(User::getId).toList();
+        if (!recipients.isEmpty()) {
+            dispatchService.dispatch(
+                    paymentEvent,
+                    recipients,
+                    Map.of(
+                            "counterparty", counterpart.getName() != null ? counterpart.getName() : "",
+                            "amount", req.getAmount().toPlainString(),
+                            "currency", business.getCurrency() != null ? business.getCurrency() : "TRY"
+                    ),
+                    "/dashboard/counterparts/" + counterpartId,
+                    business.getId());
         }
 
         return PaymentResponseDto.builder()
