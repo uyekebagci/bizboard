@@ -1,6 +1,7 @@
 package com.bizboard.service;
 
 import com.bizboard.common.dto.AuditLogDto;
+import com.bizboard.common.entity.AuditLog;
 import com.bizboard.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,6 +35,34 @@ public class AuditLogQueryService {
         // A2: businessId metadata JSONB'de text olarak tutulur → string karşılaştırma.
         String businessIdStr = businessId != null ? businessId.toString() : null;
         return repository.search(userId, action, resourceType, businessIdStr, from, to, pageable)
-                .map(AuditLogMapper::toDto);
+                .map(this::toDto);
+    }
+
+    private AuditLogDto toDto(AuditLog a) {
+        UUID businessId = null;
+        if (a.getMetadata() != null) {
+            Object b = a.getMetadata().get("businessId");
+            if (b instanceof UUID u) {
+                businessId = u;
+            } else if (b instanceof String s && !s.isBlank()) {
+                try { businessId = UUID.fromString(s); } catch (IllegalArgumentException ignored) {}
+            }
+        }
+        return AuditLogDto.builder()
+                .id(a.getId())
+                .occurredAt(a.getCreatedAt())
+                .traceId(null) // request tracing v2.0.0'da
+                .actorUserId(a.getUserId())
+                .actorUsername(a.getUserName())
+                .action(a.getAction())
+                .entityType(a.getResourceType())
+                .entityId(a.getResourceId())
+                .businessId(businessId)
+                .ip(a.getIpAddress())
+                .userAgent(a.getUserAgent())
+                .detail(a.getDetail())
+                .highlightType(a.getHighlightType())
+                .metadata(a.getMetadata())
+                .build();
     }
 }
