@@ -164,6 +164,10 @@ public final class AuditAction {
     /** İşletme-başına haftalık/aylık özet bildirim tercihi admin tarafından güncellendi. */
     public static final String PERIODIC_SUMMARY_CONFIG_UPDATE = "PERIODIC_SUMMARY_CONFIG_UPDATE";
 
+    // ── Raporlar v1.1 (R7): kategori/dönem bütçe-eşik konfigürasyonu (per-business+category) ──
+    /** İşletme+kategori-başına bütçe eşiği admin tarafından güncellendi. */
+    public static final String BUDGET_THRESHOLD_UPDATE = "BUDGET_THRESHOLD_UPDATE";
+
     // Highlight rozetleri (UI vurgu)
     public static final String HIGHLIGHT_DAY_OPEN          = "DAY_OPEN";
     public static final String HIGHLIGHT_DAY_OPEN_ROUNDING = "DAY_OPEN_ROUNDING";

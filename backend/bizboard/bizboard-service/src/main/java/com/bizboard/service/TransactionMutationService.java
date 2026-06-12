@@ -65,6 +65,9 @@ public class TransactionMutationService {
     // Tier 2 (EVT-1): proaktif finansal alarmlar (HIGH_EXPENSE + BALANCE_BELOW).
     // best-effort/non-fatal; eşik 0/null ise no-op (DEFAULT KAPALI).
     private final FinancialAlertService financialAlertService;
+    // Raporlar v1.1 (R7): kategori/dönem bütçe-eşik alarmı. best-effort/non-fatal;
+    // bütçe 0/null ise no-op (DEFAULT KAPALI, opt-in, debounce).
+    private final BudgetThresholdService budgetThresholdService;
     // Ledger v2 (Faz A): tx mutasyonunda senkron çift-giriş Posting türetme.
     // current_balance snapshot facade'i AYNEN korunur; bunun YANINDA JournalEntry/
     // Posting türetilir → gün-kapanışı posting-tabanlı totalIn/totalOut API yoluyla
@@ -496,6 +499,9 @@ public class TransactionMutationService {
         // eşik altına yeni geçtiyse (debounce).
         financialAlertService.onTransactionCreated(transaction, business);
         financialAlertService.onBalanceChanged(business);
+        // Raporlar v1.1 (R7): bütçe-eşik aşımı (kategori/dönem). best-effort/
+        // non-fatal; bütçe 0/null ise no-op (DEFAULT KAPALI, debounce).
+        budgetThresholdService.onExpenseRecorded(transaction, business);
 
         return DtoMapper.toTransactionDto(transaction);
     }
