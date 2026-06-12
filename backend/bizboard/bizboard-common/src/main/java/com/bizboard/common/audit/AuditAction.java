@@ -227,4 +227,20 @@ public final class AuditAction {
     public static final String HIGHLIGHT_POS_DEAL       = "POS_DEAL";
     /** Faz D: çek/senet karşılıksız (kritik — vurgu). */
     public static final String HIGHLIGHT_INSTRUMENT_BOUNCE = "INSTRUMENT_BOUNCE";
+
+    // ── e-Fatura modülü (Çatı v1.1, entegratör-pluggable) ─────────────────
+    /** e-Fatura taslağı oluşturuldu. */
+    public static final String INVOICE_CREATE          = "INVOICE_CREATE";
+    /** e-Fatura güncellendi (yalnız DRAFT). */
+    public static final String INVOICE_UPDATE          = "INVOICE_UPDATE";
+    /** e-Fatura silindi (yalnız DRAFT). */
+    public static final String INVOICE_DELETE          = "INVOICE_DELETE";
+    /** UBL-TR XML üretildi (+ varsa mali mühür imzalandı). */
+    public static final String INVOICE_XML_GENERATED   = "INVOICE_XML_GENERATED";
+    /** Entegratöre gönderildi (veya entegratör yapılandırılmadığı için atlandı). */
+    public static final String INVOICE_SENT            = "INVOICE_SENT";
+    /** Entegratörden durum sorgulandı. */
+    public static final String INVOICE_STATUS_QUERIED  = "INVOICE_STATUS_QUERIED";
+    /** Fatura iptal edildi. */
+    public static final String INVOICE_CANCELLED       = "INVOICE_CANCELLED";
 }
