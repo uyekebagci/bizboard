@@ -2,6 +2,7 @@ package com.bizboard.api.controller;
 
 import com.bizboard.common.audit.AuditAction;
 import com.bizboard.common.dto.FileUploadDto;
+import com.bizboard.common.dto.PagedResponseDto;
 import com.bizboard.common.entity.FileUpload;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.AuditLogService;
@@ -10,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -163,20 +166,53 @@ public class FileController {
         );
     }
 
+    /**
+     * Tüm dosyalar veya {@code entity_type}+{@code entity_id} ile entity-scoped liste.
+     *
+     * <p>PERF (server-pagination, non-breaking): {@code page} parametresi GELMEZSE
+     * eski davranış AYNEN korunur — {@code List<FileUploadDto>} JSON dizisi döner
+     * (mevcut FE kırılmaz). {@code page} GELİRSE all-files yolu {@link PagedResponseDto}
+     * zarfı döner. Entity-scoped dal zaten sınırlı kümedir; orada da {@code page}
+     * verilirse zarf döner (içerik aynı). {@code size} clamp: 1..200, default 50.</p>
+     */
     @GetMapping("/all")
-    public ResponseEntity<List<FileUploadDto>> getAllFiles(
+    public ResponseEntity<?> getAllFiles(
             @RequestParam(value = "entity_type", required = false) String entityType,
             @RequestParam(value = "entity_id", required = false) UUID entityId,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size,
             @AuthenticationPrincipal UserPrincipal principal) {
 
-        if (entityType != null && entityId != null) {
+        boolean entityScoped = entityType != null && entityId != null;
+
+        if (page == null) {
+            // Geriye uyumluluk: page yoksa eski tam-liste davranışı.
+            if (entityScoped) {
+                return ResponseEntity.ok(fileStorageService.getFilesByEntity(
+                        entityType, entityId, principal.getId(), principal.isAdmin()));
+            }
             return ResponseEntity.ok(
-                    fileStorageService.getFilesByEntity(entityType, entityId, principal.getId(), principal.isAdmin())
-            );
+                    fileStorageService.getAllFiles(principal.getId(), principal.isAdmin()));
         }
-        return ResponseEntity.ok(
-                fileStorageService.getAllFiles(principal.getId(), principal.isAdmin())
-        );
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size == null ? 50 : size, 1), 200);
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+
+        if (entityScoped) {
+            // Entity-scoped küme zaten sınırlı; içeriği koruyarak bellekte sayfa penceresi.
+            List<FileUploadDto> all = fileStorageService.getFilesByEntity(
+                    entityType, entityId, principal.getId(), principal.isAdmin());
+            long total = all.size();
+            int from = (int) Math.min((long) safePage * safeSize, total);
+            int to = (int) Math.min(from + (long) safeSize, total);
+            return ResponseEntity.ok(PagedResponseDto.of(
+                    new org.springframework.data.domain.PageImpl<>(
+                            all.subList(from, to), pageable, total)));
+        }
+
+        return ResponseEntity.ok(PagedResponseDto.of(
+                fileStorageService.getAllFilesPaged(principal.getId(), principal.isAdmin(), pageable)));
     }
 
     @PatchMapping("/{fileId}/link")

@@ -1,6 +1,8 @@
 package com.bizboard.repository;
 
 import com.bizboard.common.entity.FileUpload;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,6 +13,15 @@ public interface FileUploadRepository extends JpaRepository<FileUpload, UUID> {
 
     /** Belirli bir entity'ye bagli dosyalar */
     List<FileUpload> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(String entityType, UUID entityId);
+
+    /*
+     * PERF (server-pagination, non-breaking): {@code GET /files/all} ADMIN yolu için
+     * sayfalı varyant. Eski {@code findAllByOrderByCreatedAtDesc} AYNEN korunur;
+     * bu yalnız {@code ?page=&size=} + admin geldiğinde kullanılır. (Non-admin yolu
+     * per-row {@code canRead} elemesi gerektirdiğinden serviste bellekte slice edilir —
+     * sonuç içeriği birebir korunur.)
+     */
+    Page<FileUpload> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     /** Belirli bir entity'ye bagli, admin_only olmayan dosyalar */
     List<FileUpload> findByEntityTypeAndEntityIdAndAdminOnlyFalseOrderByCreatedAtDesc(String entityType, UUID entityId);
