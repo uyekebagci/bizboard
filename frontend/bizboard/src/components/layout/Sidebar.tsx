@@ -24,6 +24,7 @@ import {
   CreditCard, Banknote, Package, FolderOpen, Users, Receipt,
   ShieldCheck, FileSearch, History, Repeat, CalendarCheck, FileText, Wallet,
   Search, X, Smartphone, Pin, Landmark, Tags, Sparkles, Lock, PieChart,
+  ClipboardCheck,
 } from "lucide-react";
 import { SidebarBusinessesSection } from "./SidebarBusinessesSection";
 import type { LucideIcon } from "lucide-react";
@@ -89,6 +90,7 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/telefonlar",       label: "Telefonlar",    icon: Smartphone,      group: "operasyon" },
   { href: "/dashboard/vergi-takvimi",    label: "Vergi Takvimi", icon: Landmark,        group: "operasyon" },
   // ── Yönetim (yalnız admin) ──
+  { href: "/dashboard/onaylar",          label: "Onay Kuyrugu",        icon: ClipboardCheck, group: "yonetim", adminOnly: true },
   { href: "/admin",                      label: "Admin Paneli",        icon: ShieldCheck, group: "yonetim", adminOnly: true },
   { href: "/admin/audit",                label: "Admin: Audit Log",    icon: FileSearch,  group: "yonetim", adminOnly: true },
   { href: "/admin/debt-migration",       label: "Admin: Borc Migrate", icon: History,     group: "yonetim", adminOnly: true },
