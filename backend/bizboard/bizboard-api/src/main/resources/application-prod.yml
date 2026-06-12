@@ -73,5 +73,12 @@ app:
     type: ${APP_STORAGE_TYPE:s3}
   audit:
     log-file-downloads: true
+    retention-days: ${APP_AUDIT_RETENTION_DAYS:90}
+    # mod-audit v2 (KVKK): PII anonimleştirme penceresi (0 = kapalı).
+    anonymize-after-days: ${APP_AUDIT_ANONYMIZE_AFTER_DAYS:0}
+    # mod-audit v2: hash-chain arka-plan görevi (yazım/login'den ayrı).
+    chain:
+      interval-ms: ${APP_AUDIT_CHAIN_INTERVAL_MS:5000}
+      initial-delay-ms: ${APP_AUDIT_CHAIN_INITIAL_DELAY_MS:15000}
   external-integrations:
     enabled: ${APP_EXTERNAL_INTEGRATIONS_ENABLED:true}

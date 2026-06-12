@@ -62,6 +62,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
             return header.substring(7);
         }
+        // mod-audit v2: SSE (EventSource) header set edemez → yalnız SSE stream
+        // endpoint'i için query-param fallback. Header daima öncelikli; bu
+        // fallback SADECE Authorization header yokken ve yalnız bu path için
+        // devreye girer (token'ın URL'de loglanma yüzeyi en aza indirilir).
+        if (isSseStreamRequest(request)) {
+            String qp = request.getParameter("access_token");
+            if (StringUtils.hasText(qp)) {
+                return qp;
+            }
+        }
         return null;
+    }
+
+    /** Query-param token fallback'i SADECE canlı audit SSE akışına izinli. */
+    private boolean isSseStreamRequest(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri != null && uri.endsWith("/admin/audit/stream");
     }
 }
