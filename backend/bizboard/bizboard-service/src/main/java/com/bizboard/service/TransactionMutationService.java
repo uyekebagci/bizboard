@@ -969,9 +969,11 @@ public class TransactionMutationService {
     static String normalizePaymentMethod(String raw) {
         if (raw == null || raw.isBlank()) return "NAKIT";
         String upper = raw.trim().toUpperCase(java.util.Locale.ENGLISH);
-        if ("POS".equals(upper)) return "POS";
+        if ("NAKIT".equals(upper))    return "NAKIT";
+        if ("POS".equals(upper))      return "POS";
         if ("HESAPDAN".equals(upper)) return "HESAPDAN";
-        return "NAKIT";
+        throw new IllegalArgumentException(
+                "Gecersiz odeme yontemi: '" + raw.trim() + "'. Gecerli degerler: NAKIT, POS, HESAPDAN");
     }
 
     /**
