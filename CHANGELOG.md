@@ -30,6 +30,37 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Added
+
+- **Para İzi (FundLink) — "Para Bağla" aksiyonu artık keşfedilebilir.**
+  Backend + çift-yönlü trail görünümü + bağlama modalı zaten canlıydı (yeniden
+  yazılmadı, mevcut `useFundTrail` hook'u + `FundLinkModal` + `FundTrailSection`
+  reuse edildi) ancak bağlama aksiyonu yalnızca uzun işlem-detay modalının en
+  altındaki küçük bir butonla erişilebildiği için kullanıcılar bulamıyordu. Üç
+  keşfedilebilir giriş noktası eklendi:
+  - **İşlem satırı (liste) — HER ZAMAN GÖRÜNÜR:** Her işlem satırında (TRANSFER
+    hariç) kalıcı, hover'a bağlı olmayan **"Para İzi"** pill'i (rota ikonu +
+    etiket; dar ekranda yalnız ikon). Kullanıcı tek bakışta bulur; tıklayınca
+    detayı açıp bağlama akışını otomatik başlatır.
+  - **İşlem detayı (üst):** Tutar afişinin hemen altında, kaydırmadan görünen
+    belirgin **"Para Bağla (kaynağını işaretle)"** butonu — bölüme kaydırıp
+    bağlama modalını açar (TRANSFER hariç).
+  - **Para İzi bölümü:** Buton etiketi "Para bağla" olarak netleştirildi +
+    `id` çapası ve `aria-label` eklendi (a11y + kaydırma hedefi).
+  - Bağlama modalı (hedef seç → kaynak ara/seç → tutar + over-alloc tavanı → not)
+    ve bağ silme (unlink) mevcut akışlarla aynı; `GET fund-trail` / `GET
+    fund-sources` / `POST fund-links` / `DELETE fund-links/{id}` uçlarını
+    (`/businesses/{businessId}/transactions/{txId}/...`) kullanır.
+  - **Fixed:** Bağlama modalı artık `bind()` çözülene kadar açık kalır →
+    BE over-allocation 400'ünde inline hata görünür (önceden modal erken
+    kapanıp yalnız toast atıyordu).
+  - **Stil:** `FundLinkModal` Daxa v2 (`v2-card`/`--v2-*`); `FundTrailSection`
+    host'u olan legacy-surface detay-modalıyla tutarlı kalsın diye `surface-*`
+    (çift-temalı, Daxa-hizalı) notasyonunda bırakıldı — izole v2 adası + geniş
+    restyle (cati-ux-backlog kapsamı) çakışması önlendi.
+  - **STRICT:** saf izlenebilirlik — bakiye/Net Kâr DEĞİŞMEZ. Çift tema,
+    loading/empty/error korundu.
+
 ### Changed
 
 - **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**
