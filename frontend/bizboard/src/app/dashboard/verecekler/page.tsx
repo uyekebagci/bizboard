@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, HandCoins, Plus, CalendarClock, Eye, EyeOff,
+  HandCoins, Plus, CalendarClock, Eye, EyeOff,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { maskAmount, cn } from "@/lib/utils";
@@ -25,6 +25,12 @@ import { useAppStore } from "@/lib/store";
 import type { Debt, Counterpart, Business } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
+import { ViewModeToggle } from "@/components/shared/ViewModeToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
 
@@ -44,10 +50,14 @@ interface PayableAggregate {
 
 export default function VereceklerPage() {
   const router = useRouter();
-  const { refreshKey } = useAppStore();
+  const { refreshKey, triggerRefresh } = useAppStore();
   const [rows, setRows] = useState<PayableAggregate[]>([]);
   const [loading, setLoading] = useState(true);
+  // UX-08: ağ hatasını sessiz yutma yerine kullanıcıya göster + tekrar dene.
+  const [loadError, setLoadError] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
+  // UX-10: Kart/Tablo görünüm tercihi (localStorage'da kalıcı).
+  const { mode: viewMode, setMode: setViewMode } = useViewMode("verecekler", "card");
   const [showAddModal, setShowAddModal] = useState(false);
   // İşletme filtresi (salt-görüntü) — Alacaklar ile simetrik.
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -69,15 +79,25 @@ export default function VereceklerPage() {
 
   useEffect(() => {
     async function load() {
+      setLoadError(false);
       try {
         // v1.7.x net-balance: PAYABLE debt'leri counterpart bazlı grupla,
         // sonra counterpart entity'sinin current_balance'ı ile NET'le.
         // current_balance < 0 ise (= net borçluyuz) bu counterpart'ı göster,
         // abs(balance) tutar olarak. RECEIVABLE varsa zaten karşılıklı düşülmüş olur.
-        const [debts, allCps] = await Promise.all([
-          api.get<Debt[]>("/debts").catch(() => [] as Debt[]),
-          api.get<Counterpart[]>("/counterparts").catch(() => [] as Counterpart[]),
-        ]);
+        // UX-08: ana veri (/debts) başarısız olursa hata-state; counterparts
+        // yardımcı (net'leme) — boş düşse de liste gross olarak çalışır.
+        const debtsRes = await api.get<Debt[]>("/debts")
+          .then((r) => ({ ok: true as const, data: r || [] }))
+          .catch((e) => ({ ok: false as const, error: e }));
+        if (!debtsRes.ok) {
+          logger.error("api", "Payables fetch failed", undefined, debtsRes.error);
+          setRows([]);
+          setLoadError(true);
+          return;
+        }
+        const debts = debtsRes.data;
+        const allCps = await api.get<Counterpart[]>("/counterparts").catch(() => [] as Counterpart[]);
         const balanceById = new Map<string, number>();
         for (const c of (allCps || [])) balanceById.set(c.id, c.current_balance ?? 0);
 
@@ -126,6 +146,7 @@ export default function VereceklerPage() {
         setRows(netted);
       } catch (err) {
         logger.error("api", "Payables fetch failed", undefined, err);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -195,34 +216,22 @@ export default function VereceklerPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="v2-icon-btn v2-press"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex items-center gap-2 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-status-danger/15 border border-status-danger/30 flex items-center justify-center">
-            <HandCoins size={20} className="text-status-danger" />
-          </div>
-          <div>
-            <h1 className="v2-display text-xl">Verecekler</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">
-              Açık (ödenmemiş) verecekler — kişi/firma bazlı özet
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-status-danger text-white v2-press text-sm font-semibold transition-all hover:opacity-90"
-        >
-          <Plus size={16} />
-          Verecek Ekle
-        </button>
-      </div>
+      {/* Header — UX-07 paylaşılan PageHeader. */}
+      <PageHeader
+        title="Verecekler"
+        subtitle="Açık (ödenmemiş) verecekler — kişi/firma bazlı özet"
+        icon={HandCoins}
+        iconClassName="bg-status-danger/15 border-status-danger/30 text-status-danger"
+        actions={
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-status-danger text-white v2-press text-sm font-semibold transition-all hover:opacity-90"
+          >
+            <Plus size={16} aria-hidden="true" />
+            Verecek Ekle
+          </button>
+        }
+      />
 
       {/* İşletme filtresi (salt-görüntü) — Alacaklar ile simetrik. */}
       {!loading && businesses.length > 1 && (
@@ -273,36 +282,43 @@ export default function VereceklerPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-status-danger" />
-        </div>
+        // UX-08: ilk yükleme = skeleton (spinner yerine).
+        <ListSkeleton rows={6} />
+      ) : loadError ? (
+        // UX-08: ağ hatasını boş-durumdan ayır + tekrar dene.
+        <ErrorState
+          description="Verecekler yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin."
+          onRetry={triggerRefresh}
+        />
       ) : rows.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Açık verecek yok</p>
-          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
-            Yukarıdaki &quot;+ Verecek Ekle&quot; butonu ile yeni bir verecek kaydı oluşturabilirsin.
-          </p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-status-danger text-white v2-press text-sm font-semibold transition-all hover:opacity-90"
-          >
-            <Plus size={16} />
-            Verecek Ekle
-          </button>
-        </div>
+        <EmptyState
+          icon={HandCoins}
+          title="Açık verecek yok"
+          description={'Yukarıdaki "+ Verecek Ekle" butonu ile yeni bir verecek kaydı oluşturabilirsin.'}
+          action={
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-status-danger text-white v2-press text-sm font-semibold transition-all hover:opacity-90"
+            >
+              <Plus size={16} aria-hidden="true" />
+              Verecek Ekle
+            </button>
+          }
+        />
       ) : visibleRows.length === 0 ? (
         // İşletme filtresi aktif ama bu işletmede açık verecek yok.
-        <div className="v2-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Bu işletmede açık verecek yok</p>
-          <button
-            onClick={() => setBusinessFilter(ALL_BUSINESSES)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
-          >
-            Tüm İşletmeleri Göster
-          </button>
-        </div>
+        <EmptyState
+          icon={HandCoins}
+          title="Bu işletmede açık verecek yok"
+          action={
+            <button
+              onClick={() => setBusinessFilter(ALL_BUSINESSES)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
+            >
+              Tüm İşletmeleri Göster
+            </button>
+          }
+        />
       ) : (
         <>
           {/* Totals */}
@@ -334,33 +350,78 @@ export default function VereceklerPage() {
             </div>
           </section>
 
-          {/* Sort chips */}
-          <section className="flex items-center justify-between gap-2">
-            <span className="text-xs text-[rgb(var(--v2-muted))]">Sırala:</span>
-            <div className="flex gap-2">
-              {([
-                { v: "amount_desc", label: "Tutar (çok→az)" },
-                { v: "due_asc", label: "Vade (yakın→uzak)" },
-                { v: "name_asc", label: "İsim (A-Z)" },
-              ] as { v: SortMode; label: string }[]).map((opt) => (
-                <button
-                  key={opt.v}
-                  onClick={() => setSortMode(opt.v)}
-                  aria-pressed={sortMode === opt.v}
-                  className={cn(
-                    "px-3 py-1 rounded-full text-xs font-medium transition-colors",
-                    sortMode === opt.v
-                      ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
-                      : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
+          {/* Sort chips + UX-10 Kart/Tablo toggle */}
+          <section className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-[rgb(var(--v2-muted))]">Sırala:</span>
+              <div className="flex gap-2">
+                {([
+                  { v: "amount_desc", label: "Tutar (çok→az)" },
+                  { v: "due_asc", label: "Vade (yakın→uzak)" },
+                  { v: "name_asc", label: "İsim (A-Z)" },
+                ] as { v: SortMode; label: string }[]).map((opt) => (
+                  <button
+                    key={opt.v}
+                    onClick={() => setSortMode(opt.v)}
+                    aria-pressed={sortMode === opt.v}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-medium transition-colors",
+                      sortMode === opt.v
+                        ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                        : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
+            <ViewModeToggle mode={viewMode} onChange={setViewMode} />
           </section>
 
-          {/* List */}
+          {/* List — UX-10: viewMode'a göre kart-satır veya yoğun tablo. */}
+          {viewMode === "table" ? (
+            <section className="v2-card v2-table-wrap">
+              <table className="v2-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Kisi / Firma</th>
+                    <th scope="col">Son Vade</th>
+                    <th scope="col" className="v2-td-num">Tutar</th>
+                    <th scope="col" className="v2-td-num">Kayit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map((r) => {
+                    const key = r.counterpart_id || `name:${r.counterpart_name}`;
+                    const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
+                    return (
+                      <tr
+                        key={key}
+                        className={href ? "cursor-pointer" : ""}
+                        onClick={href ? () => router.push(href) : undefined}
+                      >
+                        <td className="font-medium text-[rgb(var(--v2-ink))] max-w-[220px] truncate">
+                          {r.counterpart_name || "Bilinmiyor"}
+                        </td>
+                        <td className="text-xs text-[rgb(var(--v2-muted))] whitespace-nowrap">
+                          {r.last_due_date
+                            ? new Date(r.last_due_date).toLocaleDateString("tr-TR", {
+                                day: "2-digit", month: "2-digit", year: "numeric",
+                              })
+                            : "—"}
+                        </td>
+                        <td className={cn("num v2-td-num font-semibold text-status-danger whitespace-nowrap", censorCls)}>
+                          {maskAmount(r.total_amount, censored, r.currency)}
+                        </td>
+                        <td className="num v2-td-num text-[rgb(var(--v2-muted))]">{r.count}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </section>
+          ) : (
           <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {sorted.map((r) => {
               const key = r.counterpart_id || `name:${r.counterpart_name}`;
@@ -397,6 +458,7 @@ export default function VereceklerPage() {
               );
             })}
           </section>
+          )}
         </>
       )}
 

@@ -55,6 +55,23 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
     (`null` → MetricCard delta'yı gizler). Veri yoksa nötr boş-durum ("Son 7
     günde hareket yok"); uydurma sayı yok. Dönem seçici ile uyumlu, çift tema
     korunur.
+- **UX backlog (UX-06..13) — paylaşılan UX primitive'leri + yoğun tablo görünümü + a11y.**
+  Web UX audit raporundaki (docs/ux-audit/ux-report.md) yüksek-değer maddeleri:
+  - **UX-06/07/08 paylaşılan bileşenler:** `components/shared/PageHeader`
+    (geri-buton + ikon + başlık + alt-başlık + sağ aksiyon; UX-09 akıllı geri:
+    geçmiş yoksa parent rota), `EmptyState` (icon/title/desc/action — 30+ sayfadaki
+    kopya boş-durumu standardize eder), `ErrorState` (ağ hatasını boş-durumdan
+    ayırır + "Tekrar dene") ve `Skeleton` varyantları (list/card/stat — ilk-yükleme
+    skeleton'u; S-4: yarı-saydam zemin, dark temada parlamaz). Hepsi Daxa v2 dili,
+    çift tema, token-tabanlı.
+  - **UX-10 yoğun "Excel-vari" tablo görünümü:** liste sayfalarına Kart/Tablo
+    toggle (`ViewModeToggle` + `useViewMode` hook, tercih localStorage'da kalıcı).
+    `globals.css`'e `.v2-table` stilleri (sticky başlık, zebra/hover, ~38px satır,
+    sağ-hizalı `.num` tabular para sütunları). İşlemler ve Alacaklar'a uygulandı.
+  - **UX-08 hata-state'leri:** Alacaklar sayfasında sessiz `.catch(()=>[])` yerine
+    hata-state + tekrar-dene; ilk-yükleme spinner'ları skeleton'a çevrildi.
+  - **UX-13 a11y:** ikon-only butonlara `aria-label`/`title`, dekoratif ikonlara
+    `aria-hidden`, skeleton'lara `role="status"`/`aria-busy`, hata kutusuna `role="alert"`.
 
 ### Fixed
 

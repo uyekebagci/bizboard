@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, ArrowDownLeft, ArrowUpRight, Search, Filter,
-  Calendar, Building2, Trash2, X, Loader2, AlertTriangle, Pin,
+  ArrowDownLeft, ArrowUpRight, Search,
+  Trash2, X, Loader2, AlertTriangle, Pin, Receipt,
 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
@@ -15,14 +14,20 @@ import { toast } from "@/lib/toast";
 import { TransactionDetailModal } from "@/components/business/TransactionList";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { InfiniteScrollSentinel } from "@/components/shared/InfiniteScrollSentinel";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
+import { ViewModeToggle } from "@/components/shared/ViewModeToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import type { Business, Transaction, FixedCostSummary } from "@/types";
 
 const PAGE_SIZE = 40;
 
 export default function AllTransactionsPage() {
-  const router = useRouter();
   const { triggerRefresh, refreshKey } = useAppStore();
+  // UX-10: Kart/Tablo görünüm tercihi (localStorage'da kalıcı).
+  const { mode: viewMode, setMode: setViewMode } = useViewMode("transactions", "card");
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [fixedCosts, setFixedCosts] = useState<{ businessId: string; businessName: string; summary: FixedCostSummary }[]>([]);
@@ -147,37 +152,24 @@ export default function AllTransactionsPage() {
   const partialTotals = hasNext;
 
   if (loading) {
+    // UX-08: ilk yükleme = skeleton (spinner yerine), layout-shift'i azaltır.
     return (
-      <div className="space-y-4 animate-pulse max-w-2xl mx-auto">
-        <div className="h-8 v2-sunken rounded-lg w-48" />
-        <div className="h-10 v2-sunken rounded-xl" />
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-16 v2-sunken rounded-xl" />
-          ))}
-        </div>
+      <div className="max-w-2xl mx-auto space-y-5">
+        <div className="h-8 w-48 rounded-lg bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+        <div className="h-10 rounded-xl bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+        <ListSkeleton rows={6} />
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="v2-icon-btn v2-press"
-            aria-label="Geri"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="v2-display text-xl">Tum Islemler</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">{headerCount} islem</p>
-          </div>
-        </div>
-      </div>
+      {/* Header — UX-07 paylaşılan PageHeader. */}
+      <PageHeader
+        title="Tum Islemler"
+        subtitle={`${headerCount} islem`}
+        icon={Receipt}
+      />
 
       {/* Summary cards — UI v2 (Daxa): solid v2-card + lime accent / danger renk. */}
       <div className="grid grid-cols-3 gap-2">
@@ -312,23 +304,101 @@ export default function AllTransactionsPage() {
         )}
       </div>
 
-      {/* Client-filtre aktif + daha fazla sayfa var → kullanıcıyı bilgilendir */}
-      {hasClientFilter && hasNext && (
-        <p className="text-[11px] text-[rgb(var(--v2-muted))] -mt-2">
-          Arama/ay filtresi yuklenmis kayitlar uzerinde calisir — devamini gormek icin
-          asagi kaydirin.
-        </p>
-      )}
+      {/* UX-10: Kart / Tablo görünüm değiştirici (sağa hizalı). */}
+      <div className="flex items-center justify-between gap-2 -mt-1">
+        {hasClientFilter && hasNext ? (
+          <p className="text-[11px] text-[rgb(var(--v2-muted))] flex-1 min-w-0">
+            Arama/ay filtresi yuklenmis kayitlar uzerinde calisir — devamini gormek
+            icin asagi kaydirin.
+          </p>
+        ) : (
+          <span className="flex-1" />
+        )}
+        <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+      </div>
 
       {/* Transaction List */}
       {filtered.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <p className="text-[rgb(var(--v2-muted))] text-sm">
-            {transactions.length === 0
-              ? "Henuz islem yok"
-              : "Filtreye uygun islem bulunamadi"}
-          </p>
-        </div>
+        <EmptyState
+          icon={Receipt}
+          title={transactions.length === 0 ? "Henuz islem yok" : "Filtreye uygun islem bulunamadi"}
+          description={
+            transactions.length === 0
+              ? "Yeni bir gelir/gider eklediginizde burada listelenir."
+              : "Arama veya filtre kriterlerini degistirmeyi deneyin."
+          }
+        />
+      ) : viewMode === "table" ? (
+        <>
+          {/* UX-10: yoğun "Excel-vari" tablo görünümü — sağ-hizalı .num tutar. */}
+          <div className="v2-card v2-table-wrap">
+            <table className="v2-table">
+              <thead>
+                <tr>
+                  <th scope="col">Aciklama</th>
+                  <th scope="col">Isletme / Kategori</th>
+                  <th scope="col">Tarih</th>
+                  <th scope="col" className="v2-td-num">Tutar</th>
+                  <th scope="col" className="v2-td-num w-10"><span className="sr-only">Islem</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((tx) => {
+                  const isIncome = tx.direction === "income";
+                  const shown = (tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
+                    ? tx.pos_net : tx.amount;
+                  return (
+                    <tr
+                      key={tx.id}
+                      onClick={() => setDetailTarget(tx)}
+                      className="cursor-pointer"
+                    >
+                      <td className="font-medium text-[rgb(var(--v2-ink))] max-w-[220px] truncate">
+                        {tx.description || tx.category?.name || "Islem"}
+                      </td>
+                      <td className="text-[rgb(var(--v2-muted))] text-xs max-w-[200px] truncate">
+                        {tx.business_name && (
+                          <span className="text-accent-strong dark:text-accent">{tx.business_name} · </span>
+                        )}
+                        {tx.category?.name || "Kategorisiz"}
+                      </td>
+                      <td className="text-[rgb(var(--v2-muted))] text-xs whitespace-nowrap">
+                        {new Date(tx.date).toLocaleDateString("tr-TR", {
+                          day: "2-digit", month: "2-digit", year: "numeric",
+                        })}
+                      </td>
+                      <td
+                        className={cn(
+                          "num v2-td-num font-semibold whitespace-nowrap",
+                          isIncome ? "text-accent-strong dark:text-accent" : "text-status-danger",
+                        )}
+                      >
+                        {isIncome ? "+" : "-"}{formatCurrency(shown, tx.currency)}
+                      </td>
+                      <td className="v2-td-num">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(tx); }}
+                          aria-label="İşlemi sil"
+                          title="Sil"
+                          className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-status-danger hover:bg-status-danger/10 transition-all"
+                        >
+                          <Trash2 size={15} aria-hidden="true" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <InfiniteScrollSentinel
+            hasNext={hasNext}
+            loadingMore={loadingMore}
+            loadMore={loadMore}
+            loadedCount={transactions.length}
+            totalCount={totalElements}
+          />
+        </>
       ) : (
         <>
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
