@@ -46,44 +46,45 @@ export default function KapanislarPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn v2-press"
+          aria-label="Geri"
         >
-          <ArrowLeft size={20} className="text-surface-300" />
+          <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-surface-100">Günlük Kapanışlar</h1>
-          <p className="text-xs text-surface-400">Kasa kapanış geçmişi + bugünün durumu</p>
+          <h1 className="v2-display text-xl">Günlük Kapanışlar</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">Kasa kapanış geçmişi + bugünün durumu</p>
         </div>
       </div>
 
       {/* Today preview / actions */}
       {preview && (
         <section className={cn(
-          "card p-4 border",
-          !todayClosed && "border-amber-500/30 bg-amber-500/5",
-          todayClosed && "border-emerald-500/20 bg-emerald-500/5",
+          "v2-card p-4",
+          !todayClosed && "border-status-warning/30 bg-status-warning/5",
+          todayClosed && "border-accent/20 bg-accent/5",
         )}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 {todayClosed ? (
-                  <Lock size={14} className="text-emerald-400" />
+                  <Lock size={14} className="text-accent-strong dark:text-accent" />
                 ) : (
-                  <CalendarCheck size={14} className="text-amber-400" />
+                  <CalendarCheck size={14} className="text-status-warning" />
                 )}
-                <h2 className="text-sm font-semibold text-surface-100">
+                <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                   {todayClosed ? "Bugün Kapatıldı" : "Bugün Henüz Kapatılmadı"}
                 </h2>
                 {today?.is_auto && (
-                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-surface-700 text-surface-300 border border-surface-600">
+                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full v2-sunken text-[rgb(var(--v2-muted))]">
                     OTO
                   </span>
                 )}
               </div>
-              <p className="text-2xl font-bold text-surface-100">
+              <p className="text-2xl font-bold text-[rgb(var(--v2-ink))]">
                 {formatCurrency(preview.computed_closing, "TRY")}
               </p>
-              <p className="text-[11px] text-surface-400 mt-0.5">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
                 Açılış {formatCurrency(preview.opening_balance, "TRY")}
                 {" · Net akış "}
                 {preview.net_flow >= 0 ? "+" : ""}{formatCurrency(preview.net_flow, "TRY")}
@@ -91,11 +92,11 @@ export default function KapanislarPage() {
               {todayClosed && today?.difference != null && today.difference !== 0 && (
                 <p className={cn(
                   "mt-2 text-xs font-medium",
-                  today.difference < 0 ? "text-red-400" : "text-emerald-400",
+                  today.difference < 0 ? "text-status-danger" : "text-accent-strong dark:text-accent",
                 )}>
                   Fark: {today.difference > 0 ? "+" : ""}{formatCurrency(today.difference, "TRY")}
                   {today.reason_category && (
-                    <span className="text-surface-400"> ({today.reason_category})</span>
+                    <span className="text-[rgb(var(--v2-muted))]"> ({today.reason_category})</span>
                   )}
                 </p>
               )}
@@ -103,7 +104,7 @@ export default function KapanislarPage() {
             {!todayClosed && (
               <button
                 onClick={() => setShowCloseModal(true)}
-                className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors shrink-0"
+                className="v2-btn v2-btn--accent v2-press text-sm shrink-0"
               >
                 Günü Kapat
               </button>
@@ -113,7 +114,7 @@ export default function KapanislarPage() {
       )}
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+        <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">
           {error}
         </div>
       )}
@@ -121,20 +122,20 @@ export default function KapanislarPage() {
       {/* Archive list */}
       {loading && closings.length === 0 ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-surface-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : closings.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <CalendarCheck size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Geçmiş kapanış kaydı yok</p>
+        <div className="v2-card p-8 text-center">
+          <CalendarCheck size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Geçmiş kapanış kaydı yok</p>
         </div>
       ) : (
         <>
           <section className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-surface-400">
+            <div className="flex items-center justify-between text-xs text-[rgb(var(--v2-muted))]">
               <span>Toplam {totalElements} kayıt</span>
             </div>
-            <div className="glass-card divide-y divide-surface-700">
+            <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
               {closings.map((c) => <ClosingRow key={c.id} closing={c} isAdmin={profile?.role === "admin"} />)}
             </div>
           </section>
@@ -145,15 +146,17 @@ export default function KapanislarPage() {
               <button
                 onClick={() => list(page - 1, 50)}
                 disabled={page === 0 || loading}
-                className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 disabled:opacity-40 text-surface-300"
+                className="v2-icon-btn v2-press disabled:opacity-40"
+                aria-label="Önceki sayfa"
               >
                 <ChevronLeft size={16} />
               </button>
-              <span className="text-xs text-surface-400">Sayfa {page + 1}</span>
+              <span className="text-xs text-[rgb(var(--v2-muted))]">Sayfa {page + 1}</span>
               <button
                 onClick={() => list(page + 1, 50)}
                 disabled={!hasNext || loading}
-                className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 disabled:opacity-40 text-surface-300"
+                className="v2-icon-btn v2-press disabled:opacity-40"
+                aria-label="Sonraki sayfa"
               >
                 <ChevronRight size={16} />
               </button>
@@ -180,31 +183,31 @@ function ClosingRow({ closing, isAdmin }: { closing: CashClosing; isAdmin: boole
     <div className="p-4 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-surface-100">
+          <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">
             {new Date(closing.closing_date).toLocaleDateString("tr-TR", {
               day: "numeric", month: "long", year: "numeric", weekday: "short",
             })}
           </p>
           <StatusBadge status={closing.status} isAuto={closing.is_auto} />
         </div>
-        <p className="text-[11px] text-surface-400 mt-0.5">
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
           Hesaplanan {formatCurrency(closing.computed_closing, "TRY")}
           {closing.actual_balance != null && (
             <> · Sayım {formatCurrency(closing.actual_balance, "TRY")}</>
           )}
         </p>
         {closing.reason_category && (
-          <p className="text-[11px] text-amber-300 mt-0.5">
+          <p className="text-[11px] text-status-warning mt-0.5">
             <AlertCircle size={10} className="inline mr-1" />
             {closing.reason_category}
-            {closing.reason_note && <span className="text-surface-400"> — {closing.reason_note.slice(0, 80)}</span>}
+            {closing.reason_note && <span className="text-[rgb(var(--v2-muted))]"> — {closing.reason_note.slice(0, 80)}</span>}
           </p>
         )}
       </div>
       {diff != null && diff !== 0 && (
         <span className={cn(
           "text-sm font-semibold shrink-0",
-          diff < 0 ? "text-red-400" : "text-emerald-400",
+          diff < 0 ? "text-status-danger" : "text-accent-strong dark:text-accent",
         )}>
           {diff > 0 ? "+" : ""}{formatCurrency(diff, "TRY")}
         </span>
@@ -215,10 +218,10 @@ function ClosingRow({ closing, isAdmin }: { closing: CashClosing; isAdmin: boole
 
 function StatusBadge({ status, isAuto }: { status: string; isAuto: boolean }) {
   const cls = status === "CLOSED"
-    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+    ? "bg-accent/15 text-accent-strong dark:text-accent border-accent/30"
     : status === "REOPENED"
-    ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-    : "bg-surface-700 text-surface-300 border-surface-600";
+    ? "bg-status-warning/15 text-status-warning border-status-warning/30"
+    : "v2-sunken text-[rgb(var(--v2-muted))]";
   const label = status === "CLOSED"
     ? (isAuto ? "OTO KAPALI" : "KAPALI")
     : status === "REOPENED" ? "YENİDEN AÇILDI" : "BEKLİYOR";

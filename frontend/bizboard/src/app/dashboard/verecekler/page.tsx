@@ -199,24 +199,25 @@ export default function VereceklerPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn v2-press"
+          aria-label="Geri"
         >
-          <ArrowLeft size={20} className="text-surface-300" />
+          <ArrowLeft size={20} />
         </button>
         <div className="flex items-center gap-2 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center">
-            <HandCoins size={20} className="text-red-300" />
+          <div className="w-10 h-10 rounded-xl bg-status-danger/15 border border-status-danger/30 flex items-center justify-center">
+            <HandCoins size={20} className="text-status-danger" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Verecekler</h1>
-            <p className="text-xs text-surface-400">
+            <h1 className="v2-display text-xl">Verecekler</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">
               Açık (ödenmemiş) verecekler — kişi/firma bazlı özet
             </p>
           </div>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-status-danger text-white v2-press text-sm font-semibold transition-all hover:opacity-90"
         >
           <Plus size={16} />
           Verecek Ekle
@@ -226,7 +227,7 @@ export default function VereceklerPage() {
       {/* İşletme filtresi (salt-görüntü) — Alacaklar ile simetrik. */}
       {!loading && businesses.length > 1 && (
         <section className="flex items-center gap-2">
-          <label className="text-xs text-surface-400 shrink-0">İşletme:</label>
+          <label className="text-xs text-[rgb(var(--v2-muted))] shrink-0">İşletme:</label>
           <div className="min-w-[200px]">
             <DarkSelect
               value={businessFilter}
@@ -254,18 +255,18 @@ export default function VereceklerPage() {
               onClick={() => g.key !== "_none" && setBusinessFilter(g.key)}
               disabled={g.key === "_none"}
               className={cn(
-                "glass-card p-3 text-left transition-colors",
+                "v2-card p-3 text-left transition-colors",
                 g.key === "_none"
                   ? "cursor-default opacity-80"
-                  : "hover:border-red-500/40 cursor-pointer",
+                  : "v2-lift hover:border-status-danger/40 cursor-pointer",
               )}
               title={g.key === "_none" ? undefined : `${g.name} vereceklerini göster`}
             >
-              <p className="text-[11px] text-surface-400 truncate" title={g.name}>{g.name}</p>
-              <p className={cn("mt-0.5 text-sm font-semibold text-red-300", censorCls)}>
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate" title={g.name}>{g.name}</p>
+              <p className={cn("mt-0.5 text-sm font-semibold text-status-danger", censorCls)}>
                 {maskAmount(g.total, censored, "TRY")}
               </p>
-              <p className="text-[10px] text-surface-400">{g.count} kişi/firma</p>
+              <p className="text-[10px] text-[rgb(var(--v2-muted))]">{g.count} kişi/firma</p>
             </button>
           ))}
         </section>
@@ -273,18 +274,18 @@ export default function VereceklerPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-red-400" />
+          <Loader2 size={28} className="animate-spin text-status-danger" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Açık verecek yok</p>
-          <p className="text-surface-400 text-sm mt-1">
+        <div className="v2-card p-8 text-center">
+          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Açık verecek yok</p>
+          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
             Yukarıdaki &quot;+ Verecek Ekle&quot; butonu ile yeni bir verecek kaydı oluşturabilirsin.
           </p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-status-danger text-white v2-press text-sm font-semibold transition-all hover:opacity-90"
           >
             <Plus size={16} />
             Verecek Ekle
@@ -292,12 +293,12 @@ export default function VereceklerPage() {
         </div>
       ) : visibleRows.length === 0 ? (
         // İşletme filtresi aktif ama bu işletmede açık verecek yok.
-        <div className="glass-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Bu işletmede açık verecek yok</p>
+        <div className="v2-card p-8 text-center">
+          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Bu işletmede açık verecek yok</p>
           <button
             onClick={() => setBusinessFilter(ALL_BUSINESSES)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-semibold"
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
           >
             Tüm İşletmeleri Göster
           </button>
@@ -306,10 +307,10 @@ export default function VereceklerPage() {
         <>
           {/* Totals */}
           <section className="grid grid-cols-2 gap-3">
-            <div className="glass-card p-4">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Verecek</p>
+            <div className="v2-card p-4">
+              <p className="v2-eyebrow text-[11px]">Toplam Verecek</p>
               <div className="mt-1 flex items-center gap-2">
-                <p className={cn("text-2xl font-bold text-red-300", censorCls)}>
+                <p className={cn("text-2xl font-bold text-status-danger", censorCls)}>
                   {maskAmount(total, censored, "TRY")}
                 </p>
                 {/* Sansür toggle (privacy) — maskelenen tutarın hemen yanında. */}
@@ -318,16 +319,16 @@ export default function VereceklerPage() {
                   aria-pressed={censored}
                   title={censored ? "Tutarları göster" : "Tutarları gizle"}
                   aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
-                  className="shrink-0 p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-surface-100 transition-colors"
+                  className="v2-icon-btn v2-press shrink-0 w-8 h-8"
                 >
                   {censored ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
-            <div className="glass-card p-4">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Açık Kayıt</p>
-              <p className="mt-1 text-2xl font-bold text-surface-100">{totalCount}</p>
-              <p className="text-[11px] text-surface-400 mt-0.5">
+            <div className="v2-card p-4">
+              <p className="v2-eyebrow text-[11px]">Açık Kayıt</p>
+              <p className="mt-1 text-2xl font-bold text-[rgb(var(--v2-ink))]">{totalCount}</p>
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
                 {visibleRows.length} farklı kişi/firma
               </p>
             </div>
@@ -335,7 +336,7 @@ export default function VereceklerPage() {
 
           {/* Sort chips */}
           <section className="flex items-center justify-between gap-2">
-            <span className="text-xs text-surface-400">Sırala:</span>
+            <span className="text-xs text-[rgb(var(--v2-muted))]">Sırala:</span>
             <div className="flex gap-2">
               {([
                 { v: "amount_desc", label: "Tutar (çok→az)" },
@@ -345,11 +346,13 @@ export default function VereceklerPage() {
                 <button
                   key={opt.v}
                   onClick={() => setSortMode(opt.v)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  aria-pressed={sortMode === opt.v}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs font-medium transition-colors",
                     sortMode === opt.v
-                      ? "bg-red-500/20 border-red-400 text-red-200"
-                      : "bg-surface-700 border-surface-600 text-surface-300"
-                  }`}
+                      ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                      : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+                  )}
                 >
                   {opt.label}
                 </button>
@@ -358,18 +361,18 @@ export default function VereceklerPage() {
           </section>
 
           {/* List */}
-          <section className="glass-card divide-y divide-surface-700">
+          <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {sorted.map((r) => {
               const key = r.counterpart_id || `name:${r.counterpart_name}`;
               const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
               const Inner = (
                 <div className="p-4 flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-surface-100 truncate">
+                    <p className="font-medium text-[rgb(var(--v2-ink))] truncate">
                       {r.counterpart_name || "Bilinmiyor"}
                     </p>
                     {r.last_due_date && (
-                      <p className="mt-1.5 text-[11px] text-surface-400 flex items-center gap-1">
+                      <p className="mt-1.5 text-[11px] text-[rgb(var(--v2-muted))] flex items-center gap-1">
                         <CalendarClock size={11} />
                         Son vade: {new Date(r.last_due_date).toLocaleDateString("tr-TR", {
                           day: "numeric", month: "short", year: "numeric",
@@ -378,15 +381,15 @@ export default function VereceklerPage() {
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={cn("text-base font-semibold text-red-300", censorCls)}>
+                    <p className={cn("text-base font-semibold text-status-danger", censorCls)}>
                       {maskAmount(r.total_amount, censored, r.currency)}
                     </p>
-                    <p className="text-[11px] text-surface-400">{r.count} kayıt</p>
+                    <p className="text-[11px] text-[rgb(var(--v2-muted))]">{r.count} kayıt</p>
                   </div>
                 </div>
               );
               return href ? (
-                <Link key={key} href={href} className="row-hover block transition-colors">
+                <Link key={key} href={href} className="block transition-colors hover:bg-[rgb(var(--v2-sunken))]">
                   {Inner}
                 </Link>
               ) : (
