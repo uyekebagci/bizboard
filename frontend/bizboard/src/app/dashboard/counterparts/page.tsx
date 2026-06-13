@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users, Plus, Pencil, Trash2, X, Search, ArrowRight,
-  CircleUserRound, Package, RefreshCw, ArrowLeft, Loader2,
+  CircleUserRound, Package, RefreshCw, Loader2,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -15,6 +15,11 @@ import type { Counterpart, CounterpartRole, Business } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { CurrencyEquivalentLine } from "@/components/debts/CurrencyEquivalentLine";
 import { InfiniteScrollSentinel } from "@/components/shared/InfiniteScrollSentinel";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { CardSkeleton } from "@/components/shared/Skeleton";
+import { ViewModeToggle } from "@/components/shared/ViewModeToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useAppStore } from "@/lib/store";
@@ -95,6 +100,8 @@ export default function CounterpartsPage() {
   // varsa business-bazlı gruplama, tek varsa düz liste).
   const [businessFilter, setBusinessFilter] = useState<string>("ALL");
   const [groupBy, setGroupBy] = useState<"business" | "none">("business");
+  // UX-10: düz liste için Kart/Tablo görünüm tercihi (localStorage'da kalıcı).
+  const { mode: viewMode, setMode: setViewMode } = useViewMode("counterparts", "card");
 
   // WP currency-display: güncel kur (USD + gram altın karşılığı) + "Kuru Güncelle".
   // Mevcut mekanizma (ExchangeRateBar ile aynı endpoint) — yeni mantık icat edilmez.
@@ -227,33 +234,22 @@ export default function CounterpartsPage() {
 
   return (
     <div className="space-y-5">
-      <section>
-        <div className="flex items-center justify-between gap-3 mb-1">
-          <div className="flex items-start gap-3">
-            {/* v1.6.10: Geri dön butonu */}
-            <button
-              onClick={() => router.back()}
-              className="v2-icon-btn v2-press mt-0.5"
-              aria-label="Geri don"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="v2-display text-2xl">Karsi Firmalar</h1>
-              <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
-                Musteri, tedarikci ve diger dis paydaslarin cari hesabi
-              </p>
-            </div>
-          </div>
+      {/* Header — UX-07 paylaşılan PageHeader. */}
+      <PageHeader
+        title="Karsi Firmalar"
+        subtitle="Musteri, tedarikci ve diger dis paydaslarin cari hesabi"
+        icon={Users}
+        size="lg"
+        actions={
           <button
             onClick={() => setShowCreate(true)}
             className="v2-btn v2-btn--ink v2-press text-sm shrink-0"
           >
-            <Plus size={16} />
+            <Plus size={16} aria-hidden="true" />
             Yeni
           </button>
-        </div>
-      </section>
+        }
+      />
 
       {(error || pageError) && (
         <div className="p-4 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">
@@ -382,21 +378,28 @@ export default function CounterpartsPage() {
         </div>
       </section>
 
+      {/* UX-10: düz liste görünümünde Kart/Tablo toggle (gruplamada gizli). */}
+      {!loading && filtered.length > 0 && !grouped && (
+        <div className="flex items-center justify-end">
+          <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+        </div>
+      )}
+
       {/* List */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 v2-sunken rounded-2xl animate-pulse" />
-          ))}
-        </div>
+        <CardSkeleton count={4} />
       ) : filtered.length === 0 ? (
-        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
-          {list.length === 0
-            ? 'Henuz karsi firma yok. "Yeni" ile ilk kaydi ekleyebilirsin.'
-            : "Aramaya uyan kayit bulunamadi."}
-          {/* arama eşleşmesi yok ama daha fazla sayfa var → manuel yükle. */}
-          {hasSearch && hasNext && (
-            <div className="mt-4">
+        <EmptyState
+          icon={Users}
+          title={list.length === 0 ? "Henuz karsi firma yok" : "Aramaya uyan kayit bulunamadi"}
+          description={
+            list.length === 0
+              ? '"Yeni" butonu ile ilk karsi firma kaydini ekleyebilirsin.'
+              : undefined
+          }
+          action={
+            // arama eşleşmesi yok ama daha fazla sayfa var → manuel yükle.
+            hasSearch && hasNext ? (
               <button
                 type="button"
                 onClick={loadMore}
@@ -405,9 +408,9 @@ export default function CounterpartsPage() {
               >
                 {loadingMore ? "Yukleniyor..." : "Daha fazla kayit ara"}
               </button>
-            </div>
-          )}
-        </div>
+            ) : undefined
+          }
+        />
       ) : grouped ? (
         // v1.7.x: business-bazlı gruplama
         <>
@@ -427,6 +430,86 @@ export default function CounterpartsPage() {
                 </div>
               </section>
             ))}
+          </div>
+          <InfiniteScrollSentinel
+            hasNext={hasNext}
+            loadingMore={loadingMore}
+            loadMore={loadMore}
+            loadedCount={list.length}
+            totalCount={totalElements}
+          />
+        </>
+      ) : viewMode === "table" ? (
+        <>
+          {/* UX-10: yoğun "Excel-vari" tablo — sağ-hizalı .num cari bakiye. */}
+          <div className="v2-card v2-table-wrap">
+            <table className="v2-table">
+              <thead>
+                <tr>
+                  <th scope="col">Isim</th>
+                  <th scope="col">Rol</th>
+                  <th scope="col">Vergi No</th>
+                  <th scope="col" className="v2-td-num">Cari Bakiye</th>
+                  <th scope="col" className="v2-td-num w-16"><span className="sr-only">Islem</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c) => {
+                  const m = roleMeta(c.role);
+                  const bal = c.current_balance ?? 0;
+                  return (
+                    <tr
+                      key={c.id}
+                      onClick={() => handleOpen(c)}
+                      className="cursor-pointer"
+                    >
+                      <td className="font-medium text-[rgb(var(--v2-ink))] max-w-[220px] truncate">
+                        {c.name}
+                      </td>
+                      <td className="text-xs text-[rgb(var(--v2-muted))] whitespace-nowrap">{m.label}</td>
+                      <td className="num text-xs text-[rgb(var(--v2-muted))] whitespace-nowrap">
+                        {c.tax_id || "—"}
+                      </td>
+                      <td
+                        className={cn(
+                          "num v2-td-num font-semibold whitespace-nowrap",
+                          bal > 0 ? "text-accent-strong dark:text-accent"
+                            : bal < 0 ? "text-status-danger"
+                            : "text-[rgb(var(--v2-muted))]",
+                        )}
+                      >
+                        {formatCurrency(Math.abs(bal), "TRY")}
+                        {bal !== 0 && (
+                          <span className="ml-1 text-[10px] font-normal text-[rgb(var(--v2-muted))]">
+                            {bal > 0 ? "alacak" : "verecek"}
+                          </span>
+                        )}
+                      </td>
+                      <td className="v2-td-num">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEdit(c); }}
+                            aria-label={`${c.name} duzenle`}
+                            title="Duzenle"
+                            className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))] transition-all"
+                          >
+                            <Pencil size={14} aria-hidden="true" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteConfirm(c); }}
+                            aria-label={`${c.name} sil`}
+                            title="Sil"
+                            className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-status-danger hover:bg-status-danger/10 transition-all"
+                          >
+                            <Trash2 size={14} aria-hidden="true" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
           <InfiniteScrollSentinel
             hasNext={hasNext}
