@@ -41,6 +41,30 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
   paylaşılan `DarkSelect` bileşeni ve per-business sayfaları (gün-kapanışı,
   kapanışlar vb.) etkilenmez.
 
+### Removed
+
+- **Duplike "Çekler" sayfası kaldırıldı; kanonik "Çek/Senet" (Ledger v2) ile
+  birleştirildi.** Sidebar'da iki ayrı çek sayfası vardı: eski `Debt`-tabanlı
+  `/dashboard/cekler` (yalnız okuma + "Tahsil edildi" / settle, free-text
+  karşı-taraf) ve Ledger v2 Instrument modelli `/dashboard/cek-senet`. İkincisi
+  üst-küme olduğu için kanonik seçildi; eski sayfa kaldırıldı.
+  - **Kaldırılan:** `/dashboard/cekler` sayfa içeriği (artık server-side redirect),
+    yalnız o sayfanın kullandığı `ChequeAddModal` bileşeni, sidebar "Çekler" girişi.
+  - **Veri/özellik kaybı yok:** `/cheques` backend endpoint'i ve `Debt`-tabanlı çek
+    kayıtları KORUNDU (Telegram vade hatırlatıcısı `ChequeReminderScheduler` hâlâ
+    kullanır). Kaldırılan sayfanın benzersiz işlevi (çek ekleme + vade
+    filtresi) kanonik `/dashboard/cek-senet`'te zaten mevcut (Instrument ekleme +
+    portföy/tahsil/ödeme/karşılıksız/ciro + cari FK ile bağ).
+  - Eski bookmark'lar kırılmasın diye `/dashboard/cekler` → `/dashboard/cek-senet`
+    server-side redirect (mevcut `ui-v2` redirect pattern'iyle aynı).
+
+### Changed
+
+- **Sidebar "Çek/Senet (Ledger)" etiketi "Çek/Senet" olarak sadeleştirildi**
+  ("Cari & Borçlar" grubunda) — tek çek sayfası kaldığından "(Ledger)" ayraç
+  jargonuna gerek kalmadı. Çek/senet zaten cari'ye (Instrument `issuer_counterpart_id`)
+  bağlı olduğu için "Cari & Borçlar" grubunda kalması IA olarak doğru.
+
 ### Added
 
 - **UI v2 (Daxa) Widget primitive — TEK KAYNAK pano kabuğu + işletme-detay
