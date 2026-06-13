@@ -16,6 +16,15 @@ interface Props {
   icon?: LucideIcon;
   /** Yüzde delta (ör. +12.4 / -3.1). null → gösterilmez. */
   delta?: number | null;
+  /**
+   * Hangi yön "iyi" sayılır — delta tonunu (yeşil/kırmızı) belirler.
+   *
+   * <p>{@code "up"} (default): artış iyi/yeşil — Gelir, Net Kâr gibi.
+   * {@code "down"}: AZALIŞ iyi/yeşil, ARTIŞ kötü/kırmızı — Gider gibi
+   * (artan gider finansal olarak kötüdür). Ok yönü her zaman değerin
+   * gerçek işaretini gösterir (↑ artış / ↓ azalış); yalnız renk/ton ters döner.</p>
+   */
+  goodDirection?: "up" | "down";
   /** Kart alt segment-bar dağılımı. */
   segments?: Segment[];
   /** Kart vurgu varyantı. */
@@ -29,8 +38,12 @@ interface Props {
  * UI v2 — Daxa metrik kartı.
  *
  * <p>Solid v2-card + eyebrow etiket + dev bold count-up değer + delta chip
- * (yeşil yukarı / kırmızı aşağı) + opsiyonel alt segment mini-bar. Çift tema,
- * reduced-motion saygılı. variant="ink" → koyu hero kart (Daxa).</p>
+ * + opsiyonel alt segment mini-bar. Çift tema, reduced-motion saygılı.
+ * variant="ink" → koyu hero kart (Daxa).</p>
+ *
+ * <p>Delta chip: ok yönü değerin gerçek işaretini gösterir (↑ artış / ↓ azalış);
+ * renk/ton {@code goodDirection}'a bağlı — default "up" (artış=yeşil/iyi:
+ * gelir, net), "down" ise ters (gider: artış=kırmızı/kötü, azalış=yeşil).</p>
  */
 export function MetricCard({
   label,
@@ -38,13 +51,18 @@ export function MetricCard({
   format = (n) => Math.round(n).toLocaleString("tr-TR"),
   icon: Icon,
   delta,
+  goodDirection = "up",
   segments,
   variant = "default",
   className,
   onClick,
 }: Props) {
   const isInk = variant === "ink";
-  const deltaPositive = (delta ?? 0) >= 0;
+  // Ok yönü: değerin gerçek işareti (↑ artış / ↓ azalış).
+  const deltaUp = (delta ?? 0) >= 0;
+  // Ton: yön "iyi mi" — goodDirection="down" ise mantık tersine döner
+  // (gider gibi: artış kötü/kırmızı, azalış iyi/yeşil).
+  const deltaGood = goodDirection === "down" ? !deltaUp : deltaUp;
 
   return (
     <div
@@ -105,12 +123,12 @@ export function MetricCard({
           <span
             className={cn(
               "inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold",
-              deltaPositive
+              deltaGood
                 ? "bg-accent/16 text-accent-strong dark:text-accent"
                 : "bg-status-danger/16 text-status-danger"
             )}
           >
-            {deltaPositive ? (
+            {deltaUp ? (
               <ArrowUpRight size={13} />
             ) : (
               <ArrowDownRight size={13} />

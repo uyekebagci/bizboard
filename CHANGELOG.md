@@ -56,6 +56,16 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
     günde hareket yok"); uydurma sayı yok. Dönem seçici ile uyumlu, çift tema
     korunur.
 
+### Fixed
+
+- **MetricCard "Toplam Gider" delta tonu — artan gider artık yeşil değil
+  kırmızı.** `MetricCard`'a (`components/v2`) `goodDirection: "up" | "down"`
+  prop'u eklendi: ok yönü değerin gerçek işaretini gösterir (↑ artış / ↓ azalış),
+  ton ise yönün "iyi mi" olduğuna bağlı. Gelir/Net kartları `"up"` (default,
+  artış=yeşil); Gider kartı `goodDirection="down"` → artış=danger/kırmızı,
+  azalış=yeşil. Önceden artan gider yeşil/yukarı görünüyordu (finansal olarak
+  yanıltıcı).
+
 ### Changed
 
 - **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**

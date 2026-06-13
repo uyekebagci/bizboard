@@ -330,6 +330,7 @@ export default function DashboardPage() {
             format={tl}
             icon={Receipt}
             delta={comparison?.expense_delta_pct ?? null}
+            goodDirection="down"
             segments={[
               { value: Math.max(1, expense - fixed), tone: "muted" },
               { value: Math.max(0, fixed), tone: "negative" },
