@@ -16,7 +16,7 @@
  * (surface-* token; dark default + light otomatik).</p>
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -39,6 +39,13 @@ interface Props {
   currency: string;
   /** Karşı işleme git (drill-down). null/undefined → drill kapalı. */
   onNavigate?: (txId: string) => void;
+  /**
+   * Dışarıdan "Para Bağla" tetiği. Üst-seviye bir aksiyon (ör. detay modal'ın
+   * tepesindeki belirgin buton veya işlem satırındaki kısayol) bu sayacı
+   * artırınca bağlama modalı açılır + bölüme kaydırılır. Keşfedilebilirlik için:
+   * aksiyon sayfanın görünür kısmında, asıl mantık burada tek yerde toplanır.
+   */
+  openBindSignal?: number;
 }
 
 export function FundTrailSection({
@@ -47,6 +54,7 @@ export function FundTrailSection({
   txAmount,
   currency,
   onNavigate,
+  openBindSignal,
 }: Props) {
   const { trail, loading, listSourceCandidates, bind, unlink } = useFundTrail(
     businessId,
@@ -54,6 +62,19 @@ export function FundTrailSection({
   );
   const [binding, setBinding] = useState(false);
   const [unlinkingId, setUnlinkingId] = useState<string | null>(null);
+
+  // Dış tetik (üst buton / satır kısayolu): modalı aç + bölüme kaydır.
+  // Sayaç 0'dan başlar; ilk mount'ta (0) tetiklenmez, her artış bir tetiktir.
+  useEffect(() => {
+    if (openBindSignal === undefined || openBindSignal <= 0) return;
+    setBinding(true);
+    // Bölüm görünür alanda değilse oraya kaydır (uzun detay modal'ında alt sırada).
+    requestAnimationFrame(() => {
+      document
+        .getElementById("fund-trail-section")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [openBindSignal]);
 
   async function handleUnlink(linkId: string) {
     setUnlinkingId(linkId);
@@ -79,8 +100,8 @@ export function FundTrailSection({
     trail.sources.length > 0 || trail.usages.length > 0 || trail.remaining > 0;
 
   return (
-    <div className="space-y-3">
-      {/* Başlık + bağla aksiyonu */}
+    <div id="fund-trail-section" className="space-y-3 scroll-mt-4">
+      {/* Başlık + bağla aksiyonu (keşfedilebilir: belirgin etiket + buton) */}
       <div className="flex items-center justify-between">
         <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
           <Route size={12} className="text-brand-300" /> Para İzi
@@ -88,15 +109,16 @@ export function FundTrailSection({
         <button
           type="button"
           onClick={() => setBinding(true)}
+          aria-label="Bu işlemi bir kaynak işleme bağla"
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 border border-brand-500/30 transition-colors"
         >
-          <Link2 size={12} /> Kaynağa bağla
+          <Link2 size={12} /> Para bağla
         </button>
       </div>
 
       {!hasAny && (
         <div className="p-3 bg-surface-700/60 rounded-xl text-xs text-surface-400">
-          Bu işlem için henüz fon-bağı yok. &quot;Kaynağa bağla&quot; ile paranın
+          Bu işlem için henüz fon-bağı yok. &quot;Para bağla&quot; ile paranın
           nereden geldiğini işaretleyebilirsiniz (bakiye/Net Kâr değişmez).
         </div>
       )}
