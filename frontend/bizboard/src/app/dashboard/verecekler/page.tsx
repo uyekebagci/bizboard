@@ -385,10 +385,10 @@ export default function VereceklerPage() {
               <table className="v2-table">
                 <thead>
                   <tr>
-                    <th scope="col">Kisi / Firma</th>
+                    <th scope="col">Kişi / Firma</th>
                     <th scope="col">Son Vade</th>
                     <th scope="col" className="v2-td-num">Tutar</th>
-                    <th scope="col" className="v2-td-num">Kayit</th>
+                    <th scope="col" className="v2-td-num">Kayıt</th>
                   </tr>
                 </thead>
                 <tbody>

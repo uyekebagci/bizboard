@@ -14,7 +14,7 @@ import {
   ChevronLeft, Plus, ArrowDownLeft, ArrowUpRight, TrendingUp, TrendingDown,
   FileText, Scroll, Check, AlertTriangle, RefreshCw, Loader2, Trash2,
   Wallet, Banknote, Receipt, Scissors, Pencil, CheckCircle2, ArrowLeftRight,
-  Clock, Activity, Gauge,
+  Clock, Activity, Gauge, Undo2,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -23,6 +23,7 @@ import { useAppStore } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import type {
   AccountStatement, Counterpart, PaymentDirection, PaymentInstrumentDto,
+  DebtWriteoff,
 } from "@/types";
 import { PaymentModal } from "@/components/payments/PaymentModal";
 import { ClearInstrumentModal } from "@/components/payments/ClearInstrumentModal";
@@ -88,21 +89,64 @@ function CounterpartDetailInner() {
   const [instStatusFilter, setInstStatusFilter] = useState<"ALL" | "PORTFOLIO" | "CLEARED" | "BOUNCED">("ALL");
   const [busyInstId, setBusyInstId] = useState<string | null>(null);
 
+  // para-izi: writeoff (değersiz-kayıt) listesi + geri-al. Backend
+  // GET /counterparts/{id}/writeoffs + DELETE /debt-writeoffs/{id} VAR.
+  const [writeoffs, setWriteoffs] = useState<DebtWriteoff[]>([]);
+  const [reverseTarget, setReverseTarget] = useState<DebtWriteoff | null>(null);
+  const [reversing, setReversing] = useState(false);
+  // Counterpart tekil bakiye yeniden-hesaplama (admin).
+  const [recomputing, setRecomputing] = useState(false);
+
   async function refresh() {
     if (!id) return;
     setLoading(true);
     try {
-      const [c, s] = await Promise.all([
+      const [c, s, w] = await Promise.all([
         api.get<Counterpart>(`/counterparts/${id}`),
         api.get<AccountStatement>(`/counterparts/${id}/account-statement`),
+        // para-izi: writeoff geçmişi — hata olsa bile sayfa açılmalı (best-effort).
+        api.get<DebtWriteoff[]>(`/counterparts/${id}/writeoffs`).catch(() => [] as DebtWriteoff[]),
       ]);
       setCp(c);
       setStatement(s);
+      setWriteoffs(w);
       setError(null);
     } catch (e) {
       setError(getErrorMessage(e));
     } finally {
       setLoading(false);
+    }
+  }
+
+  // para-izi: writeoff geri-al — DELETE /debt-writeoffs/{id} → liste+bakiye yenile.
+  async function handleReverseWriteoff() {
+    if (!reverseTarget) return;
+    setReversing(true);
+    try {
+      await api.delete(`/debt-writeoffs/${reverseTarget.id}`);
+      toast.success("Değersiz kayıt geri alındı");
+      setReverseTarget(null);
+      triggerRefresh();
+    } catch (e) {
+      toast.error(e);
+    } finally {
+      setReversing(false);
+    }
+  }
+
+  // Counterpart tekil bakiye yeniden-hesaplama (admin) —
+  // POST /admin/counterparts/{id}/recompute. Event-driven drift düzeltir.
+  async function handleRecompute() {
+    if (!id || !isAdmin) return;
+    setRecomputing(true);
+    try {
+      await api.post(`/admin/counterparts/${id}/recompute`, {});
+      toast.success("Bakiye yeniden hesaplandı");
+      triggerRefresh();
+    } catch (e) {
+      toast.error(e);
+    } finally {
+      setRecomputing(false);
     }
   }
 
@@ -173,7 +217,7 @@ function CounterpartDetailInner() {
 
   if (loading || !cp || !statement) {
     return (
-      <div className="text-surface-400 text-sm py-8 flex items-center gap-2 justify-center">
+      <div className="text-[rgb(var(--v2-muted))] text-sm py-8 flex items-center gap-2 justify-center">
         {loading && <Loader2 size={16} className="animate-spin" />}
         {error || (loading ? "Yükleniyor..." : "Karşı firma bulunamadı")}
       </div>
@@ -192,38 +236,47 @@ function CounterpartDetailInner() {
         {/* v1.7.x: router.back() ile geçmişe geri dön — kullanıcı /alacaklar
             veya /verecekler'den geldiyse o sayfaya döner. Fallback: counterparts. */}
         <button onClick={() => router.back()}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600"
+          className="p-2 rounded-lg bg-[rgb(var(--v2-sunken))] hover:opacity-80"
           title="Geri">
-          <ChevronLeft size={20} className="text-surface-100" />
+          <ChevronLeft size={20} className="text-[rgb(var(--v2-ink))]" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-surface-100 truncate">{cp.name}</h1>
+          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">{cp.name}</h1>
           <div className="flex items-center gap-2 mt-1">
             {cp.kind && (
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-surface-700 text-surface-300">
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]">
                 {cp.kind === "FIRM" ? "Firma" : "Kişi"}
               </span>
             )}
-            {cp.tax_id && <span className="text-[11px] text-surface-400">{cp.tax_id}</span>}
+            {cp.tax_id && <span className="text-[11px] text-[rgb(var(--v2-muted))]">{cp.tax_id}</span>}
           </div>
         </div>
+        {isAdmin && (
+          <button onClick={handleRecompute} disabled={recomputing}
+            className="p-2 rounded-lg bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-muted))] disabled:opacity-50"
+            title="Bakiye Yeniden Hesapla (admin)">
+            {recomputing ? <Loader2 size={14} className="animate-spin" /> : <Gauge size={14} />}
+          </button>
+        )}
         <button onClick={refresh}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300"
+          className="p-2 rounded-lg bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-muted))]"
           title="Yenile">
           <RefreshCw size={14} />
         </button>
       </section>
 
-      {/* ── Balance + Action buttons — Redesign Inc.3: glass hero + sheen + .num ── */}
-      <section className="glass-card sheen relative overflow-hidden p-5 bg-gradient-to-br from-brand-600/25 via-brand-700/15 to-violet-700/20">
+      {/* ── Balance + Action buttons — v2 hero (Daxa): glass/sheen/gradient kaldırıldı ── */}
+      <section className="v2-card relative overflow-hidden p-5">
         <div className="relative flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <p className="text-xs text-surface-300 mb-1">Cari Bakiye</p>
+            <p className="text-xs text-[rgb(var(--v2-muted))] mb-1">Cari Bakiye</p>
             <p className={cn("num text-4xl font-bold h-display",
-              balance > 0 ? "text-emerald-300" : balance < 0 ? "text-red-300" : "text-surface-100")}>
+              balance > 0 ? "text-emerald-700 dark:text-emerald-300"
+                : balance < 0 ? "text-red-700 dark:text-red-300"
+                : "text-[rgb(var(--v2-ink))]")}>
               {formatCurrency(balance, "TRY")}
             </p>
-            <p className="mt-1 text-[11px] text-surface-400">
+            <p className="mt-1 text-[11px] text-[rgb(var(--v2-muted))]">
               {balance > 0 && "Firma bize borçlu (alacağımız var)"}
               {balance < 0 && "Biz firmaya borçluyuz (vereceğimiz var)"}
               {balance === 0 && "Cari kapalı"}
@@ -255,8 +308,8 @@ function CounterpartDetailInner() {
               className={cn(
                 "px-3 py-2 rounded-xl text-sm font-semibold inline-flex items-center gap-1.5 border",
                 isAdmin
-                  ? "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border-rose-500/40"
-                  : "bg-surface-700 text-surface-500 border-surface-600 cursor-not-allowed",
+                  ? "bg-rose-600/20 hover:bg-rose-600/30 text-rose-700 dark:text-rose-300 border-rose-500/40"
+                  : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))] cursor-not-allowed",
               )}
             >
               <Scissors size={14} /> Borç Sil
@@ -293,11 +346,20 @@ function CounterpartDetailInner() {
       {/* ── Cari-360 — salt görüntü analitiği (mevcut statement'tan türetilir) ── */}
       <Cari360Panel statement={statement} />
 
+      {/* ── Değersiz Kayıtlar (writeoff) — para-izi: liste + geri-al ── */}
+      {writeoffs.length > 0 && (
+        <WriteoffsPanel
+          writeoffs={writeoffs}
+          isAdmin={isAdmin}
+          onReverse={(w) => setReverseTarget(w)}
+        />
+      )}
+
       {/* ── Tabs ──────────────────────────────────────────────── */}
       <section>
         {/* Sekme sırası: Açık Alacaklar · Açık Verecekler · Çek/Senet · İşlemler · Cari Hesap (sona).
             #4 fix: overflow-y-hidden + flex-nowrap + no-scrollbar → dikey scrollbar çıkmaz. */}
-        <div className="flex flex-nowrap gap-1 overflow-x-auto overflow-y-hidden no-scrollbar border-b border-surface-700 mb-3">
+        <div className="flex flex-nowrap gap-1 overflow-x-auto overflow-y-hidden no-scrollbar border-b border-[rgb(var(--v2-border))] mb-3">
           <TabBtn label={`Açık Alacaklar (${statement.open_debts.filter((d) => d.direction === "RECEIVABLE").length})`}
             active={tab === "receivables"} onClick={() => setTab("receivables")} />
           <TabBtn label={`Açık Verecekler (${statement.open_debts.filter((d) => d.direction === "PAYABLE").length})`}
@@ -312,11 +374,11 @@ function CounterpartDetailInner() {
         {/* Tab 1: Cari Hesap — hareket geçmişi (WP a9da4e9d: redesign + borç düzenleme) */}
         {tab === "running" && (
           statement.running_balance_history.length === 0 ? (
-            <div className="glass-card p-8 text-center text-surface-400 text-xs">
+            <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-xs">
               Henüz hareket yok.
             </div>
           ) : (
-            <div className="glass-card divide-y divide-surface-700/70">
+            <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
               {statement.running_balance_history.map((r, i) => {
                 // DEBT_CREATED açık borca denk geliyorsa düzenlenebilir; aksi halde kapanmış borç.
                 const openDebt = r.type === "DEBT_CREATED"
@@ -377,19 +439,19 @@ function CounterpartDetailInner() {
               {(["ALL", "PORTFOLIO", "CLEARED", "BOUNCED"] as const).map((s) => (
                 <button key={s} onClick={() => setInstStatusFilter(s)}
                   className={cn("px-3 py-1 rounded-full text-xs font-medium border",
-                    instStatusFilter === s ? "bg-brand-500/20 border-brand-400 text-brand-200"
-                                           : "bg-surface-700 border-surface-600 text-surface-300")}>
+                    instStatusFilter === s ? "bg-accent/15 border-accent/30 text-accent-strong dark:text-accent"
+                                           : "bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))]")}>
                   {s === "ALL" ? "Tümü" : s === "PORTFOLIO" ? "Portföy"
                     : s === "CLEARED" ? "Tahsil" : "Karşılıksız"}
                 </button>
               ))}
             </div>
             {filteredInstruments.length === 0 ? (
-              <div className="glass-card p-8 text-center text-surface-400 text-xs">
+              <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-xs">
                 Bu filtrede çek/senet yok.
               </div>
             ) : (
-              <div className="glass-card divide-y divide-surface-700">
+              <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
                 {filteredInstruments.map((p) => {
                   const isCheque = p.instrument_type === "CHEQUE";
                   const isIn = p.direction === "INCOMING";
@@ -397,28 +459,28 @@ function CounterpartDetailInner() {
                     <div key={p.id} className="p-3 flex items-center gap-3">
                       <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
                         isIn ? "bg-emerald-500/15" : "bg-red-500/15")}>
-                        {isCheque ? <FileText size={16} className={isIn ? "text-emerald-300" : "text-red-300"} />
-                                  : <Scroll size={16} className={isIn ? "text-emerald-300" : "text-red-300"} />}
+                        {isCheque ? <FileText size={16} className={isIn ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"} />
+                                  : <Scroll size={16} className={isIn ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"} />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-surface-100 truncate">
+                        <p className="text-sm text-[rgb(var(--v2-ink))] truncate">
                           {isCheque ? (p.cheque_number || "Çek") : (p.note_serial || "Senet")}
                           {" · "}
                           <span className="font-semibold">{formatCurrency(p.amount, p.currency || "TRY")}</span>
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-surface-700 text-surface-300">
-                            {isIn ? "Bizde" : "Veriidiğimiz"}
+                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]">
+                            {isIn ? "Bizde" : "Verdiğimiz"}
                           </span>
                           <span className={cn("ml-1 text-[10px] px-1.5 py-0.5 rounded",
-                            p.status === "PORTFOLIO" ? "bg-amber-500/20 text-amber-200" :
-                            p.status === "CLEARED" ? "bg-emerald-500/20 text-emerald-200" :
-                            p.status === "BOUNCED" ? "bg-red-500/20 text-red-200" :
-                            "bg-surface-700 text-surface-300")}>
+                            p.status === "PORTFOLIO" ? "bg-amber-500/20 text-amber-700 dark:text-amber-200" :
+                            p.status === "CLEARED" ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-200" :
+                            p.status === "BOUNCED" ? "bg-red-500/20 text-red-700 dark:text-red-200" :
+                            "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]")}>
                             {p.status === "PORTFOLIO" ? "Portföy" :
                              p.status === "CLEARED" ? "Tahsil" :
                              p.status === "BOUNCED" ? "Karşılıksız" : p.status}
                           </span>
                         </p>
-                        <p className="text-[11px] text-surface-400 truncate">
+                        <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
                           Vade: {formatDate(p.due_date)}
                           {isCheque && p.drawer_bank && ` · ${p.drawer_bank}`}
                           {p.cleared_at && ` · Tahsil: ${formatDate(p.cleared_at)}${p.cleared_bank_account_name ? ' → ' + p.cleared_bank_account_name : ''}`}
@@ -429,16 +491,16 @@ function CounterpartDetailInner() {
                         {p.status === "PORTFOLIO" && (
                           <>
                             <button onClick={() => setClearInst(p)}
-                              className="text-[10px] px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 inline-flex items-center gap-1">
+                              className="text-[10px] px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 inline-flex items-center gap-1">
                               <Check size={10} /> Tahsil
                             </button>
                             <button onClick={() => setBounceInst(p)}
-                              className="text-[10px] px-2 py-1 rounded-md bg-red-500/15 text-red-300 hover:bg-red-500/25 border border-red-500/30 inline-flex items-center gap-1">
+                              className="text-[10px] px-2 py-1 rounded-md bg-red-500/15 text-red-700 dark:text-red-300 hover:bg-red-500/25 border border-red-500/30 inline-flex items-center gap-1">
                               <AlertTriangle size={10} /> Karşılıksız
                             </button>
                             <button onClick={() => handleDeleteInstrument(p)}
                               disabled={busyInstId === p.id}
-                              className="text-[10px] px-2 py-1 rounded-md text-surface-400 hover:text-red-400 hover:bg-red-500/10 inline-flex items-center gap-1 disabled:opacity-50">
+                              className="text-[10px] px-2 py-1 rounded-md text-[rgb(var(--v2-muted))] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 inline-flex items-center gap-1 disabled:opacity-50">
                               {busyInstId === p.id ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
                             </button>
                           </>
@@ -454,9 +516,9 @@ function CounterpartDetailInner() {
 
         {/* Tab 5: Transactions */}
         {tab === "transactions" && (
-          <div className="glass-card overflow-x-auto">
+          <div className="v2-card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-surface-800/50 text-surface-400 text-xs uppercase">
+              <thead className="bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] text-xs uppercase">
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Tarih</th>
                   <th className="text-left px-4 py-2 font-medium">Açıklama</th>
@@ -464,27 +526,27 @@ function CounterpartDetailInner() {
                   <th className="text-right px-4 py-2 font-medium">Tutar</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-700">
+              <tbody className="divide-y divide-[rgb(var(--v2-border))]">
                 {statement.transactions.length === 0 ? (
-                  <tr><td colSpan={4} className="px-4 py-8 text-center text-surface-400 text-xs">
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-[rgb(var(--v2-muted))] text-xs">
                     Bu firma ile işlem yok.
                   </td></tr>
                 ) : statement.transactions.map((t) => {
                   const isInc = t.direction === "income";
                   return (
                     <tr key={t.id}>
-                      <td className="px-4 py-2 text-surface-300 whitespace-nowrap text-xs">
+                      <td className="px-4 py-2 text-[rgb(var(--v2-muted))] whitespace-nowrap text-xs">
                         {formatDate(t.date)}
                       </td>
-                      <td className="px-4 py-2 text-surface-200 truncate max-w-[300px]">
+                      <td className="px-4 py-2 text-[rgb(var(--v2-ink))] truncate max-w-[300px]">
                         {t.description || "—"}
                       </td>
-                      <td className="px-4 py-2 text-surface-400 text-xs">
+                      <td className="px-4 py-2 text-[rgb(var(--v2-muted))] text-xs">
                         {t.payment_method === "POS" ? <CreditCardBadge /> :
                          t.payment_method === "HESAPDAN" ? "Banka" : "Nakit"}
                       </td>
                       <td className={cn("px-4 py-2 text-right font-semibold whitespace-nowrap",
-                        isInc ? "text-emerald-400" : "text-red-400")}>
+                        isInc ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400")}>
                         {isInc ? "+" : "−"}{formatCurrency(t.amount, t.currency)}
                       </td>
                     </tr>
@@ -552,6 +614,126 @@ function CounterpartDetailInner() {
           onSuccess={() => { triggerRefresh(); }}
         />
       )}
+      {/* para-izi: writeoff geri-al onay modalı */}
+      {reverseTarget && (
+        <ReverseWriteoffModal
+          writeoff={reverseTarget}
+          submitting={reversing}
+          onConfirm={handleReverseWriteoff}
+          onClose={() => { if (!reversing) setReverseTarget(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Değersiz Kayıtlar (writeoff) paneli — liste + geri-al (para-izi) ──────────
+
+function WriteoffsPanel({
+  writeoffs, isAdmin, onReverse,
+}: {
+  writeoffs: DebtWriteoff[];
+  isAdmin: boolean;
+  onReverse: (w: DebtWriteoff) => void;
+}) {
+  const total = writeoffs.reduce((s, w) => s + (w.amount || 0), 0);
+  return (
+    <section className="v2-card p-4 space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Scissors size={16} className="text-rose-700 dark:text-rose-300" />
+        <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Değersiz Kayıtlar</h2>
+        <span className="text-[10px] text-[rgb(var(--v2-muted))]">
+          ödeme almadan düşülen borçlar · {writeoffs.length} kayıt
+        </span>
+        <span className="ml-auto text-xs font-semibold num text-rose-700 dark:text-rose-300">
+          {formatCurrency(total, "TRY")}
+        </span>
+      </div>
+      <div className="rounded-lg border border-[rgb(var(--v2-border))] divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
+        {writeoffs.map((w) => (
+          <div key={w.id} className="p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-rose-500/15">
+              <Scissors size={16} className="text-rose-700 dark:text-rose-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-[rgb(var(--v2-ink))]">
+                <span className="font-semibold">{formatCurrency(w.amount, "TRY")}</span>
+                {w.reason && <span className="text-[rgb(var(--v2-muted))]"> · {w.reason}</span>}
+              </p>
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
+                {formatDateTime(w.written_off_at)}
+                {w.written_off_by_name && ` · ${w.written_off_by_name}`}
+                {w.debt_status_after && ` · borç → ${w.debt_status_after}`}
+              </p>
+            </div>
+            <div className="shrink-0">
+              <button
+                onClick={() => {
+                  if (!isAdmin) { toast.error("Yönetici yetkisi gerekli"); return; }
+                  onReverse(w);
+                }}
+                disabled={!isAdmin}
+                title={isAdmin ? "Bu değersiz kaydı geri al" : "Yönetici yetkisi gerekli"}
+                className="text-[10px] px-2.5 py-1.5 rounded-md font-semibold inline-flex items-center gap-1 border bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-ink))] border-[rgb(var(--v2-border))] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Undo2 size={11} /> Geri Al
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ReverseWriteoffModal({
+  writeoff, submitting, onConfirm, onClose,
+}: {
+  writeoff: DebtWriteoff;
+  submitting: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !submitting) onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [submitting, onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="v2-card !border-rose-500/40 max-w-sm w-full p-5"
+      >
+        <h4 className="text-base font-semibold text-[rgb(var(--v2-ink))] mb-2 flex items-center gap-2">
+          <Undo2 size={18} className="text-rose-700 dark:text-rose-400" />
+          Değersiz Kaydı Geri Al
+        </h4>
+        <p className="text-sm text-[rgb(var(--v2-muted))] mb-3">
+          <strong className="text-rose-700 dark:text-rose-300">{formatCurrency(writeoff.amount, "TRY")}</strong>
+          {" "}tutarındaki değersiz kayıt geri alınacak — silinen borç tekrar açık alacağa eklenecek.
+        </p>
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] mb-4">
+          Bu işlem cari hesap bakiyesini değiştirir. Bank balance ve transaction listesi etkilenmez.
+        </p>
+        <div className="flex gap-2">
+          <button onClick={onClose} disabled={submitting}
+            className="btn-secondary flex-1 py-2 text-sm">
+            Vazgeç
+          </button>
+          <button onClick={onConfirm} disabled={submitting}
+            className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50">
+            {submitting && <Loader2 size={14} className="animate-spin" />}
+            Geri Al
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -561,8 +743,8 @@ function TabBtn({ label, active, onClick }: { label: string; active: boolean; on
     <button
       onClick={onClick}
       className={cn("px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
-        active ? "border-brand-500 text-brand-300"
-               : "border-transparent text-surface-400 hover:text-surface-200")}>
+        active ? "border-accent text-accent-strong dark:text-accent"
+               : "border-transparent text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]")}>
       {label}
     </button>
   );
@@ -575,20 +757,20 @@ function BreakdownCard({
   tone: "positive" | "negative" | "neutral"; icon: React.ReactNode;
   extra?: string; primary?: boolean;
 }) {
-  const color = tone === "positive" ? "text-emerald-300"
-              : tone === "negative" ? "text-red-300" : "text-surface-100";
+  const color = tone === "positive" ? "text-emerald-700 dark:text-emerald-300"
+              : tone === "negative" ? "text-red-700 dark:text-red-300" : "text-[rgb(var(--v2-ink))]";
   return (
-    <div className={cn("card p-3", primary && "ring-1 ring-brand-500/40 bg-brand-900/20")}>
-      <div className="flex items-center gap-1.5 text-[10px] text-surface-400 uppercase mb-1">
+    <div className={cn("v2-card p-3", primary && "ring-1 ring-accent/40 bg-accent/[0.06]")}>
+      <div className="flex items-center gap-1.5 text-[10px] text-[rgb(var(--v2-muted))] uppercase mb-1">
         {icon} {label}
       </div>
       <p className={cn("text-lg font-bold", color)}>
         {formatCurrency(Math.abs(value), "TRY")}
       </p>
       {count !== undefined && (
-        <p className="text-[10px] text-surface-500 mt-0.5">{count} kayıt</p>
+        <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-0.5">{count} kayıt</p>
       )}
-      {extra && <p className="text-[10px] text-surface-500 mt-0.5 truncate">{extra}</p>}
+      {extra && <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-0.5 truncate">{extra}</p>}
     </div>
   );
 }
@@ -667,11 +849,11 @@ function Cari360Panel({ statement }: { statement: AccountStatement }) {
   const hasPayableAging = payableAging.some((b) => b.count > 0);
 
   return (
-    <section className="glass-card p-4 space-y-4">
+    <section className="v2-card p-4 space-y-4">
       <div className="flex items-center gap-2">
-        <Gauge size={16} className="text-brand-400" />
-        <h2 className="text-sm font-semibold text-surface-100">Cari 360°</h2>
-        <span className="text-[10px] text-surface-500">salt görüntü · mevcut veriden türetildi</span>
+        <Gauge size={16} className="text-accent-strong dark:text-accent" />
+        <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Cari 360°</h2>
+        <span className="text-[10px] text-[rgb(var(--v2-muted))]">salt görüntü · mevcut veriden türetildi</span>
       </div>
 
       {/* Özet metrik şeridi */}
@@ -681,10 +863,10 @@ function Cari360Panel({ statement }: { statement: AccountStatement }) {
           sub={`${txStats.count} işlem`} />
         <MiniStat icon={<Clock size={13} />} label="Son İşlem"
           value={formatDate(txStats.lastDate)} sub="tarih" />
-        <MiniStat icon={<ArrowDownLeft size={13} className="text-emerald-300" />} label="Tahsil Edilen"
+        <MiniStat icon={<ArrowDownLeft size={13} className="text-emerald-700 dark:text-emerald-300" />} label="Tahsil Edilen"
           value={formatCurrency(payStats.received, "TRY")}
           sub={`${payStats.count} ödeme`} tone="positive" />
-        <MiniStat icon={<ArrowUpRight size={13} className="text-red-300" />} label="Ödenen"
+        <MiniStat icon={<ArrowUpRight size={13} className="text-red-700 dark:text-red-300" />} label="Ödenen"
           value={formatCurrency(payStats.paid, "TRY")}
           sub={payStats.lastDate ? `son: ${formatDate(payStats.lastDate)}` : "—"} tone="negative" />
       </div>
@@ -700,7 +882,7 @@ function Cari360Panel({ statement }: { statement: AccountStatement }) {
           )}
         </div>
       ) : (
-        <p className="text-xs text-surface-400">Açık borç yok — yaşlandırma boş.</p>
+        <p className="text-xs text-[rgb(var(--v2-muted))]">Açık borç yok — yaşlandırma boş.</p>
       )}
     </section>
   );
@@ -712,15 +894,15 @@ function MiniStat({
   icon: React.ReactNode; label: string; value: string; sub?: string;
   tone?: "positive" | "negative";
 }) {
-  const valueCls = tone === "positive" ? "text-emerald-300"
-    : tone === "negative" ? "text-red-300" : "text-surface-100";
+  const valueCls = tone === "positive" ? "text-emerald-700 dark:text-emerald-300"
+    : tone === "negative" ? "text-red-700 dark:text-red-300" : "text-[rgb(var(--v2-ink))]";
   return (
-    <div className="rounded-lg bg-surface-800/40 border border-surface-700 p-2.5">
-      <div className="flex items-center gap-1.5 text-[10px] text-surface-400 uppercase mb-1">
+    <div className="rounded-lg bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))] p-2.5">
+      <div className="flex items-center gap-1.5 text-[10px] text-[rgb(var(--v2-muted))] uppercase mb-1">
         {icon} {label}
       </div>
       <p className={cn("text-sm font-bold num truncate", valueCls)}>{value}</p>
-      {sub && <p className="text-[10px] text-surface-500 mt-0.5 truncate">{sub}</p>}
+      {sub && <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-0.5 truncate">{sub}</p>}
     </div>
   );
 }
@@ -731,32 +913,32 @@ function AgingTable({
   title: string; buckets: AgingBucket[]; tone: "positive" | "negative";
 }) {
   const total = buckets.reduce((s, b) => s + b.amount, 0);
-  const accent = tone === "positive" ? "text-emerald-300" : "text-red-300";
+  const accent = tone === "positive" ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
   return (
-    <div className="rounded-lg border border-surface-700 overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 bg-surface-800/40">
-        <span className="text-xs font-medium text-surface-200">{title}</span>
+    <div className="rounded-lg border border-[rgb(var(--v2-border))] overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[rgb(var(--v2-sunken))]">
+        <span className="text-xs font-medium text-[rgb(var(--v2-ink))]">{title}</span>
         <span className={cn("text-xs font-semibold num", accent)}>{formatCurrency(total, "TRY")}</span>
       </div>
-      <div className="divide-y divide-surface-700/70">
+      <div className="divide-y divide-[rgb(var(--v2-border))]">
         {buckets.map((b) => {
           if (b.count === 0) return null;
           const pct = total > 0 ? Math.round((b.amount / total) * 100) : 0;
           const barCls = b.tone === "danger" ? "bg-red-500/70"
             : b.tone === "warn" ? "bg-amber-500/70" : "bg-emerald-500/60";
-          const labelCls = b.tone === "danger" ? "text-red-300"
-            : b.tone === "warn" ? "text-amber-300" : "text-surface-300";
+          const labelCls = b.tone === "danger" ? "text-red-700 dark:text-red-300"
+            : b.tone === "warn" ? "text-amber-700 dark:text-amber-300" : "text-[rgb(var(--v2-muted))]";
           return (
             <div key={b.label} className="px-3 py-2">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <span className={cn("text-[11px]", labelCls)}>
-                  {b.label} <span className="text-surface-500">({b.count})</span>
+                  {b.label} <span className="text-[rgb(var(--v2-muted))]">({b.count})</span>
                 </span>
-                <span className="text-[11px] font-medium text-surface-200 num">
+                <span className="text-[11px] font-medium text-[rgb(var(--v2-ink))] num">
                   {formatCurrency(b.amount, "TRY")}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-surface-700 overflow-hidden">
+              <div className="h-1.5 rounded-full bg-[rgb(var(--v2-sunken))] overflow-hidden">
                 <div className={cn("h-full rounded-full", barCls)} style={{ width: `${pct}%` }} />
               </div>
             </div>
@@ -778,13 +960,13 @@ function DebtListTab({
 }) {
   if (debts.length === 0) {
     return (
-      <div className="glass-card p-8 text-center text-surface-400 text-xs">
+      <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-xs">
         Açık {tone === "positive" ? "alacak" : "verecek"} yok.
       </div>
     );
   }
   return (
-    <div className="glass-card divide-y divide-surface-700">
+    <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
       {debts.map((d) => {
         const isPartial = d.remaining_amount < d.original_amount && d.remaining_amount > 0;
         // WP currency-display: USD/GOLD borç → orijinal cinsi göster (kaç bin dolar /
@@ -796,13 +978,13 @@ function DebtListTab({
           <div key={d.id} className="p-3 flex items-center gap-3">
             <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
               tone === "positive" ? "bg-emerald-500/15" : "bg-red-500/15")}>
-              <Receipt size={16} className={tone === "positive" ? "text-emerald-300" : "text-red-300"} />
+              <Receipt size={16} className={tone === "positive" ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-surface-100 truncate">
+              <p className="text-sm text-[rgb(var(--v2-ink))] truncate">
                 {d.description || "Borç"}
                 {isPartial && (
-                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200">
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-200">
                     Kısmi
                   </span>
                 )}
@@ -811,8 +993,8 @@ function DebtListTab({
                   <span className={cn(
                     "ml-2 text-[10px] px-1.5 py-0.5 rounded border",
                     isGoldCurrency(d.currency)
-                      ? "bg-yellow-500/15 text-yellow-300 border-yellow-500/30"
-                      : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+                      ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
+                      : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
                   )}>
                     {isGoldCurrency(d.currency) ? "Altın" : (d.currency || "").toUpperCase()}
                   </span>
@@ -820,17 +1002,17 @@ function DebtListTab({
               </p>
               {/* USD/GOLD borçta orijinal cinsteki tutar ÖNDE/öne çıkar; TL karşılığı yanında. */}
               {isForeign && remOriginal != null ? (
-                <p className="text-[11px] text-surface-400">
-                  Kalan: <span className={cn("font-semibold", tone === "positive" ? "text-emerald-300" : "text-red-300")}>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))]">
+                  Kalan: <span className={cn("font-semibold", tone === "positive" ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300")}>
                     {formatOriginalAmount(remOriginal, d.currency)}
                   </span>
-                  <span className="text-surface-500"> ({formatCurrency(d.remaining_amount, "TRY")})</span>
+                  <span className="text-[rgb(var(--v2-muted))]"> ({formatCurrency(d.remaining_amount, "TRY")})</span>
                   {isPartial && fullOriginal != null && ` · Orijinal ${formatOriginalAmount(fullOriginal, d.currency)}`}
                   {` · Vade ${d.due_date ? formatDate(d.due_date) : "belli değil"}`}
                 </p>
               ) : (
-                <p className="text-[11px] text-surface-400">
-                  Kalan: <span className={cn("font-semibold", tone === "positive" ? "text-emerald-300" : "text-red-300")}>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))]">
+                  Kalan: <span className={cn("font-semibold", tone === "positive" ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300")}>
                     {formatCurrency(d.remaining_amount, "TRY")}
                   </span>
                   {isPartial && ` · Orijinal ${formatCurrency(d.original_amount, "TRY")}`}
@@ -842,7 +1024,7 @@ function DebtListTab({
               <button onClick={() => onEdit(d)}
                 title="Düzenle"
                 aria-label="Borcu düzenle"
-                className="text-[10px] px-2 py-1.5 rounded-md font-semibold inline-flex items-center gap-1 bg-surface-700 hover:bg-surface-600 text-surface-200 border border-surface-600">
+                className="text-[10px] px-2 py-1.5 rounded-md font-semibold inline-flex items-center gap-1 bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-ink))] border border-[rgb(var(--v2-border))]">
                 <Pencil size={10} />
               </button>
               <button onClick={() => onAction(d)}
@@ -862,7 +1044,8 @@ function DebtListTab({
 }
 
 function CreditCardBadge() {
-  return <span className="text-indigo-300">POS</span>;
+  // P0 kontrast: light koyu varyant — beyazda -300 okunmuyordu.
+  return <span className="text-indigo-700 dark:text-indigo-300">POS</span>;
 }
 
 // ── Cari Hesap hareket satırı (WP a9da4e9d: redesign + borç düzenleme) ──
@@ -876,40 +1059,42 @@ const HISTORY_TYPE_META: Record<HistoryRow["type"], {
   badge: string; // rozet arka plan + metin + border
   iconWrap: string; // sol ikon kutusu arka planı
 }> = {
+  // P0 kontrast: her renge light koyu varyant (dark:text-X-300 / text-X-700) —
+  // light temada beyaz/açık yüzeyde -300 tonları okunmuyordu (AA fail).
   DEBT_CREATED: {
     label: "Borç Eklendi",
-    icon: <Receipt size={14} className="text-indigo-300" />,
-    badge: "bg-indigo-500/10 text-indigo-300 border-indigo-500/30",
+    icon: <Receipt size={14} className="text-indigo-700 dark:text-indigo-300" />,
+    badge: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30",
     iconWrap: "bg-indigo-500/15",
   },
   PAYMENT: {
     label: "Ödeme",
-    icon: <Banknote size={14} className="text-emerald-300" />,
-    badge: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+    icon: <Banknote size={14} className="text-emerald-700 dark:text-emerald-300" />,
+    badge: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
     iconWrap: "bg-emerald-500/15",
   },
   INSTRUMENT_CLEARED: {
     label: "Çek/Senet Tahsil",
-    icon: <CheckCircle2 size={14} className="text-teal-300" />,
-    badge: "bg-teal-500/10 text-teal-300 border-teal-500/30",
+    icon: <CheckCircle2 size={14} className="text-teal-700 dark:text-teal-300" />,
+    badge: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30",
     iconWrap: "bg-teal-500/15",
   },
   INSTRUMENT_BOUNCED: {
     label: "Karşılıksız",
-    icon: <AlertTriangle size={14} className="text-amber-300" />,
-    badge: "bg-amber-500/10 text-amber-300 border-amber-500/30",
+    icon: <AlertTriangle size={14} className="text-amber-700 dark:text-amber-300" />,
+    badge: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
     iconWrap: "bg-amber-500/15",
   },
   TRANSACTION: {
     label: "İşlem",
-    icon: <ArrowLeftRight size={14} className="text-surface-300" />,
-    badge: "bg-surface-700 text-surface-300 border-surface-600",
-    iconWrap: "bg-surface-700",
+    icon: <ArrowLeftRight size={14} className="text-[rgb(var(--v2-muted))]" />,
+    badge: "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]",
+    iconWrap: "bg-[rgb(var(--v2-sunken))]",
   },
   WRITEOFF: {
     label: "Borç Silindi",
-    icon: <Scissors size={14} className="text-rose-300" />,
-    badge: "bg-rose-500/10 text-rose-300 border-rose-500/30",
+    icon: <Scissors size={14} className="text-rose-700 dark:text-rose-300" />,
+    badge: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30",
     iconWrap: "bg-rose-500/15",
   },
 };
@@ -919,9 +1104,9 @@ function RunningHistoryRow({
 }: { row: HistoryRow; onEdit?: () => void; isClosedDebt?: boolean }) {
   const meta = HISTORY_TYPE_META[row.type] ?? HISTORY_TYPE_META.TRANSACTION;
   const isWriteoff = row.type === "WRITEOFF";
-  const amountCls = isWriteoff ? "text-rose-300"
-    : row.amount > 0 ? "text-emerald-400"
-    : row.amount < 0 ? "text-red-400" : "text-surface-400";
+  const amountCls = isWriteoff ? "text-rose-700 dark:text-rose-300"
+    : row.amount > 0 ? "text-emerald-700 dark:text-emerald-400"
+    : row.amount < 0 ? "text-red-700 dark:text-red-400" : "text-[rgb(var(--v2-muted))]";
   return (
     <div className={cn(
       "p-3 flex items-start gap-3",
@@ -938,16 +1123,16 @@ function RunningHistoryRow({
             {meta.label}
           </span>
           {isClosedDebt && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-surface-700 text-surface-400 border-surface-600">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]">
               <Check size={10} /> Kapandı
             </span>
           )}
-          <span className="text-[11px] text-surface-400 whitespace-nowrap">
+          <span className="text-[11px] text-[rgb(var(--v2-muted))] whitespace-nowrap">
             {formatDateTime(row.date)}
           </span>
         </div>
         {row.description && (
-          <p className="mt-1 text-sm text-surface-200 break-words leading-relaxed">
+          <p className="mt-1 text-sm text-[rgb(var(--v2-ink))] break-words leading-relaxed">
             {row.description}
           </p>
         )}
@@ -956,15 +1141,15 @@ function RunningHistoryRow({
         <span className={cn("text-sm font-semibold whitespace-nowrap", amountCls)}>
           {row.amount === 0 ? "—" : (row.amount > 0 ? "+" : "−") + formatCurrency(Math.abs(row.amount), "TRY")}
         </span>
-        <span className="text-[11px] text-surface-400 whitespace-nowrap">
-          Bakiye: <span className="text-surface-100 font-medium">{formatCurrency(row.balance_after, "TRY")}</span>
+        <span className="text-[11px] text-[rgb(var(--v2-muted))] whitespace-nowrap">
+          Bakiye: <span className="text-[rgb(var(--v2-ink))] font-medium">{formatCurrency(row.balance_after, "TRY")}</span>
         </span>
       </div>
       {onEdit && (
         <button onClick={onEdit}
           title="Borcu düzenle"
           aria-label="Borcu düzenle"
-          className="shrink-0 self-center p-1.5 rounded-md bg-surface-700 hover:bg-surface-600 text-surface-300 border border-surface-600">
+          className="shrink-0 self-center p-1.5 rounded-md bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-muted))] border border-[rgb(var(--v2-border))]">
           <Pencil size={12} />
         </button>
       )}
