@@ -1028,6 +1028,87 @@
   .v2-table th.v2-td-num {
     @apply text-right;
   }
+
+  /* ════════════════════════════════════════════════════════════
+   * UI v2 — Liste satırı primitive'i (Daxa). TÜM liste satırlarının
+   * TEK kaynağı. Solid/katmanlı yüzey + hover + divider + yuvarlak +
+   * çift tema + a11y. Genelde .v2-card içinde divide-y ile dizilir;
+   * standalone da kullanılabilir (.v2-list-row--card varyantı).
+   *
+   * Kullanım:
+   *   <div class="v2-card divide-y divide-[rgb(var(--v2-border))]">
+   *     <div class="v2-list-row" role="button" tabindex="0">…</div>
+   *   </div>
+   * Modifierlar:
+   *   --interactive  tıklanabilir satır (cursor + hover + focus-ring)
+   *   --accent       sol accent rail (lime) — vurgu/seçili satır
+   *   --warn         sol amber rail + hafif tint (Ana Kasa)
+   *   --system       sol mor rail + hafif tint (sistem hesabı)
+   *   --muted        opaklık düşür (pasif kayıt)
+   *   --card         standalone (kendi border + radius; divider'sız liste)
+   * ════════════════════════════════════════════════════════════ */
+  .v2-list-row {
+    @apply relative flex items-center gap-3 px-4 py-3;
+    color: rgb(var(--v2-ink));
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  /* Sol accent/durum rail — modifier ile renklenir (default gizli). */
+  .v2-list-row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: transparent;
+    transition: background-color 0.15s ease;
+  }
+  /* Tıklanabilir satır — pointer + hover yüzey + erişilebilir focus halkası. */
+  .v2-list-row--interactive {
+    @apply cursor-pointer;
+  }
+  .v2-list-row--interactive:hover {
+    background: rgb(var(--v2-sunken));
+  }
+  .v2-list-row--interactive:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px rgb(var(--accent) / 0.55);
+    border-radius: 12px;
+  }
+  /* Accent (lime) rail + tint — vurgulu/seçili satır. */
+  .v2-list-row--accent::before {
+    background: rgb(var(--accent));
+  }
+  /* Uyarı (amber) rail + hafif tint — Ana Kasa gibi kilitli kayıtlar.
+     Renk = Tailwind status.warning (#fab005 = 250 176 5). */
+  .v2-list-row--warn::before {
+    background: rgb(250 176 5);
+  }
+  .v2-list-row--warn {
+    background: rgb(250 176 5 / 0.04);
+  }
+  /* Sistem (mor) rail + hafif tint — otomatik/silinemez sistem kayıtları. */
+  .v2-list-row--system::before {
+    background: rgb(168 85 247);
+  }
+  .v2-list-row--system {
+    background: rgb(168 85 247 / 0.04);
+  }
+  /* Pasif kayıt — soluk. */
+  .v2-list-row--muted {
+    opacity: 0.5;
+  }
+  /* Standalone (liste dışı tek satır) — kendi yüzey + border + radius. */
+  .v2-list-row--card {
+    background: rgb(var(--v2-card));
+    border: 1px solid rgb(var(--v2-border));
+    border-radius: 14px;
+  }
+  .v2-list-row--card.v2-list-row--interactive:hover {
+    border-color: rgb(var(--accent) / 0.4);
+    background: rgb(var(--v2-sunken));
+  }
 }
 
 /* ============================================================

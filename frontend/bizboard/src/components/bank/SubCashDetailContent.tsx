@@ -165,13 +165,13 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-10">
-        <Loader2 size={28} className="animate-spin text-surface-400" />
+        <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
       </div>
     );
   }
   if (error || !data) {
     return (
-      <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+      <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm flex items-start gap-2">
         <AlertTriangle size={14} className="mt-0.5" />
         <span>{error || "Veri yok"}</span>
       </div>
@@ -188,8 +188,8 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
         {/* SOL: Mevcut Bakiye + INVARIANT */}
         <div>
           <div className="flex items-center justify-between mb-2 gap-2">
-            <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider flex items-center gap-1">
-              <TrendingUp size={12} /> Mevcut Bakiye <span className="text-surface-500 normal-case text-[10px]">(anlık)</span>
+            <h4 className="v2-eyebrow text-[11px] flex items-center gap-1">
+              <TrendingUp size={12} /> Mevcut Bakiye <span className="text-[rgb(var(--v2-muted))] normal-case text-[10px] tracking-normal font-normal">(anlık)</span>
             </h4>
             {/* Beta v1.1 hotfix: stale bakiye temizleme (admin recovery) */}
             <button
@@ -203,25 +203,25 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
                   onChange?.();
                 } catch (err) { toast.error(err); }
               }}
-              className="text-[10px] px-2 py-1 rounded-md bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40"
+              className="text-[10px] px-2 py-1 rounded-md bg-status-warning/15 hover:bg-status-warning/25 text-status-warning border border-status-warning/40 transition-colors v2-press"
               title="Stale bakiye varsa düzelt"
             >
               ↻ Yeniden Hesapla
             </button>
           </div>
-          <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
+          <div className="rounded-xl bg-accent/10 border border-accent/30 p-4">
             {/* Beta v1.1 fix: SUB_CASH'in kendi current_balance'ı (recompute
                 edilmiş + manuel inclusion'lar dahil). Önceki davranış sadece
                 "atanmış entity'lerin bakiye toplamı" gösteriyordu → entity
                 ataması olmayan kasalarda her zaman 0 görünüyordu. */}
-            <p className="text-2xl font-bold text-emerald-300 truncate">
+            <p className="text-2xl font-bold text-accent-strong dark:text-accent truncate">
               {formatCurrency(data.sub_cash?.current_balance ?? data.aggregate, "TRY")}
             </p>
-            <p className="text-[10px] text-surface-400 mt-1">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-1">
               SUB_CASH bakiye (inclusion + atama)
             </p>
             {data.aggregate !== (data.sub_cash?.current_balance ?? 0) && (
-              <p className="text-[10px] text-surface-500 mt-0.5">
+              <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-0.5">
                 Atanan entity'ler: {formatCurrency(data.aggregate, "TRY")}
               </p>
             )}
@@ -232,7 +232,7 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
           </div>
           <p className={cn(
             "mt-2 text-[10px] flex items-center gap-1",
-            invariantOk ? "text-surface-500" : "text-red-300",
+            invariantOk ? "text-[rgb(var(--v2-muted))]" : "text-status-danger",
           )}>
             INVARIANT: Σ(sub) + atanmamış = ana kasa →
             {" "}{formatCurrency(data.aggregate, "TRY")} +{" "}
@@ -246,8 +246,8 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
         {/* SAĞ: Periyot Geliri (v1.7.x WP TODO f3b3cd2f) */}
         <div>
           <div className="flex items-center justify-between mb-2 gap-2">
-            <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider flex items-center gap-1">
-              <CalendarRange size={12} /> {periodRangeMemo.label} Gelir <span className="text-surface-500 normal-case text-[10px]">(periyot)</span>
+            <h4 className="v2-eyebrow text-[11px] flex items-center gap-1">
+              <CalendarRange size={12} /> {periodRangeMemo.label} Gelir <span className="text-[rgb(var(--v2-muted))] normal-case text-[10px] tracking-normal font-normal">(periyot)</span>
             </h4>
             <div className="min-w-[120px]">
               <DarkSelect
@@ -262,24 +262,24 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
               />
             </div>
           </div>
-          <div className="rounded-xl bg-brand-500/10 border border-brand-500/30 p-4">
+          <div className="rounded-xl v2-sunken p-4">
             {loadingIncome ? (
-              <Loader2 size={24} className="animate-spin text-brand-300" />
+              <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
             ) : (
               <>
                 <p className={cn(
                   "text-2xl font-bold truncate",
-                  (income?.total_income ?? 0) >= 0 ? "text-brand-200" : "text-red-300",
+                  (income?.total_income ?? 0) >= 0 ? "text-[rgb(var(--v2-ink))]" : "text-status-danger",
                 )}>
                   {formatCurrency(income?.total_income ?? 0, "TRY")}
                 </p>
-                <p className="text-[10px] text-surface-400 mt-1">
+                <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-1">
                   {income?.tx_count ?? 0} işlem · {periodRangeMemo.from} → {periodRangeMemo.to}
                 </p>
               </>
             )}
           </div>
-          <p className="mt-2 text-[10px] text-amber-300/80 flex items-start gap-1">
+          <p className="mt-2 text-[10px] text-status-warning/90 flex items-start gap-1">
             <AlertTriangle size={10} className="mt-0.5 shrink-0" />
             <span>
               Bakiye anlık, gelir periyot toplamıdır. Sub-cash'ler arası
@@ -292,38 +292,38 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
       {/* Atanan entity'ler */}
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider">
+          <h4 className="v2-eyebrow text-[11px]">
             Atanan Entity'ler ({data.assignments.length})
           </h4>
           <button
             type="button"
             onClick={() => setShowAssignPicker(true)}
-            className="text-[11px] font-semibold px-2 py-1 rounded-md bg-brand-600 hover:bg-brand-500 text-white inline-flex items-center gap-1"
+            className="v2-btn v2-btn--ink v2-press !px-2.5 !py-1 !text-[11px] !rounded-md inline-flex items-center gap-1"
           >
             <Plus size={11} />
             Atama Ekle
           </button>
         </div>
         {data.assignments.length === 0 ? (
-          <p className="text-xs text-surface-500 italic">
+          <p className="text-xs text-[rgb(var(--v2-muted))] italic">
             Henüz entity atanmamış. Yukardan ekle.
           </p>
         ) : (
-          <div className="rounded-xl border border-surface-700 divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {data.assignments.map((a) => (
-              <div key={a.id} className="px-3 py-2 flex items-center justify-between gap-2 text-xs">
+              <div key={a.id} className="v2-list-row !px-3 !py-2 justify-between text-xs">
                 <div className="min-w-0 flex-1">
-                  <p className="text-surface-200 truncate flex items-center gap-1.5">
+                  <p className="text-[rgb(var(--v2-ink))] truncate flex items-center gap-1.5">
                     <EntityTypeBadge type={a.entity_type} />
                     {a.entity_name}
                   </p>
-                  <p className="text-[10px] text-surface-500 truncate">
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))] truncate">
                     {a.entity_type === "BANK_ACCOUNT"
                       ? `Katkı: ${formatCurrency(a.entity_balance_contribution, "TRY")}`
                       : "Aggregate'a katkı yok — sadece tx grouping"}
                   </p>
                 </div>
-                <p className="text-emerald-300 font-medium shrink-0 text-xs">
+                <p className="text-accent-strong dark:text-accent font-medium shrink-0 text-xs">
                   {a.entity_type === "BANK_ACCOUNT"
                     ? formatCurrency(a.entity_balance_contribution, "TRY")
                     : "—"}
@@ -331,7 +331,7 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
                 <button
                   onClick={() => unassign(a.id)}
                   disabled={busyAssignId === a.id}
-                  className="p-1 rounded-md text-surface-400 hover:bg-red-500/10 hover:text-red-300 transition-colors disabled:opacity-50"
+                  className="p-1 rounded-md text-[rgb(var(--v2-muted))] hover:bg-status-danger/10 hover:text-status-danger transition-colors disabled:opacity-50"
                   title="Atamayı kaldır (entity Ana Kasa'ya iade)"
                 >
                   {busyAssignId === a.id
@@ -347,19 +347,19 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
       {/* v1.7.x WP TODO 7bebe2f8: Gelir Dağılımı (kaynak bazlı) */}
       {income && income.breakdown_by_source.length > 0 && (
         <section>
-          <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider mb-2 flex items-center gap-1">
+          <h4 className="v2-eyebrow text-[11px] mb-2 flex items-center gap-1">
             <BarChart3 size={12} /> Gelir Dağılımı — {periodRangeMemo.label}
           </h4>
-          <div className="rounded-xl border border-surface-700 overflow-hidden">
-            <table className="w-full text-xs">
-              <thead className="bg-surface-800/60 text-surface-400 text-[10px] uppercase">
+          <div className="v2-card v2-table-wrap overflow-hidden">
+            <table className="v2-table text-xs">
+              <thead>
                 <tr>
-                  <th className="text-left px-3 py-2 font-medium">Kaynak</th>
-                  <th className="text-right px-3 py-2 font-medium">Tx</th>
-                  <th className="text-right px-3 py-2 font-medium">Gelir</th>
+                  <th className="text-left">Kaynak</th>
+                  <th className="v2-td-num">Tx</th>
+                  <th className="v2-td-num">Gelir</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-700">
+              <tbody>
                 {income.breakdown_by_source.map((s) => {
                   const href = s.source_type === "COUNTERPART"
                     ? `/dashboard/counterparts/${s.source_id}`
@@ -369,19 +369,19 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
                   return (
                     <tr
                       key={`${s.source_type}-${s.source_id}`}
-                      className="hover:bg-surface-700/40 cursor-pointer transition-colors"
+                      className="cursor-pointer"
                       onClick={() => { window.location.href = href; }}
                     >
-                      <td className="px-3 py-2 text-surface-200">
+                      <td className="text-[rgb(var(--v2-ink))]">
                         <span className="inline-flex items-center gap-1.5">
                           <EntityTypeBadge type={s.source_type} />
                           <span className="truncate">{s.source_name}</span>
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right text-surface-300">{s.tx_count}</td>
+                      <td className="v2-td-num text-[rgb(var(--v2-muted))]">{s.tx_count}</td>
                       <td className={cn(
-                        "px-3 py-2 text-right font-semibold whitespace-nowrap",
-                        s.income >= 0 ? "text-emerald-300" : "text-red-300",
+                        "v2-td-num font-semibold whitespace-nowrap",
+                        s.income >= 0 ? "text-accent-strong dark:text-accent" : "text-status-danger",
                       )}>
                         {formatCurrency(s.income, "TRY")}
                       </td>
@@ -397,7 +397,7 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
       {/* Tx kartı (inclusion table'dan) — Beta v1.1: lazy fetch ile pagination */}
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-xs font-semibold text-surface-200 uppercase tracking-wider flex items-center gap-1">
+          <h4 className="v2-eyebrow text-[11px] flex items-center gap-1">
             <Receipt size={12} /> Bu Sub-Cash&apos;in İşlemleri
             ({data.transactions.length + extraTxs.length}
             {hasMoreTx ? "+" : ""})
@@ -405,44 +405,44 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
           <button
             type="button"
             onClick={() => setShowRetroactive(true)}
-            className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-brand-600 hover:bg-brand-500 text-white inline-flex items-center gap-1"
+            className="v2-btn v2-btn--ink v2-press !px-2.5 !py-1 !text-[11px] !rounded-md inline-flex items-center gap-1"
           >
             <Rewind size={11} />
             Geri Dönük Ekle
           </button>
         </div>
         {data.transactions.length + extraTxs.length === 0 ? (
-          <p className="text-xs text-surface-500 italic">
+          <p className="text-xs text-[rgb(var(--v2-muted))] italic">
             Bu sub-cash&apos;e dahil edilmiş işlem yok. Yeni tx oluştururken
             entity match olursa otomatik eklenir; eski tx&apos;ler için
             &quot;Geri Dönük Ekle&quot; kullanın.
           </p>
         ) : (
-          <div className="rounded-xl border border-surface-700 divide-y divide-surface-700 max-h-96 overflow-y-auto">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))] max-h-96 overflow-y-auto">
             {[...data.transactions, ...extraTxs].map((t) => {
               const isManual = t.inclusion_scope === "MANUAL";
               const isAuto = t.inclusion_scope === "AUTOMATIC";
               return (
-                <div key={t.id} className="px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                <div key={t.id} className="v2-list-row !px-3 !py-2 justify-between text-xs">
                   <div className="min-w-0 flex-1">
-                    <p className="text-surface-200 truncate flex items-center gap-1.5">
+                    <p className="text-[rgb(var(--v2-ink))] truncate flex items-center gap-1.5">
                       <span className="truncate">{t.description || "—"}</span>
                       {isAuto && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-surface-700 text-surface-400 border border-surface-600">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded v2-sunken text-[rgb(var(--v2-muted))]">
                           AUTO
                         </span>
                       )}
                       {isManual && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/15 text-accent-strong dark:text-accent border border-accent/30">
                           MANUEL
                         </span>
                       )}
                     </p>
-                    <p className="text-[10px] text-surface-500">{t.date} · {t.payment_method}</p>
+                    <p className="text-[10px] text-[rgb(var(--v2-muted))]">{t.date} · {t.payment_method}</p>
                   </div>
                   <p className={cn(
                     "font-medium shrink-0",
-                    t.direction === "INCOME" ? "text-emerald-300" : "text-red-300",
+                    t.direction === "INCOME" ? "text-accent-strong dark:text-accent" : "text-status-danger",
                   )}>
                     {t.direction === "INCOME" ? "+" : "−"}{formatCurrency(t.amount, t.currency || "TRY")}
                   </p>
@@ -464,7 +464,7 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
                         setBusyRemoveTxId(null);
                       }
                     }}
-                    className="p-1 rounded-md text-surface-500 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50 shrink-0"
+                    className="p-1 rounded-md text-[rgb(var(--v2-muted))] hover:bg-status-danger/10 hover:text-status-danger disabled:opacity-50 shrink-0 transition-colors"
                   >
                     {busyRemoveTxId === t.id ? (
                       <Loader2 size={12} className="animate-spin" />
@@ -484,7 +484,7 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
               type="button"
               onClick={loadMoreTx}
               disabled={loadingMore}
-              className="text-[11px] px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-200 border border-surface-600 inline-flex items-center gap-1.5 disabled:opacity-50"
+              className="text-[11px] px-3 py-1.5 rounded-lg v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] inline-flex items-center gap-1.5 disabled:opacity-50 transition-colors v2-press"
             >
               {loadingMore ? (
                 <Loader2 size={11} className="animate-spin" />
@@ -522,11 +522,11 @@ export function SubCashDetailContent({ subCashId, onChange }: Props) {
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: "emerald" }) {
   return (
-    <div className="bg-surface-900 border border-surface-700 rounded-xl p-3">
-      <p className="text-[10px] uppercase text-surface-400">{label}</p>
+    <div className="v2-sunken rounded-xl p-3">
+      <p className="text-[10px] uppercase text-[rgb(var(--v2-muted))]">{label}</p>
       <p className={cn(
         "mt-1 text-sm font-semibold truncate",
-        accent === "emerald" ? "text-emerald-300" : "text-surface-100",
+        accent === "emerald" ? "text-accent-strong dark:text-accent" : "text-[rgb(var(--v2-ink))]",
       )}>
         {formatCurrency(value, "TRY")}
       </p>
@@ -715,26 +715,27 @@ function AssignmentPicker({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
+        className="v2-card shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700 shrink-0">
-          <h3 className="text-sm font-semibold text-surface-100">Atama Ekle</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-surface-700">
-            <X size={16} className="text-surface-400" />
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Atama Ekle</h3>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors">
+            <X size={16} />
           </button>
         </div>
 
         {/* Tip tab'leri */}
-        <div className="px-4 py-2 border-b border-surface-700 flex gap-1.5 shrink-0">
+        <div className="px-4 py-2 border-b border-[rgb(var(--v2-border))] flex gap-1.5 shrink-0">
           {(["BANK_ACCOUNT", "POS_DEVICE", "COUNTERPART"] as const).map((t) => (
             <button
               key={t}
               onClick={() => { setTab(t); setQuery(""); }}
+              aria-pressed={tab === t}
               className={cn(
-                "px-2.5 py-1 rounded-full text-[11px] font-medium border",
+                "px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors",
                 tab === t
-                  ? "bg-brand-600 border-brand-500 text-white"
-                  : "bg-surface-700 border-surface-600 text-surface-300",
+                  ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                  : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
               )}
             >
               {t === "BANK_ACCOUNT" ? "Banka/Kasa" : t === "POS_DEVICE" ? "POS" : "Cari"}
@@ -743,9 +744,9 @@ function AssignmentPicker({
         </div>
 
         {/* Search + active chip — v1.6.23.28 (TODO 24310479) */}
-        <div className="px-4 py-2 border-b border-surface-700 shrink-0 space-y-2">
+        <div className="px-4 py-2 border-b border-[rgb(var(--v2-border))] shrink-0 space-y-2">
           <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" />
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
             <input
               type="text"
               value={query}
@@ -755,15 +756,15 @@ function AssignmentPicker({
                 tab === "POS_DEVICE"   ? "Ad / banka / sahip ara…" :
                                           "Ad / VKN / telefon ara…"
               }
-              className="field field-sm py-1.5 pl-7 pr-7 text-xs"
+              className="w-full py-1.5 pl-7 pr-7 text-xs rounded-lg border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-surface-700"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-[rgb(var(--v2-card))]"
                 aria-label="Aramayı temizle"
               >
-                <X size={10} className="text-surface-400" />
+                <X size={10} className="text-[rgb(var(--v2-muted))]" />
               </button>
             )}
           </div>
@@ -771,22 +772,24 @@ function AssignmentPicker({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setShowInactive(false)}
+                aria-pressed={!showInactive}
                 className={cn(
-                  "px-2 py-0.5 rounded-full text-[10px] font-medium border",
+                  "px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors",
                   !showInactive
-                    ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
-                    : "bg-surface-700 border-surface-600 text-surface-300",
+                    ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
                 )}
               >
                 Aktif
               </button>
               <button
                 onClick={() => setShowInactive(true)}
+                aria-pressed={showInactive}
                 className={cn(
-                  "px-2 py-0.5 rounded-full text-[10px] font-medium border",
+                  "px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors",
                   showInactive
-                    ? "bg-surface-500 border-surface-400 text-surface-100"
-                    : "bg-surface-700 border-surface-600 text-surface-300",
+                    ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
                 )}
               >
                 Tümü
@@ -795,14 +798,14 @@ function AssignmentPicker({
           )}
         </div>
 
-        <p className="text-[10px] text-amber-300/80 px-4 py-1.5 border-b border-surface-700 shrink-0">
+        <p className="text-[10px] text-status-warning/90 px-4 py-1.5 border-b border-[rgb(var(--v2-border))] shrink-0">
           {tab === "BANK_ACCOUNT"
             ? "BANK_ACCOUNT katkı verir (current_balance). MAIN_CASH ve SUB_CASH atanamaz."
             : "POS_DEVICE / COUNTERPART aggregate'a 0 katkı verir (sadece tx grouping)."}
         </p>
 
         {error && (
-          <div className="mx-4 mt-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+          <div className="mx-4 mt-2 p-2.5 rounded-lg bg-status-danger/10 border border-status-danger/30 text-status-danger text-xs">
             {error}
           </div>
         )}
@@ -810,10 +813,10 @@ function AssignmentPicker({
         <div className="flex-1 overflow-y-auto p-3">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 size={20} className="animate-spin text-surface-400" />
+              <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           ) : paged.length === 0 ? (
-            <p className="text-xs text-surface-500 text-center py-6">
+            <p className="text-xs text-[rgb(var(--v2-muted))] text-center py-6">
               {query
                 ? "Arama sonucu yok."
                 : "Atanabilir entity yok."}
@@ -829,34 +832,34 @@ function AssignmentPicker({
                     disabled={already || busyId === o.id}
                     onClick={() => assignOne(o)}
                     className={cn(
-                      "w-full text-left p-2.5 rounded-lg border flex items-center justify-between gap-2 transition-colors",
+                      "v2-list-row v2-list-row--card !p-2.5 w-full text-left justify-between",
                       already
-                        ? "border-surface-700 bg-surface-900 opacity-50 cursor-not-allowed"
-                        : "border-surface-700 hover:border-brand-500/40 hover:bg-surface-700/40",
+                        ? "opacity-50 cursor-not-allowed"
+                        : "v2-list-row--interactive",
                       !o.active && !already && "opacity-60",
                     )}
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate flex items-center gap-1.5">
                         {o.name}
                         {!o.active && (
-                          <span className="text-[9px] px-1 py-0.5 rounded bg-surface-700 text-surface-400 border border-surface-600">
+                          <span className="text-[9px] px-1 py-0.5 rounded v2-sunken text-[rgb(var(--v2-muted))]">
                             pasif
                           </span>
                         )}
                       </p>
-                      <p className="text-[10px] text-surface-400">
+                      <p className="text-[10px] text-[rgb(var(--v2-muted))]">
                         {o.subtitle}
                         {already && " · zaten bu sub-cash'te"}
                       </p>
                     </div>
                     {o.balance != null && (
-                      <p className="text-xs font-semibold text-surface-300 shrink-0">
+                      <p className="text-xs font-semibold text-[rgb(var(--v2-muted))] shrink-0">
                         {formatCurrency(o.balance, "TRY")}
                       </p>
                     )}
                     {busyId === o.id && (
-                      <Loader2 size={12} className="animate-spin text-surface-400" />
+                      <Loader2 size={12} className="animate-spin text-[rgb(var(--v2-muted))]" />
                     )}
                   </button>
                 );
@@ -867,8 +870,8 @@ function AssignmentPicker({
 
         {/* v1.6.23.28 (TODO 24310479): pagination footer */}
         {!loading && filteredSorted.length > PAGE_SIZE && (
-          <div className="px-4 py-2 border-t border-surface-700 flex items-center justify-between shrink-0 text-[11px]">
-            <span className="text-surface-400">
+          <div className="px-4 py-2 border-t border-[rgb(var(--v2-border))] flex items-center justify-between shrink-0 text-[11px]">
+            <span className="text-[rgb(var(--v2-muted))]">
               {safePage * PAGE_SIZE + 1}–
               {Math.min((safePage + 1) * PAGE_SIZE, filteredSorted.length)}
               {" / "}{filteredSorted.length}
@@ -878,20 +881,22 @@ function AssignmentPicker({
                 type="button"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={safePage === 0}
-                className="p-1 rounded-md hover:bg-surface-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-1 rounded-md hover:bg-[rgb(var(--v2-sunken))] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                aria-label="Önceki sayfa"
               >
-                <ChevronLeft size={12} className="text-surface-300" />
+                <ChevronLeft size={12} className="text-[rgb(var(--v2-muted))]" />
               </button>
-              <span className="px-1.5 text-surface-300">
+              <span className="px-1.5 text-[rgb(var(--v2-ink))]">
                 {safePage + 1} / {totalPages}
               </span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={safePage >= totalPages - 1}
-                className="p-1 rounded-md hover:bg-surface-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-1 rounded-md hover:bg-[rgb(var(--v2-sunken))] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                aria-label="Sonraki sayfa"
               >
-                <ChevronRight size={12} className="text-surface-300" />
+                <ChevronRight size={12} className="text-[rgb(var(--v2-muted))]" />
               </button>
             </div>
           </div>
