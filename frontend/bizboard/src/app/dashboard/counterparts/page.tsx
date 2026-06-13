@@ -23,10 +23,10 @@ const PAGE_SIZE = 40;
 
 // ── Role helpers ─────────────────────────────────────────
 const ROLES: { value: CounterpartRole; label: string; badge: string; icon: typeof CircleUserRound }[] = [
-  { value: "CUSTOMER", label: "Musteri", badge: "bg-green-500/20 text-green-400", icon: CircleUserRound },
-  { value: "SUPPLIER", label: "Tedarikci", badge: "bg-blue-500/20 text-blue-400", icon: Package },
-  { value: "BOTH", label: "Her ikisi", badge: "bg-purple-500/20 text-purple-400", icon: RefreshCw },
-  { value: "OTHER", label: "Diger", badge: "bg-surface-600/40 text-surface-300", icon: Users },
+  { value: "CUSTOMER", label: "Musteri", badge: "bg-accent/15 text-accent-strong dark:text-accent", icon: CircleUserRound },
+  { value: "SUPPLIER", label: "Tedarikci", badge: "bg-accent/15 text-accent-strong dark:text-accent", icon: Package },
+  { value: "BOTH", label: "Her ikisi", badge: "bg-status-warning/15 text-status-warning", icon: RefreshCw },
+  { value: "OTHER", label: "Diger", badge: "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]", icon: Users },
 ];
 
 function roleMeta(r: CounterpartRole) {
@@ -233,21 +233,21 @@ export default function CounterpartsPage() {
             {/* v1.6.10: Geri dön butonu */}
             <button
               onClick={() => router.back()}
-              className="p-2 -ml-2 mt-0.5 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+              className="v2-icon-btn v2-press mt-0.5"
               aria-label="Geri don"
             >
-              <ArrowLeft size={20} className="text-surface-300" />
+              <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-surface-100">Karsi Firmalar</h1>
-              <p className="text-surface-400 mt-1 text-sm">
+              <h1 className="v2-display text-2xl">Karsi Firmalar</h1>
+              <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
                 Musteri, tedarikci ve diger dis paydaslarin cari hesabi
               </p>
             </div>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm rounded-xl transition-colors shrink-0"
+            className="v2-btn v2-btn--ink v2-press text-sm shrink-0"
           >
             <Plus size={16} />
             Yeni
@@ -256,7 +256,7 @@ export default function CounterpartsPage() {
       </section>
 
       {(error || pageError) && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+        <div className="p-4 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">
           {error || pageError}
         </div>
       )}
@@ -264,18 +264,18 @@ export default function CounterpartsPage() {
       {/* WP currency-display: Cari toplam + USD/gram-altın karşılığı + Kuru Güncelle.
           Toplam tutarın ALTINA daha küçük fontla karşılıklar (alacaklar deseniyle aynı). */}
       {!loading && filtered.length > 0 && (
-        <section className="glass-card p-4 flex flex-wrap items-start justify-between gap-3">
+        <section className="v2-card p-4 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] text-surface-400 uppercase tracking-wider">
+            <p className="v2-eyebrow">
               {netTotal >= 0 ? "Toplam Net Alacak" : "Toplam Net Verecek"}
-              {hasNext && <span className="text-surface-500 normal-case"> (yuklenen)</span>}
+              {hasNext && <span className="text-[rgb(var(--v2-muted))]/70 normal-case"> (yuklenen)</span>}
             </p>
             {/* İşaret-bazlı renk: pozitif (alacaklı) → yeşil; 0 → nötr; negatif → uyarı. */}
             <p className={cn(
-              "mt-1 text-2xl font-bold",
-              netTotal > 0 ? "text-emerald-400"
-                : netTotal < 0 ? "text-red-400"
-                : "text-surface-200",
+              "num mt-1 text-2xl font-bold",
+              netTotal > 0 ? "text-accent-strong dark:text-accent"
+                : netTotal < 0 ? "text-status-danger"
+                : "text-[rgb(var(--v2-ink))]",
             )}>
               {formatCurrency(Math.abs(netTotal), "TRY")}
             </p>
@@ -293,7 +293,7 @@ export default function CounterpartsPage() {
             onClick={() => refresh(() => { triggerRefresh(); fetchList(); })}
             disabled={refreshing || onCooldown}
             title={onCooldown ? "Az önce güncellendi — biraz bekleyin" : "Canlı kuru çek ve bakiyeleri güncelle"}
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="v2-btn v2-btn--ink v2-press text-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
             Kuru Güncelle
@@ -302,15 +302,15 @@ export default function CounterpartsPage() {
       )}
 
       {/* Filters */}
-      <section className="glass-card p-3 flex flex-col gap-3">
+      <section className="v2-card p-3 flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Isim veya vergi no ara..."
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-surface-100 placeholder-surface-400 text-sm focus:outline-none focus:border-brand-500"
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
           </div>
           {/* v1.7.x: business filter (sadece >1 business varsa) */}
@@ -330,16 +330,17 @@ export default function CounterpartsPage() {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex gap-2 overflow-x-auto -mx-1 px-1">
+          <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl overflow-x-auto">
             {(["ALL", ...ROLES.map((r) => r.value)] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRoleFilter(r as CounterpartRole | "ALL")}
+                aria-pressed={roleFilter === r}
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
                   roleFilter === r
-                    ? "bg-brand-600 text-white"
-                    : "bg-surface-700/50 text-surface-300 hover:bg-surface-700"
+                    ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                    : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
                 )}
               >
                 {r === "ALL" ? "Tumu" : roleMeta(r as CounterpartRole).label}
@@ -349,25 +350,33 @@ export default function CounterpartsPage() {
           {/* v1.7.x: grup görünümü toggle (sadece >1 business + ALL filter) */}
           {businesses.length > 1 && businessFilter === "ALL" && (
             <div className="ml-auto flex items-center gap-1 text-[11px]">
-              <span className="text-surface-400">Görünüm:</span>
-              <button
-                onClick={() => setGroupBy("business")}
-                className={cn(
-                  "px-2 py-1 rounded-md font-medium",
-                  groupBy === "business" ? "bg-brand-500/20 text-brand-200" : "text-surface-400 hover:bg-surface-700",
-                )}
-              >
-                İşletmeye Göre
-              </button>
-              <button
-                onClick={() => setGroupBy("none")}
-                className={cn(
-                  "px-2 py-1 rounded-md font-medium",
-                  groupBy === "none" ? "bg-brand-500/20 text-brand-200" : "text-surface-400 hover:bg-surface-700",
-                )}
-              >
-                Düz Liste
-              </button>
+              <span className="text-[rgb(var(--v2-muted))]">Görünüm:</span>
+              <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
+                <button
+                  onClick={() => setGroupBy("business")}
+                  aria-pressed={groupBy === "business"}
+                  className={cn(
+                    "px-2 py-1 rounded-md font-medium",
+                    groupBy === "business"
+                      ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                      : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
+                  )}
+                >
+                  İşletmeye Göre
+                </button>
+                <button
+                  onClick={() => setGroupBy("none")}
+                  aria-pressed={groupBy === "none"}
+                  className={cn(
+                    "px-2 py-1 rounded-md font-medium",
+                    groupBy === "none"
+                      ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                      : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
+                  )}
+                >
+                  Düz Liste
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -377,11 +386,11 @@ export default function CounterpartsPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-surface-200 rounded-2xl animate-pulse" />
+            <div key={i} className="h-24 v2-sunken rounded-2xl animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center text-surface-400 text-sm">
+        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
           {list.length === 0
             ? 'Henuz karsi firma yok. "Yeni" ile ilk kaydi ekleyebilirsin.'
             : "Aramaya uyan kayit bulunamadi."}
@@ -392,7 +401,7 @@ export default function CounterpartsPage() {
                 type="button"
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] text-xs font-medium transition-colors disabled:opacity-50 v2-press"
               >
                 {loadingMore ? "Yukleniyor..." : "Daha fazla kayit ara"}
               </button>
@@ -406,12 +415,12 @@ export default function CounterpartsPage() {
             {grouped.map((g) => (
               <section key={g.businessId}>
                 <div className="flex items-center gap-2 mb-2 px-1">
-                  <div className="w-1 h-4 bg-brand-500 rounded-full" />
-                  <h3 className="text-xs font-semibold text-surface-200 uppercase tracking-wider">
+                  <div className="w-1 h-4 bg-accent rounded-full" />
+                  <h3 className="text-xs font-semibold text-[rgb(var(--v2-ink))] uppercase tracking-wider">
                     {g.businessName}
                   </h3>
-                  <span className="text-[10px] text-surface-400">({g.items.length})</span>
-                  <div className="flex-1 border-b border-surface-700 ml-2" />
+                  <span className="text-[10px] text-[rgb(var(--v2-muted))]">({g.items.length})</span>
+                  <div className="flex-1 border-b border-[rgb(var(--v2-border))] ml-2" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {g.items.map((c) => renderCard(c))}
@@ -495,25 +504,25 @@ export default function CounterpartsPage() {
 
       {/* Delete */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-surface-100 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="v2-card shadow-v2-hover p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">
               Karsi Firmayi Sil
             </h3>
-            <p className="text-sm text-surface-400 mb-6">
-              <strong className="text-surface-100">{deleteConfirm.name}</strong> kaydini
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-6">
+              <strong className="text-[rgb(var(--v2-ink))]">{deleteConfirm.name}</strong> kaydini
               silmek istediginden emin misin? Bagli borc varsa silme reddedilir.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="btn-secondary px-4 py-2 text-sm"
+                className="px-4 py-2 rounded-xl font-semibold text-[rgb(var(--v2-ink))] v2-sunken hover:border-accent/50 transition-colors v2-press text-sm"
               >
                 Iptal
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm"
+                className="px-4 py-2 rounded-xl bg-status-danger hover:opacity-90 text-white font-semibold text-sm v2-press"
               >
                 Evet, Sil
               </button>
@@ -549,7 +558,7 @@ const CounterpartCard = memo(function CounterpartCard({
   return (
     <div
       onClick={() => onOpen(c)}
-      className="glass-card glass-hover p-4 cursor-pointer transition-all active:scale-[0.98] group"
+      className="v2-card v2-lift p-4 cursor-pointer transition-all active:scale-[0.98] group"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -557,7 +566,7 @@ const CounterpartCard = memo(function CounterpartCard({
             <Icon size={18} />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-surface-100 text-sm leading-tight truncate">
+            <h3 className="font-semibold text-[rgb(var(--v2-ink))] text-sm leading-tight truncate">
               {c.name}
             </h3>
             <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -565,34 +574,36 @@ const CounterpartCard = memo(function CounterpartCard({
                 {m.label}
               </span>
               {c.tax_id && (
-                <span className="text-[10px] text-surface-400">{c.tax_id}</span>
+                <span className="text-[10px] text-[rgb(var(--v2-muted))]">{c.tax_id}</span>
               )}
             </div>
           </div>
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
           <div className={cn(
-            "text-sm font-bold whitespace-nowrap",
-            balance > 0 ? "text-green-400" : balance < 0 ? "text-red-400" : "text-surface-300"
+            "num text-sm font-bold whitespace-nowrap",
+            balance > 0 ? "text-accent-strong dark:text-accent" : balance < 0 ? "text-status-danger" : "text-[rgb(var(--v2-muted))]"
           )}>
             {formatCurrency(balance)}
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(c); }}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-surface-400 hover:text-white"
+              className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))]"
+              aria-label="Duzenle"
               title="Duzenle"
             >
               <Pencil size={14} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(c); }}
-              className="p-1.5 rounded-lg hover:bg-red-500/20 text-surface-400 hover:text-red-400"
+              className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-status-danger hover:bg-status-danger/10"
+              aria-label="Sil"
               title="Sil"
             >
               <Trash2 size={14} />
             </button>
-            <ArrowRight size={14} className="text-surface-500 ml-1" />
+            <ArrowRight size={14} className="text-[rgb(var(--v2-muted))] ml-1" />
           </div>
         </div>
       </div>
@@ -670,24 +681,25 @@ function CounterpartFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
       <form
         onSubmit={handleSubmit}
-        className="card p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
+        className="v2-card shadow-v2-hover p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-surface-100">{title}</h3>
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/10 text-surface-400 hover:text-white"
+            className="v2-icon-btn v2-press"
+            aria-label="Kapat"
           >
             <X size={18} />
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+          <div className="mb-4 p-3 bg-status-danger/10 border border-status-danger/30 rounded-xl text-status-danger text-sm">
             {error}
           </div>
         )}
@@ -695,11 +707,11 @@ function CounterpartFormModal({
         {/* v1.7.x bug-fix: business picker — create modunda zorunlu */}
         {requireBusiness && (
           <div className="mb-4">
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">İşletme *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">İşletme *</label>
             {businesses.length === 0 ? (
-              <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+              <div className="h-10 v2-sunken rounded-xl animate-pulse" />
             ) : businesses.length === 1 ? (
-              <div className="px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-700/40 text-sm text-surface-200">
+              <div className="px-3 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))]">
                 {businesses[0].name}
               </div>
             ) : (
@@ -750,10 +762,10 @@ function CounterpartFormModal({
               placeholder="10 veya 11 hane"
               inputMode="numeric"
               maxLength={11}
-              className={cn(inputClass, taxIdInvalid && "border-red-500")}
+              className={cn(inputClass, taxIdInvalid && "border-status-danger")}
             />
             {taxIdInvalid && (
-              <p className="mt-1 text-xs text-red-400">Gecersiz format / checksum</p>
+              <p className="mt-1 text-xs text-status-danger">Gecersiz format / checksum</p>
             )}
           </Field>
 
@@ -813,14 +825,14 @@ function CounterpartFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="btn-secondary px-4 py-2 text-sm"
+            className="px-4 py-2 rounded-xl font-semibold text-[rgb(var(--v2-ink))] v2-sunken hover:border-accent/50 transition-colors v2-press text-sm"
           >
             Iptal
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold text-sm"
+            className="v2-btn v2-btn--ink v2-press text-sm disabled:opacity-50"
           >
             {submitting ? "Kaydediliyor..." : "Kaydet"}
           </button>
@@ -831,7 +843,7 @@ function CounterpartFormModal({
 }
 
 const inputClass =
-  "w-full px-3 py-2 rounded-lg bg-surface-700/50 border border-surface-600 text-surface-100 text-sm placeholder-surface-400 focus:outline-none focus:border-brand-500 transition-colors";
+  "w-full px-3 py-2 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] text-sm placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all";
 
 function Field({
   label,
@@ -844,7 +856,7 @@ function Field({
 }) {
   return (
     <div className={colSpan ?? ""}>
-      <label className="block text-xs font-medium text-surface-400 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1.5">{label}</label>
       {children}
     </div>
   );
