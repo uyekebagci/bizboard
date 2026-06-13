@@ -61,16 +61,16 @@ export function BusinessGroupCard({
   return (
     <section
       className={cn(
-        "glass-card relative overflow-hidden",
-        isPinned && "sticky top-0 z-10 ring-1 ring-white/5",
-        isHigh && "ring-1 ring-white/5",
+        "v2-card relative overflow-hidden",
+        isPinned && "sticky top-0 z-10 ring-1 ring-[rgb(var(--v2-border))]",
+        isHigh && "ring-1 ring-[rgb(var(--v2-border))]",
       )}
     >
       {/* Accent bar (3px sol kenar) */}
       <div className={cn("absolute inset-y-0 left-0 w-[3px]", colorCls.bar)} aria-hidden />
 
       {/* Header */}
-      <header className="flex items-center justify-between gap-2 px-4 py-3 border-b border-surface-700">
+      <header className="flex items-center justify-between gap-2 px-4 py-3 border-b border-[rgb(var(--v2-border))]">
         <button
           onClick={() => setCollapsed((c) => !c)}
           className="flex items-center gap-2 flex-1 text-left min-w-0"
@@ -79,19 +79,19 @@ export function BusinessGroupCard({
           {priorityIcon(group.priority) && (
             <span className="text-sm leading-none">{priorityIcon(group.priority)}</span>
           )}
-          <h3 className="font-semibold text-surface-100 text-sm truncate">{group.name}</h3>
+          <h3 className="font-semibold text-[rgb(var(--v2-ink))] text-sm truncate">{group.name}</h3>
           {isPinned && (
             <span className={cn("text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border", colorCls.chipBg, colorCls.chipText)}>
               PINNED
             </span>
           )}
-          <span className="ml-auto text-[11px] text-surface-400 shrink-0">
+          <span className="ml-auto text-[11px] text-[rgb(var(--v2-muted))] shrink-0">
             {memberBusinesses.length} isletme
           </span>
           {collapsed ? (
-            <ChevronDown size={14} className="text-surface-400" />
+            <ChevronDown size={14} className="text-[rgb(var(--v2-muted))]" />
           ) : (
-            <ChevronUp size={14} className="text-surface-400" />
+            <ChevronUp size={14} className="text-[rgb(var(--v2-muted))]" />
           )}
         </button>
 
@@ -114,7 +114,7 @@ export function BusinessGroupCard({
           )}
         >
           {memberBusinesses.length === 0 ? (
-            <div className="py-6 text-center text-xs text-surface-400 border-2 border-dashed border-surface-700 rounded-xl">
+            <div className="py-6 text-center text-xs text-[rgb(var(--v2-muted))] border-2 border-dashed border-[rgb(var(--v2-border))] rounded-xl">
               Bu gruba isletme suruklemek icin <br/> asagidaki kartlardan birini buraya birakin.
             </div>
           ) : (

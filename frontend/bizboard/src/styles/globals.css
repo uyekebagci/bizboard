@@ -170,35 +170,6 @@
    * .dark token'ları DEĞİŞMEZ — bu yalnız yeni component class'ları.
    * ============================================================ */
 
-  /* Glass kart: dark → yarı saydam + ince border + blur + iç gölge;
-     light → near-solid surface-800 + gerçek border + gölge, blur YOK. */
-  .glass-card {
-    background: linear-gradient(
-      180deg,
-      rgb(var(--surface-800) / 0.55),
-      rgb(var(--surface-800) / 0.30)
-    );
-    border: 1px solid rgb(var(--surface-700) / 0.5);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    box-shadow:
-      0 1px 0 rgb(var(--surface-0) / 0.05) inset,
-      0 18px 40px -22px rgba(0, 0, 0, 0.7);
-    /* Daxa hizası: app genelindeki de-facto kart primitivi → büyük yuvarlak. */
-    border-radius: var(--radius-card);
-  }
-  /* Light: artık tam OPAK beyaz yüzey + DAHA NET border (saydam/soluk his giderildi).
-     Daxa katmanlı gölge ile app zemininden belirgin ayrışır. */
-  html:not(.dark) .glass-card {
-    background: rgb(var(--surface-800) / 1);
-    border: 1px solid rgb(var(--surface-600) / 1);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow:
-      0 1px 2px rgba(15, 23, 42, 0.05),
-      0 12px 28px -18px rgba(15, 23, 42, 0.28);
-  }
-
   /* Solid modal yüzeyi — glass-card'ın dark'taki yarı-saydamlığı bazı
      yoğun detay modallarını "yıkanmış/floaty" gösteriyordu. Bu varyant
      her iki temada da OPAK + net border + premium gölge sağlar; içerik
@@ -243,21 +214,6 @@
     box-shadow:
       0 1px 2px rgba(15, 23, 42, 0.06),
       0 16px 36px -22px rgba(15, 23, 42, 0.35);
-  }
-
-  /* Hover: hafif yükselme + brand glow. */
-  .glass-hover {
-    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
-      box-shadow 0.25s, border-color 0.25s;
-  }
-  .glass-hover:hover {
-    transform: translateY(-3px);
-    border-color: rgb(var(--color-brand) / 0.35);
-    box-shadow: 0 24px 50px -24px rgba(76, 110, 245, 0.45);
-  }
-  html:not(.dark) .glass-hover:hover {
-    border-color: rgba(76, 110, 245, 0.45);
-    box-shadow: 0 20px 40px -24px rgba(76, 110, 245, 0.35);
   }
 
   /* Başlık — sıkı tracking. */
