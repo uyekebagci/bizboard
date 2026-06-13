@@ -14,54 +14,71 @@
    * rgb(var(--surface-N) / <alpha-value>) ile opacity'yi korur.
    */
   :root {
+    /* ════════════════════════════════════════════════════════════
+     * LIGHT TEMA — SIFIRDAN, LIGHT'A ÖZEL TASARIM (dark'ın inversiyonu DEĞİL).
+     *
+     * Tasarım hedefleri:
+     *  1. NET yüzey hiyerarşisi: app zemini (soğuk açık-gri) < sunken < kart
+     *     (beyaz) < yükseltilmiş; katmanlar GÖZLE ayrışsın (washout YOK).
+     *  2. Metin WCAG AA: başlık/body near-black, muted yeterince KOYU.
+     *  3. Accent lime → light'a uyarlandı: dolgu üstünde KOYU metin; metin/ikon
+     *     için KOYU yeşil (lime-on-white okunmaz). Sadece dark'ı kopyalamadık.
+     *  4. Logo tile + avatar: koyu ink zemin + parlak lime harf (beyaz parlama
+     *     YOK; ink koyu = light'ta okunur, kasıtlı premium plaka).
+     *  5. Border'lar GERÇEKTEN görünür (eski #e6e8ec ~görünmezdi → #cdd5e0).
+     *  6. Gölgeler YUMUŞAK light (slate-mavi tonlu, dark-gölge değil).
+     * ════════════════════════════════════════════════════════════ */
     --color-brand: 92 124 250;
     --color-surface: 255 255 255;
     --radius: 0.75rem;
 
-    /* ── UI v2 (Daxa / Overview Panel) — LIGHT ──────────────────
-       Accent = lime-yeşil (token-bazlı → kullanıcı tonu buradan değiştirir).
-       Brand indigo SİLİNMEDİ; v2 yüzeyleri accent kullanır, eski yüzeyler brand. */
-    --accent: 132 204 22;        /* #84cc16 lime-500 — highlight */
-    --accent-bright: 163 230 53; /* #a3e635 lime-400 — ilerleme arkı/aktif */
-    --accent-strong: 77 124 15;  /* #4d7c0f lime-700 — light'ta metin/kontrast */
+    /* ── UI v2 (Daxa) Accent = lime — LIGHT'a özel tonlanmış ──────
+       Light'ta lime parlak/açık bir renk: yüzey/metin için olduğu gibi
+       kullanılamaz. Dolgu (button/chip-bg) parlak kalır + üstünde KOYU
+       metin; standalone metin/ikon için --accent-strong (koyu lime). */
+    --accent: 101 163 13;        /* #65a30d lime-600 — light'ta okunur dolgu/halka tonu */
+    --accent-bright: 132 204 22; /* #84cc16 lime-500 — canlı dolgu (üstünde koyu ink) + dark-tile harf */
+    --accent-strong: 63 98 18;   /* #3f6212 lime-800 — light metin/ikon (white üstü 7:1 AA+) */
     --accent-soft: 236 252 203;  /* #ecfccb lime-100 — tint zemin */
-    --accent-ink: 26 46 5;       /* #1a2e05 — accent zemin üstü koyu metin */
+    --accent-ink: 23 37 5;       /* #172505 — accent dolgu üstü koyu metin (lime'da ~7.4:1) */
 
-    /* v2 yüzey hiyerarşisi (blur yerine katman) — LIGHT */
-    --v2-app: 240 241 243;       /* #f0f1f3 — app zemini */
-    --v2-card: 255 255 255;      /* #ffffff — kart yüzeyi */
-    --v2-sunken: 244 245 247;    /* #f4f5f7 — alt-yüzey / chip */
-    --v2-border: 230 232 236;    /* #e6e8ec — ince border */
-    --v2-ink: 17 19 22;          /* #111316 — vurgu/siyah metin + buton */
-    --v2-muted: 100 106 116;     /* #646a74 — muted metin */
+    /* v2 yüzey hiyerarşisi — LIGHT: 3 net katman (washout giderildi).
+       app (soğuk açık-gri) belirgin biçimde kart'tan (beyaz) AYRI;
+       sunken app'ten hafif koyu (chip/segment kart içinde de okunur). */
+    --v2-app: 237 240 245;       /* #edf0f5 — app zemini (soğuk açık-gri, beyazdan net ayrı) */
+    --v2-card: 255 255 255;      /* #ffffff — kart yüzeyi (net beyaz, yükseltilmiş) */
+    --v2-sunken: 232 236 242;    /* #e8ecf2 — alt-yüzey / chip (app'ten koyu, kart içinde ayrışır) */
+    --v2-border: 205 213 224;    /* #cdd5e0 — GÖRÜNÜR ince border (slate-300 civarı) */
+    --v2-ink: 15 23 42;          /* #0f172a — vurgu/koyu metin + ink buton/tile (slate-900) */
+    --v2-muted: 91 101 115;      /* #5b6573 — muted metin (white üstü ~5.9:1 AA) */
 
     --radius-card: 20px;
+    /* Light gölge: slate-mavi tonlu, YUMUŞAK; katmanı zeminden kaldırır. */
     --shadow-card:
-      0 1px 2px rgba(17, 19, 22, 0.04),
-      0 8px 24px -12px rgba(17, 19, 22, 0.12);
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 8px 24px -12px rgba(15, 23, 42, 0.14);
     --shadow-card-hover:
-      0 2px 4px rgba(17, 19, 22, 0.05),
-      0 18px 40px -16px rgba(17, 19, 22, 0.2);
+      0 2px 6px rgba(15, 23, 42, 0.08),
+      0 18px 40px -16px rgba(15, 23, 42, 0.22);
 
-    /* LIGHT palet — premium revize (FAZ 2 cila).
-     * Koyu indeksler = metin (açık→koyu), açık indeksler = yüzey.
-     * Hedef: derinlikli, temiz, hafif soğuk-nötr ("slate") tonlar; düz/
-     * yıkanmış #f8f9fa görünümü giderildi. App arka planı kartlardan
-     * belirgin AYRI (kontrast + ayrışma), border'lar daha okunur. */
+    /* ── Eski surface-N paleti (v1 .card / .glass-card / form / badge) ──
+       Light'a özel: KOYU indeksler = metin (açık→koyu), AÇIK indeksler =
+       yüzey. Tüm metin tonları AA; yüzeyler app↔kart net ayrışır; border
+       gerçekten görünür. */
     --surface-0: 15 23 42;     /* #0f172a — en koyu metin (slate-900) */
     --surface-50: 241 245 249; /* #f1f5f9 — slate-100 */
     --surface-100: 15 23 42;   /* #0f172a — başlık metni */
     --surface-200: 30 41 59;   /* #1e293b — body metin (slate-800) */
-    --surface-300: 51 65 85;   /* #334155 — slate-700 */
-    --surface-400: 100 116 139;/* #64748b — muted metin (slate-500) */
-    --surface-500: 148 163 184;/* #94a3b8 — slate-400 */
-    --surface-600: 203 213 225;/* #cbd5e1 — border (slate-300) */
-    --surface-700: 226 232 240;/* #e2e8f0 — alt-yüzey / chip (slate-200) */
+    --surface-300: 51 65 85;   /* #334155 — slate-700 (ikincil metin) */
+    --surface-400: 91 101 115; /* #5b6573 — muted metin (white üstü AA, slate-500'den KOYU) */
+    --surface-500: 148 163 184;/* #94a3b8 — slate-400 (disabled/ince çizgi) */
+    --surface-600: 205 213 224;/* #cdd5e0 — GÖRÜNÜR border */
+    --surface-700: 232 236 242;/* #e8ecf2 — alt-yüzey / chip (app'ten koyu) */
     --surface-800: 255 255 255;/* #ffffff — kart (net beyaz, bg'den ayrı) */
     --surface-900: 255 255 255;/* #ffffff — panel/üst yüzey */
 
-    --body-bg: 237 242 248;    /* #edf2f8 — app arka planı (hafif soğuk, kartlardan ayrı) */
-    --body-text: 30 41 59;     /* #1e293b — slate-800 */
+    --body-bg: 237 240 245;    /* #edf0f5 — app arka planı (v2-app ile aynı, tutarlı zemin) */
+    --body-text: 30 41 59;     /* #1e293b — slate-800 body metin */
   }
 
   .dark {
@@ -857,6 +874,109 @@
   }
 
   /* ════════════════════════════════════════════════════════════
+   * UI v2 — WIDGET PRIMITIVE (TEK KAYNAK / single source of truth)
+   * ─────────────────────────────────────────────────────────────
+   * Tüm pano widget'larının ortak kabuğu. Widget bileşenleri kendi
+   * kart-CSS'ini HARDCODE ETMEZ — hepsi <Widget> primitive'i (veya
+   * doğrudan bu sınıfları) kullanır. Bir gün yüzey/başlık/border/gölge
+   * değişsin istenirse YALNIZ burayı (ve token'ları) değiştir → tüm
+   * widget'lar otomatik takip eder. Daxa dili: solid yüzey + ince
+   * border + çok-katmanlı yumuşak gölge (blur YOK) + lime accent + çift tema.
+   * ════════════════════════════════════════════════════════════ */
+
+  /* Widget kabuğu — .v2-card ile aynı yüzey dili, içerik akışı için flex-col.
+     overflow-hidden: başlık border'ı + liste/footer köşelerle hizalı kalır. */
+  .v2-widget {
+    background: rgb(var(--v2-card));
+    border: 1px solid rgb(var(--v2-border));
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    color: rgb(var(--body-text));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Tıklanabilir widget — hover'da accent halka + hafif lift. */
+  .v2-widget--interactive {
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      border-color 0.2s;
+  }
+  .v2-widget--interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: rgb(var(--accent) / 0.45);
+  }
+  .v2-widget--interactive:focus-visible {
+    outline: none;
+    border-color: rgb(var(--accent) / 0.6);
+    box-shadow: var(--shadow-card), 0 0 0 2px rgb(var(--accent) / 0.4);
+  }
+
+  /* Accent vurgulu widget (hero / highlight) — koyu ink zemin + lime aksan.
+     Konsolide / Genel Kasa gibi öne çıkan tek kart için. */
+  .v2-widget--hero {
+    background:
+      radial-gradient(140% 140% at 0% 0%, rgb(var(--v2-ink) / 0.97), rgb(var(--v2-ink)));
+    border-color: rgb(var(--v2-ink));
+    color: rgb(var(--v2-card));
+    box-shadow: var(--shadow-card), 0 0 0 1px rgb(var(--accent) / 0.18);
+  }
+  .v2-widget--hero.v2-widget--interactive:hover {
+    border-color: rgb(var(--accent) / 0.55);
+    box-shadow: var(--shadow-card-hover), 0 0 0 1px rgb(var(--accent) / 0.4);
+  }
+  .v2-widget--hero.v2-widget--interactive:focus-visible {
+    border-color: rgb(var(--accent) / 0.7);
+    box-shadow: var(--shadow-card), 0 0 0 2px rgb(var(--accent) / 0.55);
+  }
+
+  /* Widget başlığı — başlık metni (sol) + opsiyonel aksiyon (sağ) + alt border.
+     overflow-hidden kabuğuyla birlikte üst köşeler temiz kalır. */
+  .v2-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+  /* Hero varyantında border + ikon/metin renkleri açık zemine göre yumuşatılır. */
+  .v2-widget--hero .v2-widget-header {
+    border-bottom-color: rgb(var(--v2-card) / 0.14);
+  }
+
+  /* Başlık metni — küçük, yarı-bold; ikon + etiket. */
+  .v2-widget-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgb(var(--v2-ink));
+    min-width: 0;
+  }
+  .v2-widget--hero .v2-widget-title {
+    color: rgb(var(--v2-card) / 0.7);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Widget gövdesi — varsayılan iç padding; liste/divider içerikler kendi
+     padding'ini yönetebildiğinden .v2-widget-body--flush ile sıfırlanabilir. */
+  .v2-widget-body {
+    padding: 1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .v2-widget-body--flush {
+    padding: 0;
+  }
+
+  /* ════════════════════════════════════════════════════════════
    * UI v2 — SHELL (Sidebar + TopBar). Eski indigo/glass yüzeyleri
    * yerine Daxa solid/katmanlı yüzey + lime accent + yuvarlak.
    * İçerik alanıyla (.v2-card / .v2-app-bg) TUTARLI. Çift tema.
@@ -886,12 +1006,22 @@
       0 8px 18px -10px rgb(var(--v2-ink) / 0.55);
   }
   html:not(.dark) .v2-logo-tile {
-    /* Light: ink = koyu slate (#0f172a) zemin üstünde parlak lime harf. */
-    color: rgb(var(--accent-bright));
+    /* Light: tile KASITLI koyu (ink = slate-900 #0f172a) → light shell üstünde
+       net okunur, premium plaka (beyaz-parlama YOK). Harf parlak lime-400
+       (#a3e635, koyu tile üstü ~11.8:1) → "Ç" net seçilir. Dark gradient'i
+       light shell'e oturması için biraz daha doygun, yumuşak light gölge. */
+    background:
+      radial-gradient(120% 120% at 30% 0%, rgb(30 41 59), rgb(var(--v2-ink)));
+    color: rgb(163 230 53); /* lime-400 — koyu tile üstü parlak okunur harf */
     box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.1) inset,
-      0 0 0 1px rgb(var(--accent) / 0.3),
-      0 8px 16px -10px rgb(15 23 42 / 0.4);
+      0 1px 0 rgb(255 255 255 / 0.08) inset,
+      0 0 0 1px rgb(15 23 42 / 0.06),
+      0 6px 16px -8px rgb(15 23 42 / 0.35);
+  }
+  /* Logo imza noktası (light) — koyu tile üstünde parlak lime + hafif glow. */
+  html:not(.dark) .v2-logo-dot {
+    background: rgb(163 230 53);
+    box-shadow: 0 0 6px rgb(132 204 22 / 0.7);
   }
   /* Logo imza noktası — accent dolgu + hafif glow (Daxa aksan). */
   .v2-logo-dot {
@@ -929,6 +1059,13 @@
   .v2-avatar {
     background: rgb(var(--v2-ink));
     color: rgb(var(--accent-bright));
+  }
+  /* Light: koyu ink daire (#0f172a) + parlak lime-400 baş harf (~11.8:1) →
+     beyaz-parlama YOK, net okunur; logo plakasıyla tutarlı. Yumuşak halka. */
+  html:not(.dark) .v2-avatar {
+    background: rgb(var(--v2-ink));
+    color: rgb(163 230 53);
+    box-shadow: 0 0 0 1px rgb(15 23 42 / 0.06);
   }
 
   /* Nav öğesi — pasif: muted; hover: sunken + ink; aktif: accent şerit + tint. */
@@ -1027,6 +1164,87 @@
   }
   .v2-table th.v2-td-num {
     @apply text-right;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+   * UI v2 — Liste satırı primitive'i (Daxa). TÜM liste satırlarının
+   * TEK kaynağı. Solid/katmanlı yüzey + hover + divider + yuvarlak +
+   * çift tema + a11y. Genelde .v2-card içinde divide-y ile dizilir;
+   * standalone da kullanılabilir (.v2-list-row--card varyantı).
+   *
+   * Kullanım:
+   *   <div class="v2-card divide-y divide-[rgb(var(--v2-border))]">
+   *     <div class="v2-list-row" role="button" tabindex="0">…</div>
+   *   </div>
+   * Modifierlar:
+   *   --interactive  tıklanabilir satır (cursor + hover + focus-ring)
+   *   --accent       sol accent rail (lime) — vurgu/seçili satır
+   *   --warn         sol amber rail + hafif tint (Ana Kasa)
+   *   --system       sol mor rail + hafif tint (sistem hesabı)
+   *   --muted        opaklık düşür (pasif kayıt)
+   *   --card         standalone (kendi border + radius; divider'sız liste)
+   * ════════════════════════════════════════════════════════════ */
+  .v2-list-row {
+    @apply relative flex items-center gap-3 px-4 py-3;
+    color: rgb(var(--v2-ink));
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  /* Sol accent/durum rail — modifier ile renklenir (default gizli). */
+  .v2-list-row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: transparent;
+    transition: background-color 0.15s ease;
+  }
+  /* Tıklanabilir satır — pointer + hover yüzey + erişilebilir focus halkası. */
+  .v2-list-row--interactive {
+    @apply cursor-pointer;
+  }
+  .v2-list-row--interactive:hover {
+    background: rgb(var(--v2-sunken));
+  }
+  .v2-list-row--interactive:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px rgb(var(--accent) / 0.55);
+    border-radius: 12px;
+  }
+  /* Accent (lime) rail + tint — vurgulu/seçili satır. */
+  .v2-list-row--accent::before {
+    background: rgb(var(--accent));
+  }
+  /* Uyarı (amber) rail + hafif tint — Ana Kasa gibi kilitli kayıtlar.
+     Renk = Tailwind status.warning (#fab005 = 250 176 5). */
+  .v2-list-row--warn::before {
+    background: rgb(250 176 5);
+  }
+  .v2-list-row--warn {
+    background: rgb(250 176 5 / 0.04);
+  }
+  /* Sistem (mor) rail + hafif tint — otomatik/silinemez sistem kayıtları. */
+  .v2-list-row--system::before {
+    background: rgb(168 85 247);
+  }
+  .v2-list-row--system {
+    background: rgb(168 85 247 / 0.04);
+  }
+  /* Pasif kayıt — soluk. */
+  .v2-list-row--muted {
+    opacity: 0.5;
+  }
+  /* Standalone (liste dışı tek satır) — kendi yüzey + border + radius. */
+  .v2-list-row--card {
+    background: rgb(var(--v2-card));
+    border: 1px solid rgb(var(--v2-border));
+    border-radius: 14px;
+  }
+  .v2-list-row--card.v2-list-row--interactive:hover {
+    border-color: rgb(var(--accent) / 0.4);
+    background: rgb(var(--v2-sunken));
   }
 }
 

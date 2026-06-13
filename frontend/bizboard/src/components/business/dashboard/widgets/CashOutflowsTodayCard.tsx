@@ -2,29 +2,28 @@
 
 // ───────────────────────── 8. HESAPTAN HARCAMA (BUGÜN) ─────────────────────────
 // (R3 god-component bolme: ConsolidatedWidgets.tsx'ten cikarildi)
+// UI v2 (Daxa) geçiş: tek-tip Widget kabuğu. Liste + Footer body'de (flush);
+// kabuk/yüzey global'den gelir.
 
 import { Banknote } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
-import { SectionTitle, Footer } from "./shared";
+import { Widget } from "@/components/v2";
+import { Footer } from "./shared";
 
 export function CashOutflowsTodayCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.cash_outflows_today;
   if (list.length === 0) {
     return (
-      <section className="glass-card p-4">
-        <SectionTitle icon={Banknote} label="Hesaptan Harcama (Bugün)" />
-        <p className="text-xs text-surface-400 py-2">Bugün nakit harcama yok.</p>
-      </section>
+      <Widget title="Hesaptan Harcama (Bugün)" icon={Banknote}>
+        <p className="text-xs text-[rgb(var(--v2-muted))] py-1">Bugün nakit harcama yok.</p>
+      </Widget>
     );
   }
   const total = list.reduce((a, x) => a + x.amount, 0);
   return (
-    <section className="glass-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-surface-700">
-        <SectionTitle icon={Banknote} label="Hesaptan Harcama (Bugün)" inline />
-      </div>
-      <div className="divide-y divide-surface-700 max-h-72 overflow-y-auto">
+    <Widget title="Hesaptan Harcama (Bugün)" icon={Banknote} flush>
+      <div className="divide-y divide-[rgb(var(--v2-border))] max-h-72 overflow-y-auto">
         {list.slice(0, 10).map((t) => (
           <div key={t.tx_id} className="px-4 py-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -42,6 +41,6 @@ export function CashOutflowsTodayCard({ d }: { d: ConsolidatedDashboard }) {
         ))}
       </div>
       <Footer left={`${list.length} harcama`} right={`Toplam -${formatCurrency(total, "TRY")}`} />
-    </section>
+    </Widget>
   );
 }

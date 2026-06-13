@@ -85,10 +85,10 @@ const moduleConfig: Record<
   projects: { label: "Projeler", icon: FolderKanban },
   documents: { label: "Belgeler", icon: FileText },
   reservations: { label: "Rezervasyonlar", icon: CalendarCheck },
-  vehicles: { label: "Araclar", icon: CarFront },
-  menu: { label: "Menu", icon: UtensilsCrossed },
-  crm: { label: "Musteriler", icon: UserCircle },
-  debt: { label: "Borclar", icon: Landmark },
+  vehicles: { label: "Araçlar", icon: CarFront },
+  menu: { label: "Menü", icon: UtensilsCrossed },
+  crm: { label: "Müşteriler", icon: UserCircle },
+  debt: { label: "Borçlar", icon: Landmark },
   notes: { label: "Notlar", icon: StickyNote },
   fixed_costs: { label: "Sabit Masraflar", icon: Pin },
 };
@@ -156,12 +156,12 @@ export function ModuleTabs({ business }: Props) {
         return <FixedCostsWidget businessId={business.id} currency={business.currency} />;
       default:
         return (
-          <div className="glass-card p-6 text-center">
-            <p className="text-surface-400 text-sm">
-              {moduleConfig[activeTab]?.label} modul icerigi burada gorunecek.
+          <div className="v2-card p-6 text-center">
+            <p className="text-[rgb(var(--v2-muted))] text-sm">
+              {moduleConfig[activeTab]?.label} modül içeriği burada görünecek.
             </p>
-            <p className="text-surface-400 text-xs mt-1">
-              Module ozel veriler ve islemler burada yer alacak.
+            <p className="text-[rgb(var(--v2-muted))] text-xs mt-1">
+              Modüle özel veriler ve işlemler burada yer alacak.
             </p>
           </div>
         );
@@ -205,7 +205,7 @@ export function ModuleTabs({ business }: Props) {
                        hover:border-brand-400 hover:text-brand-400 hover:bg-brand-500/10 transition-all"
           >
             <Plus size={16} />
-            Modul Ekle
+            Modül Ekle
           </button>
         )}
       </div>
@@ -213,9 +213,9 @@ export function ModuleTabs({ business }: Props) {
       {/* Tab Content */}
       <div className="mt-4">
         {enabledModules.length > 0 ? renderContent() : (
-          <div className="glass-card p-6 text-center">
-            <p className="text-surface-400 text-sm">Henuz aktif modul yok.</p>
-            <p className="text-surface-400 text-xs mt-1">Modul eklemek icin + butonuna tiklayın.</p>
+          <div className="v2-card p-6 text-center">
+            <p className="text-[rgb(var(--v2-muted))] text-sm">Henüz aktif modül yok.</p>
+            <p className="text-[rgb(var(--v2-muted))] text-xs mt-1">Modül eklemek için + butonuna tıklayın.</p>
           </div>
         )}
       </div>
@@ -294,7 +294,7 @@ function ModuleManagerModal({
             <div className="w-8 h-8 rounded-lg bg-brand-500/15 flex items-center justify-center">
               <Plus size={16} className="text-brand-400" />
             </div>
-            <h3 className="text-lg font-bold text-surface-100">Modul Yonetimi</h3>
+            <h3 className="text-lg font-bold text-surface-100">Modül Yönetimi</h3>
           </div>
           <button onClick={handleClose} className="p-2 rounded-xl hover:bg-surface-700">
             <X size={20} className="text-surface-400" />
@@ -304,7 +304,7 @@ function ModuleManagerModal({
         {/* Module List */}
         <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
           <p className="text-xs text-surface-400 mb-3">
-            Aktif etmek veya devre disi birakmak icin modullere tiklayin.
+            Aktif etmek veya devre dışı bırakmak için modüllere tıklayın.
           </p>
 
           {allModules.map((mod) => {

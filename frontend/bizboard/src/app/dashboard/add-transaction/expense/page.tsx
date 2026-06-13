@@ -29,7 +29,7 @@ export default function ExpenseFormPage() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <button
-            onClick={() => router.push("/dashboard/add-transaction")}
+            onClick={() => router.replace("/dashboard/add-transaction")}
             className="v2-press p-2 -ml-2 rounded-xl v2-sunken hover:border-[rgb(var(--accent))]/50 transition-colors"
             aria-label="Tip seçimine dön"
           >

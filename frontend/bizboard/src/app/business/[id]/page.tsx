@@ -24,6 +24,7 @@ import { api, ApiError } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { AddTransactionModal } from "@/components/transactions/AddTransactionModal";
+import { Widget } from "@/components/v2";
 import Link from "next/link";
 
 export default function BusinessDetailPage() {
@@ -259,10 +260,12 @@ function RecentTransactionsSection({
   const [showAddModal, setShowAddModal] = useState<null | "ALL" | "POS" | "TRANSFER">(null);
 
   return (
-    <section className="glass-card overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-bold h-display text-surface-100">Son İşlemler</h2>
-        <div className="flex items-center gap-1.5">
+    <Widget
+      title="Son İşlemler"
+      flush
+      className="flex flex-col"
+      actions={
+        <>
           <button
             type="button"
             onClick={() => setShowAddModal("TRANSFER")}
@@ -284,14 +287,14 @@ function RecentTransactionsSection({
           <button
             type="button"
             onClick={() => setShowAddModal("ALL")}
-            className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md bg-brand-600 hover:bg-brand-500 text-white shadow-sm"
+            className="v2-btn v2-btn--accent v2-press !px-2.5 !py-1 !text-xs"
           >
             <Plus size={12} />
             Yeni İşlem
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <AddTransactionModal
         open={showAddModal !== null}
         businessId={businessId}
@@ -302,7 +305,7 @@ function RecentTransactionsSection({
         onSuccess={onChange}
       />
 
-      <div className="px-4 py-2 border-b border-surface-700 flex gap-1.5">
+      <div className="px-4 py-2 border-b border-[rgb(var(--v2-border))] flex gap-1.5">
         <button
           type="button"
           onClick={() => setPaymentFilter("ALL")}
@@ -348,7 +351,7 @@ function RecentTransactionsSection({
           onChange={onChange}
         />
       </div>
-    </section>
+    </Widget>
   );
 }
 

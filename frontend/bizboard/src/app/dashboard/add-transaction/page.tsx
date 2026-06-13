@@ -10,14 +10,23 @@
  *
  * <p>Modal akışı (Son İşlemler widget'ı + İşletme pano'su) etkilenmedi —
  * bu sayfa SADECE sidebar shortcut'u için.</p>
+ *
+ * <p>NAVİGASYON NOTU: Kart tıklamalarında router.replace kullanılır —
+ * chooser history'de form ile yer DEĞİŞTİRİR. Bu sayede:
+ * - Form ← geri butonu (router.replace chooser) → chooser [korunur]
+ * - Browser geri ← form → chooser → dashboard [loop yok]
+ * Link yerine replace kullanılmazsa: push zinciri chooser↔form loop'u
+ * oluştururdu (her geri-ileri yeni history girişi ekler).</p>
  */
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownLeft, ArrowUpRight, CreditCard, ArrowLeftRight, ChevronRight, ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Kart tiplerini href yerine type key ile tutuyoruz; onClick'te router.replace kullanılır
+// (Link/push kullanmak chooser↔form history loop'una yol açar — bkz. dosya başı notu)
 
 interface CardSpec {
   href: string;
@@ -97,11 +106,15 @@ export default function AddTransactionChooserPage() {
         {CARDS.map((card) => {
           const Icon = card.icon;
           return (
-            <Link
+            // router.replace yerine Link/push kullanmak chooser↔form loop'u yaratır:
+            // push her seferinde yeni history girişi ekler, geri-ileri döngüsü oluşur.
+            // replace ile chooser'ın kendi history slot'u form ile değişir → loop imkansız.
+            <button
               key={card.href}
-              href={card.href}
+              type="button"
+              onClick={() => router.replace(card.href)}
               className={cn(
-                "group relative v2-card p-5 sm:p-6 border-2 transition-all",
+                "group relative v2-card p-5 sm:p-6 border-2 transition-all text-left w-full",
                 "hover:scale-[1.02] cursor-pointer",
                 card.borderHover,
               )}
@@ -126,7 +139,7 @@ export default function AddTransactionChooserPage() {
                   className="text-[rgb(var(--v2-muted))] group-hover:text-[rgb(var(--v2-ink))] transition-colors shrink-0 mt-1"
                 />
               </div>
-            </Link>
+            </button>
           );
         })}
       </div>

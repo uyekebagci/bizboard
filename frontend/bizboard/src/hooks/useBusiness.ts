@@ -42,10 +42,10 @@ export function useBusiness(businessId: string) {
       } catch (err: unknown) {
         const message =
           err instanceof ApiError && err.code === "AUTH-403"
-            ? "Bu isletmeye erisim yetkiniz yok."
+            ? "Bu işletmeye erişim yetkiniz yok."
             : err instanceof Error
               ? err.message
-              : "Isletme yuklenemedi";
+              : "İşletme yüklenemedi";
         logger.error("api", "Failed to fetch business", { businessId }, err);
         setError(message);
         // AUTH-403: stale activeBusiness yi temizle.

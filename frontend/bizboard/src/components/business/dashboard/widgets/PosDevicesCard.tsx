@@ -8,8 +8,9 @@ import { useState } from "react";
 import { CreditCard, ChevronRight } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
+import { Widget } from "@/components/v2";
 import { WidgetDetailModal } from "../WidgetDetailModal";
-import { SectionTitle, Footer } from "./shared";
+import { Footer } from "./shared";
 import { PosDeviceModalDetail } from "./PosDeviceModalDetail";
 
 export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compact?: boolean }) {
@@ -23,10 +24,9 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
   const devs = d.pos_devices;
   if (devs.length === 0) {
     return (
-      <section className="glass-card p-4">
-        <SectionTitle icon={CreditCard} label="POS Cihazları" />
-        <p className="text-xs text-surface-400 py-2">Aktif POS cihazı yok.</p>
-      </section>
+      <Widget title="POS Cihazları" icon={CreditCard}>
+        <p className="text-xs text-[rgb(var(--v2-muted))] py-1">Aktif POS cihazı yok.</p>
+      </Widget>
     );
   }
   // Beta v1.1: POS Hacmi mantığı — sadece amount toplamı, komisyon/kâr yok.
@@ -39,19 +39,21 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
 
   return (
     <>
-    <section
+    <Widget
+      title="POS Cihazları (Bugün)"
+      icon={CreditCard}
+      flush
       onClick={() => setShowDetail(true)}
-      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-indigo-500/40 transition-all"
-    >
-      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
-        <SectionTitle icon={CreditCard} label="POS Cihazları (Bugün)" inline />
-        {unsettled > 0 && (
+      ariaLabel="POS cihazları detayını aç"
+      actions={
+        unsettled > 0 ? (
           <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
             {unsettled} bekliyor
           </span>
-        )}
-      </div>
-      <div className="divide-y divide-surface-700">
+        ) : undefined
+      }
+    >
+      <div className="divide-y divide-[rgb(var(--v2-border))]">
         {devs.map((dev) => (
           <div key={dev.device_id} className="px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -95,7 +97,7 @@ export function PosDevicesCard({ d, compact }: { d: ConsolidatedDashboard; compa
           </span>
         }
       />
-    </section>
+    </Widget>
     <WidgetDetailModal
       open={showDetail}
       onClose={() => { setShowDetail(false); setSelectedDeviceId(null); }}

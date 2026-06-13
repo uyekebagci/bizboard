@@ -30,8 +30,74 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Tüm İşlemler — işletme filtresi "Tüm İşletmeler" seçeneği eklendi.**
+  Dropdown'da yalnızca tekil işletmeler listeleniyordu; bir işletme (örn. dgr)
+  seçildikten sonra tüm işletmelere geri dönmek mümkün değildi. Artık
+  dropdown'un en üstünde sabit bir "Tum Isletmeler" girişi bulunuyor; seçilince
+  `filterBusiness` `""` sıfırlanır → tüm işletmelerin işlemleri gösterilir.
+  Değişiklik `transactions/page.tsx`'e özel (yerel `options` dizisine prepend);
+  paylaşılan `DarkSelect` bileşeni ve per-business sayfaları (gün-kapanışı,
+  kapanışlar vb.) etkilenmez.
+
+### Removed
+
+- **Duplike "Çekler" sayfası kaldırıldı; kanonik "Çek/Senet" (Ledger v2) ile
+  birleştirildi.** Sidebar'da iki ayrı çek sayfası vardı: eski `Debt`-tabanlı
+  `/dashboard/cekler` (yalnız okuma + "Tahsil edildi" / settle, free-text
+  karşı-taraf) ve Ledger v2 Instrument modelli `/dashboard/cek-senet`. İkincisi
+  üst-küme olduğu için kanonik seçildi; eski sayfa kaldırıldı.
+  - **Kaldırılan:** `/dashboard/cekler` sayfa içeriği (artık server-side redirect),
+    yalnız o sayfanın kullandığı `ChequeAddModal` bileşeni, sidebar "Çekler" girişi.
+  - **Veri/özellik kaybı yok:** `/cheques` backend endpoint'i ve `Debt`-tabanlı çek
+    kayıtları KORUNDU (Telegram vade hatırlatıcısı `ChequeReminderScheduler` hâlâ
+    kullanır). Kaldırılan sayfanın benzersiz işlevi (çek ekleme + vade
+    filtresi) kanonik `/dashboard/cek-senet`'te zaten mevcut (Instrument ekleme +
+    portföy/tahsil/ödeme/karşılıksız/ciro + cari FK ile bağ).
+  - Eski bookmark'lar kırılmasın diye `/dashboard/cekler` → `/dashboard/cek-senet`
+    server-side redirect (mevcut `ui-v2` redirect pattern'iyle aynı).
+
+### Changed
+
+- **Sidebar "Çek/Senet (Ledger)" etiketi "Çek/Senet" olarak sadeleştirildi**
+  ("Cari & Borçlar" grubunda) — tek çek sayfası kaldığından "(Ledger)" ayraç
+  jargonuna gerek kalmadı. Çek/senet zaten cari'ye (Instrument `issuer_counterpart_id`)
+  bağlı olduğu için "Cari & Borçlar" grubunda kalması IA olarak doğru.
+
 ### Added
 
+- **UI v2 (Daxa) Widget primitive — TEK KAYNAK pano kabuğu + işletme-detay
+  widget'ları + tıklanabilir metrik detayları.** Sayfa-sayfa restyle yerine
+  tek bir parent `Widget` primitive'i + global `.v2-widget*` sınıfları: tüm
+  pano widget'ları aynı kabuğu (yüzey/radius/border/gölge/padding) bundan alır;
+  ileride tek yer değişince hepsi takip eder.
+  - **Primitive** (`components/v2/Widget.tsx` + globals.css `.v2-widget`,
+    `.v2-widget--hero`, `.v2-widget--interactive`, `.v2-widget-header`,
+    `.v2-widget-title`, `.v2-widget-body`): override edilemez tutarlı kabuk;
+    sabit yerleşim → sol başlık (+subtitle/icon), **sağ-üst aksiyon slotu**
+    (tüm butonlar/rozetler hep burada), body içerik. Özelleştirme yalnız
+    slot/prop ile (`title`/`subtitle`/`icon`/`actions`/`variant`/`children`).
+    Tıklanabilirlik: `onClick` (detay modalı) veya `href` (deep-link) →
+    tutarlı hover-lift + a11y. Detay-modal kabuğu primitive seviyesinde
+    (`WidgetDetailModal` v2'den re-export; Daxa yüzey + ESC/backdrop + kapat).
+  - **İşletme-detay (`/business/[id]`) widget'ları primitive'e geçirildi:**
+    KONSOLİDE/Genel-Kasa kartı (eski mor/indigo gradient → `hero` varyantı:
+    solid koyu ink + lime accent), Bugünün Kasa Durumu (Günü Kapat aksiyon
+    slotuna), Son İşlemler (Transfer/POS/+Yeni İşlem aksiyon slotuna), Hesaptan
+    Harcama, Alt Kasalar, Para Bulunan Hesaplar, POS Cihazları, Yaklaşan
+    Çekler/Hatırlatmalar, Elde Tutulan Nakitler, Hızlı İşlemler. Tümü tek-tip
+    Daxa kabuğu; veri/işlevsellik (Günü-Kapat, Para-İzi, filtre, sansür)
+    korundu. `shared.tsx` Footer v2 token'larına geçti.
+  - **Dashboard (`/dashboard`) metrik kartları tıklanabilir → detay tablosu:**
+    Net Kar / Toplam Gelir / Toplam Gider / İşletme MetricCard'ları tıklanınca
+    işletme-bazlı kırılım tablosu açılır (`PortfolioMetricDetail` +
+    `WidgetDetailModal`); her satır ilgili işletme detayına deep-link.
+    `StackInsightCard` satırları tıklanabilir hale geldi (Net kâr/Sabit
+    gider/İşletme → ilgili detay modalı; Bekleyen borç → /verecekler, Bekleyen
+    alacak → /alacaklar). Salt görsel/okunur; mevcut portföy verisinden türetilir.
+  - Çift tema (dark default + light), a11y, reduced-motion korunur; `tsc` +
+    `next build` temiz.
 - **Dashboard grafikleri gerçek veriye bağlandı — "Haftalık Hareket" bar-chart'ı
   ve MetricCard delta yüzdeleri artık placeholder değil.** Önceden dashboard'da
   haftalık-trend barları (sabit `42,55,38,...`) ve metrik delta'ları (`+12.4%`,
@@ -116,6 +182,70 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Fixed
 
+- **Light tema sıfırdan, light'a özel yeniden tasarlandı — dark'ın naive
+  inversiyonu giderildi (kontrastsız/parlak/okunmaz → okunur, katmanlı, AA).**
+  Önceki light palet dark token'larının ters çevrilmesiydi: app zemini ile
+  kartlar neredeyse aynı beyazdı (#f0f1f3 vs #ffffff), border'lar görünmezdi
+  (#e6e8ec), lime accent metin/ikonlar beyaz üstünde okunmuyordu, logo + avatar
+  "beyaz parlıyordu". Light token'ları (`:root`) artık dark'tan bağımsız,
+  amaca-uygun değerlerle yeniden atandı; **DARK tema (`.dark`) hiç değişmedi.**
+  - **Yüzey hiyerarşisi** — 3 net katman: app `#edf0f5` (soğuk açık-gri) <
+    sunken `#e8ecf2` < kart `#ffffff`; border `#cdd5e0` (gerçekten görünür,
+    eski #e6e8ec ~görünmezdi). app→kart luminans deltası 0.13 (gözle ayrışır).
+  - **Metin WCAG AA** — başlık/body near-black slate; muted `#5b6573`
+    (white üstü ~5.9:1, eski #64748b 4.76 idi). surface-400 da koyulaştırıldı.
+  - **Accent (lime) light'a uyarlandı** — lime-on-white okunmaz; standalone
+    metin/ikon `--accent-strong` = lime-800 `#3f6212` (white üstü 7.08:1);
+    dolgu (buton/chip) parlak lime + üstünde koyu ink (`#172505`, ~8:1).
+    `--accent` light = lime-600 `#65a30d` (white üstü segment/halka okunur).
+  - **ÇATI logosu** — tile KASITLI koyu (slate gradient `#1e293b→#0f172a`),
+    "Ç" harfi parlak lime-400 `#a3e635` (tile üstü 11.84:1); beyaz-parlama YOK,
+    light'a uygun yumuşak gölge. Logo imza noktası da light'a özel.
+  - **Avatar** — koyu ink daire + parlak lime-400 baş harf (11.84:1); logo ile
+    tutarlı, beyaz-parlama YOK.
+  - **Shell/badge/buton/input** — sidebar/topbar/badge/nav-active hepsi
+    headless Chromium'da doğrulandı (AA geçti). `tsc --noEmit` + `next build`
+    temiz (statik 66/66 sayfa).
+- **Banka İçe Aktar "Aç" → "Yetki yok" (403) düzeltildi.** Banka Hareketi Import
+  sayfasında "Yeni Parti → hesap seç → Aç" akışı, çoklu işletmeye erişimi olan
+  (admin/QA) kullanıcılarda 403 "Yetki yok" dönüyordu. Kök neden: hesap dropdown'ı
+  `/bank-accounts`'i `business_id` PARAMETRESİZ çağırıyor → erişilebilir TÜM
+  işletmelerin hesapları listeleniyordu; oysa `createBatch` `business_id`'yi
+  `businesses[0]` ile gönderiyor. `businesses[0]` dışındaki bir hesap (ör. başka
+  işletmenin "Ana Kasa"sı) seçilince backend'in cross-tenant guard'ı
+  (`BankImportService.createBatch` → "Hesap bu işletmeye ait değil")
+  `SecurityException` fırlatıp 403 dönüyordu. Düzeltme FE'de: dropdown artık
+  `/bank-accounts?business_id={businessId}` ile seçili işletmeye DARALTILIYOR ve
+  `business_id` değişince yeniden yüklenip stale seçim sıfırlanıyor. **Tenant-scope
+  KORUNDU** — backend guard'ı gevşetilmedi, FE'ye doğru scope verildi
+  (`app/dashboard/banka-import/page.tsx`).
+- **Denetim Kaydı (Audit Log) sayfası — "Zinciri doğrula" hatası + Daxa CSS +
+  Türkçe lokalizasyon (QA).** Admin `/admin/audit` sayfasındaki üç QA bulgusu
+  giderildi:
+  - **"ZİNCİR KIRIK — POST metodu desteklenmiyor" kök-neden fix.** FE "Zinciri
+    doğrula" butonu zinciri `POST /admin/audit/verify-chain` ile çağırıyordu;
+    backend (`AdminAuditController#verifyChain`) bu uç noktayı `@GetMapping`
+    (salt-okunur, gövdesiz) olarak tanımladığı için her doğrulama 405 (method not
+    allowed) → "ZİNCİR KIRIK" yanılgısı veriyordu. FE çağrısı doğru method'a
+    (`api.get`) düzeltildi. Backend doğruydu, yalnız FE method'u yanlıştı.
+  - **Türkçe lokalizasyon (immutable kayıtlara dokunmadan).** Stored audit
+    kayıtları değiştirilmez (geçmiş/tamper-proof) ve backend bazı detail'ları
+    İngilizce üretir ("Login successful for X", "Login failed for username
+    '…': User is disabled" vb.). Yeni `audit-i18n.ts` görüntüleme katmanında
+    action-code → Türkçe (AuditAction.java ile birebir; `user.login` türevleri
+    dahil), entity_type → Türkçe (USER→"Kullanıcı" vb.) ve İngilizce login
+    detail/sebep metinlerini Türkçe'ye eşler; tanınmayan değerler olduğu gibi
+    kalır. Filtre placeholder'ları, başlık, boş-durum ve hata metinleri de
+    Türkçe'ye çevrildi (`USER_LOGIN` gibi var-olmayan eski etiket anahtarları
+    gerçek `USER_LOGIN_SUCCESS/FAILED/LOGOUT` ile düzeltildi).
+  - **Daxa CSS + çift tema.** Sayfa eski `surface-*`/`brand-*` (mor) tam-ekran
+    sticky header'dan DashboardShell-içi Daxa diline taşındı: `v2-eyebrow`/
+    `v2-display` başlık, `v2-card`/`v2-sunken` yüzeyler, lime `accent` tonları,
+    "Filtrele" butonu `v2-btn--accent` (mor brand yerine), token-tabanlı çift
+    tema. Rezerve `.v2-widget`/`.v2-list-row` sınıflarına dokunulmadı; yeni CSS
+    sınıfı eklenmedi. Sayfa <500 satır için `AuditRow`/`AuditToolbar`/`audit-i18n`
+    olarak bölündü. İşlevsellik (filtre, sayfalama, canlı SSE, CSV/JSON export,
+    zincir doğrula) korundu.
 - **MetricCard "Toplam Gider" delta tonu — artan gider artık yeşil değil
   kırmızı.** `MetricCard`'a (`components/v2`) `goodDirection: "up" | "down"`
   prop'u eklendi: ok yönü değerin gerçek işaretini gösterir (↑ artış / ↓ azalış),
@@ -129,6 +259,42 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Changed
 
+- **UI v2 (Daxa) — global `.v2-list-row` liste-satırı primitive'i + Banka Hesapları
+  satırları + Alt Kasa (sub-cash) detay modalı Daxa'ya geçirildi.** Salt görsel;
+  veri/hesap/işlevsellik DEĞİŞMEDİ.
+  - **Yeni global primitive (`globals.css`):** `.v2-list-row` — tüm liste
+    satırlarının TEK kaynağı. Solid/katmanlı yüzey, hover, divider, yuvarlak köşe,
+    çift tema, a11y odak halkası. Modifier'lar: `--interactive` (tıklanabilir +
+    `:focus-visible` accent halkası), `--accent` (lime sol rail), `--warn` (amber
+    rail+tint, Ana Kasa), `--system` (mor rail+tint, sistem hesabı), `--muted`
+    (pasif/soluk), `--card` (standalone satır). `.v2-widget*` (widget-primitive)
+    ile çakışmaz — ayrı isim uzayı.
+  - **Banka Hesapları sayfası** (`/dashboard/hesaplar`): hesap satırları eski
+    inline yüzey/tint sınıflarından `.v2-list-row` primitive'ine geçirildi
+    (rozetler, bakiye, bakiye-düzelt/aktiflik-toggle/sil ikonları korundu).
+  - **Alt Kasa detay modalı** (`SubCashDetailContent` + `AssignmentPicker`):
+    Mevcut Bakiye / Ana Kasa / Atanmamış kartları, INVARIANT satırı, atanan
+    entity'ler listesi, gelir-dağılımı tablosu, işlemler listesi ve "Atama Ekle"/
+    "Geri Dönük Ekle" eski `surface-*`/`brand-*`/`emerald-*` temasından v2
+    token'larına (`--v2-*`, lime accent, `v2-card`/`v2-list-row`/`v2-table`/
+    `v2-btn--ink`) taşındı. Çift tema + a11y.
+- **Admin Paneli Daxa'ya geçirildi — sıkışık sekme şeridi + eski-tema kullanıcı
+  satırları + panel kabuğu (salt görsel; işlevsellik/RBAC korundu).**
+  - **Tab bar (en kritik):** Kart başlığında tek satırda sıkışan 7 `btn-secondary`
+    link + amber "Yeni Kullanıcı" butonu → temiz Daxa segment/pill şeridine
+    (`AdminTabs`) çevrildi: `v2-sunken` zemin, eşit boşluk, taşmada yatay-scroll
+    (`no-scrollbar`), aktif sekme accent (lime) + `aria-current`, ikonlu etiketler.
+    "Yeni Kullanıcı" SEKME DEĞİL → sağda ayrı accent aksiyon butonu (`v2-btn--accent`).
+  - **Kullanıcı satırları:** Eski `surface-*`/amber stili → tek-tip Daxa satır
+    (`v2-card` içi `divide`/hover `v2-sunken`, avatar accent tint, isim + `@handle`,
+    rol/Pasif/işletme rozetleri Daxa accent/danger token'ı, sağda düzenle/sil ikonu).
+    Aksiyon ikonları artık her zaman görünür (önceki `opacity-0` hover-only → a11y/mobil).
+  - **Kabuk + modal'lar:** Panel kartı `glass-card` → `v2-card`, başlık `v2-display`,
+    geri butonu `v2-icon-btn`; oluştur/düzenle modal'larındaki amber accent → Daxa
+    lime accent (rol/işletme seçimi, submit `v2-btn--accent`, aktif toggle). Çift
+    tema + a11y (`aria-label`/`role="switch"`/`role="alert"`, focus-visible ring).
+  - **Refactor (salt organizasyon):** `page.tsx` 500-satır sınırı için modal'lar
+    `AdminUserModals.tsx`'e taşındı (page 306, AdminTabs 95, modals 489 satır).
 - **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**
   - **Logo:** Sidebar sol-üst "ÇATI" plakası yeniden tasarlandı — katmanlı ink
     zemin (radial gradient + iç ışık + accent halka + yumuşak gölge), Daxa imza
