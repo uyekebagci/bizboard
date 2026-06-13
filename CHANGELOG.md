@@ -219,6 +219,33 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
   `business_id` değişince yeniden yüklenip stale seçim sıfırlanıyor. **Tenant-scope
   KORUNDU** — backend guard'ı gevşetilmedi, FE'ye doğru scope verildi
   (`app/dashboard/banka-import/page.tsx`).
+- **Denetim Kaydı (Audit Log) sayfası — "Zinciri doğrula" hatası + Daxa CSS +
+  Türkçe lokalizasyon (QA).** Admin `/admin/audit` sayfasındaki üç QA bulgusu
+  giderildi:
+  - **"ZİNCİR KIRIK — POST metodu desteklenmiyor" kök-neden fix.** FE "Zinciri
+    doğrula" butonu zinciri `POST /admin/audit/verify-chain` ile çağırıyordu;
+    backend (`AdminAuditController#verifyChain`) bu uç noktayı `@GetMapping`
+    (salt-okunur, gövdesiz) olarak tanımladığı için her doğrulama 405 (method not
+    allowed) → "ZİNCİR KIRIK" yanılgısı veriyordu. FE çağrısı doğru method'a
+    (`api.get`) düzeltildi. Backend doğruydu, yalnız FE method'u yanlıştı.
+  - **Türkçe lokalizasyon (immutable kayıtlara dokunmadan).** Stored audit
+    kayıtları değiştirilmez (geçmiş/tamper-proof) ve backend bazı detail'ları
+    İngilizce üretir ("Login successful for X", "Login failed for username
+    '…': User is disabled" vb.). Yeni `audit-i18n.ts` görüntüleme katmanında
+    action-code → Türkçe (AuditAction.java ile birebir; `user.login` türevleri
+    dahil), entity_type → Türkçe (USER→"Kullanıcı" vb.) ve İngilizce login
+    detail/sebep metinlerini Türkçe'ye eşler; tanınmayan değerler olduğu gibi
+    kalır. Filtre placeholder'ları, başlık, boş-durum ve hata metinleri de
+    Türkçe'ye çevrildi (`USER_LOGIN` gibi var-olmayan eski etiket anahtarları
+    gerçek `USER_LOGIN_SUCCESS/FAILED/LOGOUT` ile düzeltildi).
+  - **Daxa CSS + çift tema.** Sayfa eski `surface-*`/`brand-*` (mor) tam-ekran
+    sticky header'dan DashboardShell-içi Daxa diline taşındı: `v2-eyebrow`/
+    `v2-display` başlık, `v2-card`/`v2-sunken` yüzeyler, lime `accent` tonları,
+    "Filtrele" butonu `v2-btn--accent` (mor brand yerine), token-tabanlı çift
+    tema. Rezerve `.v2-widget`/`.v2-list-row` sınıflarına dokunulmadı; yeni CSS
+    sınıfı eklenmedi. Sayfa <500 satır için `AuditRow`/`AuditToolbar`/`audit-i18n`
+    olarak bölündü. İşlevsellik (filtre, sayfalama, canlı SSE, CSV/JSON export,
+    zincir doğrula) korundu.
 - **MetricCard "Toplam Gider" delta tonu — artan gider artık yeşil değil
   kırmızı.** `MetricCard`'a (`components/v2`) `goodDirection: "up" | "down"`
   prop'u eklendi: ok yönü değerin gerçek işaretini gösterir (↑ artış / ↓ azalış),
