@@ -87,16 +87,16 @@ export function AddTransactionModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col"
+        className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col"
       >
-        <div className="flex items-center justify-between p-4 border-b border-surface-700 shrink-0">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <Receipt size={16} className="text-brand-400" />
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Receipt size={16} className="text-accent-strong dark:text-accent" />
             Yeni İşlem
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             aria-label="Kapat"
           >
             <X size={16} />
@@ -104,7 +104,7 @@ export function AddTransactionModal({
         </div>
 
         {/* v1.7.0-beta: 3'lü toggle. Çatı v1.2: + Borç (verilen/alınan). */}
-        <div className="px-4 py-2 border-b border-surface-700 shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="px-4 py-2 border-b border-[rgb(var(--v2-border))] shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2">
           <TabBtn
             active={tab === "income"}
             onClick={() => setTab("income")}
@@ -186,20 +186,20 @@ function TabBtn({
   label: string;
 }) {
   const activeCls = {
-    emerald: "bg-emerald-500/15 border-emerald-500/50 text-emerald-300",
-    red:     "bg-red-500/15 border-red-500/50 text-red-300",
-    blue:    "bg-blue-500/15 border-blue-500/50 text-blue-300",
-    amber:   "bg-amber-500/15 border-amber-500/50 text-amber-300",
+    emerald: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300",
+    red:     "bg-red-500/15 border-red-500/50 text-red-700 dark:text-red-300",
+    blue:    "bg-blue-500/15 border-blue-500/50 text-blue-700 dark:text-blue-300",
+    amber:   "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300",
   }[tone];
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "py-2 rounded-xl font-medium text-sm border-2 transition-colors inline-flex items-center justify-center gap-1.5",
+        "v2-press py-2 rounded-xl font-medium text-sm border-2 transition-colors inline-flex items-center justify-center gap-1.5",
         active
           ? activeCls
-          : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+          : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
       )}
     >
       {icon}

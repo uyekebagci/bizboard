@@ -223,16 +223,16 @@ export function PaymentModal({
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            {isReceived ? <ArrowDownLeft size={16} className="text-emerald-300" />
-                        : <ArrowUpRight size={16} className="text-red-300" />}
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            {isReceived ? <ArrowDownLeft size={16} className="text-emerald-700 dark:text-emerald-300" />
+                        : <ArrowUpRight size={16} className="text-red-700 dark:text-red-300" />}
             {isReceived ? "Ödeme Al" : "Ödeme Yap"}
           </h3>
           <button type="button" onClick={onClose}
-            className="modal-close"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             aria-label="Kapat">
             <X size={16} />
           </button>
@@ -240,7 +240,7 @@ export function PaymentModal({
 
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -249,23 +249,23 @@ export function PaymentModal({
           {/* Direction toggle */}
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => setDirection("RECEIVED")}
-              className={cn("py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
-                isReceived ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-300"
-                           : "bg-surface-700 border-surface-600 text-surface-400")}>
+              className={cn("v2-press py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
+                isReceived ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300"
+                           : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50")}>
               <ArrowDownLeft size={14} /> Ödeme Aldık
             </button>
             <button type="button" onClick={() => setDirection("PAID")}
-              className={cn("py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
-                !isReceived ? "bg-red-500/15 border-red-500/50 text-red-300"
-                            : "bg-surface-700 border-surface-600 text-surface-400")}>
+              className={cn("v2-press py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
+                !isReceived ? "bg-red-500/15 border-red-500/50 text-red-700 dark:text-red-300"
+                            : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50")}>
               <ArrowUpRight size={14} /> Ödeme Yaptık
             </button>
           </div>
 
           {/* Counterpart (read-only) */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Karşı Taraf</label>
-            <div className="px-3 py-2.5 rounded-xl border border-surface-600 bg-surface-700/40 text-sm text-surface-200">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Karşı Taraf</label>
+            <div className="px-3 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] v2-sunken text-sm text-[rgb(var(--v2-ink))]">
               {counterpartName}
             </div>
           </div>
@@ -273,7 +273,7 @@ export function PaymentModal({
           {/* Tutar + Tarih */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">Tutar *</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tutar *</label>
               <div className="relative">
                 <input
                   type="text" inputMode="numeric" required
@@ -282,11 +282,11 @@ export function PaymentModal({
                   placeholder="0"
                   className="field field-sm py-2.5 text-lg font-bold"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">TRY</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] text-sm">TRY</span>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">Tarih *</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tarih *</label>
               <input
                 type="date" required value={paymentDate}
                 onChange={(e) => setPaymentDate(e.target.value)}
@@ -297,14 +297,14 @@ export function PaymentModal({
 
           {/* Method tabs */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Ödeme Yöntemi *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Ödeme Yöntemi *</label>
             <div className="grid grid-cols-4 gap-2">
               {METHOD_TABS.map(({ k, label, icon: Icon }) => (
                 <button
                   key={k} type="button" onClick={() => setMethod(k)}
-                  className={cn("py-2 rounded-xl text-xs font-medium border-2 inline-flex items-center justify-center gap-1",
-                    method === k ? "bg-brand-500/15 border-brand-500/50 text-brand-300"
-                                 : "bg-surface-700 border-surface-600 text-surface-400")}>
+                  className={cn("v2-press py-2 rounded-xl text-xs font-medium border-2 inline-flex items-center justify-center gap-1",
+                    method === k ? "border-[rgb(var(--accent))]/60 bg-[rgb(var(--accent))]/12 text-accent-strong dark:text-accent"
+                                 : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50")}>
                   <Icon size={12} /> {label}
                 </button>
               ))}
@@ -314,7 +314,7 @@ export function PaymentModal({
           {/* Method-specific fields */}
           {method === "HESAPDAN" && (
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                 {isReceived ? "Yatan Hesap" : "Çıkan Hesap"} *
               </label>
               <DarkSelect
@@ -339,28 +339,28 @@ export function PaymentModal({
           {method === "CHEQUE" && (
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">Çek No *</label>
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Çek No *</label>
                 <input type="text" required value={chequeNo}
                   onChange={(e) => setChequeNo(e.target.value)}
                   className="field field-sm py-2.5"
                   placeholder="orn. 123456" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">Banka *</label>
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Banka *</label>
                 <input type="text" required value={drawerBank}
                   onChange={(e) => setDrawerBank(e.target.value)}
                   className="field field-sm py-2.5"
                   placeholder="orn. Yapı Kredi" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">Şube</label>
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Şube</label>
                 <input type="text" value={drawerBranch}
                   onChange={(e) => setDrawerBranch(e.target.value)}
                   className="field field-sm py-2.5"
                   placeholder="opsiyonel" />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">Vade Tarihi *</label>
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Vade Tarihi *</label>
                 <input type="date" required value={chequeDueDate}
                   onChange={(e) => setChequeDueDate(e.target.value)}
                   className="field field-sm py-2.5" />
@@ -371,14 +371,14 @@ export function PaymentModal({
           {method === "PROMISSORY_NOTE" && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">Seri No *</label>
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Seri No *</label>
                 <input type="text" required value={noteSerial}
                   onChange={(e) => setNoteSerial(e.target.value)}
                   className="field field-sm py-2.5"
                   placeholder="orn. S-001" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">Vade Tarihi *</label>
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Vade Tarihi *</label>
                 <input type="date" required value={noteDueDate}
                   onChange={(e) => setNoteDueDate(e.target.value)}
                   className="field field-sm py-2.5" />
@@ -387,19 +387,19 @@ export function PaymentModal({
           )}
 
           {/* Allocation toggle */}
-          <div className="border-t border-surface-700 pt-3 space-y-2">
-            <label className="flex items-center gap-2 text-xs text-surface-200">
+          <div className="border-t border-[rgb(var(--v2-border))] pt-3 space-y-2">
+            <label className="flex items-center gap-2 text-xs text-[rgb(var(--v2-ink))]">
               <input type="checkbox" checked={useAllocations}
                 onChange={(e) => setUseAllocations(e.target.checked)} />
               Belirli {isReceived ? "alacak'lara" : "verecek'lere"} uygula
             </label>
-            <p className="text-[10px] text-surface-400">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))]">
               Seçili değilse backend FIFO (vade yakından) ile dağıtır.
             </p>
             {useAllocations && (
               <div className="space-y-1.5 max-h-44 overflow-y-auto">
                 {eligibleDebts.length === 0 && (
-                  <p className="text-xs text-surface-400 text-center py-3">
+                  <p className="text-xs text-[rgb(var(--v2-muted))] text-center py-3">
                     Açık {isReceived ? "alacak" : "verecek"} yok
                   </p>
                 )}
@@ -409,15 +409,15 @@ export function PaymentModal({
                     <div key={d.id}
                       className={cn(
                         "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs",
-                        selected ? "bg-brand-500/15 border border-brand-500/30"
-                                 : "bg-surface-700/40 border border-surface-700")}>
+                        selected ? "border-[rgb(var(--accent))]/60 bg-[rgb(var(--accent))]/12 border"
+                                 : "v2-sunken")}>
                       <input type="checkbox" checked={selected}
                         onChange={() => toggleAllocDebt(d.id)} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-surface-200 truncate">
+                        <p className="text-[rgb(var(--v2-ink))] truncate">
                           {d.description || `Borç ${d.id.slice(0, 8)}`}
                         </p>
-                        <p className="text-[10px] text-surface-400">
+                        <p className="text-[10px] text-[rgb(var(--v2-muted))]">
                           Kalan: {formatCurrency(d.remaining_amount, "TRY")} / Orijinal {formatCurrency(d.original_amount, "TRY")}
                         </p>
                       </div>
@@ -426,7 +426,7 @@ export function PaymentModal({
                           type="text" inputMode="numeric"
                           value={allocations[d.id] || ""}
                           onChange={(e) => setAllocAmount(d.id, e.target.value)}
-                          className="w-24 px-2 py-1 rounded border border-surface-600 bg-surface-800 text-surface-100 text-xs text-right"
+                          className="w-24 px-2 py-1 rounded border border-[rgb(var(--v2-border))] v2-sunken text-[rgb(var(--v2-ink))] text-xs text-right"
                         />
                       )}
                     </div>
@@ -435,7 +435,7 @@ export function PaymentModal({
                 {Object.keys(allocations).length > 0 && (
                   <div className={cn(
                     "flex justify-between px-2 py-1 rounded text-xs font-semibold",
-                    allocMismatch ? "bg-red-500/10 text-red-300" : "bg-emerald-500/10 text-emerald-300")}>
+                    allocMismatch ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300")}>
                     <span>Toplam allocation</span>
                     <span>{formatCurrency(allocSum, "TRY")} / {formatCurrency(parsedAmount, "TRY")}</span>
                   </div>
@@ -446,8 +446,8 @@ export function PaymentModal({
 
           {/* Açıklama */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Açıklama <span className="text-surface-400 font-normal">(opsiyonel)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Açıklama <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <textarea value={description}
               onChange={(e) => setDescription(e.target.value)} rows={2}
@@ -463,7 +463,7 @@ export function PaymentModal({
           </button>
           <button type="submit"
             disabled={submitting || !parsedAmount || parsedAmount <= 0 || allocMismatch}
-            className={cn("flex-1 py-2.5 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
+            className={cn("flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
               isReceived ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700")}>
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
             {isReceived ? "Tahsil Et" : "Öde"}

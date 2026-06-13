@@ -145,10 +145,10 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
           type="button"
           onClick={() => setLoanType("GIVEN")}
           className={cn(
-            "py-2.5 rounded-xl font-medium text-sm border-2 transition-colors inline-flex items-center justify-center gap-1.5",
+            "v2-press py-2.5 rounded-xl font-medium text-sm border-2 transition-colors inline-flex items-center justify-center gap-1.5",
             given
-              ? "bg-amber-500/15 border-amber-500/50 text-amber-300"
-              : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300"
+              : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
           )}
         >
           <ArrowUpRight size={14} />
@@ -158,10 +158,10 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
           type="button"
           onClick={() => setLoanType("TAKEN")}
           className={cn(
-            "py-2.5 rounded-xl font-medium text-sm border-2 transition-colors inline-flex items-center justify-center gap-1.5",
+            "v2-press py-2.5 rounded-xl font-medium text-sm border-2 transition-colors inline-flex items-center justify-center gap-1.5",
             !given
-              ? "bg-red-500/15 border-red-500/50 text-red-300"
-              : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+              ? "bg-red-500/15 border-red-500/50 text-red-700 dark:text-red-300"
+              : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
           )}
         >
           <ArrowDownLeft size={14} />
@@ -173,8 +173,8 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
       <div className={cn(
         "p-2.5 rounded-lg border text-xs flex items-start gap-2",
         given
-          ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
-          : "bg-red-500/10 border-red-500/30 text-red-200",
+          ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-200"
+          : "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-200",
       )}>
         <HandCoins size={12} className="mt-0.5 shrink-0" />
         <span>
@@ -190,7 +190,7 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
 
       {/* Cari (kişi/firma) */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
           {given ? "Borçlu (kime verildi)" : "Alacaklı (kimden alındı)"} *
         </label>
         <DarkSelect
@@ -218,7 +218,7 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
 
       {/* Tutar */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Tutar *</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tutar *</label>
         <div className="relative">
           <input
             type="text"
@@ -229,13 +229,13 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
             required
             className="field py-3 text-2xl font-bold pr-16"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 font-medium">TRY</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] font-medium">TRY</span>
         </div>
       </div>
 
       {/* Ödeme yöntemi: NAKIT / HESAPDAN */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Kasa Hareketi *</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Kasa Hareketi *</label>
         <div className="grid grid-cols-2 gap-2">
           {(["NAKIT", "HESAPDAN"] as const).map((m) => (
             <button
@@ -243,10 +243,10 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
               type="button"
               onClick={() => setPaymentMethod(m)}
               className={cn(
-                "py-2 rounded-xl text-sm border-2 transition-colors",
+                "v2-press py-2 rounded-xl text-sm border-2 transition-colors",
                 paymentMethod === m
-                  ? "bg-brand-500/15 border-brand-500/50 text-brand-300"
-                  : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+                  ? "border-[rgb(var(--accent))]/60 bg-[rgb(var(--accent))]/12 text-accent-strong dark:text-accent"
+                  : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
               )}
             >
               {m === "NAKIT" ? "Nakit" : "Hesaptan"}
@@ -258,7 +258,7 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
       {/* HESAPDAN → banka hesabı */}
       {paymentMethod === "HESAPDAN" && (
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">Banka/Kasa Hesabı *</label>
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Banka/Kasa Hesabı *</label>
           <DarkSelect
             required
             value={bankAccountId}
@@ -277,7 +277,7 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
       {/* Tarih + Vade */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">Tarih *</label>
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tarih *</label>
           <input
             type="date"
             value={date}
@@ -287,7 +287,7 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">Vade (opsiyonel)</label>
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Vade (opsiyonel)</label>
           <input
             type="date"
             value={dueDate}
@@ -299,7 +299,7 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
 
       {/* Açıklama */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Açıklama</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Açıklama</label>
         <input
           type="text"
           value={description}
@@ -310,13 +310,13 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
       </div>
 
       {dayNotOpen && (
-        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2">
+        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-200 text-xs flex items-start gap-2">
           <AlertTriangle size={12} className="mt-0.5 shrink-0" />
           <span>{dayNotOpen || "Bu tarih için gün açık değil. Önce günü açın."}</span>
         </div>
       )}
       {error && (
-        <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+        <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs">
           {error}
         </div>
       )}
@@ -335,7 +335,7 @@ export function LoanForm({ businessId, compact = false, onSuccess, onCancel }: P
         <button
           type="submit"
           disabled={submitting || !businessId}
-          className="btn-primary flex-1 py-2.5 text-sm gap-2"
+          className="v2-btn v2-btn--ink flex-1 py-2.5 text-sm gap-2 inline-flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
           <HandCoins size={14} />

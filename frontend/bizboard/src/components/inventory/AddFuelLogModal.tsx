@@ -101,34 +101,34 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
     } catch (err) { toast.error(err); setSaving(false); }
   }
 
-  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
+  const inputCls = "field field-sm py-2.5";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center">
-              <Fuel size={16} className="text-orange-300" />
+              <Fuel size={16} className="text-orange-700 dark:text-orange-300" />
             </div>
-            <h3 className="text-lg font-bold text-surface-100">Yakit Kaydi Ekle</h3>
+            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Yakit Kaydi Ekle</h3>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600"><X size={20} className="text-surface-400" /></button>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"><X size={20} /></button>
         </div>
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Yakit Tipi</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Yakit Tipi</label>
               <select value={fuelType} onChange={(e) => setFuelType(e.target.value)} className={inputCls}>
                 {Object.entries(FUEL_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Tarih</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Tarih</label>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Saat</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Saat</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -143,11 +143,11 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Miktar (Litre) *</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Miktar (Litre) *</label>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} step="0.01" min="0" className={inputCls} placeholder="50" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Litre Fiyati (TRY) *</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Litre Fiyati (TRY) *</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -163,30 +163,30 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
           {/* Otomatik hesaplanan toplam */}
           {totalCost > 0 && (
             <div className="p-3 bg-orange-500/15 border border-orange-500/30 rounded-xl flex items-center justify-between">
-              <span className="text-sm font-medium text-surface-200">Toplam Tutar</span>
-              <span className="text-lg font-bold text-orange-300">{formatCurrency(totalCost)}</span>
+              <span className="text-sm font-medium text-[rgb(var(--v2-ink))]">Toplam Tutar</span>
+              <span className="text-lg font-bold text-orange-700 dark:text-orange-300">{formatCurrency(totalCost)}</span>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">KM / Saat Sayaci</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">KM / Saat Sayaci</label>
               <input type="number" value={odometerKm} onChange={(e) => setOdometerKm(e.target.value)} step="0.1" className={inputCls} placeholder="15230" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Istasyon</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Istasyon</label>
               <input type="text" value={station} onChange={(e) => setStation(e.target.value)} className={inputCls} placeholder="Shell - Kadikoy" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Notlar</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Notlar</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={inputCls + " resize-none"} />
           </div>
 
           {/* Fiş/Fatura Fotoğrafı */}
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Fis / Fatura Fotografi</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Fis / Fatura Fotografi</label>
             <InlineFileUpload
               category="fuel_receipt"
               onUploaded={(file) => {
@@ -205,9 +205,9 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">Vazgec</button>
+            <button onClick={onClose} className="btn-secondary flex-1 py-2.5">Vazgec</button>
             <button onClick={handleSave} disabled={saving || !amount || priceRaw.length !== 4}
-              className="flex-1 py-2.5 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 transition-colors flex items-center justify-center gap-2">
+              className="flex-1 py-2.5 rounded-xl font-semibold bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Kaydet
             </button>
           </div>

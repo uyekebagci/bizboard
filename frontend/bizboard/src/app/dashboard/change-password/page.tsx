@@ -77,10 +77,10 @@ export default function ChangePasswordPage() {
     return (
       <div className="min-h-[60dvh] flex flex-col items-center justify-center px-6">
         <div className="w-16 h-16 rounded-2xl bg-green-500/15 flex items-center justify-center mb-4">
-          <ShieldCheck size={36} className="text-green-300" />
+          <ShieldCheck size={36} className="text-green-700 dark:text-green-300" />
         </div>
-        <h1 className="text-xl font-bold text-surface-100 mb-1">Sifre Degistirildi</h1>
-        <p className="text-surface-400 text-sm">
+        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] mb-1">Sifre Degistirildi</h1>
+        <p className="text-[rgb(var(--v2-muted))] text-sm">
           Guvenlik icin yeniden giris yapmaniz gerekiyor...
         </p>
       </div>
@@ -90,21 +90,21 @@ export default function ChangePasswordPage() {
   return (
     <div className="max-w-md mx-auto p-6">
       <div className="mb-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-3">
-          <Lock size={20} className="text-surface-100" />
+        <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--v2-ink))] flex items-center justify-center mx-auto mb-3">
+          <Lock size={20} className="text-[rgb(var(--v2-card))]" />
         </div>
-        <h1 className="text-xl font-bold text-surface-100">Sifre Degistir</h1>
-        <p className="text-surface-400 text-sm mt-1">
+        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Sifre Degistir</h1>
+        <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
           Guvenlik icin yeni bir sifre belirleyin
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-400 text-sm">
             <div>{error}</div>
             {errorRequestId && (
-              <div className="mt-1 text-[10px] font-mono text-red-400/80">
+              <div className="mt-1 text-[10px] font-mono text-red-700/80 dark:text-red-400/80">
                 Destek icin referans: {errorRequestId}
               </div>
             )}
@@ -146,7 +146,7 @@ export default function ChangePasswordPage() {
           {fieldErrors.new_password ? (
             <p className="mt-1 text-xs text-red-500">{fieldErrors.new_password}</p>
           ) : (
-            <p className="mt-1 text-xs text-surface-400">
+            <p className="mt-1 text-xs text-[rgb(var(--v2-muted))]">
               En az 10 karakter. Tahmin edilmesi zor bir sifre secin.
             </p>
           )}
@@ -185,7 +185,7 @@ export default function ChangePasswordPage() {
           )}
         </button>
 
-        <p className="text-[11px] text-surface-400 text-center">
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] text-center">
           Sifre degisikliginden sonra tum cihazlarda yeniden giris yapmaniz gerekecektir.
         </p>
       </form>

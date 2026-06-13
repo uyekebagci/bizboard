@@ -72,12 +72,12 @@ export function PosDeviceModalDetail({
   if (loading) {
     return (
       <div className="py-12 flex items-center justify-center">
-        <span className="text-sm text-surface-400">Yükleniyor...</span>
+        <span className="text-sm text-[rgb(var(--v2-muted))]">Yükleniyor...</span>
       </div>
     );
   }
   if (!info) {
-    return <div className="py-8 text-center text-sm text-surface-400">Cihaz bulunamadı</div>;
+    return <div className="py-8 text-center text-sm text-[rgb(var(--v2-muted))]">Cihaz bulunamadı</div>;
   }
 
   const t = analytics?.totals;
@@ -102,7 +102,7 @@ export function PosDeviceModalDetail({
       {/* Bekleyen tahsilatlar */}
       {unsettledTxs.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-amber-300 uppercase tracking-wider mb-2">
+          <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider mb-2">
             Bekleyen Tahsilatlar ({unsettledTxs.length})
           </h4>
           <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -110,7 +110,7 @@ export function PosDeviceModalDetail({
               <TxMiniRow key={tx.id} tx={tx} />
             ))}
             {unsettledTxs.length > 10 && (
-              <p className="text-[11px] text-surface-400 text-center pt-1">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] text-center pt-1">
                 + {unsettledTxs.length - 10} daha (tam liste detay sayfasında)
               </p>
             )}
@@ -120,18 +120,18 @@ export function PosDeviceModalDetail({
 
       {/* Son tx'ler */}
       <div>
-        <h4 className="text-xs font-semibold text-surface-300 uppercase tracking-wider mb-2">
+        <h4 className="text-xs font-semibold text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-2">
           Son İşlemler ({txs.length} toplam)
         </h4>
         {txs.length === 0 ? (
-          <p className="text-xs text-surface-500 text-center py-4">Bu cihaz için işlem yok</p>
+          <p className="text-xs text-[rgb(var(--v2-muted))] text-center py-4">Bu cihaz için işlem yok</p>
         ) : (
           <div className="space-y-1 max-h-60 overflow-y-auto">
             {txs.slice(0, 15).map((tx) => (
               <TxMiniRow key={tx.id} tx={tx} />
             ))}
             {txs.length > 15 && (
-              <p className="text-[11px] text-surface-400 text-center pt-1">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] text-center pt-1">
                 + {txs.length - 15} daha
               </p>
             )}
@@ -139,11 +139,11 @@ export function PosDeviceModalDetail({
         )}
       </div>
 
-      <div className="pt-3 border-t border-surface-700 flex justify-end">
+      <div className="pt-3 border-t border-[rgb(var(--v2-border))] flex justify-end">
         <Link
           href={`/dashboard/pos-cihazlari/${device.device_id}`}
           onClick={onClose}
-          className="text-xs px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white"
+          className="v2-press text-xs px-3 py-1.5 rounded-lg bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90"
         >
           Tam Detay Sayfasına Git →
         </Link>

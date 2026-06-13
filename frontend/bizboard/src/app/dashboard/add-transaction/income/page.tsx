@@ -31,37 +31,39 @@ export default function IncomeFormPage() {
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => router.push("/dashboard/add-transaction")}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="v2-press p-2 -ml-2 rounded-xl v2-sunken hover:border-[rgb(var(--accent))]/50 transition-colors"
             aria-label="Tip seçimine dön"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <ArrowDownLeft size={20} className="text-emerald-300 shrink-0" />
-            <h1 className="text-xl font-bold text-surface-100 truncate">Yeni Gelir</h1>
+            <ArrowDownLeft size={20} className="text-emerald-600 dark:text-emerald-300 shrink-0" />
+            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">Yeni Gelir</h1>
           </div>
         </div>
         <Link
           href="/dashboard"
-          className="text-xs text-surface-400 hover:text-surface-200 whitespace-nowrap"
+          className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] whitespace-nowrap"
         >
           ← Dashboard
         </Link>
       </div>
 
       {showSuccess && (
-        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-sm flex items-center gap-2">
           <CheckCircle2 size={16} />
           İşlem oluşturuldu. Form temizlendi — başka bir gelir ekleyebilirsiniz.
         </div>
       )}
 
-      <AddTransactionForm
-        key={formKey}
-        preselectedType="income"
-        lockDirection
-        onSuccess={handleSuccess}
-      />
+      <div className="v2-card p-5 sm:p-6">
+        <AddTransactionForm
+          key={formKey}
+          preselectedType="income"
+          lockDirection
+          onSuccess={handleSuccess}
+        />
+      </div>
     </div>
   );
 }

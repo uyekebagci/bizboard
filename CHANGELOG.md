@@ -30,6 +30,38 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Changed
+
+- **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**
+  - **Logo:** Sidebar sol-üst "ÇATI" plakası yeniden tasarlandı — katmanlı ink
+    zemin (radial gradient + iç ışık + accent halka + yumuşak gölge), Daxa imza
+    accent noktası ve "BETA v1.1" cramped italic-mono etiketi yerine net accent
+    tint pill rozeti; orantı/hizalama (11px tile, hizalı dikey blok) düzeltildi.
+  - **Light-theme saydamlık:** Light temada aşırı saydam/soluk kalan yüzeyler
+    opaklaştırıldı — `.glass-card` (app genelinde de-facto kart, 332 kullanım)
+    light'ta tam opak + daha net border, `.btn-secondary` light'ta solid alt-yüzey
+    (slate-200/70 yıkanmış görünümü giderildi), `.input/.field/.input-sm/.field-sm`
+    + `.modal-surface`/`.popover-surface`/`.modal-header`/`.modal-footer`/`.card`
+    border'ları light'ta solid'e çekildi. Dark tema değişmedi.
+  - **Paylaşılan primitive'ler → Daxa:** `.card`/`.glass-card`/`.modal-surface`
+    radius'u `--radius-card` (~20px) Daxa estetiğine hizalandı; yeni paylaşılan
+    `.badge` primitivi (accent/ink/success/warning/danger/info varyantları, çift
+    tema, a11y kontrast) eklendi. Böylece tüm sayfalar (formlar/listeler) bu base
+    sınıfları kullandığında otomatik uyumlanır. İşlevsellik değişmedi.
+- **UI v2 (Daxa) rollout — form sayfaları + modal'lar.** Tüm işlem/form/onay/
+  düzenleme bileşenleri eski koyu-düz temadan v2 "Daxa" diline (solid/katmanlı,
+  yuvarlak, lime accent, doğru light+dark) geçirildi. Öncelik: **İşlem Ekle**
+  akışı (Yeni Gelir/Gider/POS/Transfer formları + `AddTransactionModal`).
+  Kapsam: İşlem Ekle formları ve chooser/sub-page'ler; işlem/karşı-taraf/firma/
+  kategori/banka/borç/ödeme/gün-kapanışı/çek-senet/envanter/POS-anlaşma/OCR/
+  hatırlatıcı/dosya-yükleme modal'ları; paylaşımlı `DarkSelect`/
+  `CounterpartCombobox` form widget'ları; Firmalarım ve Kategoriler form'ları;
+  Şifre Değiştir sayfası. SALT GÖRSEL — form mantığı, validasyon, alanlar ve
+  API çağrıları AYNEN korundu; semantik durum renkleri (gelir=yeşil, gider=
+  kırmızı, uyarı=amber, bilgi=mavi/sky) light+dark kontrast eklenerek korundu.
+  `globals.css` / `tailwind.config` / shell / paylaşılan base primitive'lere
+  dokunulmadı (mevcut v2 utility sınıfları kullanıldı).
+
 ### Security
 
 - **Cari liste/alt-firma artık aktif işletmeye scope'lanıyor (cross-business sızıntı fix'i).**
@@ -47,6 +79,24 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
   log'una yazılır.
 
 ### Changed
+
+- **UI v2 (Daxa) — liste/finans/rapor sayfaları yeni tasarım diline taşındı (salt görsel).**
+  Çatı'nın liste/tablo/finans/rapor sayfaları eski `glass-card`/pastel/indigo
+  görünümden Daxa diline (`v2-card`, solid/katmanlı yüzey, lime accent, segment/
+  badge, yuvarlak butonlar, yoğun-okunur tablolar) geçirildi: **İşlemler**
+  (Tüm İşlemler), **Cariler**, **Kişiler**, **Finans** (finans merkezi),
+  **Raporlar** (+ forecast + bütçe), **Çekler**, **Çek/Senetler**, **Krediler**,
+  **Alacaklar**, **Verecekler**, **Banka Hesapları**, **Kategoriler**,
+  **Firmalarım**, **Kapanışlar** ve **Gün Kapanışı** (görsel). Para-semantiği
+  renkleri tutarlı eşlendi (gelir/alacak/tahsil/fazla/denk → lime accent;
+  gider/borç/verecek/eksik/karşılıksız → `status-danger`; yaklaşan vade/uyarı/
+  ciro → `status-warning`). Kategorik ayrım hue'ları (instrument/hesap tipi
+  rozetleri) ve çok-seri grafik paletleri veri-görselleştirme amacıyla korundu.
+  **Veri, işlevsellik, filtre, pagination (server + client) ve infinite-scroll
+  AYNEN korundu** — yalnızca görsel katman değişti. Çift tema (light + dark),
+  a11y (icon-butonlarda `aria-label`, segment kontrollerde `aria-pressed`,
+  `focus:ring-accent`). Paylaşılan shell/base-primitive'lere (globals.css,
+  tailwind.config, layout, `components/v2`, `components/shared`) dokunulmadı.
 
 - **UI v2 (Daxa) — yeni "Genel Bakış" tasarımı GERÇEK `/dashboard` landing'ine taşındı (promote).**
   Showcase'teki (`/dashboard/ui-v2`) Daxa "Overview Panel" artık login sonrası

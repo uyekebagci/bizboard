@@ -96,16 +96,15 @@ export function PosDealModal({ open, devices, counterparts, onClose, create, pre
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl
-                      bg-surface-800 border border-surface-700 shadow-2xl">
+      <div className="v2-card relative w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4
-                        bg-surface-800/95 backdrop-blur border-b border-surface-700">
+                        bg-[rgb(var(--v2-card))]/95 backdrop-blur border-b border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-brand-400" />
-            <h2 className="text-base font-bold text-white">POS İşlem Gir</h2>
+            <Sparkles size={18} className="text-accent-strong dark:text-accent" />
+            <h2 className="text-base font-bold text-[rgb(var(--v2-ink))]">POS İşlem Gir</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700">
-            <X size={18} className="text-surface-300" />
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
+            <X size={18} />
           </button>
         </div>
 
@@ -122,7 +121,7 @@ export function PosDealModal({ open, devices, counterparts, onClose, create, pre
               ))}
             </select>
             {selectedDevice && (
-              <p className="text-[11px] text-surface-400 mt-1">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1">
                 Sahip: {selectedDevice.owner_my_company_name ?? "—"}
                 {selectedDevice.default_rate != null && <> · Banka oranı %{selectedDevice.default_rate}</>}
               </p>
@@ -171,37 +170,37 @@ export function PosDealModal({ open, devices, counterparts, onClose, create, pre
 
           {/* Canlı kâr-payı önizleme */}
           {previewDeal && previewDeal.shares.length > 0 && (
-            <div className="rounded-2xl p-4 bg-surface-900/40 border border-surface-700/60 space-y-2">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <Sparkles size={11} className="text-brand-400" /> Kâr-Payı Önizleme
+            <div className="rounded-2xl p-4 v2-sunken border border-[rgb(var(--v2-border))] space-y-2">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <Sparkles size={11} className="text-accent-strong dark:text-accent" /> Kâr-Payı Önizleme
               </p>
               {previewDeal.shares.map((s, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-surface-300 flex items-center gap-1.5 min-w-0">
+                  <span className="text-[rgb(var(--v2-muted))] flex items-center gap-1.5 min-w-0">
                     <span className="truncate">{s.operator_name ?? "Şirket"}</span>
-                    <span className="text-[9px] uppercase tracking-wider text-surface-500">{s.rule_type}</span>
+                    <span className="text-[9px] uppercase tracking-wider text-[rgb(var(--v2-muted))]">{s.rule_type}</span>
                     {s.provisional && (
-                      <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/25 flex items-center gap-0.5">
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 flex items-center gap-0.5">
                         <Clock size={8} /> T+1
                       </span>
                     )}
                   </span>
-                  <span className={cn("font-semibold num", s.amount >= 0 ? "text-emerald-400" : "text-red-400")}>
+                  <span className={cn("font-semibold num", s.amount >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400")}>
                     {formatCurrency(s.amount, "TRY")}
                   </span>
                 </div>
               ))}
-              <p className="text-[10px] text-surface-500 pt-1 border-t border-surface-700/60">
+              <p className="text-[10px] text-[rgb(var(--v2-muted))] pt-1 border-t border-[rgb(var(--v2-border))]">
                 T+1 işaretli paylar gün kapanışında banka yatışı girilince kesinleşir (Tuncay).
               </p>
             </div>
           )}
         </div>
 
-        <div className="sticky bottom-0 flex gap-2 px-5 py-4 bg-surface-800/95 backdrop-blur border-t border-surface-700">
+        <div className="sticky bottom-0 flex gap-2 px-5 py-4 bg-[rgb(var(--v2-card))]/95 backdrop-blur border-t border-[rgb(var(--v2-border))]">
           <button onClick={onClose} className="btn-secondary flex-1 py-2.5">İptal</button>
           <button onClick={handleSubmit} disabled={submitting || !canPreview}
-            className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold
+            className="flex-1 py-2.5 rounded-xl bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] font-semibold
                        disabled:opacity-50 flex items-center justify-center gap-2">
             {submitting && <Loader2 size={16} className="animate-spin" />}
             İşlemi Gir

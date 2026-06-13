@@ -15,7 +15,7 @@
  *   <li>"Günü Aç" → gün AÇIK; işlem girişi serbest (enforcement açıkken).</li>
  * </ol>
  *
- * <p>Portal'lı (createPortal); çift tema (surface/brand token'ları).</p>
+ * <p>Portal'lı (createPortal); çift tema (v2 Daxa design language).</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -114,26 +114,30 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
-          <h3 className="text-lg font-bold h-display text-white flex items-center gap-2">
-            <Sunrise size={18} className="text-amber-300" /> Günü Aç — Devir Yuvarlama
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Sunrise size={18} className="text-amber-700 dark:text-amber-300" /> Günü Aç — Devir Yuvarlama
           </h3>
-          <button onClick={onClose} className="modal-close">
-            <X size={18} className="text-surface-400" />
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
+            <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {alreadyOpen && (
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-200 text-xs">
               Bu gün zaten AÇIK. Kaydetmek açılışları (devir yuvarlamayı) GÜNCELLER —
               eski yuvarlama düzeltmesi geri alınıp yeniden üretilir.
             </div>
@@ -145,7 +149,7 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
               <label className="label flex items-center gap-1.5">
                 <CalendarClock size={13} /> Açılış Tarihi
                 {isBackdated && (
-                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                     Geri Dönük
                   </span>
                 )}
@@ -159,7 +163,7 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
           <div className="space-y-2">
             <p className="label">Hesap Açılışları (Devir → Yuvarlanmış)</p>
             {openings.length === 0 && (
-              <p className="text-xs text-surface-400">
+              <p className="text-xs text-[rgb(var(--v2-muted))]">
                 Açılacak (parası olan) hesap yok. Önce hesap/kasa ekleyin.
               </p>
             )}
@@ -168,26 +172,26 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
               const roundedVal = v ? parseMoneyInput(v) : 0;
               const delta = roundedVal - (a.carried_over ?? 0);
               return (
-                <div key={a.account_id} className="rounded-xl p-3 bg-surface-900/40 border border-surface-700/60">
+                <div key={a.account_id} className="rounded-xl p-3 v2-sunken border border-[rgb(var(--v2-border))]">
                   <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="text-sm font-medium text-white truncate">{a.account_name}</span>
-                    <span className="text-[10px] uppercase tracking-wider text-surface-400">
+                    <span className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{a.account_name}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-[rgb(var(--v2-muted))]">
                       {a.account_type}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-surface-400 num shrink-0">
+                    <span className="text-xs text-[rgb(var(--v2-muted))] num shrink-0">
                       {formatCurrency(a.carried_over ?? 0, "TRY")}
                     </span>
-                    <ArrowRight size={13} className="text-surface-500 shrink-0" />
+                    <ArrowRight size={13} className="text-[rgb(var(--v2-muted))] shrink-0" />
                     <input type="text" inputMode="numeric" value={v}
                       onChange={(e) => setRounded((p) => ({ ...p, [a.account_id]: formatMoneyInput(e.target.value) }))}
                       className="input flex-1 font-semibold" placeholder="Yuvarlanmış açılış" />
                   </div>
-                  <p className="text-[11px] text-surface-400 mt-1">
+                  <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1">
                     Devir: {formatCurrency(a.carried_over ?? 0, "TRY")}
                     {Math.abs(delta) > 0.005 && (
-                      <span className={cn("ml-2 font-medium", delta > 0 ? "text-emerald-400" : "text-red-400")}>
+                      <span className={cn("ml-2 font-medium", delta > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400")}>
                         (yuvarlama {delta > 0 ? "+" : ""}{formatCurrency(delta, "TRY")})
                       </span>
                     )}
@@ -198,22 +202,22 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
           </div>
 
           {/* Toplam blok */}
-          <div className="rounded-2xl p-4 bg-surface-900/40 border border-surface-700/60 space-y-1.5">
+          <div className="rounded-2xl p-4 v2-sunken border border-[rgb(var(--v2-border))] space-y-1.5">
             <Row label="Toplam Devir (otomatik)" value={carriedTotal} />
             <Row label="Yuvarlanmış Açılış" value={roundedTotal} bold />
-            <div className="border-t border-surface-700/60 my-1.5" />
+            <div className="border-t border-[rgb(var(--v2-border))] my-1.5" />
             <div className="flex items-center justify-between">
-              <span className="text-sm text-surface-300">Devir Yuvarlama Farkı</span>
+              <span className="text-sm text-[rgb(var(--v2-muted))]">Devir Yuvarlama Farkı</span>
               <span className={cn("text-base font-bold num",
-                Math.abs(roundingDelta) <= 0.005 && "text-white",
-                roundingDelta > 0.005 && "text-emerald-400",
-                roundingDelta < -0.005 && "text-red-400")}>
+                Math.abs(roundingDelta) <= 0.005 && "text-[rgb(var(--v2-ink))]",
+                roundingDelta > 0.005 && "text-emerald-700 dark:text-emerald-400",
+                roundingDelta < -0.005 && "text-red-700 dark:text-red-400")}>
                 {roundingDelta > 0 ? "+" : ""}{formatCurrency(roundingDelta, "TRY")}
               </span>
             </div>
           </div>
           {Math.abs(roundingDelta) > 0.005 && (
-            <p className="text-xs text-amber-300 flex items-center gap-1.5">
+            <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
               <AlertTriangle size={12} /> Fark için denetlenen "Devir Yuvarlama"
               düzeltme kaydı (Σ=0) üretilir — gelir/gider yaratmaz.
             </p>
@@ -232,7 +236,7 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
               Vazgeç
             </button>
             <button type="submit" disabled={submitting || openings.length === 0}
-              className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+              className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 disabled:opacity-50 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2">
               {submitting
                 ? (<><Loader2 size={16} className="animate-spin" /> Açılıyor...</>)
                 : (<><Sunrise size={16} /> Günü Aç</>)}
@@ -248,9 +252,9 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
 function Row({ label, value, bold }: { label: string; value: number; bold?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={cn("text-surface-300", bold ? "text-sm font-semibold" : "text-xs")}>{label}</span>
+      <span className={cn("text-[rgb(var(--v2-muted))]", bold ? "text-sm font-semibold" : "text-xs")}>{label}</span>
       <span className={cn("num tabular-nums",
-        bold ? "text-base font-bold text-white" : "text-sm text-surface-200")}>
+        bold ? "text-base font-bold text-[rgb(var(--v2-ink))]" : "text-sm text-[rgb(var(--v2-ink))]")}>
         {formatCurrency(value, "TRY")}
       </span>
     </div>

@@ -52,53 +52,53 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}>
       <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md shadow-xl">
+        className="v2-card w-full max-w-md shadow-xl">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <AlertTriangle size={16} className="text-red-300" />
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <AlertTriangle size={16} className="text-red-700 dark:text-red-300" />
             {isCheque ? "Çek" : "Senet"} Karşılıksız İşaretle
           </h3>
           <button type="button" onClick={onClose}
-            className="modal-close">
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
             <X size={16} />
           </button>
         </div>
 
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs">
               {error}
             </div>
           )}
 
-          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-xs text-red-200">
+          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-xs text-red-700 dark:text-red-200">
             <p className="font-semibold mb-1">Bu işlem geri alınamaz.</p>
             {isIncoming
               ? <p>Karşı tarafın bizdeki alacağı geri açılacak (borç restore edilecek).</p>
               : <p>Bizim verecek borcumuz tekrar açılacak.</p>}
           </div>
 
-          <div className="rounded-lg bg-surface-700/40 p-3 text-xs space-y-1">
-            <p className="text-surface-200">
+          <div className="rounded-lg v2-sunken p-3 text-xs space-y-1">
+            <p className="text-[rgb(var(--v2-ink))]">
               <strong>{isCheque ? instrument.cheque_number : instrument.note_serial}</strong>
               {" · "}
               {formatCurrency(instrument.amount, instrument.currency || "TRY")}
             </p>
-            <p className="text-surface-400">
+            <p className="text-[rgb(var(--v2-muted))]">
               {instrument.counterpart_name} · vade: {instrument.due_date}
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Karşılıksız Tarihi *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Karşılıksız Tarihi *</label>
             <input type="date" required value={bouncedDate}
               onChange={(e) => setBouncedDate(e.target.value)}
               className="field field-sm py-2.5" />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Sebep <span className="text-surface-400 font-normal">(opsiyonel)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Sebep <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
               placeholder="orn. Yetersiz bakiye"

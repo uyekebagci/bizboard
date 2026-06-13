@@ -149,11 +149,11 @@ export default function AllTransactionsPage() {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse max-w-2xl mx-auto">
-        <div className="h-8 bg-surface-600 rounded-lg w-48" />
-        <div className="h-10 bg-surface-600 rounded-xl" />
+        <div className="h-8 v2-sunken rounded-lg w-48" />
+        <div className="h-10 v2-sunken rounded-xl" />
         <div className="space-y-2">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-16 bg-surface-600 rounded-xl" />
+            <div key={i} className="h-16 v2-sunken rounded-xl" />
           ))}
         </div>
       </div>
@@ -167,48 +167,46 @@ export default function AllTransactionsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="v2-icon-btn v2-press"
+            aria-label="Geri"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-xl font-bold h-display text-surface-100">Tum Islemler</h1>
-            <p className="text-xs text-surface-400">{headerCount} islem</p>
+            <h1 className="v2-display text-xl">Tum Islemler</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">{headerCount} islem</p>
           </div>
         </div>
       </div>
 
-      {/* Summary cards — Redesign Inc.3: glass + token-correct renkler + .num */}
+      {/* Summary cards — UI v2 (Daxa): solid v2-card + lime accent / danger renk. */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="glass-card p-3 text-center">
-          <p className="text-[10px] text-emerald-300 uppercase tracking-wider font-medium">
-            Gelir{partialTotals && <span className="text-surface-500"> (yuklenen)</span>}
+        <div className="v2-card p-3 text-center">
+          <p className="v2-eyebrow text-[10px]">
+            Gelir{partialTotals && <span className="text-[rgb(var(--v2-muted))]/70"> (yuklenen)</span>}
           </p>
-          <p className="num text-sm font-bold text-emerald-300 mt-0.5">
+          <p className="num text-sm font-bold text-accent-strong dark:text-accent mt-0.5">
             {formatCurrency(totalIncome)}
           </p>
         </div>
-        <div className="glass-card p-3 text-center">
-          <p className="text-[10px] text-rose-300 uppercase tracking-wider font-medium">
-            Gider{partialTotals && <span className="text-surface-500"> (yuklenen)</span>}
+        <div className="v2-card p-3 text-center">
+          <p className="v2-eyebrow text-[10px]">
+            Gider{partialTotals && <span className="text-[rgb(var(--v2-muted))]/70"> (yuklenen)</span>}
           </p>
-          <p className="num text-sm font-bold text-rose-300 mt-0.5">
+          <p className="num text-sm font-bold text-status-danger mt-0.5">
             {formatCurrency(totalWithFixed)}
           </p>
           {totalFixedCostMonthly > 0 && (
-            <p className="text-[9px] text-rose-300/80 mt-0.5">
+            <p className="text-[9px] text-status-danger/80 mt-0.5">
               Islem: {formatCurrency(totalExpense)}
             </p>
           )}
         </div>
-        <div className="glass-card p-3 text-center">
-          <p className={cn(
-            "text-[10px] uppercase tracking-wider font-medium",
-            totalIncome - totalWithFixed >= 0 ? "text-emerald-300" : "text-orange-300"
-          )}>Net</p>
+        <div className="v2-card p-3 text-center">
+          <p className="v2-eyebrow text-[10px]">Net</p>
           <p className={cn(
             "num text-sm font-bold mt-0.5",
-            totalIncome - totalWithFixed >= 0 ? "text-emerald-300" : "text-orange-300"
+            totalIncome - totalWithFixed >= 0 ? "text-accent-strong dark:text-accent" : "text-status-warning"
           )}>
             {formatCurrency(totalIncome - totalWithFixed)}
           </p>
@@ -217,11 +215,11 @@ export default function AllTransactionsPage() {
 
       {/* Sabit Giderler Özet Kartı */}
       {totalFixedCostMonthly > 0 && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+        <div className="v2-card p-3 border-status-warning/40">
           <div className="flex items-center gap-2 mb-2">
-            <Pin size={14} className="text-amber-300" />
-            <p className="text-xs font-bold text-amber-400">Aylik Sabit Giderler</p>
-            <span className="ml-auto text-sm font-bold text-amber-400">
+            <Pin size={14} className="text-status-warning" />
+            <p className="text-xs font-bold text-status-warning">Aylik Sabit Giderler</p>
+            <span className="ml-auto text-sm font-bold text-status-warning">
               {formatCurrency(totalFixedCostMonthly)}/ay
             </span>
           </div>
@@ -236,10 +234,10 @@ export default function AllTransactionsPage() {
               )
               .filter((c) => c.amount > 0)
               .map((c, i) => (
-                <span key={i} className="text-[10px] text-amber-300">
+                <span key={i} className="text-[10px] text-[rgb(var(--v2-muted))]">
                   {c.name}
-                  {!filterBusiness && <span className="text-amber-400"> ({c.bizName})</span>}
-                  : <span className="font-medium">{formatCurrency(c.amount)}</span>
+                  {!filterBusiness && <span className="text-status-warning"> ({c.bizName})</span>}
+                  : <span className="font-medium text-[rgb(var(--v2-ink))]">{formatCurrency(c.amount)}</span>
                 </span>
               ))}
           </div>
@@ -248,14 +246,14 @@ export default function AllTransactionsPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Islem ara... (aciklama, kategori)"
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm text-surface-100
-                     placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))]
+                     placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
         />
       </div>
 
@@ -272,8 +270,8 @@ export default function AllTransactionsPage() {
           />
         </div>
 
-        {/* Direction filter — Redesign Inc.3: segmented (.seg-active) */}
-        <div className="flex items-center gap-1 glass-card p-1">
+        {/* Direction filter — UI v2: sunken segment + accent aktif. */}
+        <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
           {([
             { key: "", label: "Tumu" },
             { key: "income", label: "Gelir" },
@@ -282,11 +280,13 @@ export default function AllTransactionsPage() {
             <button
               key={opt.key}
               onClick={() => setFilterDirection(opt.key as "" | "income" | "expense")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              aria-pressed={filterDirection === opt.key}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                 filterDirection === opt.key
-                  ? "seg-active font-semibold"
-                  : "text-surface-400 hover:text-surface-100"
-              }`}
+                  ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                  : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+              )}
             >
               {opt.label}
             </button>
@@ -298,12 +298,14 @@ export default function AllTransactionsPage() {
           type="month"
           value={filterMonth}
           onChange={(e) => setFilterMonth(e.target.value)}
-          className="field-sm py-2 text-xs"
+          className="px-3 py-2 text-xs rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))]
+                     focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
         />
         {filterMonth && (
           <button
             onClick={() => setFilterMonth("")}
-            className="px-2 py-2 text-xs text-red-500 hover:text-red-300"
+            aria-label="Ay filtresini temizle"
+            className="px-2 py-2 text-xs text-status-danger hover:opacity-80"
           >
             <X size={14} />
           </button>
@@ -312,7 +314,7 @@ export default function AllTransactionsPage() {
 
       {/* Client-filtre aktif + daha fazla sayfa var → kullanıcıyı bilgilendir */}
       {hasClientFilter && hasNext && (
-        <p className="text-[11px] text-surface-500 -mt-2">
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] -mt-2">
           Arama/ay filtresi yuklenmis kayitlar uzerinde calisir — devamini gormek icin
           asagi kaydirin.
         </p>
@@ -320,8 +322,8 @@ export default function AllTransactionsPage() {
 
       {/* Transaction List */}
       {filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <p className="text-surface-400 text-sm">
+        <div className="v2-card p-8 text-center">
+          <p className="text-[rgb(var(--v2-muted))] text-sm">
             {transactions.length === 0
               ? "Henuz islem yok"
               : "Filtreye uygun islem bulunamadi"}
@@ -329,35 +331,35 @@ export default function AllTransactionsPage() {
         </div>
       ) : (
         <>
-          <div className="glass-card divide-y divide-surface-700/60 overflow-hidden">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
             {filtered.map((tx) => {
               const isIncome = tx.direction === "income";
               return (
                 <div
                   key={tx.id}
                   onClick={() => setDetailTarget(tx)}
-                  className="flex items-center gap-3 p-4 hover:bg-surface-700 transition-colors cursor-pointer group"
+                  className="flex items-center gap-3 p-4 hover:bg-[rgb(var(--v2-sunken))] transition-colors cursor-pointer group"
                 >
                   <div
                     className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                      isIncome ? "bg-emerald-500/15" : "bg-rose-500/15"
+                      isIncome ? "bg-accent/15" : "bg-status-danger/15"
                     )}
                   >
                     {isIncome ? (
-                      <ArrowDownLeft size={18} className="text-emerald-400" />
+                      <ArrowDownLeft size={18} className="text-accent-strong dark:text-accent" />
                     ) : (
-                      <ArrowUpRight size={18} className="text-rose-400" />
+                      <ArrowUpRight size={18} className="text-status-danger" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-surface-100 truncate">
+                    <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">
                       {tx.description || tx.category?.name || "Islem"}
                     </p>
-                    <p className="text-xs text-surface-400 mt-0.5">
+                    <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">
                       {tx.business_name && (
-                        <span className="text-brand-500">{tx.business_name} · </span>
+                        <span className="text-accent-strong dark:text-accent">{tx.business_name} · </span>
                       )}
                       {tx.category?.name || "Kategorisiz"} ·{" "}
                       {new Date(tx.date).toLocaleDateString("tr-TR", {
@@ -369,7 +371,7 @@ export default function AllTransactionsPage() {
                   <span
                     className={cn(
                       "num text-sm font-semibold flex-shrink-0 text-right",
-                      isIncome ? "text-emerald-300" : "text-rose-300"
+                      isIncome ? "text-accent-strong dark:text-accent" : "text-status-danger"
                     )}
                   >
                     {/* v1.6.23.8 (TODO ad8afc6f): POS tx için net göster. */}
@@ -382,7 +384,7 @@ export default function AllTransactionsPage() {
                     )}
                     {(tx.payment_method || "NAKIT") === "POS" && tx.pos_net != null
                       && tx.pos_net !== tx.amount && (
-                      <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
+                      <span className="block text-[10px] font-normal text-[rgb(var(--v2-muted))] mt-0.5">
                         brüt {formatCurrency(tx.amount, tx.currency)}
                       </span>
                     )}
@@ -390,7 +392,8 @@ export default function AllTransactionsPage() {
 
                   <button
                     onClick={(e) => { e.stopPropagation(); setDeleteTarget(tx); }}
-                    className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-500/10
+                    aria-label="İşlemi sil"
+                    className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-status-danger hover:bg-status-danger/10
                                opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0"
                   >
                     <Trash2 size={16} />
@@ -467,33 +470,33 @@ function DeleteModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
-        <div className="modal-header">
+      <div className="v2-card shadow-v2-hover w-full max-w-md">
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
-              <AlertTriangle size={16} className="text-red-300" />
+            <div className="w-8 h-8 rounded-lg bg-status-danger/15 flex items-center justify-center">
+              <AlertTriangle size={16} className="text-status-danger" />
             </div>
-            <h3 className="text-lg font-bold text-surface-100">Islemi Sil</h3>
+            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Islemi Sil</h3>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
-            <X size={20} className="text-surface-400" />
+          <button onClick={onClose} aria-label="Kapat" className="v2-icon-btn v2-press">
+            <X size={20} />
           </button>
         </div>
 
         <div className="p-4">
-          <div className="bg-surface-700 rounded-xl p-3 mb-4">
+          <div className="v2-sunken rounded-xl p-3 mb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-surface-100">
+                <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">
                   {transaction.description || transaction.category?.name || "Islem"}
                 </p>
-                <p className="text-xs text-surface-400 mt-0.5">
+                <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">
                   {new Date(transaction.date).toLocaleDateString("tr-TR", {
                     day: "numeric", month: "long", year: "numeric",
                   })}
                 </p>
               </div>
-              <span className={cn("text-base font-bold text-right", isIncome ? "text-green-300" : "text-red-300")}>
+              <span className={cn("text-base font-bold text-right", isIncome ? "text-accent-strong dark:text-accent" : "text-status-danger")}>
                 {/* v1.6.23.8 (TODO ad8afc6f): POS net göster. */}
                 {isIncome ? "+" : "-"}
                 {formatCurrency(
@@ -504,7 +507,7 @@ function DeleteModal({
                 )}
                 {(transaction.payment_method || "NAKIT") === "POS" && transaction.pos_net != null
                   && transaction.pos_net !== transaction.amount && (
-                  <span className="block text-[10px] font-normal text-surface-400 mt-0.5">
+                  <span className="block text-[10px] font-normal text-[rgb(var(--v2-muted))] mt-0.5">
                     brüt {formatCurrency(transaction.amount, transaction.currency)}
                   </span>
                 )}
@@ -512,8 +515,8 @@ function DeleteModal({
             </div>
           </div>
 
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">
-            Silme Sebebi <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+            Silme Sebebi <span className="text-status-danger">*</span>
           </label>
           <textarea
             value={reason}
@@ -521,25 +524,28 @@ function DeleteModal({
             placeholder="Bu islemi neden siliyorsunuz? (zorunlu)"
             rows={3}
             autoFocus
-            className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
-                       placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-red-500
+            className="w-full px-4 py-3 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))]
+                       placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-status-danger
                        focus:border-transparent transition-all resize-none"
           />
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mt-3">
-              <p className="text-red-300 text-sm">{error}</p>
+            <div className="bg-status-danger/10 border border-status-danger/30 rounded-xl p-3 mt-3">
+              <p className="text-status-danger text-sm">{error}</p>
             </div>
           )}
 
           <div className="flex gap-3 mt-4">
-            <button onClick={onClose} className="btn-secondary flex-1 py-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl font-semibold text-[rgb(var(--v2-ink))] v2-sunken hover:border-accent/50 transition-colors v2-press"
+            >
               Vazgec
             </button>
             <button
               onClick={handleDelete}
               disabled={isDeleting || !reason.trim()}
-              className="flex-1 py-3 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl font-semibold text-white bg-status-danger hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center justify-center gap-2 v2-press"
             >
               {isDeleting ? <><Loader2 size={18} className="animate-spin" /> Siliniyor...</> : <><Trash2 size={18} /> Sil</>}
             </button>

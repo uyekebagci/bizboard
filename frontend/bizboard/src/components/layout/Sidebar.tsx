@@ -239,24 +239,27 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
             <Link
               href="/dashboard"
               onClick={() => onMobileOpenChange(false)}
-              className="flex items-center gap-3"
+              className="group flex items-center gap-3 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               aria-label="ÇATI ana sayfa"
             >
-              {/* Daxa logo plakası: ink zemin + accent harf, yuvarlak. */}
-              <div className="v2-logo-tile w-10 h-10 rounded-2xl flex items-center justify-center">
-                <span className="font-extrabold text-base">Ç</span>
-              </div>
-              <div className="flex flex-col leading-tight">
-                <span className="font-extrabold text-[17px] tracking-tight text-[rgb(var(--v2-ink))] leading-none">ÇATI</span>
+              {/* Daxa logo plakası: katmanlı ink zemin + accent harf + iç ring.
+                  Aksan noktası "çatı" metaforu (ev/şirket) hissini verir. */}
+              <span className="v2-logo-tile relative w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5">
+                <span className="font-extrabold text-lg leading-none -tracking-[0.02em]">Ç</span>
+                {/* Sağ-üst accent nokta (Daxa imza işareti). */}
+                <span className="v2-logo-dot absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" aria-hidden="true" />
+              </span>
+              <span className="flex flex-col leading-none">
+                <span className="font-extrabold text-[18px] tracking-tight text-[rgb(var(--v2-ink))] leading-none">ÇATI</span>
                 {versionLabel && (
                   <span
-                    className="mt-0.5 text-[10px] italic text-[rgb(var(--v2-muted))] font-mono leading-none tracking-tight"
+                    className="v2-logo-beta mt-1.5 inline-flex items-center self-start px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase leading-none tracking-[0.08em]"
                     title="Beta sürümü"
                   >
                     {versionLabel}
                   </span>
                 )}
-              </div>
+              </span>
             </Link>
             {/* Mobile-only kapatma */}
             <button

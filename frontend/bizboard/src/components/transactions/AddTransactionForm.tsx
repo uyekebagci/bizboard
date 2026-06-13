@@ -493,7 +493,7 @@ export function AddTransactionForm({
       {/* Success Banner */}
       {success && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-center">
-          <p className="text-green-300 text-sm font-medium">Islem basariyla eklendi!</p>
+          <p className="text-green-700 dark:text-green-300 text-sm font-medium">Islem basariyla eklendi!</p>
         </div>
       )}
 
@@ -509,10 +509,10 @@ export function AddTransactionForm({
             type="button"
             onClick={() => setDirection("income")}
             className={cn(
-              "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+              "v2-press flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               direction === "income"
-                ? "bg-green-500/15 border-green-500/50 text-green-300"
-                : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                ? "bg-green-500/15 border-green-500/50 text-green-700 dark:text-green-300"
+                : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
             )}
           >
             <ArrowDownLeft size={18} />
@@ -522,10 +522,10 @@ export function AddTransactionForm({
             type="button"
             onClick={() => setDirection("expense")}
             className={cn(
-              "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+              "v2-press flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               direction === "expense"
-                ? "bg-red-500/15 border-red-500/50 text-red-300"
-                : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                ? "bg-red-500/15 border-red-500/50 text-red-700 dark:text-red-300"
+                : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
             )}
           >
             <ArrowUpRight size={18} />
@@ -541,7 +541,7 @@ export function AddTransactionForm({
       <div>
         {!lockPaymentMethod && (
         <>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
           Odeme Yontemi *
         </label>
         <div className="grid gap-3 grid-cols-2">
@@ -549,10 +549,10 @@ export function AddTransactionForm({
             type="button"
             onClick={() => setPaymentMethod("NAKIT")}
             className={cn(
-              "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+              "v2-press flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               paymentMethod === "NAKIT"
-                ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-300"
-                : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300"
+                : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
             )}
           >
             <Banknote size={16} />
@@ -564,10 +564,10 @@ export function AddTransactionForm({
               setPaymentMethod("POS");
             }}
             className={cn(
-              "flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
+              "v2-press flex items-center justify-center gap-2 py-3 rounded-2xl font-medium transition-all border-2",
               paymentMethod === "POS"
-                ? "bg-indigo-500/15 border-indigo-500/50 text-indigo-300"
-                : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                ? "border-[rgb(var(--accent))]/60 bg-[rgb(var(--accent))]/12 text-accent-strong dark:text-accent"
+                : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
             )}
           >
             <CreditCard size={16} />
@@ -580,7 +580,7 @@ export function AddTransactionForm({
           <>
             {posDevices.length > 0 && (
               <div className="mt-3">
-                <label className="block text-xs font-medium text-surface-300 mb-1.5">
+                <label className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1.5">
                   POS Cihazi
                 </label>
                 <DarkSelect
@@ -619,7 +619,7 @@ export function AddTransactionForm({
                 kapanışı/mutabakata girmiyordu. Boş = sistem "Genel Nakit" fallback. */}
             {direction === "income" && (
               <div className="mt-3">
-                <label className="block text-xs font-medium text-surface-300 mb-1.5">
+                <label className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1.5">
                   Kasa / Hesap (POS geliri buraya düşer)
                 </label>
                 <DarkSelect
@@ -644,7 +644,7 @@ export function AddTransactionForm({
         {direction === "expense"
           && (paymentMethod === "POS" || paymentMethod === "NAKIT") && (
           <div className="mt-3 space-y-2">
-            <label className="block text-xs font-medium text-surface-300">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-muted))]">
               İşlem Tipi
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -654,16 +654,16 @@ export function AddTransactionForm({
                   type="button"
                   onClick={() => setPosTxSubtype(opt)}
                   className={cn(
-                    "py-2 px-3 rounded-xl text-xs font-medium border transition-all text-left",
+                    "v2-press py-2 px-3 rounded-xl text-xs font-medium border transition-all text-left",
                     posTxSubtype === opt
-                      ? "bg-indigo-500/15 border-indigo-500/50 text-indigo-200"
-                      : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                      ? "border-[rgb(var(--accent))]/60 bg-[rgb(var(--accent))]/12 text-accent-strong dark:text-accent"
+                      : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                   )}
                 >
                   <div className="font-semibold">
                     {opt === "NAKIT" ? "Nakit" : "Transfer"}
                   </div>
-                  <div className="text-[10px] text-surface-400 mt-0.5">
+                  <div className="text-[10px] text-[rgb(var(--v2-muted))] mt-0.5">
                     {opt === "NAKIT"
                       ? (paymentMethod === "POS" ? "POS'tan nakit hareket" : "Elden nakit ödeme")
                       : "Banka hesabımıza/dan"}
@@ -674,7 +674,7 @@ export function AddTransactionForm({
 
             {posTxSubtype === "TRANSFER" && (
               <div className="pt-1">
-                <label className="block text-[11px] font-medium text-surface-300 mb-1">
+                <label className="block text-[11px] font-medium text-[rgb(var(--v2-muted))] mb-1">
                   İlgili Banka Hesabı (opsiyonel)
                 </label>
                 <DarkSelect
@@ -691,7 +691,7 @@ export function AddTransactionForm({
                     })),
                   ]}
                 />
-                <p className="mt-1 text-[10px] text-surface-500">
+                <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">
                   Sadece bilgi alanı — hesap bakiyesini etkilemez.
                 </p>
               </div>
@@ -702,7 +702,7 @@ export function AddTransactionForm({
 
       {/* Amount */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Tutar *</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tutar *</label>
         <div className="relative">
           <input
             type="text"
@@ -713,16 +713,16 @@ export function AddTransactionForm({
             required
             className="field py-3 text-2xl font-bold pr-14"
           />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 font-medium">TRY</span>
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] font-medium">TRY</span>
         </div>
       </div>
 
       {/* Business */}
       {!preselectedBusinessId && (
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">Isletme *</label>
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Isletme *</label>
           {isLoadingBiz ? (
-            <div className="h-12 bg-surface-700 rounded-xl animate-pulse" />
+            <div className="h-12 v2-sunken rounded-xl animate-pulse" />
           ) : (
             <DarkSelect
               required
@@ -742,8 +742,8 @@ export function AddTransactionForm({
 
       {/* Counterpart */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">
-          Karsi Taraf <span className="text-surface-400 font-normal text-xs">(opsiyonel)</span>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+          Karsi Taraf <span className="text-[rgb(var(--v2-muted))] font-normal text-xs">(opsiyonel)</span>
         </label>
         <DarkSelect
           value={targetCounterpartId}
@@ -849,28 +849,28 @@ export function AddTransactionForm({
         className={cn(
           "rounded-2xl border-2 p-3 transition-colors",
           categoryId
-            ? "border-brand-500/40 bg-brand-500/5"
+            ? "border-[rgb(var(--accent))]/45 bg-[rgb(var(--accent))]/8"
             : "border-amber-500/40 bg-amber-500/5",
         )}
       >
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-semibold text-surface-100">
+          <label className="block text-sm font-semibold text-[rgb(var(--v2-ink))]">
             <Tag size={14} className="inline mr-1" /> Kategori
-            <span className="text-surface-400 font-normal text-[11px] ml-1">(ne tür?)</span>
-            <span className="text-red-400"> *</span>
+            <span className="text-[rgb(var(--v2-muted))] font-normal text-[11px] ml-1">(ne tür?)</span>
+            <span className="text-red-500 dark:text-red-400"> *</span>
           </label>
           {businessId && (
             <button
               type="button"
               onClick={() => setShowCreateCategory(true)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-brand-300 hover:text-brand-200"
+              className="inline-flex items-center gap-1 text-xs font-medium text-accent-strong dark:text-accent hover:opacity-80"
             >
               <Plus size={13} /> Yeni kategori
             </button>
           )}
         </div>
         {isLoadingCat ? (
-          <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+          <div className="h-10 v2-sunken rounded-xl animate-pulse" />
         ) : filteredCategories.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {filteredCategories.map((cat) => (
@@ -879,10 +879,10 @@ export function AddTransactionForm({
                 type="button"
                 onClick={() => setCategoryId(categoryId === cat.id ? "" : cat.id)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
+                  "v2-press inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
                   categoryId === cat.id
-                    ? "bg-brand-500/20 border-brand-500/60 text-brand-200"
-                    : "bg-surface-700 border-surface-600 text-surface-300 hover:border-surface-300",
+                    ? "bg-[rgb(var(--accent))]/18 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                 )}
                 style={
                   categoryId === cat.id && cat.color
@@ -896,25 +896,25 @@ export function AddTransactionForm({
             ))}
           </div>
         ) : businessId ? (
-          <p className="text-xs text-amber-300">
+          <p className="text-xs text-amber-700 dark:text-amber-300">
             Henüz kategori yok — &quot;Yeni kategori&quot; ile hemen oluşturun.
           </p>
         ) : (
-          <p className="text-xs text-surface-400">Önce işletme seçin</p>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">Önce işletme seçin</p>
         )}
         {!categoryId && businessId && filteredCategories.length > 0 && (
-          <p className="mt-2 text-[11px] text-amber-300">Kayıt için bir kategori seçin.</p>
+          <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-300">Kayıt için bir kategori seçin.</p>
         )}
         {/* A7 (§3.9): tek-tarafa-kilit ihlali — uyarı, kayıt engellenmez. */}
         {applicabilityWarning && (
-          <p className="mt-2 text-[11px] text-amber-300">⚠️ {applicabilityWarning}</p>
+          <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-300">⚠️ {applicabilityWarning}</p>
         )}
       </div>
 
       {/* Date + Time */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
             <Calendar size={14} className="inline mr-1" /> Tarih *
           </label>
           <input
@@ -926,7 +926,7 @@ export function AddTransactionForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-1.5">
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
             <Clock size={14} className="inline mr-1" /> Saat *
           </label>
           <input
@@ -934,14 +934,14 @@ export function AddTransactionForm({
             value={time}
             onChange={(e) => setTime(e.target.value)}
             required
-            className="field field-sm py-2.5 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
+            className="field field-sm py-2.5 dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
           />
         </div>
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
           <FileText size={14} className="inline mr-1" /> Aciklama
         </label>
         <textarea
@@ -955,7 +955,7 @@ export function AddTransactionForm({
 
       {/* File Upload */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Dosya / Fotograf</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Dosya / Fotograf</label>
         <InlineFileUpload
           category="receipt"
           entityType={businessId ? "business" : undefined}
@@ -970,7 +970,7 @@ export function AddTransactionForm({
       </div>
 
       {/* Beta v1.1: Bir alt kasaya da ekle (tx-time manuel atama) */}
-      <div className="rounded-xl border border-surface-600/70 bg-surface-700/40 p-3 space-y-2">
+      <div className="rounded-xl v2-sunken p-3 space-y-2">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -979,12 +979,12 @@ export function AddTransactionForm({
             disabled={subCashList.length === 0}
             className="checkbox cursor-pointer"
           />
-          <span className="text-sm font-medium text-surface-200">
+          <span className="text-sm font-medium text-[rgb(var(--v2-ink))]">
             🏦 Hesap / Alt-kasa
-            <span className="text-surface-400 font-normal text-[11px] ml-1">(kim / nerede?)</span>
+            <span className="text-[rgb(var(--v2-muted))] font-normal text-[11px] ml-1">(kim / nerede?)</span>
           </span>
           {subCashList.length === 0 && (
-            <span className="text-[10px] text-surface-500">(alt kasa yok)</span>
+            <span className="text-[10px] text-[rgb(var(--v2-muted))]">(alt kasa yok)</span>
           )}
         </label>
         {addToSubCash && subCashList.length > 0 && (
@@ -999,7 +999,7 @@ export function AddTransactionForm({
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
-            <p className="text-[10px] text-surface-400 mt-1">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-1">
               Otomatik attribution&apos;a EK — bu tx seçili alt kasaya da düşer.
             </p>
           </div>
@@ -1007,7 +1007,7 @@ export function AddTransactionForm({
       </div>
 
       {/* WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet */}
-      <div className="rounded-xl border border-surface-600/70 bg-surface-700/40 p-3 space-y-2">
+      <div className="rounded-xl v2-sunken p-3 space-y-2">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -1015,7 +1015,7 @@ export function AddTransactionForm({
             onChange={(e) => setSaveAsQuickAction(e.target.checked)}
             className="checkbox cursor-pointer"
           />
-          <span className="text-sm font-medium text-surface-200">
+          <span className="text-sm font-medium text-[rgb(var(--v2-ink))]">
             ⚡ Bu işlemi hızlı işlemlere kaydet
           </span>
         </label>
@@ -1029,7 +1029,7 @@ export function AddTransactionForm({
               maxLength={100}
               className="field-sm"
             />
-            <p className="text-[10px] text-surface-400">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))]">
               Dashboard widget&apos;ından tek tıkla tekrar oluşturulabilir. Limit: 12/işletme.
             </p>
           </div>
@@ -1040,7 +1040,7 @@ export function AddTransactionForm({
       {dayNotOpen && (
         <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3 flex items-start gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sky-200 text-sm">{dayNotOpen}</p>
+            <p className="text-sky-700 dark:text-sky-200 text-sm">{dayNotOpen}</p>
             <a href="/dashboard/gun-kapanisi"
               className="inline-block mt-2 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold transition-colors">
               Günü Aç sayfasına git
@@ -1052,7 +1052,7 @@ export function AddTransactionForm({
       {/* Error */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
-          <p className="text-red-300 text-sm">{error}</p>
+          <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
         </div>
       )}
 
@@ -1079,7 +1079,7 @@ export function AddTransactionForm({
             (saveAsQuickAction && !quickActionName.trim())
           }
           className={cn(
-            "py-3 rounded-2xl font-semibold text-surface-100 flex items-center justify-center gap-2",
+            "py-3 rounded-2xl font-semibold text-white flex items-center justify-center gap-2",
             "transition-all duration-150 hover:-translate-y-px active:translate-y-0",
             "disabled:opacity-50 disabled:pointer-events-none",
             direction === "income"

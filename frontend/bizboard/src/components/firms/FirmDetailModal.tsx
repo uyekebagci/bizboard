@@ -192,22 +192,22 @@ export function FirmDetailModal({
   return (
     <>
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <form
         onSubmit={mode === "edit" ? handleSave : undefined}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         {/* Header */}
         <div className="modal-header">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-surface-100 truncate">
+            <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] truncate">
               {isReadOnly ? firm.legal_name : "Firmayı Düzenle"}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] uppercase text-surface-400 tracking-wider">
+              <span className="text-[10px] uppercase text-[rgb(var(--v2-muted))] tracking-wider">
                 {typeLabel(firm.company_type)}
               </span>
               {firm.group_name && (
@@ -233,12 +233,12 @@ export function FirmDetailModal({
           <div className="flex items-center gap-1 shrink-0">
             {canEdit && isReadOnly && (
               <button type="button" onClick={() => setMode("edit")}
-                className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold inline-flex items-center gap-1.5">
+                className="px-3 py-1.5 rounded-lg bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 text-xs font-semibold inline-flex items-center gap-1.5">
                 <Pencil size={12} /> Düzenle
               </button>
             )}
             <button type="button" onClick={onClose}
-              className="modal-close">
+              className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
               <X size={16} />
             </button>
           </div>
@@ -247,7 +247,7 @@ export function FirmDetailModal({
         {/* Body */}
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -256,7 +256,7 @@ export function FirmDetailModal({
           {/* Grup dropdown (sadece edit mode'da) */}
           {!isReadOnly && (
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">Grup</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Grup</label>
               <DarkSelect
                 value={form.group_id}
                 onChange={(v) => setForm({ ...form, group_id: v })}
@@ -296,9 +296,9 @@ export function FirmDetailModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">Şirket Tipi</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Şirket Tipi</label>
               {isReadOnly ? (
-                <div className="px-3 py-2.5 rounded-xl border border-surface-700 bg-surface-700/30 text-sm text-surface-300">
+                <div className="px-3 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] v2-sunken text-sm text-[rgb(var(--v2-muted))]">
                   {typeLabel(form.company_type)}
                 </div>
               ) : (
@@ -337,8 +337,8 @@ export function FirmDetailModal({
             onChange={(v) => setForm({ ...form, address: v })}
             readOnly={isReadOnly} />
 
-          <div className="border-t border-surface-700 pt-3 space-y-3">
-            <p className="text-[10px] uppercase text-surface-400 tracking-wider">İletişim</p>
+          <div className="border-t border-[rgb(var(--v2-border))] pt-3 space-y-3">
+            <p className="text-[10px] uppercase text-[rgb(var(--v2-muted))] tracking-wider">İletişim</p>
             <Row label="Yetkili"
               value={form.contact_name}
               onChange={(v) => setForm({ ...form, contact_name: v })}
@@ -357,11 +357,11 @@ export function FirmDetailModal({
 
           {/* v1.7.0.x: İlişkili veriler — yalnız read-only mode'da */}
           {isReadOnly && (
-            <div className="border-t border-surface-700 pt-3 space-y-3">
-              <p className="text-[10px] uppercase text-surface-400 tracking-wider">İlişkili Veriler</p>
+            <div className="border-t border-[rgb(var(--v2-border))] pt-3 space-y-3">
+              <p className="text-[10px] uppercase text-[rgb(var(--v2-muted))] tracking-wider">İlişkili Veriler</p>
 
               {relatedLoading ? (
-                <div className="flex items-center gap-2 text-sm text-surface-400">
+                <div className="flex items-center gap-2 text-sm text-[rgb(var(--v2-muted))]">
                   <Loader2 size={14} className="animate-spin" /> Yükleniyor…
                 </div>
               ) : (
@@ -369,30 +369,30 @@ export function FirmDetailModal({
                   {/* Banka hesapları */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <h4 className="text-xs font-semibold text-surface-200 inline-flex items-center gap-1.5">
-                        <Wallet size={12} className="text-emerald-400" />
+                      <h4 className="text-xs font-semibold text-[rgb(var(--v2-ink))] inline-flex items-center gap-1.5">
+                        <Wallet size={12} className="text-emerald-500 dark:text-emerald-400" />
                         Banka Hesapları ({relatedBanks.length})
                       </h4>
                       {relatedBanks.length > 0 && (
-                        <span className="text-[11px] text-emerald-300 font-semibold">
+                        <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
                           {formatCurrency(totalBankBalance, relatedBanks[0]?.currency || "TRY")}
                         </span>
                       )}
                     </div>
                     {relatedBanks.length === 0 ? (
-                      <p className="text-[11px] text-surface-500 italic">
+                      <p className="text-[11px] text-[rgb(var(--v2-muted))] italic">
                         Bu firmaya bağlı banka hesabı yok. /dashboard/hesaplar'dan ekleyebilirsiniz.
                       </p>
                     ) : (
                       <ul className="space-y-1 max-h-40 overflow-y-auto">
                         {relatedBanks.map((b) => (
                           <li key={b.id}
-                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-700/40 border border-surface-700 text-xs">
-                            <span className="truncate text-surface-200">
+                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg v2-sunken border border-[rgb(var(--v2-border))] text-xs">
+                            <span className="truncate text-[rgb(var(--v2-ink))]">
                               {b.name}
-                              {b.bank_name && <span className="ml-1 text-surface-400">· {b.bank_name}</span>}
+                              {b.bank_name && <span className="ml-1 text-[rgb(var(--v2-muted))]">· {b.bank_name}</span>}
                             </span>
-                            <span className="text-surface-300 font-medium shrink-0">
+                            <span className="text-[rgb(var(--v2-ink))] font-medium shrink-0">
                               {formatCurrency(b.current_balance ?? 0, b.currency || "TRY")}
                             </span>
                           </li>
@@ -403,25 +403,25 @@ export function FirmDetailModal({
 
                   {/* POS cihazları */}
                   <div>
-                    <h4 className="text-xs font-semibold text-surface-200 inline-flex items-center gap-1.5 mb-1.5">
-                      <CreditCard size={12} className="text-blue-400" />
+                    <h4 className="text-xs font-semibold text-[rgb(var(--v2-ink))] inline-flex items-center gap-1.5 mb-1.5">
+                      <CreditCard size={12} className="text-blue-600 dark:text-blue-400" />
                       POS Cihazları ({relatedPosDevices.length})
                     </h4>
                     {relatedPosDevices.length === 0 ? (
-                      <p className="text-[11px] text-surface-500 italic">
+                      <p className="text-[11px] text-[rgb(var(--v2-muted))] italic">
                         Bu firmaya bağlı POS cihazı yok.
                       </p>
                     ) : (
                       <ul className="space-y-1 max-h-40 overflow-y-auto">
                         {relatedPosDevices.map((d) => (
                           <li key={d.id}
-                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-700/40 border border-surface-700 text-xs">
-                            <span className="truncate text-surface-200">
+                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg v2-sunken border border-[rgb(var(--v2-border))] text-xs">
+                            <span className="truncate text-[rgb(var(--v2-ink))]">
                               {d.name}
-                              {d.bank_name && <span className="ml-1 text-surface-400">· {d.bank_name}</span>}
+                              {d.bank_name && <span className="ml-1 text-[rgb(var(--v2-muted))]">· {d.bank_name}</span>}
                             </span>
                             {!d.is_active && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-600/30 text-surface-400 shrink-0">
+                              <span className="text-[10px] px-1.5 py-0.5 rounded v2-sunken text-[rgb(var(--v2-muted))] shrink-0">
                                 Pasif
                               </span>
                             )}
@@ -431,7 +431,7 @@ export function FirmDetailModal({
                     )}
                   </div>
 
-                  <p className="text-[10px] text-surface-500 leading-relaxed">
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))] leading-relaxed">
                     <Building2 size={9} className="inline mr-1" />
                     POS işlemleri bu firmanın banka hesaplarına yansıtılır; transfer'ler aynı firma içinde zorunludur.
                   </p>
@@ -446,11 +446,11 @@ export function FirmDetailModal({
           {!isReadOnly ? (
             <>
               <button type="button" onClick={handleCancel} disabled={saving}
-                className="px-4 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium border border-surface-600 disabled:opacity-50">
+                className="btn-secondary px-4 py-2.5 text-sm disabled:opacity-50">
                 İptal
               </button>
               <button type="submit" disabled={saving || !form.legal_name.trim()}
-                className="ml-auto px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50">
+                className="ml-auto px-4 py-2.5 rounded-xl bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 Kaydet
               </button>
@@ -459,13 +459,13 @@ export function FirmDetailModal({
             <>
               {canManageAccess && onManageAccess && (
                 <button type="button" onClick={() => onManageAccess(firm)}
-                  className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold inline-flex items-center gap-1.5">
+                  className="px-3 py-2 rounded-xl bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 text-sm font-semibold inline-flex items-center gap-1.5">
                   <ShieldCheck size={14} /> Erişim Yönet
                 </button>
               )}
               {canEdit && !firm.is_default && (
                 <button type="button" onClick={() => setConfirmDelete(true)}
-                  className="ml-auto px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-300 text-sm font-semibold inline-flex items-center gap-1.5 border border-red-500/30">
+                  className="ml-auto px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-700 dark:text-red-300 text-sm font-semibold inline-flex items-center gap-1.5 border border-red-500/30">
                   <Trash2 size={14} /> Sil
                 </button>
               )}
@@ -493,9 +493,9 @@ export function FirmDetailModal({
       <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
            onClick={() => setConfirmDelete(false)}>
         <div onClick={(e) => e.stopPropagation()}
-             className="glass-card !border-red-500/30 max-w-sm w-full p-5">
-          <h4 className="text-base font-semibold text-surface-100 mb-2">Firmayı sil</h4>
-          <p className="text-sm text-surface-300 mb-4">
+             className="v2-card border border-red-500/30 max-w-sm w-full p-5">
+          <h4 className="text-base font-semibold text-[rgb(var(--v2-ink))] mb-2">Firmayı sil</h4>
+          <p className="text-sm text-[rgb(var(--v2-muted))] mb-4">
             <strong>{firm.legal_name}</strong> kaydını silmek istediğinden emin misin? Bu işlem geri alınamaz.
           </p>
           <div className="flex gap-2">
@@ -504,7 +504,7 @@ export function FirmDetailModal({
               Vazgeç
             </button>
             <button onClick={handleDelete} disabled={saving}
-              className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+              className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5 disabled:opacity-50">
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
               Sil
             </button>
@@ -529,12 +529,12 @@ function Row({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-surface-200 mb-1.5">
+      <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
         {label}{required && " *"}
       </label>
       {readOnly ? (
-        <div className="px-3 py-2.5 rounded-xl border border-surface-700 bg-surface-700/30 text-sm text-surface-300 min-h-[42px] whitespace-pre-wrap">
-          {value || <span className="text-surface-500 italic">—</span>}
+        <div className="px-3 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] v2-sunken text-sm text-[rgb(var(--v2-muted))] min-h-[42px] whitespace-pre-wrap">
+          {value || <span className="text-[rgb(var(--v2-muted))] italic">—</span>}
         </div>
       ) : textarea ? (
         <textarea required={required} value={value}

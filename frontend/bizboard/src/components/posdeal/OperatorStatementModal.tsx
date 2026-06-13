@@ -46,29 +46,28 @@ export function OperatorStatementModal({ account, load, onClose }: Props) {
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl
-                      bg-surface-800 border border-surface-700 shadow-2xl">
+      <div className="v2-card relative w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4
-                        bg-surface-800/95 backdrop-blur border-b border-surface-700">
+                        bg-[rgb(var(--v2-card))]/95 backdrop-blur border-b border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2 min-w-0">
-            <Lock size={16} className="text-surface-400 shrink-0" />
-            <h2 className="text-base font-bold text-white truncate">{s.account_name}</h2>
+            <Lock size={16} className="text-[rgb(var(--v2-muted))] shrink-0" />
+            <h2 className="text-base font-bold text-[rgb(var(--v2-ink))] truncate">{s.account_name}</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700 shrink-0">
-            <X size={18} className="text-surface-300" />
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] shrink-0">
+            <X size={18} />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
           {/* Özet */}
           <div className="grid grid-cols-3 gap-2">
-            <SummaryCard label="Kâr" value={s.total_earned} className="text-emerald-400" />
-            <SummaryCard label="Ödeme" value={s.total_paid_out} className="text-surface-300" />
+            <SummaryCard label="Kâr" value={s.total_earned} className="text-emerald-700 dark:text-emerald-400" />
+            <SummaryCard label="Ödeme" value={s.total_paid_out} className="text-[rgb(var(--v2-muted))]" />
             <SummaryCard label="Bakiye" value={s.balance}
-              className={s.balance >= 0 ? "text-emerald-400" : "text-red-400"} />
+              className={s.balance >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"} />
           </div>
           {s.provisional_pending > 0.005 && (
-            <div className="rounded-xl p-2.5 bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300
+            <div className="rounded-xl p-2.5 bg-amber-500/10 border border-amber-500/25 text-xs text-amber-700 dark:text-amber-300
                             flex items-center gap-1.5">
               <Clock size={12} /> T+1 bekleyen (provisional): {formatCurrency(s.provisional_pending, "TRY")}
             </div>
@@ -77,37 +76,37 @@ export function OperatorStatementModal({ account, load, onClose }: Props) {
           {/* Satırlar */}
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <Loader2 size={24} className="animate-spin text-surface-400" />
+              <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           ) : error ? (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-400 text-sm">{error}</div>
           ) : (s.lines ?? []).length === 0 ? (
-            <p className="text-sm text-surface-400 text-center py-6">Henüz hareket yok.</p>
+            <p className="text-sm text-[rgb(var(--v2-muted))] text-center py-6">Henüz hareket yok.</p>
           ) : (
             <div className="space-y-1.5">
-              <p className="text-[11px] text-surface-400 uppercase tracking-wider">Hareketler</p>
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Hareketler</p>
               {(s.lines ?? []).map((l) => {
                 const inflow = l.amount >= 0;
                 return (
                   <div key={l.posting_id}
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-surface-900/40 border border-surface-700/60">
+                    className="flex items-center gap-2 p-2.5 rounded-xl v2-sunken border border-[rgb(var(--v2-border))]">
                     {inflow
-                      ? <ArrowUpRight size={14} className="text-emerald-400 shrink-0" />
-                      : <ArrowDownRight size={14} className="text-red-400 shrink-0" />}
+                      ? <ArrowUpRight size={14} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
+                      : <ArrowDownRight size={14} className="text-red-700 dark:text-red-400 shrink-0" />}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white truncate">
+                      <p className="text-xs text-[rgb(var(--v2-ink))] truncate">
                         {l.description ?? l.source_type ?? "—"}
                         {l.provisional && (
-                          <span className="ml-1.5 text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-300
+                          <span className="ml-1.5 text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300
                                            border border-amber-500/25">T+1</span>
                         )}
                       </p>
-                      <p className="text-[10px] text-surface-500">
+                      <p className="text-[10px] text-[rgb(var(--v2-muted))]">
                         {l.date ? new Date(l.date).toLocaleDateString("tr-TR") : ""}
                       </p>
                     </div>
                     <span className={cn("text-sm font-semibold num shrink-0",
-                      inflow ? "text-emerald-400" : "text-red-400")}>
+                      inflow ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400")}>
                       {inflow ? "+" : ""}{formatCurrency(l.amount, "TRY")}
                     </span>
                   </div>
@@ -116,7 +115,7 @@ export function OperatorStatementModal({ account, load, onClose }: Props) {
             </div>
           )}
 
-          <p className="text-[10px] text-surface-500 flex items-center gap-1">
+          <p className="text-[10px] text-[rgb(var(--v2-muted))] flex items-center gap-1">
             <Lock size={9} /> Read-only: manuel giriş yok. Bakiye = Σ kâr-payı − Σ ödeme.
           </p>
         </div>
@@ -130,8 +129,8 @@ function SummaryCard({ label, value, className }: {
   label: string; value: number; className?: string;
 }) {
   return (
-    <div className="rounded-xl p-2.5 bg-surface-900/40 border border-surface-700/60 text-center">
-      <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
+    <div className="rounded-xl p-2.5 v2-sunken border border-[rgb(var(--v2-border))] text-center">
+      <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">{label}</p>
       <p className={cn("text-sm font-bold num mt-0.5", className)}>{formatCurrency(value, "TRY")}</p>
     </div>
   );

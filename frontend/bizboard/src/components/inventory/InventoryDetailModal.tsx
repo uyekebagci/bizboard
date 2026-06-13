@@ -133,7 +133,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
           <div className="flex items-center gap-2 min-w-0">
@@ -142,19 +142,19 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
             </div>
             {editing ? (
               <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
-                className="text-lg font-bold text-surface-100 border-b-2 border-brand-500 outline-none bg-transparent min-w-0" />
+                className="text-lg font-bold text-[rgb(var(--v2-ink))] border-b-2 border-[rgb(var(--accent))] outline-none bg-transparent min-w-0" />
             ) : (
-              <h3 className="text-lg font-bold text-surface-100 truncate">{item.name}</h3>
+              <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))] truncate">{item.name}</h3>
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {!editing && (
-              <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg hover:bg-brand-500/15 transition-colors">
-                <Pencil size={16} className="text-brand-300" />
+              <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg hover:bg-[rgb(var(--accent))]/15 transition-colors">
+                <Pencil size={16} className="text-accent-strong dark:text-accent" />
               </button>
             )}
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-600">
-              <X size={18} className="text-surface-400" />
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
+              <X size={18} />
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {/* Durum */}
           {editing ? (
             <div>
-              <label className="block text-xs font-medium text-surface-400 mb-1">Durum</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1">Durum</label>
               <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className={inputCls}>
                 {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
@@ -171,7 +171,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           ) : (
             <div className="flex items-center gap-2">
               <span className={cn("px-2 py-1 rounded-lg text-xs font-medium border", statusCfg.bg, statusCfg.color)}>{statusCfg.label}</span>
-              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-surface-700 text-surface-300">{catDef.label}</span>
+              <span className="px-2 py-1 rounded-lg text-xs font-medium v2-sunken text-[rgb(var(--v2-muted))]">{catDef.label}</span>
             </div>
           )}
 
@@ -204,7 +204,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                   {hasField("power_capacity") && <EditField label="Guc Kapasitesi" value={editPowerCapacity} onChange={setEditPowerCapacity} />}
                   {hasField("energy_source") && (
                     <div>
-                      <label className="block text-[10px] text-surface-400 uppercase tracking-wider mb-1">Enerji Kaynagi</label>
+                      <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Enerji Kaynagi</label>
                       <select value={editEnergySource} onChange={(e) => setEditEnergySource(e.target.value)} className={inputCls}>
                         <option value="">Seciniz</option>
                         {Object.entries(ENERGY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -232,7 +232,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                 </div>
                 {hasField("interior_details") && (
                   <div className="col-span-2">
-                    <label className="block text-[10px] text-surface-400 uppercase tracking-wider mb-1">Ic Donanim</label>
+                    <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Ic Donanim</label>
                     <textarea value={editInteriorDetails} onChange={(e) => setEditInteriorDetails(e.target.value)}
                       rows={2} className={inputCls + " resize-none"} />
                   </div>
@@ -254,7 +254,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
               <DetailSection title="Stok Bilgileri">
                 <div className="col-span-2 grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-[10px] text-surface-400 uppercase tracking-wider mb-1">Birim</label>
+                    <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Birim</label>
                     <select value={editUnit} onChange={(e) => setEditUnit(e.target.value)} className={inputCls}>
                       {Object.entries(UNIT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
@@ -266,7 +266,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                   <EditField label="Reorder Esigi (ops.)" value={editReorderPoint} onChange={setEditReorderPoint} type="number" />
                   <EditField label="Temin Suresi (gun)" value={editReorderLeadDays} onChange={setEditReorderLeadDays} type="number" />
                 </div>
-                <p className="col-span-2 text-[10px] text-surface-400 -mt-1">
+                <p className="col-span-2 text-[10px] text-[rgb(var(--v2-muted))] -mt-1">
                   Reorder esigi bos birakilirsa min. stok + temin suresi tamponuyla otomatik hesaplanir.
                 </p>
                 <div className="col-span-2 grid grid-cols-2 gap-2">
@@ -274,7 +274,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                   {hasField("warehouse_location") && <EditField label="Depo/Raf" value={editWarehouseLocation} onChange={setEditWarehouseLocation} />}
                   {hasField("stock_category") && (
                     <div>
-                      <label className="block text-[10px] text-surface-400 uppercase tracking-wider mb-1">Kategori</label>
+                      <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Kategori</label>
                       <select value={editStockCategory} onChange={(e) => setEditStockCategory(e.target.value)} className={inputCls}>
                         <option value="">Seciniz</option>
                         {Object.entries(STOCK_CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -305,7 +305,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                 <div className="col-span-2 grid grid-cols-2 gap-2">
                   {hasField("assigned_to") && (
                     <div>
-                      <label className="block text-[10px] text-surface-400 uppercase tracking-wider mb-1">Zimmetli Personel</label>
+                      <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Zimmetli Personel</label>
                       <select value={editAssignedTo} onChange={(e) => setEditAssignedTo(e.target.value)} className={inputCls}>
                         <option value="">Seciniz</option>
                         {employees.filter(e => e.is_active).map((emp) => (
@@ -316,7 +316,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                   )}
                   {hasField("assigned_type") && (
                     <div>
-                      <label className="block text-[10px] text-surface-400 uppercase tracking-wider mb-1">Zimmet Tipi</label>
+                      <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Zimmet Tipi</label>
                       <select value={editAssignedType} onChange={(e) => setEditAssignedType(e.target.value)} className={inputCls}>
                         <option value="">Seciniz</option>
                         <option value="PERSONNEL">Personel</option>
@@ -359,13 +359,13 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {/* Notlar */}
           {editing ? (
             <div>
-              <label className="block text-xs font-medium text-surface-400 mb-1">Notlar</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1">Notlar</label>
               <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} rows={2} className={inputCls + " resize-none"} />
             </div>
           ) : item.notes ? (
-            <div className="p-3 bg-surface-700 rounded-xl">
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider mb-1">Notlar</p>
-              <p className="text-sm text-surface-200">{item.notes}</p>
+            <div className="p-3 v2-sunken rounded-xl">
+              <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Notlar</p>
+              <p className="text-sm text-[rgb(var(--v2-ink))]">{item.notes}</p>
             </div>
           ) : null}
 
@@ -373,24 +373,24 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {!editing && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-bold text-surface-200 flex items-center gap-1"><Activity size={14} /> Bakim Gecmisi</h4>
+                <h4 className="text-sm font-bold text-[rgb(var(--v2-ink))] flex items-center gap-1"><Activity size={14} /> Bakim Gecmisi</h4>
                 <button onClick={() => setShowAddMaint(true)}
-                  className="text-xs font-medium text-brand-300 hover:text-brand-300 flex items-center gap-1">
+                  className="text-xs font-medium text-accent-strong dark:text-accent flex items-center gap-1 hover:opacity-80">
                   <Plus size={12} /> Kayit Ekle
                 </button>
               </div>
               {logs.length === 0 ? (
-                <p className="text-xs text-surface-400 p-3 bg-surface-700 rounded-xl">Henuz bakim kaydi yok</p>
+                <p className="text-xs text-[rgb(var(--v2-muted))] p-3 v2-sunken rounded-xl">Henuz bakim kaydi yok</p>
               ) : (
                 <div className="space-y-1.5">
                   {logs.map((log) => (
-                    <div key={log.id} className="p-3 bg-surface-700 rounded-xl">
+                    <div key={log.id} className="p-3 v2-sunken rounded-xl">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-surface-200">{MAINTENANCE_LABELS[log.maintenance_type] || log.maintenance_type}</span>
-                        <span className="text-[10px] text-surface-400">{log.date}</span>
+                        <span className="text-xs font-medium text-[rgb(var(--v2-ink))]">{MAINTENANCE_LABELS[log.maintenance_type] || log.maintenance_type}</span>
+                        <span className="text-[10px] text-[rgb(var(--v2-muted))]">{log.date}</span>
                       </div>
-                      {log.description && <p className="text-xs text-surface-300 mt-0.5">{log.description}</p>}
-                      <div className="flex gap-3 mt-0.5 text-[10px] text-surface-400">
+                      {log.description && <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">{log.description}</p>}
+                      <div className="flex gap-3 mt-0.5 text-[10px] text-[rgb(var(--v2-muted))]">
                         {log.cost != null && <span>Maliyet: {formatCurrency(log.cost)}</span>}
                         {log.performed_by && <span>Yapan: {log.performed_by}</span>}
                       </div>
@@ -405,41 +405,41 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {!editing && hasFuel && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-bold text-surface-200 flex items-center gap-1">
+                <h4 className="text-sm font-bold text-[rgb(var(--v2-ink))] flex items-center gap-1">
                   <Fuel size={14} /> Yakit Masrafi
                   {fuelLogs.length > 0 && (
-                    <span className="text-[10px] font-normal text-surface-400 ml-1">
+                    <span className="text-[10px] font-normal text-[rgb(var(--v2-muted))] ml-1">
                       ({formatCurrency(totalFuelCost)} / {totalFuelLiters.toFixed(1)} L)
                     </span>
                   )}
                 </h4>
                 <button onClick={() => setShowAddFuel(true)}
-                  className="text-xs font-medium text-brand-300 hover:text-brand-300 flex items-center gap-1">
+                  className="text-xs font-medium text-accent-strong dark:text-accent flex items-center gap-1 hover:opacity-80">
                   <Plus size={12} /> Kayit Ekle
                 </button>
               </div>
               {fuelLogs.length === 0 ? (
-                <p className="text-xs text-surface-400 p-3 bg-surface-700 rounded-xl">Henuz yakit kaydi yok</p>
+                <p className="text-xs text-[rgb(var(--v2-muted))] p-3 v2-sunken rounded-xl">Henuz yakit kaydi yok</p>
               ) : (
                 <div className="space-y-1.5">
                   {fuelLogs.map((log) => (
                     <div key={log.id} className="p-3 bg-orange-500/15 border border-orange-500/20 rounded-xl">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-surface-200">
+                        <span className="text-xs font-medium text-[rgb(var(--v2-ink))]">
                           {FUEL_TYPE_LABELS[log.fuel_type] || log.fuel_type} — {log.amount} L
                         </span>
-                        <span className="text-[10px] text-surface-400">{log.date}</span>
+                        <span className="text-[10px] text-[rgb(var(--v2-muted))]">{log.date}</span>
                       </div>
-                      <div className="flex gap-3 mt-0.5 text-[10px] text-surface-400 flex-wrap">
-                        <span className="text-orange-300 font-medium">{formatCurrency(log.cost)}</span>
+                      <div className="flex gap-3 mt-0.5 text-[10px] text-[rgb(var(--v2-muted))] flex-wrap">
+                        <span className="text-orange-700 dark:text-orange-300 font-medium">{formatCurrency(log.cost)}</span>
                         {log.amount > 0 && <span>{formatCurrency(log.cost / log.amount)}/L</span>}
                         {log.odometer_km != null && <span>KM: {log.odometer_km}</span>}
                         {log.station && <span>Istasyon: {log.station}</span>}
                       </div>
-                      {log.notes && <p className="text-xs text-surface-400 mt-0.5">{log.notes}</p>}
+                      {log.notes && <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">{log.notes}</p>}
                       {log.receipt_url && (
                         <a href={log.receipt_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1 text-[10px] text-brand-300 hover:text-brand-300">
+                          className="inline-flex items-center gap-1 mt-1 text-[10px] text-accent-strong dark:text-accent hover:opacity-80">
                           <Camera size={10} /> Fis Goruntule
                         </a>
                       )}
@@ -456,7 +456,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
               <>
                 <button onClick={() => setEditing(false)} className="btn-secondary flex-1 px-4 py-2.5 text-sm">Vazgec</button>
                 <button onClick={handleSave} disabled={saving || !editName}
-                  className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Kaydet
                 </button>
               </>
@@ -464,7 +464,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
               <>
                 <button onClick={onClose} className="btn-secondary flex-1 px-4 py-2.5 text-sm">Kapat</button>
                 <button onClick={handleDelete} disabled={deleting}
-                  className="px-4 py-2.5 bg-red-500/15 hover:bg-red-500/20 text-red-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+                  className="px-4 py-2.5 bg-red-500/15 hover:bg-red-500/20 text-red-700 dark:text-red-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
                   {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Sil
                 </button>
               </>

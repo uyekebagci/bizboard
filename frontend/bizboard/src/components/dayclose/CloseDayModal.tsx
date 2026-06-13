@@ -15,8 +15,8 @@
  *       gerekçe zorunlu.</li>
  * </ol>
  *
- * <p>Portal'lı (createPortal): ata {@code .glass-card} backdrop-filter fixed
- * konumu bozmasın diye. Çift tema: surface/brand token'ları.</p>
+ * <p>Portal'lı (createPortal): ata backdrop-filter fixed konumu bozmasın diye.
+ * Çift tema: v2 Daxa design language.</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -139,17 +139,21 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
-          <h3 className="text-lg font-bold h-display text-white">Gün Kapanışı — Mutabakat</h3>
-          <button onClick={onClose} className="modal-close">
-            <X size={18} className="text-surface-400" />
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Gün Kapanışı — Mutabakat</h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
+            <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -161,7 +165,7 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
               <label className="label flex items-center gap-1.5">
                 <CalendarClock size={13} /> Kapanış Tarihi
                 {isBackdated && (
-                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                     Geri Dönük
                   </span>
                 )}
@@ -178,9 +182,9 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
 
           {/* Çok-hesaplı zorunlu sayım */}
           <div className="space-y-2">
-            <p className="label">Hesap Sayımları <span className="text-red-400">*</span></p>
+            <p className="label">Hesap Sayımları <span className="text-red-500 dark:text-red-400">*</span></p>
             {(preview?.account_counts ?? []).length === 0 && (
-              <p className="text-xs text-surface-400">
+              <p className="text-xs text-[rgb(var(--v2-muted))]">
                 Sayılacak (parası olan) hesap yok. Önce hesap/kasa ekleyin.
               </p>
             )}
@@ -190,10 +194,10 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
               const accVar = counted != null && a.computed_balance != null
                 ? counted - a.computed_balance : null;
               return (
-                <div key={a.account_id} className="rounded-xl p-3 bg-surface-900/40 border border-surface-700/60">
+                <div key={a.account_id} className="rounded-xl p-3 v2-sunken border border-[rgb(var(--v2-border))]">
                   <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="text-sm font-medium text-white truncate">{a.account_name}</span>
-                    <span className="text-[10px] uppercase tracking-wider text-surface-400">
+                    <span className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{a.account_name}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-[rgb(var(--v2-muted))]">
                       {a.account_type}
                     </span>
                   </div>
@@ -207,10 +211,10 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
                       placeholder="Gerçek bakiye"
                     />
                   </div>
-                  <p className="text-[11px] text-surface-400 mt-1">
+                  <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1">
                     Sistem: {formatCurrency(a.computed_balance ?? 0, "TRY")}
                     {accVar != null && Math.abs(accVar) > 0.005 && (
-                      <span className={cn("ml-2 font-medium", accVar > 0 ? "text-emerald-400" : "text-red-400")}>
+                      <span className={cn("ml-2 font-medium", accVar > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400")}>
                         ({accVar > 0 ? "+" : ""}{formatCurrency(accVar, "TRY")})
                       </span>
                     )}
@@ -221,12 +225,12 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
           </div>
 
           {/* SAĞLAMA HESAP bloğu (canlı) */}
-          <div className="rounded-2xl p-4 bg-surface-900/40 border border-surface-700/60 space-y-1.5">
-            <p className="text-[11px] text-surface-400 uppercase tracking-wider mb-1">Sağlama Hesap</p>
+          <div className="rounded-2xl p-4 v2-sunken border border-[rgb(var(--v2-border))] space-y-1.5">
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Sağlama Hesap</p>
             <Row label="Önceki Kasa" value={opening} />
             <Row label="Toplam Gelen" value={totalIn} positive />
             <Row label="Toplam Giden" value={-totalOut} />
-            <div className="border-t border-surface-700/60 my-1.5" />
+            <div className="border-t border-[rgb(var(--v2-border))] my-1.5" />
             <Row label="Olması Gereken" value={computed} bold />
             <Row label="Son Kasa (sayım)" value={actualTotal} bold />
           </div>
@@ -235,28 +239,28 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
           {allFilled && (
             <div className={cn(
               "rounded-2xl p-4 border flex items-center justify-between transition-colors",
-              Math.abs(variance) <= 0.005 && "bg-surface-700/50 border-surface-700/60",
+              Math.abs(variance) <= 0.005 && "v2-sunken border-[rgb(var(--v2-border))]",
               isShortage && "bg-red-500/10 border-red-500/30",
               isOver && "bg-emerald-500/10 border-emerald-500/30",
             )}>
               <div className="flex items-center gap-2">
-                {overThreshold && isShortage && <ShieldAlert size={16} className="text-red-400" />}
-                <span className="text-sm text-surface-300">
+                {overThreshold && isShortage && <ShieldAlert size={16} className="text-red-700 dark:text-red-400" />}
+                <span className="text-sm text-[rgb(var(--v2-muted))]">
                   {isShortage ? "Eksik Olan (kaçak)" : isOver ? "Fazla" : "Mutabık"}
                 </span>
               </div>
               <span className={cn(
                 "text-lg font-bold",
-                Math.abs(variance) <= 0.005 && "text-white",
-                isShortage && "text-red-400",
-                isOver && "text-emerald-400",
+                Math.abs(variance) <= 0.005 && "text-[rgb(var(--v2-ink))]",
+                isShortage && "text-red-700 dark:text-red-400",
+                isOver && "text-emerald-700 dark:text-emerald-400",
               )}>
                 {variance > 0 ? "+" : ""}{formatCurrency(variance, "TRY")}
               </span>
             </div>
           )}
           {allFilled && overThreshold && (
-            <p className="text-xs text-amber-300 flex items-center gap-1.5">
+            <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
               <AlertTriangle size={12} /> Eşik ({formatCurrency(DEFAULT_THRESHOLD, "TRY")}) aşıldı —
               kapanış sonrası kaçak alarmı kaydedilir.
             </p>
@@ -266,7 +270,7 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
           {needsReason && (
             <>
               <div>
-                <label className="label">Gerekçe Kategorisi <span className="text-red-400">*</span></label>
+                <label className="label">Gerekçe Kategorisi <span className="text-red-500 dark:text-red-400">*</span></label>
                 <div className="grid grid-cols-2 gap-2">
                   {REASONS.map((r) => (
                     <button
@@ -274,10 +278,10 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
                       type="button"
                       onClick={() => setReason(r.value)}
                       className={cn(
-                        "px-3 py-2.5 rounded-xl text-sm font-medium border transition-colors",
+                        "v2-press px-3 py-2.5 rounded-xl text-sm font-medium border transition-colors",
                         reason === r.value
-                          ? "bg-brand-500/15 border-brand-500/40 text-brand-300"
-                          : "bg-surface-700 border-surface-600 text-surface-300 hover:border-surface-300",
+                          ? "bg-[rgb(var(--accent))]/12 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                          : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                       )}
                     >
                       {r.label}
@@ -286,7 +290,7 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
                 </div>
               </div>
               <div>
-                <label className="label">Açıklama <span className="text-red-400">*</span></label>
+                <label className="label">Açıklama <span className="text-red-500 dark:text-red-400">*</span></label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
@@ -303,7 +307,7 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
               Vazgeç
             </button>
             <button type="submit" disabled={submitting || !allFilled}
-              className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+              className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 disabled:opacity-50 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2">
               {submitting
                 ? (<><Loader2 size={16} className="animate-spin" /> Kapatılıyor...</>)
                 : (<><Check size={16} /> Günü Kapat</>)}
@@ -321,13 +325,13 @@ function Row({ label, value, bold, positive }: {
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={cn("text-surface-300", bold ? "text-sm font-semibold" : "text-xs")}>{label}</span>
+      <span className={cn("text-[rgb(var(--v2-muted))]", bold ? "text-sm font-semibold" : "text-xs")}>{label}</span>
       <span className={cn(
         "num tabular-nums",
-        bold ? "text-base font-bold text-white" : "text-sm",
-        !bold && positive && "text-emerald-300",
-        !bold && !positive && value < 0 && "text-red-300",
-        !bold && !positive && value >= 0 && "text-surface-200",
+        bold ? "text-base font-bold text-[rgb(var(--v2-ink))]" : "text-sm",
+        !bold && positive && "text-emerald-700 dark:text-emerald-300",
+        !bold && !positive && value < 0 && "text-red-700 dark:text-red-300",
+        !bold && !positive && value >= 0 && "text-[rgb(var(--v2-ink))]",
       )}>
         {value > 0 && positive ? "+" : ""}{formatCurrency(value, "TRY")}
       </span>

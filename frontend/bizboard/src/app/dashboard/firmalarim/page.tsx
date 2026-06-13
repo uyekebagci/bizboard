@@ -233,11 +233,11 @@ export default function FirmalarimPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start gap-2">
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-surface-100 flex items-center gap-2">
-            <Building2 size={20} className="text-brand-300" />
+          <h1 className="v2-display text-xl flex items-center gap-2">
+            <Building2 size={20} className="text-accent-strong dark:text-accent" />
             Firmalarım
           </h1>
-          <p className="text-xs text-surface-400 mt-0.5">
+          <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">
             {isAdmin
               ? "Tüm firmalar — gruplara ayır, kullanıcı erişimi yönet."
               : "Sana erişim verilen firmalar."}
@@ -248,24 +248,26 @@ export default function FirmalarimPage() {
           {isAdmin && (
             <>
               <button onClick={() => { setCreateFirmGroupId(null); setShowCreateFirm(true); }}
-                className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold inline-flex items-center gap-1.5">
+                className="v2-btn v2-btn--ink v2-press text-xs inline-flex items-center gap-1.5">
                 <Plus size={14} /> Yeni Firma
               </button>
               <button onClick={() => setShowCreateGroup(true)}
-                className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold inline-flex items-center gap-1.5">
+                className="v2-sunken hover:border-accent/50 v2-press rounded-xl px-3 py-2 text-xs font-semibold text-[rgb(var(--v2-ink))] inline-flex items-center gap-1.5 transition-colors">
                 <FolderPlus size={14} /> Yeni Grup
               </button>
             </>
           )}
-          <div className="inline-flex rounded-xl border border-surface-600 overflow-hidden bg-surface-800">
+          <div className="inline-flex items-center gap-1 v2-sunken p-1 rounded-xl">
             <button onClick={() => setView("list")}
-              className={cn("px-2.5 py-2 text-xs font-medium inline-flex items-center gap-1.5",
-                view === "list" ? "bg-surface-700 text-surface-100" : "text-surface-300 hover:bg-surface-700/50")}>
+              aria-pressed={view === "list"}
+              className={cn("px-2.5 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors",
+                view === "list" ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold" : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]")}>
               <ListIcon size={12} /> Liste
             </button>
             <button onClick={() => setView("group")}
-              className={cn("px-2.5 py-2 text-xs font-medium inline-flex items-center gap-1.5 border-l border-surface-600",
-                view === "group" ? "bg-surface-700 text-surface-100" : "text-surface-300 hover:bg-surface-700/50")}>
+              aria-pressed={view === "group"}
+              className={cn("px-2.5 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors",
+                view === "group" ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold" : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]")}>
               <LayoutGrid size={12} /> Grup
             </button>
           </div>
@@ -274,15 +276,15 @@ export default function FirmalarimPage() {
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" />
+        <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Firma, VKN veya vergi dairesi ara…"
-          className="field field-sm py-2 pl-7 pr-2" />
+          className="w-full py-2 pl-7 pr-2 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all" />
       </div>
 
       {/* Body */}
       {error && (
-        <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+        <div className="p-2.5 rounded-lg bg-status-danger/10 border border-status-danger/30 text-status-danger text-xs flex items-start gap-2">
           <AlertTriangle size={12} className="mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -290,7 +292,7 @@ export default function FirmalarimPage() {
 
       {loading ? (
         <div className="py-12 flex justify-center">
-          <Loader2 size={20} className="animate-spin text-surface-400" />
+          <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : firms.length === 0 ? (
         <EmptyState isAdmin={isAdmin} onCreate={() => setShowCreateFirm(true)} />
@@ -311,31 +313,35 @@ export default function FirmalarimPage() {
                 onDragLeave={onDragLeave}
                 onDrop={(e) => onDrop(e, s.id)}
                 className={cn("rounded-2xl border transition-colors",
-                  isDragOver ? "border-brand-400 bg-brand-500/5" : "border-surface-700 bg-surface-800/50")}>
+                  isDragOver ? "border-accent bg-accent/5" : "border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-card))]")}>
                 {/* Header */}
                 <div className="px-3 py-2.5 flex items-center gap-2">
                   <button onClick={() => toggleCollapse(s.id)}
-                    className="p-1 rounded hover:bg-surface-700 text-surface-300">
+                    className="p-1 rounded hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]"
+                    aria-label={isCollapsed ? "Genişlet" : "Daralt"}>
                     {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                   </button>
                   <span
-                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold border"
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold border",
+                      !s.color && "v2-sunken text-[rgb(var(--v2-ink))]",
+                    )}
                     style={s.color ? {
                       color: s.color, borderColor: s.color, background: `${s.color}22`,
-                    } : { color: "#cbd5e1", borderColor: "#334155", background: "#1e293b66" }}>
+                    } : undefined}>
                     {s.icon && <span>{s.icon}</span>}
                     {s.name}
                   </span>
-                  <span className="text-[10px] text-surface-400 ml-1">{s.firms.length} firma</span>
+                  <span className="text-[10px] text-[rgb(var(--v2-muted))] ml-1">{s.firms.length} firma</span>
                   {isAdmin && !isUngrouped && s.group && (
                     <>
                       <button onClick={() => setEditGroup(s.group!)}
-                        className="ml-1 p-1 rounded hover:bg-surface-700 text-surface-400 hover:text-surface-100"
-                        title="Grubu düzenle">
+                        className="ml-1 p-1 rounded hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+                        title="Grubu düzenle" aria-label="Grubu düzenle">
                         <Pencil size={11} />
                       </button>
                       <button onClick={() => { setCreateFirmGroupId(s.id); setShowCreateFirm(true); }}
-                        className="ml-auto px-2 py-1 rounded-md bg-surface-700 hover:bg-surface-600 text-surface-200 text-[10px] font-medium inline-flex items-center gap-1">
+                        className="ml-auto px-2 py-1 rounded-md v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-[10px] font-medium inline-flex items-center gap-1 transition-colors">
                         <Plus size={10} /> Firma Ekle
                       </button>
                     </>
@@ -345,7 +351,7 @@ export default function FirmalarimPage() {
 
                 {!isCollapsed && (
                   s.firms.length === 0 ? (
-                    <div className="px-4 pb-4 pt-1 text-xs text-surface-500 italic">
+                    <div className="px-4 pb-4 pt-1 text-xs text-[rgb(var(--v2-muted))] italic">
                       {isAdmin && !isUngrouped
                         ? "Bu grupta firma yok. Bir firmayı sürükleyip bırakabilirsin veya yukarıdan ekleyebilirsin."
                         : "Bu grupta firma yok."}
@@ -466,23 +472,23 @@ function FirmCard({
       draggable={draggable}
       onDragStart={onDragStart}
       className={cn(
-        "text-left p-3 rounded-xl border border-surface-700 bg-surface-800",
-        "hover:border-brand-500/50 hover:bg-surface-700/30 transition-colors",
+        "text-left p-3 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-card))] v2-lift",
+        "hover:border-accent/50 transition-colors",
         draggable && "cursor-grab active:cursor-grabbing",
       )}>
       <div className="flex items-start gap-2">
-        <div className="w-9 h-9 rounded-lg bg-surface-700/60 flex items-center justify-center shrink-0">
-          <Building2 size={16} className="text-surface-300" />
+        <div className="w-9 h-9 rounded-lg v2-sunken flex items-center justify-center shrink-0">
+          <Building2 size={16} className="text-[rgb(var(--v2-muted))]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-surface-100 truncate">{firm.legal_name}</p>
-          <p className="text-[10px] text-surface-400 mt-0.5">
+          <p className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">{firm.legal_name}</p>
+          <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-0.5">
             {COMPANY_TYPE_LABEL[firm.company_type] || firm.company_type}
             {firm.tax_id && <span className="ml-1.5">· VKN {firm.tax_id}</span>}
           </p>
           <div className="flex flex-wrap items-center gap-1 mt-1.5">
             {firm.is_default && (
-              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200 border border-amber-500/30">
+              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-status-warning/15 text-status-warning border border-status-warning/30">
                 Default
               </span>
             )}
@@ -508,20 +514,20 @@ function FirmCard({
 function EmptyState({ isAdmin, onCreate }: { isAdmin: boolean; onCreate: () => void }) {
   if (!isAdmin) {
     return (
-      <div className="py-12 px-6 text-center rounded-2xl border border-surface-700 bg-surface-800/40">
-        <ShieldOff size={28} className="mx-auto text-surface-500 mb-3" />
-        <p className="text-sm font-semibold text-surface-100 mb-1">Henüz hiçbir firmaya erişiminiz yok</p>
-        <p className="text-xs text-surface-400">Yöneticinizden firma erişimi talep ediniz.</p>
+      <div className="v2-card py-12 px-6 text-center">
+        <ShieldOff size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-3" />
+        <p className="text-sm font-semibold text-[rgb(var(--v2-ink))] mb-1">Henüz hiçbir firmaya erişiminiz yok</p>
+        <p className="text-xs text-[rgb(var(--v2-muted))]">Yöneticinizden firma erişimi talep ediniz.</p>
       </div>
     );
   }
   return (
-    <div className="py-12 px-6 text-center rounded-2xl border border-surface-700 bg-surface-800/40">
-      <Inbox size={28} className="mx-auto text-surface-500 mb-3" />
-      <p className="text-sm font-semibold text-surface-100 mb-1">Henüz firma yok</p>
-      <p className="text-xs text-surface-400 mb-4">İlk firmayı ekleyerek başlayın.</p>
+    <div className="v2-card py-12 px-6 text-center">
+      <Inbox size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-3" />
+      <p className="text-sm font-semibold text-[rgb(var(--v2-ink))] mb-1">Henüz firma yok</p>
+      <p className="text-xs text-[rgb(var(--v2-muted))] mb-4">İlk firmayı ekleyerek başlayın.</p>
       <button onClick={onCreate}
-        className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold inline-flex items-center gap-1.5">
+        className="v2-btn v2-btn--ink v2-press text-xs inline-flex items-center gap-1.5">
         <Plus size={14} /> Yeni Firma
       </button>
     </div>
