@@ -32,15 +32,15 @@ export function RecentActivity() {
 
   if (isLoading) {
     return (
-      <div className="card divide-y divide-surface-700 animate-pulse">
+      <div className="v2-card divide-y divide-[rgb(var(--v2-border))] rounded-2xl animate-pulse">
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex items-center gap-3 p-4">
-            <div className="w-10 h-10 rounded-xl bg-surface-600" />
+            <div className="w-10 h-10 rounded-xl bg-[rgb(var(--v2-sunken))]" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-surface-600 rounded w-3/4" />
-              <div className="h-3 bg-surface-600 rounded w-1/2" />
+              <div className="h-4 bg-[rgb(var(--v2-sunken))] rounded w-3/4" />
+              <div className="h-3 bg-[rgb(var(--v2-sunken))] rounded w-1/2" />
             </div>
-            <div className="h-4 bg-surface-600 rounded w-16" />
+            <div className="h-4 bg-[rgb(var(--v2-sunken))] rounded w-16" />
           </div>
         ))}
       </div>
@@ -49,9 +49,9 @@ export function RecentActivity() {
 
   if (transactions.length === 0) {
     return (
-      <div className="card p-8 text-center">
-        <p className="text-surface-400">Henüz işlem yok</p>
-        <p className="text-surface-400 text-sm mt-1">
+      <div className="v2-card p-8 rounded-2xl text-center">
+        <p className="text-[rgb(var(--v2-muted))]">Henüz işlem yok</p>
+        <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
           Burada aktivite görmek için ilk gelir veya giderinizi ekleyin
         </p>
       </div>
@@ -61,7 +61,7 @@ export function RecentActivity() {
   return (
     <>
       {/* Clickable card — Redesign PR-2: glass */}
-      <div className="glass-card divide-y divide-surface-700/60 w-full text-left overflow-hidden">
+      <div className="v2-card divide-y divide-[rgb(var(--v2-border))] w-full text-left overflow-hidden rounded-2xl">
         {transactions.slice(0, 5).map((tx) => (
           <TransactionRow
             key={tx.id}
@@ -72,7 +72,7 @@ export function RecentActivity() {
         {transactions.length > 5 && (
           <button
             onClick={() => setShowModal(true)}
-            className="p-3 text-center w-full hover:bg-surface-700 transition-colors"
+            className="p-3 text-center w-full hover:bg-[rgb(var(--v2-sunken))] transition-colors"
           >
             <span className="text-sm text-brand-300 font-medium flex items-center justify-center gap-1">
               Tümünü Gör ({transactions.length} işlem)
@@ -97,17 +97,17 @@ export function RecentActivity() {
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           />
-          <div className="relative bg-surface-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up z-10">
+          <div className="relative modal-surface w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up z-10">
             <div className="modal-header">
-              <h3 className="text-lg font-bold text-surface-100">Son İşlemler</h3>
+              <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Son İşlemler</h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 rounded-xl hover:bg-surface-600 transition-colors"
+                className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors"
               >
                 <X size={20} className="text-surface-400" />
               </button>
             </div>
-            <div className="overflow-y-auto flex-1 divide-y divide-surface-700">
+            <div className="overflow-y-auto flex-1 divide-y divide-[rgb(var(--v2-border))]">
               {transactions.map((tx) => (
                 <TransactionRow
                   key={tx.id}
@@ -145,11 +145,11 @@ function TransactionRow({
       <div
         className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-          isPos ? "bg-indigo-500/15" : isIncome ? "bg-green-500/15" : "bg-red-500/15"
+          isPos ? "bg-[rgb(var(--accent))]/15" : isIncome ? "bg-green-500/15" : "bg-red-500/15"
         )}
       >
         {isPos ? (
-          <CreditCard size={18} className="text-indigo-300" />
+          <CreditCard size={18} className="text-[rgb(var(--accent))]" />
         ) : isIncome ? (
           <ArrowDownLeft size={18} className="text-green-300" />
         ) : (
@@ -158,12 +158,12 @@ function TransactionRow({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-surface-100 truncate">
+        <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">
           {/* Beta v1.1: POS komisyon UI kaldırıldı — POS satırı da normal
               description/kategori formatı kullanır. */}
           {tx.description || tx.category?.name || (isPos ? "POS İşlemi" : "İşlem")}
         </p>
-        <p className="text-xs text-surface-400 mt-0.5">
+        <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">
           {tx.business_name && <span>{tx.business_name} · </span>}
           {showDate
             ? new Date(tx.date).toLocaleDateString("tr-TR", {

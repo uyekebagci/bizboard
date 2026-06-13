@@ -96,8 +96,8 @@ export function AlertsWidget({ businesses }: Props) {
         if (totalInactive > 0) {
           items.push({
             icon: Users,
-            color: "text-sky-400",
-            bg: "bg-sky-500/8 hover:bg-sky-500/12",
+            color: "text-[rgb(var(--accent))]",
+            bg: "bg-[rgb(var(--accent))]/8 hover:bg-[rgb(var(--accent))]/12",
             title: `${totalInactive} pasif personel`,
             detail: "Aktif olmayan personel kaydi",
           });
@@ -117,12 +117,12 @@ export function AlertsWidget({ businesses }: Props) {
 
   return (
     /* Redesign PR-2: glass + token-correct uyarı renkleri. */
-    <div className="glass-card p-5">
+    <div className="v2-card p-5 rounded-2xl">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-9 h-9 rounded-xl bg-amber-500/15 grid place-items-center">
           <AlertTriangle size={18} className="text-amber-400" />
         </div>
-        <h3 className="text-[15px] font-bold h-display text-surface-100">Dikkat Gerektiren</h3>
+        <h3 className="text-[15px] font-bold h-display text-[rgb(var(--v2-ink))]">Dikkat Gerektiren</h3>
         <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold">
           {alerts.length}
         </span>
@@ -135,8 +135,8 @@ export function AlertsWidget({ businesses }: Props) {
             <div key={i} className={cn("flex items-start gap-3 p-2.5 rounded-xl transition", alert.bg)}>
               <Icon size={16} className={cn("mt-0.5 shrink-0", alert.color)} />
               <div>
-                <p className="text-[13px] font-semibold text-surface-100">{alert.title}</p>
-                <p className="text-[11px] text-surface-400">{alert.detail}</p>
+                <p className="text-[13px] font-semibold text-[rgb(var(--v2-ink))]">{alert.title}</p>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))]">{alert.detail}</p>
               </div>
             </div>
           );

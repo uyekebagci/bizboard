@@ -60,7 +60,7 @@ export function SearchResultItem({ hit }: { hit: SearchHit }) {
   return (
     <Link
       href={hit.url}
-      className="glass-card glass-hover !rounded-xl block p-4 transition-colors"
+      className="v2-card !rounded-xl block p-4 transition-colors hover:bg-[rgb(var(--v2-sunken))]"
     >
       <div className="flex items-center gap-2 mb-1.5">
         <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-400">
@@ -68,22 +68,22 @@ export function SearchResultItem({ hit }: { hit: SearchHit }) {
         </span>
         {hit.businessName && (
           <>
-            <span className="text-surface-600">·</span>
-            <span className="text-[11px] text-surface-400 truncate">{hit.businessName}</span>
+            <span className="text-[rgb(var(--v2-border))]">·</span>
+            <span className="text-[11px] text-[rgb(var(--v2-muted))] truncate">{hit.businessName}</span>
           </>
         )}
       </div>
 
-      <p className="text-sm text-surface-100 font-medium">
+      <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">
         {renderSnippet(hit.snippet)}
       </p>
 
       {fields.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
           {fields.map((f) => (
-            <span key={f.label} className="inline-flex items-center gap-1 text-[12px] text-surface-300">
-              <span className="text-surface-500">{f.label}:</span>
-              <span className={f.masked ? "text-surface-400" : "text-surface-200"}>{f.value}</span>
+            <span key={f.label} className="inline-flex items-center gap-1 text-[12px] text-[rgb(var(--v2-muted))]">
+              <span className="text-[rgb(var(--v2-muted))]/70">{f.label}:</span>
+              <span className={f.masked ? "text-[rgb(var(--v2-muted))]" : "text-[rgb(var(--v2-ink))]"}>{f.value}</span>
               {f.masked && (
                 <span
                   title="Tam görünüm için yöneticine başvur"

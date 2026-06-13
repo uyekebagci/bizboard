@@ -52,7 +52,7 @@ export function DebtWidget({ businesses, onTotalChange }: Props) {
   }, [businesses]);
 
   if (loading) {
-    return <div className="glass-card p-4 h-28 animate-pulse" />;
+    return <div className="v2-card p-4 h-28 rounded-2xl animate-pulse" />;
   }
 
   const net = totals.receivable - totals.payable;
@@ -62,12 +62,12 @@ export function DebtWidget({ businesses, onTotalChange }: Props) {
 
   return (
     /* Redesign PR-2: glass + token-correct renkler (light+dark). */
-    <div className="glass-card p-5 flex-1">
+    <div className="v2-card p-5 flex-1 rounded-2xl">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-9 h-9 rounded-xl bg-violet-500/15 grid place-items-center">
           <Scale size={18} className="text-violet-400" />
         </div>
-        <h3 className="text-[15px] font-bold h-display text-surface-100">Borc / Alacak Durumu</h3>
+        <h3 className="text-[15px] font-bold h-display text-[rgb(var(--v2-ink))]">Borç / Alacak Durumu</h3>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -78,23 +78,23 @@ export function DebtWidget({ businesses, onTotalChange }: Props) {
             <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">Alacak</span>
           </div>
           <p className="num text-2xl font-bold text-emerald-300">{formatCurrency(totals.receivable)}</p>
-          <p className="text-[11px] text-surface-400 mt-1">{totals.rCount} kayit</p>
+          <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1">{totals.rCount} kayıt</p>
         </div>
 
         {/* Borç */}
         <div className="rounded-2xl p-4 bg-rose-500/8 border border-rose-500/15">
           <div className="flex items-center gap-1.5 mb-1">
             <ArrowUpRight size={14} className="text-rose-400" />
-            <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider">Borc</span>
+            <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider">Borç</span>
           </div>
           <p className="num text-2xl font-bold text-rose-300">{formatCurrency(totals.payable)}</p>
-          <p className="text-[11px] text-surface-400 mt-1">{totals.pCount} kayit</p>
+          <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1">{totals.pCount} kayıt</p>
         </div>
       </div>
 
       {/* Net bakiye */}
-      <div className="mt-4 pt-4 border-t border-surface-700/60 flex items-center justify-between">
-        <span className="text-[13px] text-surface-400">Net Bakiye</span>
+      <div className="mt-4 pt-4 border-t border-[rgb(var(--v2-border))] flex items-center justify-between">
+        <span className="text-[13px] text-[rgb(var(--v2-muted))]">Net Bakiye</span>
         <span className={cn("num text-lg font-bold", net >= 0 ? "text-emerald-300" : "text-rose-300")}>
           {net >= 0 ? "+" : ""}{formatCurrency(net)}
         </span>

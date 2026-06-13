@@ -72,7 +72,7 @@ export default function BusinessDetailPage() {
   if (!business) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <p className="text-surface-300 text-lg">İşletme bulunamadı</p>
+        <p className="text-[rgb(var(--v2-muted))] text-lg">İşletme bulunamadı</p>
         <button onClick={() => router.push("/dashboard")} className="btn-primary mt-4">
           Panele Dön
         </button>
@@ -88,17 +88,17 @@ export default function BusinessDetailPage() {
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl text-surface-300 hover:text-surface-100 hover:bg-surface-700 transition-colors shrink-0"
+            className="p-2 -ml-2 rounded-xl text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))] transition-colors shrink-0"
             aria-label="Geri"
             title="Geri"
           >
             <ArrowLeft size={20} />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold text-surface-100 truncate leading-tight">
+            <h1 className="text-lg font-bold text-[rgb(var(--v2-ink))] truncate leading-tight">
               {business.name}
             </h1>
-            <p className="text-[11px] text-surface-400 flex items-center gap-1.5 mt-0.5">
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] flex items-center gap-1.5 mt-0.5">
               <span className="capitalize">{business.business_type_name || "İşletme"}</span>
               {business.members && business.members.length > 0 && (
                 <>
@@ -124,10 +124,10 @@ export default function BusinessDetailPage() {
           )}
           <Link
             href={`/business/${businessId}/settings`}
-            className="p-2 rounded-xl hover:bg-surface-600 transition-colors"
+            className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors"
             title="Ayarlar"
           >
-            <Settings size={20} className="text-surface-300" />
+            <Settings size={20} className="text-[rgb(var(--v2-muted))]" />
           </Link>
         </div>
       </div>
@@ -135,12 +135,12 @@ export default function BusinessDetailPage() {
       {/* v1.6.2: Admin delete confirm modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="glass-card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-surface-100 mb-2">
+          <div className="modal-surface p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">
               İşletmeyi Sil
             </h3>
-            <p className="text-sm text-surface-400 mb-4">
-              <strong className="text-surface-100">{business.name}</strong> işletmesini
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-4">
+              <strong className="text-[rgb(var(--v2-ink))]">{business.name}</strong> işletmesini
               silmek istediğinden emin misin? Bu işlem geri alınamaz. Bağlı
               kayıtlar (işlemler, sabit giderler, personel, vb.) var ise silme
               reddedilebilir.
@@ -154,7 +154,7 @@ export default function BusinessDetailPage() {
               <button
                 onClick={() => { setDeleteConfirm(false); setDeleteError(null); }}
                 disabled={deleting}
-                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-ink))] text-sm disabled:opacity-50"
               >
                 İptal
               </button>
@@ -269,7 +269,7 @@ function RecentTransactionsSection({
           <button
             type="button"
             onClick={() => setShowAddModal("TRANSFER")}
-            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md text-blue-200 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30"
+            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md v2-chip-accent"
             title="Hesaplar arası transfer"
           >
             <ArrowLeftRight size={11} />
@@ -278,7 +278,7 @@ function RecentTransactionsSection({
           <button
             type="button"
             onClick={() => setShowAddModal("POS")}
-            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md text-indigo-200 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30"
+            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md v2-chip-accent"
             title="POS işlemi oluştur"
           >
             <CreditCard size={11} />
@@ -311,8 +311,8 @@ function RecentTransactionsSection({
           onClick={() => setPaymentFilter("ALL")}
           className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
             paymentFilter === "ALL"
-              ? "bg-surface-600 border-surface-500 text-surface-100"
-              : "bg-surface-700 border-surface-600 text-surface-300"
+              ? "v2-chip-ink"
+              : "v2-chip"
           }`}
         >
           Tümü
@@ -322,8 +322,8 @@ function RecentTransactionsSection({
           onClick={() => setPaymentFilter("POS")}
           className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors inline-flex items-center gap-1 ${
             paymentFilter === "POS"
-              ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
-              : "bg-surface-700 border-surface-600 text-surface-300"
+              ? "v2-chip-accent"
+              : "v2-chip"
           }`}
         >
           <CreditCard size={10} />
@@ -334,8 +334,8 @@ function RecentTransactionsSection({
           onClick={() => setPaymentFilter("NAKIT")}
           className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors inline-flex items-center gap-1 ${
             paymentFilter === "NAKIT"
-              ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
-              : "bg-surface-700 border-surface-600 text-surface-300"
+              ? "v2-chip-accent"
+              : "v2-chip"
           }`}
         >
           <Banknote size={10} />

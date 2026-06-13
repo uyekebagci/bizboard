@@ -18,9 +18,9 @@ export function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.payables;
   if (list.length === 0) {
     return (
-      <section className="glass-card p-4">
+      <section className="v2-card p-4 rounded-2xl">
         <SectionTitle icon={TrendingDown} label="Verecekler" />
-        <p className="text-xs text-surface-400 py-2">Açık veriniz yok.</p>
+        <p className="text-xs text-[rgb(var(--v2-muted))] py-2">Açık veriniz yok.</p>
       </section>
     );
   }
@@ -33,12 +33,12 @@ export function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
     <>
     <section
       onClick={() => setShowDetail(true)}
-      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-red-500/40 transition-all"
+      className="v2-widget v2-widget--interactive overflow-hidden"
     >
-      <div className="px-4 py-3 border-b border-surface-700">
+      <div className="px-4 py-3 border-b border-[rgb(var(--v2-border))]">
         <SectionTitle icon={TrendingDown} label="Verecekler" inline />
       </div>
-      <div className="divide-y divide-surface-700 max-h-72 overflow-y-auto">
+      <div className="divide-y divide-[rgb(var(--v2-border))] max-h-72 overflow-y-auto">
         {list.slice(0, 8).map((p) => {
           const soon = p.days_to_due != null && p.days_to_due <= 7 && p.days_to_due >= 0;
           return (
@@ -47,8 +47,8 @@ export function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
               soon && "bg-amber-500/5",
             )}>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-surface-100 truncate">{p.counterpart_name}</p>
-                <p className="text-[11px] text-surface-400">
+                <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{p.counterpart_name}</p>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                   {p.instrument_type || "—"}
                   {p.due_date && (
                     <> · Vade {new Date(p.due_date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}</>
@@ -89,18 +89,18 @@ export function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
               key={p.debt_id}
               className={cn(
                 "flex items-center justify-between gap-3 p-3 rounded-lg border",
-                soon ? "border-amber-500/40 bg-amber-500/5" : "border-surface-700",
+                soon ? "border-amber-500/40 bg-amber-500/5" : "border-[rgb(var(--v2-border))]",
               )}
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-surface-100">{p.counterpart_name}</p>
-                <p className="text-[11px] text-surface-400">
+                <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">{p.counterpart_name}</p>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                   {p.instrument_type || "—"}
                   {p.due_date && (
                     <> · Vade {new Date(p.due_date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}</>
                   )}
                   {p.days_to_due != null && (
-                    <span className={soon ? "ml-1.5 text-amber-300" : "ml-1.5 text-surface-500"}>
+                    <span className={soon ? "ml-1.5 text-amber-300" : "ml-1.5 text-[rgb(var(--v2-muted))]"}>
                       ({p.days_to_due >= 0 ? `${p.days_to_due} gün` : `${Math.abs(p.days_to_due)} gün geçti`})
                     </span>
                   )}
@@ -113,8 +113,8 @@ export function PayablesCard({ d }: { d: ConsolidatedDashboard }) {
           );
         })}
       </div>
-      <div className="mt-4 pt-3 border-t border-surface-700 flex items-center justify-between text-sm">
-        <span className="text-surface-300">Toplam</span>
+      <div className="mt-4 pt-3 border-t border-[rgb(var(--v2-border))] flex items-center justify-between text-sm">
+        <span className="text-[rgb(var(--v2-muted))]">Toplam</span>
         <span className="font-bold text-red-300">−{formatCurrency(total, "TRY")}</span>
       </div>
     </WidgetDetailModal>

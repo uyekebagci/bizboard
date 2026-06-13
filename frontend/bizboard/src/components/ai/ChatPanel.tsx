@@ -92,16 +92,16 @@ export function ChatPanel({ businessId, businessName }: ChatPanelProps) {
   }
 
   return (
-    <div className="glass-card flex flex-col h-[70vh] min-h-[480px] overflow-hidden">
+    <div className="v2-card flex flex-col h-[70vh] min-h-[480px] overflow-hidden rounded-2xl">
       {/* Başlık */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-700">
-        <div className="w-8 h-8 rounded-xl bg-surface-800 flex items-center justify-center text-brand">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-[rgb(var(--v2-border))]">
+        <div className="w-8 h-8 rounded-xl bg-[rgb(var(--v2-sunken))] flex items-center justify-center text-brand">
           <Bot size={18} />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-surface-100 truncate">AI Asistan</p>
+          <p className="text-sm font-bold text-[rgb(var(--v2-ink))] truncate">AI Asistan</p>
           {businessName && (
-            <p className="text-[11px] text-surface-400 truncate">{businessName}</p>
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">{businessName}</p>
           )}
         </div>
       </div>
@@ -110,8 +110,8 @@ export function ChatPanel({ businessId, businessName }: ChatPanelProps) {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.length === 0 && !sending && (
           <div className="text-center py-8">
-            <Bot size={32} className="mx-auto mb-3 text-surface-400" />
-            <p className="text-surface-400 text-sm mb-4">
+            <Bot size={32} className="mx-auto mb-3 text-[rgb(var(--v2-muted))]" />
+            <p className="text-[rgb(var(--v2-muted))] text-sm mb-4">
               İşletmenizin finansal verisi hakkında soru sorun.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
@@ -119,7 +119,7 @@ export function ChatPanel({ businessId, businessName }: ChatPanelProps) {
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-surface-800 text-surface-300 hover:text-surface-100 border border-surface-700 transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-full bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] border border-[rgb(var(--v2-border))] transition-colors"
                 >
                   {s}
                 </button>
@@ -134,7 +134,7 @@ export function ChatPanel({ businessId, businessName }: ChatPanelProps) {
             className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}
           >
             {m.role === "assistant" && (
-              <div className="w-7 h-7 shrink-0 rounded-lg bg-surface-800 flex items-center justify-center text-brand">
+              <div className="w-7 h-7 shrink-0 rounded-lg bg-[rgb(var(--v2-sunken))] flex items-center justify-center text-brand">
                 <Bot size={15} />
               </div>
             )}
@@ -143,18 +143,18 @@ export function ChatPanel({ businessId, businessName }: ChatPanelProps) {
                 "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm whitespace-pre-wrap break-words",
                 m.role === "user"
                   ? "bg-brand text-white rounded-br-sm"
-                  : "bg-surface-800 text-surface-100 rounded-bl-sm border border-surface-700"
+                  : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] rounded-bl-sm border border-[rgb(var(--v2-border))]"
               )}
             >
               {m.content}
               {m.role === "assistant" && m.aiUsed === false && (
-                <p className="mt-1 text-[10px] text-surface-400 italic">
+                <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))] italic">
                   (AI kullanılamadı)
                 </p>
               )}
             </div>
             {m.role === "user" && (
-              <div className="w-7 h-7 shrink-0 rounded-lg bg-surface-700 flex items-center justify-center text-surface-300">
+              <div className="w-7 h-7 shrink-0 rounded-lg bg-[rgb(var(--v2-sunken))] flex items-center justify-center text-[rgb(var(--v2-muted))]">
                 <User size={15} />
               </div>
             )}
@@ -163,10 +163,10 @@ export function ChatPanel({ businessId, businessName }: ChatPanelProps) {
 
         {sending && (
           <div className="flex gap-2 justify-start">
-            <div className="w-7 h-7 shrink-0 rounded-lg bg-surface-800 flex items-center justify-center text-brand">
+            <div className="w-7 h-7 shrink-0 rounded-lg bg-[rgb(var(--v2-sunken))] flex items-center justify-center text-brand">
               <Bot size={15} />
             </div>
-            <div className="rounded-2xl rounded-bl-sm px-3.5 py-2.5 bg-surface-800 border border-surface-700">
+            <div className="rounded-2xl rounded-bl-sm px-3.5 py-2.5 bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))]">
               <Loader2 size={16} className="animate-spin text-surface-400" />
             </div>
           </div>
@@ -179,7 +179,7 @@ export function ChatPanel({ businessId, businessName }: ChatPanelProps) {
           e.preventDefault();
           send(input);
         }}
-        className="flex items-center gap-2 px-3 py-3 border-t border-surface-700"
+        className="flex items-center gap-2 px-3 py-3 border-t border-[rgb(var(--v2-border))]"
       >
         <input
           className="input flex-1"

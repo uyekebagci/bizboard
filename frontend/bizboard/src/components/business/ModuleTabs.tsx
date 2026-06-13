@@ -287,14 +287,14 @@ function ModuleManagerModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
+      <div className="modal-surface shadow-xl w-full max-w-md rounded-2xl">
         {/* Header */}
         <div className="modal-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-brand-500/15 flex items-center justify-center">
               <Plus size={16} className="text-brand-400" />
             </div>
-            <h3 className="text-lg font-bold text-surface-100">Modül Yönetimi</h3>
+            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Modül Yönetimi</h3>
           </div>
           <button onClick={handleClose} className="p-2 rounded-xl hover:bg-surface-700">
             <X size={20} className="text-surface-400" />
@@ -303,7 +303,7 @@ function ModuleManagerModal({
 
         {/* Module List */}
         <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
-          <p className="text-xs text-surface-400 mb-3">
+          <p className="text-xs text-[rgb(var(--v2-muted))] mb-3">
             Aktif etmek veya devre dışı bırakmak için modüllere tıklayın.
           </p>
 
@@ -352,7 +352,7 @@ function ModuleManagerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-surface-700">
+        <div className="p-4 border-t border-[rgb(var(--v2-border))]">
           <button
             onClick={handleClose}
             className="w-full py-2.5 rounded-xl font-medium text-white bg-brand-600 hover:bg-brand-700 transition-colors"
