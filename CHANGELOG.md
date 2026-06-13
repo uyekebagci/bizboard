@@ -129,6 +129,23 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Changed
 
+- **Admin Paneli Daxa'ya geçirildi — sıkışık sekme şeridi + eski-tema kullanıcı
+  satırları + panel kabuğu (salt görsel; işlevsellik/RBAC korundu).**
+  - **Tab bar (en kritik):** Kart başlığında tek satırda sıkışan 7 `btn-secondary`
+    link + amber "Yeni Kullanıcı" butonu → temiz Daxa segment/pill şeridine
+    (`AdminTabs`) çevrildi: `v2-sunken` zemin, eşit boşluk, taşmada yatay-scroll
+    (`no-scrollbar`), aktif sekme accent (lime) + `aria-current`, ikonlu etiketler.
+    "Yeni Kullanıcı" SEKME DEĞİL → sağda ayrı accent aksiyon butonu (`v2-btn--accent`).
+  - **Kullanıcı satırları:** Eski `surface-*`/amber stili → tek-tip Daxa satır
+    (`v2-card` içi `divide`/hover `v2-sunken`, avatar accent tint, isim + `@handle`,
+    rol/Pasif/işletme rozetleri Daxa accent/danger token'ı, sağda düzenle/sil ikonu).
+    Aksiyon ikonları artık her zaman görünür (önceki `opacity-0` hover-only → a11y/mobil).
+  - **Kabuk + modal'lar:** Panel kartı `glass-card` → `v2-card`, başlık `v2-display`,
+    geri butonu `v2-icon-btn`; oluştur/düzenle modal'larındaki amber accent → Daxa
+    lime accent (rol/işletme seçimi, submit `v2-btn--accent`, aktif toggle). Çift
+    tema + a11y (`aria-label`/`role="switch"`/`role="alert"`, focus-visible ring).
+  - **Refactor (salt organizasyon):** `page.tsx` 500-satır sınırı için modal'lar
+    `AdminUserModals.tsx`'e taşındı (page 306, AdminTabs 95, modals 489 satır).
 - **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**
   - **Logo:** Sidebar sol-üst "ÇATI" plakası yeniden tasarlandı — katmanlı ink
     zemin (radial gradient + iç ışık + accent halka + yumuşak gölge), Daxa imza
