@@ -133,8 +133,14 @@
 
 @layer components {
   .card {
-    @apply bg-surface-800 rounded-2xl shadow-card transition-shadow duration-200
+    @apply bg-surface-800 shadow-card transition-shadow duration-200
            border border-surface-700/50 text-surface-200;
+    /* Daxa hizası: büyük yuvarlak kart. */
+    border-radius: var(--radius-card);
+  }
+  /* Light: ince saydam border yerine net border (soluk ayrım giderildi). */
+  html:not(.dark) .card {
+    border-color: rgb(var(--surface-600) / 1);
   }
 
   .card:hover {
@@ -161,16 +167,19 @@
     box-shadow:
       0 1px 0 rgb(var(--surface-0) / 0.05) inset,
       0 18px 40px -22px rgba(0, 0, 0, 0.7);
-    border-radius: 1rem;
+    /* Daxa hizası: app genelindeki de-facto kart primitivi → büyük yuvarlak. */
+    border-radius: var(--radius-card);
   }
+  /* Light: artık tam OPAK beyaz yüzey + DAHA NET border (saydam/soluk his giderildi).
+     Daxa katmanlı gölge ile app zemininden belirgin ayrışır. */
   html:not(.dark) .glass-card {
     background: rgb(var(--surface-800) / 1);
-    border: 1px solid rgb(var(--surface-600) / 0.7);
+    border: 1px solid rgb(var(--surface-600) / 1);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     box-shadow:
-      0 1px 2px rgba(15, 23, 42, 0.06),
-      0 14px 30px -22px rgba(15, 23, 42, 0.35);
+      0 1px 2px rgba(15, 23, 42, 0.05),
+      0 12px 28px -18px rgba(15, 23, 42, 0.28);
   }
 
   /* Solid modal yüzeyi — glass-card'ın dark'taki yarı-saydamlığı bazı
@@ -183,11 +192,13 @@
     box-shadow:
       0 1px 0 rgb(var(--surface-0) / 0.06) inset,
       0 24px 60px -28px rgba(0, 0, 0, 0.85);
-    border-radius: 1rem;
+    /* Daxa hizası: büyük yuvarlak modal yüzeyi. */
+    border-radius: var(--radius-card);
   }
   html:not(.dark) .modal-surface {
     background: rgb(var(--surface-900) / 1);
-    border: 1px solid rgb(var(--surface-600) / 0.7);
+    border: 1px solid rgb(var(--surface-600) / 1);
+    border-radius: var(--radius-card);
     box-shadow:
       0 1px 2px rgba(15, 23, 42, 0.06),
       0 18px 44px -26px rgba(15, 23, 42, 0.4);
@@ -209,7 +220,7 @@
   }
   html:not(.dark) .popover-surface {
     background: rgb(var(--surface-900) / 1);
-    border: 1px solid rgb(var(--surface-600) / 0.7);
+    border: 1px solid rgb(var(--surface-600) / 1);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     box-shadow:
@@ -396,6 +407,20 @@
            focus:ring-offset-transparent
            disabled:opacity-50 disabled:pointer-events-none;
   }
+  /* Light: yarı-saydam surface-700 (slate-200/70) değişen zeminde "soluk/yıkanmış"
+     görünüyordu → SOLID alt-yüzey + net border + okunur metin (Daxa katmanlı). */
+  html:not(.dark) .btn-secondary {
+    background: rgb(var(--surface-700) / 1);
+    color: rgb(var(--surface-100));
+    border-color: rgb(var(--surface-600) / 1);
+  }
+  html:not(.dark) .btn-secondary:hover {
+    background: rgb(var(--surface-600) / 0.85);
+    border-color: rgb(var(--surface-500) / 1);
+  }
+  html:not(.dark) .btn-secondary:active {
+    background: rgb(var(--surface-600) / 1);
+  }
 
   /* Premium tehlike butonu (sil/iptal-yıkıcı) — danger gradient + glow. */
   .btn-danger {
@@ -443,7 +468,8 @@
   html:not(.dark) .input,
   html:not(.dark) .field {
     background: rgb(var(--surface-900) / 1);
-    border: 1px solid rgb(var(--surface-600) / 0.9);
+    border: 1px solid rgb(var(--surface-600) / 1);
+    box-shadow: none;
   }
   .input:hover:not(:focus),
   .field:hover:not(:focus) {
@@ -484,6 +510,7 @@
   html:not(.dark) .input-sm,
   html:not(.dark) .field-sm {
     background: rgb(var(--surface-900) / 1);
+    border-color: rgb(var(--surface-600) / 1);
   }
   .input-sm:focus,
   .field-sm:focus {
@@ -508,7 +535,7 @@
     );
   }
   html:not(.dark) .modal-header {
-    border-bottom-color: rgb(var(--surface-600) / 0.6);
+    border-bottom-color: rgb(var(--surface-600) / 0.9);
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.02), transparent);
   }
   .modal-title {
@@ -527,7 +554,7 @@
     background: rgb(var(--surface-0) / 0.02);
   }
   html:not(.dark) .modal-footer {
-    border-top-color: rgb(var(--surface-600) / 0.6);
+    border-top-color: rgb(var(--surface-600) / 0.9);
     background: rgba(15, 23, 42, 0.015);
   }
 
@@ -590,6 +617,63 @@
   .status-dot {
     @apply w-2.5 h-2.5 rounded-full inline-block;
   }
+
+  /* ── Paylaşılan Badge primitivi (Daxa) ──────────────────────
+     Tam-yuvarlak pill, solid/tint zemin, çift tema. Tüm sayfalar
+     (formlar/listeler) durum etiketlerinde bu base'i kullanır →
+     tek yerden uyumlanır. Renkli varyantlar token-bazlı tint. */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+           text-xs font-semibold leading-5 whitespace-nowrap;
+    background: rgb(var(--surface-700) / 1);
+    color: rgb(var(--surface-200));
+    border: 1px solid rgb(var(--surface-600) / 0.6);
+  }
+  html:not(.dark) .badge {
+    background: rgb(var(--surface-700) / 1);
+    color: rgb(var(--surface-200));
+    border-color: rgb(var(--surface-600) / 1);
+  }
+  /* Accent (lime) varyant — vurgulu/aktif durum. */
+  .badge-accent {
+    background: rgb(var(--accent) / 0.16);
+    color: rgb(var(--accent-strong));
+    border-color: rgb(var(--accent) / 0.3);
+  }
+  .dark .badge-accent {
+    color: rgb(var(--accent));
+  }
+  /* Ink (Daxa siyah) varyant — kuvvetli vurgu. */
+  .badge-ink {
+    background: rgb(var(--v2-ink));
+    color: rgb(var(--v2-card));
+    border-color: transparent;
+  }
+  /* Durum varyantları — light'ta okunur koyu metin, dark'ta açık. */
+  .badge-success {
+    background: rgb(64 192 87 / 0.16);
+    color: #15803d;
+    border-color: rgb(64 192 87 / 0.3);
+  }
+  .dark .badge-success { color: #69db7c; }
+  .badge-warning {
+    background: rgb(250 176 5 / 0.18);
+    color: #b45309;
+    border-color: rgb(250 176 5 / 0.32);
+  }
+  .dark .badge-warning { color: #ffd43b; }
+  .badge-danger {
+    background: rgb(250 82 82 / 0.16);
+    color: #b91c1c;
+    border-color: rgb(250 82 82 / 0.3);
+  }
+  .dark .badge-danger { color: #ff8787; }
+  .badge-info {
+    background: rgb(51 154 240 / 0.16);
+    color: #1d4ed8;
+    border-color: rgb(51 154 240 / 0.3);
+  }
+  .dark .badge-info { color: #74c0fc; }
 
   /* Mobile bottom navigation */
   .bottom-nav {
@@ -789,10 +873,38 @@
     border-bottom: 1px solid rgb(var(--v2-border));
   }
 
-  /* Logo plakası — Daxa: ink (siyah/açık) zemin + accent harf. */
+  /* Logo plakası — Daxa: katmanlı ink zemin + accent harf + derinlik.
+     İnce iç ışık (top inset) + yumuşak dış gölge + 1px accent halka →
+     düz/yapışkan görünüm yerine premium, oturmuş plaka hissi. Çift tema. */
   .v2-logo-tile {
-    background: rgb(var(--v2-ink));
+    background:
+      radial-gradient(120% 120% at 30% 0%, rgb(var(--v2-ink) / 0.92), rgb(var(--v2-ink)));
     color: rgb(var(--accent-bright));
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.12) inset,
+      0 0 0 1px rgb(var(--accent) / 0.22),
+      0 8px 18px -10px rgb(var(--v2-ink) / 0.55);
+  }
+  html:not(.dark) .v2-logo-tile {
+    /* Light: ink = koyu slate (#0f172a) zemin üstünde parlak lime harf. */
+    color: rgb(var(--accent-bright));
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.1) inset,
+      0 0 0 1px rgb(var(--accent) / 0.3),
+      0 8px 16px -10px rgb(15 23 42 / 0.4);
+  }
+  /* Logo imza noktası — accent dolgu + hafif glow (Daxa aksan). */
+  .v2-logo-dot {
+    background: rgb(var(--accent-bright));
+    box-shadow: 0 0 6px rgb(var(--accent) / 0.7);
+  }
+  /* BETA etiketi — accent tint pill (cramped italic-mono yerine net rozet). */
+  .v2-logo-beta {
+    background: rgb(var(--accent) / 0.16);
+    color: rgb(var(--accent-strong));
+  }
+  .dark .v2-logo-beta {
+    color: rgb(var(--accent));
   }
 
   /* TopBar — solid app zemini + ince alt border (blur yok). */

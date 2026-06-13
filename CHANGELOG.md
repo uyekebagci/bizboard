@@ -30,6 +30,25 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Changed
+
+- **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**
+  - **Logo:** Sidebar sol-üst "ÇATI" plakası yeniden tasarlandı — katmanlı ink
+    zemin (radial gradient + iç ışık + accent halka + yumuşak gölge), Daxa imza
+    accent noktası ve "BETA v1.1" cramped italic-mono etiketi yerine net accent
+    tint pill rozeti; orantı/hizalama (11px tile, hizalı dikey blok) düzeltildi.
+  - **Light-theme saydamlık:** Light temada aşırı saydam/soluk kalan yüzeyler
+    opaklaştırıldı — `.glass-card` (app genelinde de-facto kart, 332 kullanım)
+    light'ta tam opak + daha net border, `.btn-secondary` light'ta solid alt-yüzey
+    (slate-200/70 yıkanmış görünümü giderildi), `.input/.field/.input-sm/.field-sm`
+    + `.modal-surface`/`.popover-surface`/`.modal-header`/`.modal-footer`/`.card`
+    border'ları light'ta solid'e çekildi. Dark tema değişmedi.
+  - **Paylaşılan primitive'ler → Daxa:** `.card`/`.glass-card`/`.modal-surface`
+    radius'u `--radius-card` (~20px) Daxa estetiğine hizalandı; yeni paylaşılan
+    `.badge` primitivi (accent/ink/success/warning/danger/info varyantları, çift
+    tema, a11y kontrast) eklendi. Böylece tüm sayfalar (formlar/listeler) bu base
+    sınıfları kullandığında otomatik uyumlanır. İşlevsellik değişmedi.
+
 ### Security
 
 - **Cari liste/alt-firma artık aktif işletmeye scope'lanıyor (cross-business sızıntı fix'i).**
