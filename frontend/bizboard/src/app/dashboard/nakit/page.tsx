@@ -9,7 +9,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Banknote,
   Loader2,
   Plus,
@@ -20,6 +19,9 @@ import { formatCurrency } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import type { CashBusinessBalance } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 export default function NakitPage() {
   const router = useRouter();
@@ -45,32 +47,15 @@ export default function NakitPage() {
   return (
     <div className="space-y-5 pb-24">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="v2-icon-btn v2-press"
-          aria-label="Geri"
-          title="Geri"
-        >
-          <ArrowLeft size={18} aria-hidden="true" />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
-            <Banknote size={20} className="text-accent-strong dark:text-accent" />
-          </div>
-          <div>
-            <h1 className="v2-display text-xl">Nakit</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">
-              İşletmelerin nakit bakiye dağılımı
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Nakit"
+        subtitle="İşletmelerin nakit bakiye dağılımı"
+        icon={Banknote}
+        fallbackHref="/dashboard"
+      />
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-accent-strong dark:text-accent" />
-        </div>
+        <ListSkeleton rows={3} />
       ) : (
         <>
           {/* Total */}
@@ -90,20 +75,20 @@ export default function NakitPage() {
 
           {/* Per-business list */}
           {balances.length === 0 ? (
-            <div className="v2-card p-8 text-center">
-              <Banknote size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-              <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz nakit bakiye yok</p>
-              <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
-                İşlem eklerken &quot;Ödeme Yöntemi&quot; olarak Nakit seçiniz.
-              </p>
-              <Link
-                href="/dashboard/add-transaction?payment_method=NAKIT&type=income"
-                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-accent-ink text-sm font-medium transition-colors hover:opacity-90"
-              >
-                <Plus size={16} />
-                Nakit İşlem Ekle
-              </Link>
-            </div>
+            <EmptyState
+              icon={Banknote}
+              title="Henüz nakit bakiye yok"
+              description={'İşlem eklerken "Ödeme Yöntemi" olarak Nakit seçiniz.'}
+              action={
+                <Link
+                  href="/dashboard/add-transaction?payment_method=NAKIT&type=income"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-accent-ink text-sm font-medium transition-colors hover:opacity-90"
+                >
+                  <Plus size={16} />
+                  Nakit İşlem Ekle
+                </Link>
+              }
+            />
           ) : (
             <section className="space-y-2">
               <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">İşletme Bakiyeleri</h2>

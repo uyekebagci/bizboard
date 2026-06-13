@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   TrendingUp,
   TrendingDown,
   DollarSign,
@@ -21,6 +20,7 @@ import {
   Layers,
   Calendar,
 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -125,7 +125,7 @@ export default function FinancePage() {
   }, [period]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading && !data) return <FinanceSkeleton />;
-  if (!data) return <EmptyState />;
+  if (!data) return <FinanceEmptyState />;
 
   const cur = data.current_period;
   const prev = data.previous_period;
@@ -133,46 +133,38 @@ export default function FinancePage() {
   return (
     <div className="space-y-5 pb-8">
       {/* Header */}
-      <section className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="v2-icon-btn v2-press"
-            aria-label="Geri"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div>
-            <h1 className="v2-display text-xl">Finans Merkezi</h1>
-            <p className="text-[rgb(var(--v2-muted))] text-sm mt-0.5">Detaylı finansal analiz ve raporlar</p>
+      <PageHeader
+        title="Finans Merkezi"
+        subtitle="Detaylı finansal analiz ve raporlar"
+        fallbackHref="/dashboard"
+        actions={
+          /* Dönem Seçici (v1.6.15+: 'Bugun' default) — UI v2: sunken segment + accent aktif. */
+          <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
+            {([
+              { value: "daily", label: "Bugün" },
+              { value: "1m",    label: "1 Ay" },
+              { value: "3m",    label: "3 Ay" },
+              { value: "6m",    label: "6 Ay" },
+              { value: "1y",    label: "1 Yıl" },
+              { value: "all",   label: "Tümü" },
+            ] as const).map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => persistPeriod(value)}
+                aria-pressed={period === value}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                  period === value
+                    ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                    : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-        </div>
-        {/* Dönem Seçici (v1.6.15+: 'Bugun' default) — UI v2: sunken segment + accent aktif. */}
-        <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
-          {([
-            { value: "daily", label: "Bugün" },
-            { value: "1m",    label: "1 Ay" },
-            { value: "3m",    label: "3 Ay" },
-            { value: "6m",    label: "6 Ay" },
-            { value: "1y",    label: "1 Yıl" },
-            { value: "all",   label: "Tümü" },
-          ] as const).map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => persistPeriod(value)}
-              aria-pressed={period === value}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                period === value
-                  ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
-                  : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </section>
+        }
+      />
 
       {/* Tabs — UI v2: sunken segment + accent aktif. */}
       <section className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
@@ -1149,7 +1141,7 @@ function EmptySection({ text }: { text: string }) {
   );
 }
 
-function EmptyState() {
+function FinanceEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="w-16 h-16 rounded-2xl v2-sunken flex items-center justify-center mb-4">

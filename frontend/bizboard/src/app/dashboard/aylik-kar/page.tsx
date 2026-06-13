@@ -15,8 +15,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, TrendingUp, TrendingDown, Receipt, Users, ChevronLeft, ChevronRight,
+  Loader2, TrendingUp, TrendingDown, Receipt, Users, ChevronLeft, ChevronRight,
 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { useMonthlyProfit } from "@/hooks/useMonthlyProfit";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -48,17 +49,11 @@ export default function AylikKarPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.back()}
-          className="v2-icon-btn v2-press"
-          aria-label="Geri">
-          <ArrowLeft size={18} />
-        </button>
-        <div className="flex-1">
-          <h1 className="v2-display text-xl">Aylık Kâr</h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">kategori P&L · gider≠masraf · operatör kırılımı</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Aylık Kâr"
+        subtitle="kategori P&L · gider≠masraf · operatör kırılımı"
+        fallbackHref="/dashboard"
+      />
 
       {/* Dönem seçici */}
       <div className="flex items-center justify-between v2-card p-2">

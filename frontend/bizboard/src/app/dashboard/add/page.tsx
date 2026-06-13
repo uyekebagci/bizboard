@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   HardHat,
@@ -38,6 +37,8 @@ import { cn, formatCurrency, formatMoneyInput, parseMoneyInput } from "@/lib/uti
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { SkeletonBlock } from "@/components/shared/Skeleton";
 import type { BusinessType, ModuleType } from "@/types";
 
 // ===== ICON MAPS =====
@@ -365,11 +366,11 @@ export default function AddBusinessPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-[rgb(var(--v2-sunken))] rounded-lg w-48" />
+      <div className="space-y-6">
+        <SkeletonBlock className="h-8 w-48" />
         <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-[rgb(var(--v2-sunken))] rounded-2xl" />
+            <SkeletonBlock key={i} className="h-32 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -379,22 +380,12 @@ export default function AddBusinessPage() {
   return (
     <div className="space-y-5 pb-24">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => (step > 1 ? setStep(step - 1) : router.back())}
-          className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors"
-        >
-          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">
-            {form.isMockup ? "Mock-up İşletme" : "Yeni İşletme"}
-          </h1>
-          <p className="text-sm text-[rgb(var(--v2-muted))]">
-            Adım {step}/{STEPS.length} — {STEPS[step - 1].label}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={form.isMockup ? "Mock-up İşletme" : "Yeni İşletme"}
+        subtitle={`Adım ${step}/${STEPS.length} — ${STEPS[step - 1].label}`}
+        onBack={() => (step > 1 ? setStep(step - 1) : router.back())}
+        fallbackHref="/dashboard"
+      />
 
       {/* Step Progress */}
       <div className="flex gap-1.5">

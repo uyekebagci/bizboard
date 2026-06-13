@@ -14,8 +14,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, Sparkles, Clock, Plus, RotateCcw, Banknote,
+  Loader2, Sparkles, Clock, Plus, RotateCcw, Banknote, CreditCard,
 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 import { useAppStore } from "@/lib/store";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { usePosDeals } from "@/hooks/usePosDeals";
@@ -57,21 +60,20 @@ export default function PosKarPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
-          <ArrowLeft size={20} className="text-surface-300" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">POS Kâr</h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">işlem girişi · kâr-payı şelalesi · T+1 yatış</p>
-        </div>
-        <button onClick={() => setShowDeal(true)}
-          className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold
-                     flex items-center gap-1.5 shrink-0">
-          <Plus size={15} /> İşlem Gir
-        </button>
-      </div>
+      <PageHeader
+        title="POS Kâr"
+        subtitle="işlem girişi · kâr-payı şelalesi · T+1 yatış"
+        icon={CreditCard}
+        fallbackHref="/dashboard"
+        actions={
+          <button
+            onClick={() => setShowDeal(true)}
+            className="v2-btn v2-btn--ink v2-press text-sm shrink-0 flex items-center gap-1.5"
+          >
+            <Plus size={15} aria-hidden="true" /> İşlem Gir
+          </button>
+        }
+      />
 
       {/* Yatış bekleyen (kaçak adayı) */}
       {pending.length > 0 && (
@@ -108,15 +110,13 @@ export default function PosKarPage() {
 
       {/* POS işlem listesi */}
       {loading && deals.length === 0 ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={4} />
       ) : deals.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <Sparkles size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz POS işlemi yok</p>
-          <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">&quot;İşlem Gir&quot; ile başla.</p>
-        </div>
+        <EmptyState
+          icon={Sparkles}
+          title="Henüz POS işlemi yok"
+          description='"İşlem Gir" ile başla.'
+        />
       ) : (
         <section className="space-y-2">
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">

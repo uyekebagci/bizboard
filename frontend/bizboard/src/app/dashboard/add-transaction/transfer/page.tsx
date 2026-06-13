@@ -22,9 +22,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, ArrowLeftRight, ArrowDownLeft, ArrowUpRight, Loader2,
+  ArrowLeftRight, ArrowDownLeft, ArrowUpRight, Loader2,
   AlertTriangle, CheckCircle2, Building2,
 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
@@ -79,27 +80,21 @@ export default function TransferModePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 pb-24">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={() => router.replace("/dashboard/add-transaction")}
-            className="v2-press p-2 -ml-2 rounded-xl v2-sunken hover:border-[rgb(var(--accent))]/50 transition-colors"
-            aria-label="Tip seçimine dön"
+      <PageHeader
+        title="Yeni Transfer"
+        icon={ArrowLeftRight}
+        iconClassName="bg-purple-500/15 border-purple-500/30 text-purple-600 dark:text-purple-300"
+        onBack={() => router.replace("/dashboard/add-transaction")}
+        fallbackHref="/dashboard/add-transaction"
+        actions={
+          <Link
+            href="/dashboard"
+            className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] whitespace-nowrap"
           >
-            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-          </button>
-          <div className="flex items-center gap-2 min-w-0">
-            <ArrowLeftRight size={20} className="text-purple-600 dark:text-purple-300 shrink-0" />
-            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">Yeni Transfer</h1>
-          </div>
-        </div>
-        <Link
-          href="/dashboard"
-          className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] whitespace-nowrap"
-        >
-          ← Ana Sayfa
-        </Link>
-      </div>
+            Ana Sayfa
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
         {MODES.map((m) => {
