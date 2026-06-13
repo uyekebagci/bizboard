@@ -39,8 +39,9 @@ export function Stat({
 }
 
 export function Footer({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
+  // UI v2: v2 token'larıyla — Widget primitive kabuğuyla tutarlı alt şerit.
   return (
-    <div className="px-4 py-2 border-t border-surface-700/60 flex items-center justify-between text-[11px] text-surface-400 bg-surface-800/40">
+    <div className="px-4 py-2 border-t border-[rgb(var(--v2-border))] flex items-center justify-between text-[11px] text-[rgb(var(--v2-muted))] bg-[rgb(var(--v2-sunken))]/40">
       <span>{left}</span>
       <span>{right}</span>
     </div>

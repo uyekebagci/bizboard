@@ -32,6 +32,37 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Added
 
+- **UI v2 (Daxa) Widget primitive — TEK KAYNAK pano kabuğu + işletme-detay
+  widget'ları + tıklanabilir metrik detayları.** Sayfa-sayfa restyle yerine
+  tek bir parent `Widget` primitive'i + global `.v2-widget*` sınıfları: tüm
+  pano widget'ları aynı kabuğu (yüzey/radius/border/gölge/padding) bundan alır;
+  ileride tek yer değişince hepsi takip eder.
+  - **Primitive** (`components/v2/Widget.tsx` + globals.css `.v2-widget`,
+    `.v2-widget--hero`, `.v2-widget--interactive`, `.v2-widget-header`,
+    `.v2-widget-title`, `.v2-widget-body`): override edilemez tutarlı kabuk;
+    sabit yerleşim → sol başlık (+subtitle/icon), **sağ-üst aksiyon slotu**
+    (tüm butonlar/rozetler hep burada), body içerik. Özelleştirme yalnız
+    slot/prop ile (`title`/`subtitle`/`icon`/`actions`/`variant`/`children`).
+    Tıklanabilirlik: `onClick` (detay modalı) veya `href` (deep-link) →
+    tutarlı hover-lift + a11y. Detay-modal kabuğu primitive seviyesinde
+    (`WidgetDetailModal` v2'den re-export; Daxa yüzey + ESC/backdrop + kapat).
+  - **İşletme-detay (`/business/[id]`) widget'ları primitive'e geçirildi:**
+    KONSOLİDE/Genel-Kasa kartı (eski mor/indigo gradient → `hero` varyantı:
+    solid koyu ink + lime accent), Bugünün Kasa Durumu (Günü Kapat aksiyon
+    slotuna), Son İşlemler (Transfer/POS/+Yeni İşlem aksiyon slotuna), Hesaptan
+    Harcama, Alt Kasalar, Para Bulunan Hesaplar, POS Cihazları, Yaklaşan
+    Çekler/Hatırlatmalar, Elde Tutulan Nakitler, Hızlı İşlemler. Tümü tek-tip
+    Daxa kabuğu; veri/işlevsellik (Günü-Kapat, Para-İzi, filtre, sansür)
+    korundu. `shared.tsx` Footer v2 token'larına geçti.
+  - **Dashboard (`/dashboard`) metrik kartları tıklanabilir → detay tablosu:**
+    Net Kar / Toplam Gelir / Toplam Gider / İşletme MetricCard'ları tıklanınca
+    işletme-bazlı kırılım tablosu açılır (`PortfolioMetricDetail` +
+    `WidgetDetailModal`); her satır ilgili işletme detayına deep-link.
+    `StackInsightCard` satırları tıklanabilir hale geldi (Net kâr/Sabit
+    gider/İşletme → ilgili detay modalı; Bekleyen borç → /verecekler, Bekleyen
+    alacak → /alacaklar). Salt görsel/okunur; mevcut portföy verisinden türetilir.
+  - Çift tema (dark default + light), a11y, reduced-motion korunur; `tsc` +
+    `next build` temiz.
 - **Dashboard grafikleri gerçek veriye bağlandı — "Haftalık Hareket" bar-chart'ı
   ve MetricCard delta yüzdeleri artık placeholder değil.** Önceden dashboard'da
   haftalık-trend barları (sabit `42,55,38,...`) ve metrik delta'ları (`+12.4%`,

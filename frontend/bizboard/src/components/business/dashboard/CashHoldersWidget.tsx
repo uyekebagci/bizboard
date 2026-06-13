@@ -16,6 +16,7 @@ import { UserCircle2, Wallet, Plus, ArrowRight, Info } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { Widget } from "@/components/v2";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
 
 interface CashHolderItem {
@@ -73,30 +74,20 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
 
   return (
     <>
-      <section className="glass-card overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-              <Wallet size={14} className="text-amber-300" />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-surface-100">
-                Elde Tutulan Nakitler
-              </h2>
-              <p className="text-[10px] text-surface-400">
-                Çalışan/saha şefi vb. kişilerde tutulan nakit
-              </p>
-            </div>
-          </div>
+      <Widget
+        title="Elde Tutulan Nakitler"
+        subtitle="Çalışan/saha şefi vb. kişilerde tutulan nakit"
+        icon={Wallet}
+        flush
+        actions={
           <Link
             href="/dashboard/hesaplar"
             className="text-[11px] text-amber-300 hover:text-amber-200 inline-flex items-center gap-1"
           >
             Tümünü Yönet <ArrowRight size={11} />
           </Link>
-        </div>
-
+        }
+      >
         {/* Body */}
         {loading ? (
           <div className="p-4 text-center text-xs text-surface-400">Yükleniyor...</div>
@@ -115,7 +106,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
           </div>
         ) : (
           <>
-            <div className="divide-y divide-surface-700">
+            <div className="divide-y divide-[rgb(var(--v2-border))]">
               {summary!.items.map((it) => {
                 const display = it.holder_name || it.name;
                 return (
@@ -142,7 +133,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
             </div>
 
             {/* Total + Add CTA */}
-            <div className="px-4 py-2.5 border-t border-surface-700 bg-surface-700/20 flex items-center justify-between gap-3">
+            <div className="px-4 py-2.5 border-t border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))]/30 flex items-center justify-between gap-3">
               <div className="text-[11px] text-surface-300">
                 TOPLAM: <strong>{summary!.total_count}</strong> kişide
               </div>
@@ -161,13 +152,13 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
             </div>
 
             {/* Şeffaflık notu — çift sayım korkusunu önler */}
-            <div className="px-4 py-2 border-t border-surface-700 text-[10px] text-surface-400 flex items-center gap-1.5">
+            <div className="px-4 py-2 border-t border-[rgb(var(--v2-border))] text-[10px] text-surface-400 flex items-center gap-1.5">
               <Info size={11} className="text-amber-400 shrink-0" />
               <span>Bu tutarlar <strong>Ana Kasa</strong> toplamına dahildir — çift sayım yok.</span>
             </div>
           </>
         )}
-      </section>
+      </Widget>
 
       {/* Create modal — tip kilitli CASH_HOLDER yarat (ANY içinden kullanıcı seçer). */}
       {showCreate && (
@@ -176,10 +167,10 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
           onClick={() => setShowCreate(false)}
         >
           <div
-            className="glass-card max-w-md w-full max-h-[90vh] overflow-y-auto"
+            className="v2-card max-w-md w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-surface-700 flex items-center gap-2">
+            <div className="p-4 border-b border-[rgb(var(--v2-border))] flex items-center gap-2">
               <UserCircle2 size={16} className="text-amber-300" />
               <h3 className="text-sm font-semibold text-surface-100">
                 Kişide Nakit Ekle

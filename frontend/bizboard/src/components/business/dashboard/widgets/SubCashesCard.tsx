@@ -19,10 +19,11 @@ import { Banknote, ChevronRight } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
 import type { ConsolidatedDashboard } from "@/types";
+import { Widget } from "@/components/v2";
 import { WidgetDetailModal } from "../WidgetDetailModal";
 import { SubCashDetailContent } from "@/components/bank/SubCashDetailContent";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
-import { SectionTitle, Footer } from "./shared";
+import { Footer } from "./shared";
 
 export function SubCashesCard({
   d, onChange,
@@ -95,34 +96,37 @@ export function SubCashesCard({
 
   return (
     <>
-    <section
+    <Widget
+      title="Alt Kasalar"
+      icon={Banknote}
+      flush
       onClick={() => setShowModal(true)}
-      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-emerald-500/40 transition-all"
-    >
-      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
-        <SectionTitle icon={Banknote} label="Alt Kasalar" inline />
-        {subCashes.length > 0 && (
+      ariaLabel="Alt kasalar detayını aç"
+      actions={
+        subCashes.length > 0 ? (
           <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
             {subCashes.length}
           </span>
-        )}
-      </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { setShowModal(true); setView("CREATE"); }}
+            className="text-[11px] font-semibold px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center gap-1"
+          >
+            <Banknote size={11} />
+            + Kasa
+          </button>
+        )
+      }
+    >
       {subCashes.length === 0 ? (
         <div className="px-4 py-6 text-center">
           <Banknote size={20} className="mx-auto text-surface-500 mb-1.5" />
           <p className="text-xs text-surface-400">Henüz alt kasa yok</p>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); setShowModal(true); setView("CREATE"); }}
-            className="mt-2 text-[11px] font-semibold px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center gap-1"
-          >
-            <Banknote size={11} />
-            + İlk Kasayı Oluştur
-          </button>
         </div>
       ) : (
         <>
-          <div className="divide-y divide-surface-700">
+          <div className="divide-y divide-[rgb(var(--v2-border))]">
             {subCashes.map((s) => {
               const inc = incomeMap[s.id];
               return (
@@ -163,7 +167,7 @@ export function SubCashesCard({
           />
         </>
       )}
-    </section>
+    </Widget>
 
     <WidgetDetailModal
       open={showModal}

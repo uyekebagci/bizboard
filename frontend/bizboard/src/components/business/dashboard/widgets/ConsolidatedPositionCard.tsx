@@ -2,12 +2,16 @@
 
 // ───────────────────────── 1. KONSOLİDE POZİSYON ─────────────────────────
 // (R3 god-component bolme: ConsolidatedWidgets.tsx'ten cikarildi)
+// UI v2 (Daxa) geçiş: eski mor/indigo gradient → Widget primitive `hero`
+// varyantı (solid koyu ink zemin + lime accent). Kabuk/yüzey global'den gelir;
+// bu dosya yalnız İÇERİĞİ (body) tanımlar.
 
 import { useEffect, useState } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, maskAmount, cn } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
+import { Widget } from "@/components/v2";
 import { WidgetDetailModal } from "../WidgetDetailModal";
-import { DetailRow, PositionStat } from "./shared";
+import { DetailRow } from "./shared";
 
 export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   const c = d.consolidated;
@@ -35,68 +39,97 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   const genelKasa = (c.total_cash ?? 0) + (c.total_bank_balance ?? 0);
   return (
     <>
-    <section
-      onClick={() => setShowDetail(true)}
-      className="sheen rounded-2xl p-5 text-white cursor-pointer hover:ring-1 hover:ring-brand-400 transition-all flex flex-col h-full relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg,#4263eb 0%,#4c6ef5 42%,#6741d9 100%)" }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowDetail(true); } }}
-    >
-      <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-2">Konsolide DGR</p>
-
-      {/* Genel Kasa — tek primary metric (nakit + banka). */}
-      <div>
-        <p className="text-brand-200 text-[10px] uppercase tracking-wider mb-0.5">Genel Kasa</p>
-        <p className="num text-2xl font-bold truncate" title={formatCurrency(genelKasa, "TRY")}>
-          {formatCurrency(genelKasa, "TRY")}
-        </p>
-        <p className="mt-1 text-[10px] text-brand-200">nakit + banka</p>
-      </div>
-
-      {/* Sub-stat row: 3 küçük metric */}
-      <div className="mt-3 pt-3 border-t border-brand-600/50 grid grid-cols-3 gap-2 text-[10px]">
-        <PositionStat label="Alacaklar" value={c.receivables} tone="positive" censor={receivableCensor} />
-        <PositionStat label="Verecekler" value={-Math.abs(c.payables)} tone="negative" censor={payableCensor} />
-        {pendingPos > 0 ? (
+      <Widget
+        title="Konsolide DGR"
+        variant="hero"
+        flush
+        onClick={() => setShowDetail(true)}
+        ariaLabel="Konsolide pozisyon detayını aç"
+        className="h-full"
+      >
+        <div className="p-5 flex flex-col h-full">
+          {/* Genel Kasa — tek primary metric (nakit + banka). */}
           <div>
-            <p className="text-amber-200 uppercase tracking-wider">Bekleyen POS</p>
-            <p className="text-sm font-bold text-amber-200 mt-0.5">
-              +{formatCurrency(pendingPos, "TRY")}
+            <p className="text-[10px] uppercase tracking-wider mb-0.5 text-[rgb(var(--v2-card))]/55">
+              Genel Kasa
             </p>
+            <p
+              className="v2-metric text-3xl truncate text-[rgb(var(--v2-card))]"
+              title={formatCurrency(genelKasa, "TRY")}
+            >
+              {formatCurrency(genelKasa, "TRY")}
+            </p>
+            <p className="mt-1 text-[10px] text-[rgb(var(--v2-card))]/45">nakit + banka</p>
           </div>
-        ) : (
-          <PositionStat
-            label="KK + Kredi"
-            value={-(Math.abs(c.credit_card_debt) + Math.abs(c.loan_principal))}
-            tone="negative"
-            censor={payableCensor}
-          />
-        )}
-      </div>
-    </section>
-    <WidgetDetailModal
-      open={showDetail}
-      onClose={() => setShowDetail(false)}
-      title="Konsolide Pozisyon — Detay"
-      subtitle="DGR'nin tüm finansal pozisyonu"
-      size="md"
-    >
-      <div className="space-y-3 text-sm text-surface-200">
-        <DetailRow label="Toplam Nakit (kasa + cebde)" value={c.total_cash} tone="pos" />
-        <DetailRow label="Banka Bakiyeleri (CHECKING+SAVINGS)" value={c.total_bank_balance ?? 0} tone="neutral" />
-        <DetailRow label="Bekleyen POS Tahsilatı (settle bekliyor)" value={pendingPos} tone={pendingPos > 0 ? "warn" : "neutral"} />
-        <DetailRow label="Alacaklar (DGR'ye gelecek)" value={c.receivables} tone="pos" censor={receivableCensor} />
-        <DetailRow label="Verecekler (DGR'den gidecek)" value={-Math.abs(c.payables)} tone="neg" censor={payableCensor} />
-        <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" censor={payableCensor} />
-        <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" censor={payableCensor} />
-        {/* Beta v1.1: komisyon kaldırıldı — formül sadeleşti. */}
-        <p className="text-[11px] text-surface-400 pt-2">
-          <strong>Genel Kasa</strong> = nakit + banka bakiyeleri (fiziksel para).
-          Bekleyen POS settle olunca Genel Kasa'ya geçer.
-        </p>
-      </div>
-    </WidgetDetailModal>
+
+          {/* Sub-stat row: 3 küçük metric */}
+          <div className="mt-3 pt-3 border-t border-[rgb(var(--v2-card))]/12 grid grid-cols-3 gap-2 text-[10px]">
+            <HeroStat label="Alacaklar" value={c.receivables} tone="positive" censor={receivableCensor} />
+            <HeroStat label="Verecekler" value={-Math.abs(c.payables)} tone="negative" censor={payableCensor} />
+            {pendingPos > 0 ? (
+              <div>
+                <p className="uppercase tracking-wider text-[rgb(var(--accent-bright))]/90">Bekleyen POS</p>
+                <p className="text-sm font-bold mt-0.5 text-[rgb(var(--accent-bright))]">
+                  +{formatCurrency(pendingPos, "TRY")}
+                </p>
+              </div>
+            ) : (
+              <HeroStat
+                label="KK + Kredi"
+                value={-(Math.abs(c.credit_card_debt) + Math.abs(c.loan_principal))}
+                tone="negative"
+                censor={payableCensor}
+              />
+            )}
+          </div>
+        </div>
+      </Widget>
+      <WidgetDetailModal
+        open={showDetail}
+        onClose={() => setShowDetail(false)}
+        title="Konsolide Pozisyon — Detay"
+        subtitle="DGR'nin tüm finansal pozisyonu"
+        size="md"
+      >
+        <div className="space-y-3 text-sm text-surface-200">
+          <DetailRow label="Toplam Nakit (kasa + cebde)" value={c.total_cash} tone="pos" />
+          <DetailRow label="Banka Bakiyeleri (CHECKING+SAVINGS)" value={c.total_bank_balance ?? 0} tone="neutral" />
+          <DetailRow label="Bekleyen POS Tahsilatı (settle bekliyor)" value={pendingPos} tone={pendingPos > 0 ? "warn" : "neutral"} />
+          <DetailRow label="Alacaklar (DGR'ye gelecek)" value={c.receivables} tone="pos" censor={receivableCensor} />
+          <DetailRow label="Verecekler (DGR'den gidecek)" value={-Math.abs(c.payables)} tone="neg" censor={payableCensor} />
+          <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" censor={payableCensor} />
+          <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" censor={payableCensor} />
+          {/* Beta v1.1: komisyon kaldırıldı — formül sadeleşti. */}
+          <p className="text-[11px] text-surface-400 pt-2">
+            <strong>Genel Kasa</strong> = nakit + banka bakiyeleri (fiziksel para).
+            Bekleyen POS settle olunca Genel Kasa'ya geçer.
+          </p>
+        </div>
+      </WidgetDetailModal>
     </>
+  );
+}
+
+/**
+ * Hero (koyu ink zemin) kart içi alt-metrik. {@link PositionStat}'ın hero
+ * zeminine uyarlanmış versiyonu — pozitif=lime accent, negatif=kırmızı, koyu
+ * zeminde okunur. Borç sansürü {@link DetailRow} censor mantığıyla aynı.
+ */
+function HeroStat({ label, value, tone, censor }: {
+  label: string; value: number; tone: "positive" | "negative"; censor?: boolean;
+}) {
+  // value < 0 ise formatCurrency zaten "-" prefix verir; defensive minus.
+  const displayValue = tone === "negative" && value > 0 ? -value : value;
+  return (
+    <div>
+      <p className="uppercase tracking-wider text-[rgb(var(--v2-card))]/50">{label}</p>
+      <p className={cn(
+        "text-sm font-bold mt-0.5",
+        tone === "negative" ? "text-red-300" : "text-[rgb(var(--accent-bright))]",
+        censor && "select-none",
+      )}>
+        {maskAmount(displayValue, !!censor, "TRY")}
+      </p>
+    </div>
   );
 }

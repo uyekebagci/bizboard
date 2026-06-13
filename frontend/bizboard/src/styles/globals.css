@@ -874,6 +874,109 @@
   }
 
   /* ════════════════════════════════════════════════════════════
+   * UI v2 — WIDGET PRIMITIVE (TEK KAYNAK / single source of truth)
+   * ─────────────────────────────────────────────────────────────
+   * Tüm pano widget'larının ortak kabuğu. Widget bileşenleri kendi
+   * kart-CSS'ini HARDCODE ETMEZ — hepsi <Widget> primitive'i (veya
+   * doğrudan bu sınıfları) kullanır. Bir gün yüzey/başlık/border/gölge
+   * değişsin istenirse YALNIZ burayı (ve token'ları) değiştir → tüm
+   * widget'lar otomatik takip eder. Daxa dili: solid yüzey + ince
+   * border + çok-katmanlı yumuşak gölge (blur YOK) + lime accent + çift tema.
+   * ════════════════════════════════════════════════════════════ */
+
+  /* Widget kabuğu — .v2-card ile aynı yüzey dili, içerik akışı için flex-col.
+     overflow-hidden: başlık border'ı + liste/footer köşelerle hizalı kalır. */
+  .v2-widget {
+    background: rgb(var(--v2-card));
+    border: 1px solid rgb(var(--v2-border));
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    color: rgb(var(--body-text));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Tıklanabilir widget — hover'da accent halka + hafif lift. */
+  .v2-widget--interactive {
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      border-color 0.2s;
+  }
+  .v2-widget--interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: rgb(var(--accent) / 0.45);
+  }
+  .v2-widget--interactive:focus-visible {
+    outline: none;
+    border-color: rgb(var(--accent) / 0.6);
+    box-shadow: var(--shadow-card), 0 0 0 2px rgb(var(--accent) / 0.4);
+  }
+
+  /* Accent vurgulu widget (hero / highlight) — koyu ink zemin + lime aksan.
+     Konsolide / Genel Kasa gibi öne çıkan tek kart için. */
+  .v2-widget--hero {
+    background:
+      radial-gradient(140% 140% at 0% 0%, rgb(var(--v2-ink) / 0.97), rgb(var(--v2-ink)));
+    border-color: rgb(var(--v2-ink));
+    color: rgb(var(--v2-card));
+    box-shadow: var(--shadow-card), 0 0 0 1px rgb(var(--accent) / 0.18);
+  }
+  .v2-widget--hero.v2-widget--interactive:hover {
+    border-color: rgb(var(--accent) / 0.55);
+    box-shadow: var(--shadow-card-hover), 0 0 0 1px rgb(var(--accent) / 0.4);
+  }
+  .v2-widget--hero.v2-widget--interactive:focus-visible {
+    border-color: rgb(var(--accent) / 0.7);
+    box-shadow: var(--shadow-card), 0 0 0 2px rgb(var(--accent) / 0.55);
+  }
+
+  /* Widget başlığı — başlık metni (sol) + opsiyonel aksiyon (sağ) + alt border.
+     overflow-hidden kabuğuyla birlikte üst köşeler temiz kalır. */
+  .v2-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+  /* Hero varyantında border + ikon/metin renkleri açık zemine göre yumuşatılır. */
+  .v2-widget--hero .v2-widget-header {
+    border-bottom-color: rgb(var(--v2-card) / 0.14);
+  }
+
+  /* Başlık metni — küçük, yarı-bold; ikon + etiket. */
+  .v2-widget-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgb(var(--v2-ink));
+    min-width: 0;
+  }
+  .v2-widget--hero .v2-widget-title {
+    color: rgb(var(--v2-card) / 0.7);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Widget gövdesi — varsayılan iç padding; liste/divider içerikler kendi
+     padding'ini yönetebildiğinden .v2-widget-body--flush ile sıfırlanabilir. */
+  .v2-widget-body {
+    padding: 1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .v2-widget-body--flush {
+    padding: 0;
+  }
+
+  /* ════════════════════════════════════════════════════════════
    * UI v2 — SHELL (Sidebar + TopBar). Eski indigo/glass yüzeyleri
    * yerine Daxa solid/katmanlı yüzey + lime accent + yuvarlak.
    * İçerik alanıyla (.v2-card / .v2-app-bg) TUTARLI. Çift tema.

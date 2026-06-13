@@ -7,11 +7,12 @@ import { useState } from "react";
 import { Wallet, Banknote, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
+import { Widget } from "@/components/v2";
 import { WidgetDetailModal } from "../WidgetDetailModal";
 import { BankAccountDetailContent } from "@/components/bank/BankAccountDetailContent";
 import { SubCashDetailContent } from "@/components/bank/SubCashDetailContent";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
-import { SectionTitle, Footer, TypeBadge } from "./shared";
+import { Footer, TypeBadge } from "./shared";
 
 export function BankAccountsCard({
   d, compact, onChange,
@@ -45,13 +46,14 @@ export function BankAccountsCard({
     // v1.6.23.26: boş durumda bile widget tıklanabilir → CREATE_ANY ile aç
     return (
       <>
-      <section
+      <Widget
+        title="Para Bulunan Hesaplar"
+        icon={Wallet}
         onClick={() => { setShowDetail(true); setView("CREATE_ANY"); }}
-        className="glass-card glass-hover p-4 cursor-pointer hover:ring-1 hover:ring-blue-500/40 transition-all"
+        ariaLabel="Yeni hesap ekle"
       >
-        <SectionTitle icon={Wallet} label="Para Bulunan Hesaplar" />
-        <p className="text-xs text-surface-400 py-2">Henüz hesap eklenmemiş. + ekle</p>
-      </section>
+        <p className="text-xs text-[rgb(var(--v2-muted))] py-1">Henüz hesap eklenmemiş. + ekle</p>
+      </Widget>
       <WidgetDetailModal
         open={showDetail}
         onClose={resetModal}
@@ -122,14 +124,14 @@ export function BankAccountsCard({
 
   return (
     <>
-    <section
+    <Widget
+      title="Para Bulunan Hesaplar"
+      icon={Wallet}
+      flush
       onClick={() => setShowDetail(true)}
-      className="glass-card glass-hover overflow-hidden cursor-pointer hover:ring-1 hover:ring-blue-500/40 transition-all"
+      ariaLabel="Para bulunan hesaplar detayını aç"
     >
-      <div className="px-4 py-3 border-b border-surface-700">
-        <SectionTitle icon={Wallet} label="Para Bulunan Hesaplar" inline />
-      </div>
-      <div className="divide-y divide-surface-700">
+      <div className="divide-y divide-[rgb(var(--v2-border))]">
         {accounts.map((a) => (
           <div key={a.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0 flex items-center gap-2">
@@ -150,7 +152,7 @@ export function BankAccountsCard({
         ))}
       </div>
       <Footer left={`${accounts.length} hesap`} right={`Toplam ${formatCurrency(total, "TRY")}`} />
-    </section>
+    </Widget>
     <WidgetDetailModal
       open={showDetail}
       onClose={resetModal}
