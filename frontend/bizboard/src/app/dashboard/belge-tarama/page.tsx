@@ -113,14 +113,14 @@ export default function BelgeTaramaPage() {
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
-          <ArrowLeft size={20} className="text-surface-300" />
+          className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] transition-colors">
+          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <ScanLine size={20} className="text-brand-300" /> Belge Tarama (OCR)
+          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <ScanLine size={20} className="text-accent" /> Belge Tarama (OCR)
           </h1>
-          <p className="text-xs text-surface-400">
+          <p className="text-xs text-[rgb(var(--v2-muted))]">
             Fiş, çek/senet ve dekont fotoğrafı/PDF&apos;i yükleyin — alanlar otomatik çıkarılır
           </p>
         </div>
@@ -136,8 +136,8 @@ export default function BelgeTaramaPage() {
                 className={cn(
                   "px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors",
                   docType === dt.value
-                    ? "bg-brand-600/25 text-brand-200 border-brand-500/40"
-                    : "bg-surface-700 text-surface-400 border-surface-600 hover:bg-surface-600"
+                    ? "bg-accent/25 text-accent border-accent/40"
+                    : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))] hover:bg-[rgb(var(--v2-border))]"
                 )}>
                 {dt.label}
               </button>
@@ -154,21 +154,21 @@ export default function BelgeTaramaPage() {
           className={cn(
             "rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors",
             dragOver
-              ? "border-brand-500 bg-brand-500/10"
-              : "border-surface-600 hover:border-surface-500 bg-surface-900/30"
+              ? "border-accent bg-accent/10"
+              : "border-[rgb(var(--v2-border))] hover:border-[rgb(var(--v2-muted))] bg-[rgb(var(--v2-sunken))]"
           )}
         >
           <input ref={inputRef} type="file" accept={ACCEPT} multiple className="hidden"
             onChange={(e) => void handleFiles(Array.from(e.target.files ?? []))} />
           {uploading ? (
-            <div className="flex flex-col items-center gap-2 text-surface-300">
-              <Loader2 size={28} className="animate-spin text-brand-300" />
+            <div className="flex flex-col items-center gap-2 text-[rgb(var(--v2-muted))]">
+              <Loader2 size={28} className="animate-spin text-accent" />
               <p className="text-sm">Taranıyor...</p>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2 text-surface-400">
-              <UploadCloud size={32} className="text-brand-300" />
-              <p className="text-sm text-surface-200 font-medium">
+            <div className="flex flex-col items-center gap-2 text-[rgb(var(--v2-muted))]">
+              <UploadCloud size={32} className="text-accent" />
+              <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">
                 Sürükle-bırak veya tıkla
               </p>
               <p className="text-xs">JPEG, PNG, WebP, PDF · tek veya çoklu</p>
@@ -179,17 +179,17 @@ export default function BelgeTaramaPage() {
 
       {/* Tarama listesi */}
       <section className="space-y-2">
-        <p className="text-sm font-semibold text-white">Taramalar</p>
+        <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Taramalar</p>
         {loading && scans.length === 0 ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 size={24} className="animate-spin text-surface-400" />
+            <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
           </div>
         ) : scans.length === 0 ? (
-          <div className="glass-card p-6 text-center text-surface-400 text-sm">
+          <div className="v2-card p-6 text-center text-[rgb(var(--v2-muted))] text-sm">
             Henüz tarama yok — yukarıdan belge yükleyin
           </div>
         ) : (
-          <div className="glass-card divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {scans.map((s) => (
               <ScanRow key={s.id} scan={s}
                 onReview={() => setReviewScan(s)}
@@ -226,11 +226,11 @@ function ScanRow({ scan, onReview, onDiscard }: {
       <StatusIcon status={scan.status} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white">{docLabel}</span>
-          {amount && <span className="text-xs text-surface-300 num">{amount}</span>}
+          <span className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{docLabel}</span>
+          {amount && <span className="text-xs text-[rgb(var(--v2-muted))] num">{amount}</span>}
           <StatusBadge status={scan.status} />
         </div>
-        <p className="text-[11px] text-surface-400 truncate">
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
           {scan.ocr_provider ?? "—"}
           {scan.overall_confidence != null && ` · %${Math.round(scan.overall_confidence * 100)} güven`}
           {scan.result_entity_type && ` · ${scan.result_entity_type} oluşturuldu`}
@@ -239,19 +239,19 @@ function ScanRow({ scan, onReview, onDiscard }: {
       <div className="flex items-center gap-1.5 shrink-0">
         {pending && (
           <button onClick={onReview}
-            className="px-3 py-1.5 rounded-lg bg-brand-600/20 text-brand-300 border border-brand-600/30 text-xs font-semibold hover:bg-brand-600/30">
+            className="px-3 py-1.5 rounded-lg bg-accent/20 text-accent border border-accent/30 text-xs font-semibold hover:bg-accent/30">
             İncele & Onayla
           </button>
         )}
         {pending && (
           <button onClick={onDiscard} title="At"
-            className="p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-400">
+            className="p-1.5 rounded-lg bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))]">
             <Trash2 size={13} />
           </button>
         )}
         {scan.status === "CONFIRMED" && scan.file_url && (
           <a href={scan.file_url} target="_blank" rel="noreferrer"
-            className="p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300" title="Belge">
+            className="p-1.5 rounded-lg bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))]" title="Belge">
             <FileText size={13} />
           </a>
         )}
@@ -264,19 +264,19 @@ function StatusIcon({ status }: { status: string }) {
   if (status === "CONFIRMED") return <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />;
   if (status === "FAILED") return <XCircle size={18} className="text-red-400 shrink-0" />;
   if (status === "LOW_CONFIDENCE") return <AlertTriangle size={18} className="text-amber-400 shrink-0" />;
-  if (status === "DISCARDED") return <Trash2 size={18} className="text-surface-500 shrink-0" />;
-  return <ScanLine size={18} className="text-brand-300 shrink-0" />;
+  if (status === "DISCARDED") return <Trash2 size={18} className="text-[rgb(var(--v2-muted))] shrink-0" />;
+  return <ScanLine size={18} className="text-accent shrink-0" />;
 }
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    EXTRACTED: { label: "Hazır", cls: "bg-brand-500/15 text-brand-300 border-brand-500/25" },
-    LOW_CONFIDENCE: { label: "Düşük güven", cls: "bg-amber-500/15 text-amber-300 border-amber-500/25" },
-    FAILED: { label: "Okunamadı", cls: "bg-red-500/15 text-red-300 border-red-500/25" },
-    CONFIRMED: { label: "Onaylandı", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/25" },
-    DISCARDED: { label: "Atıldı", cls: "bg-surface-700/60 text-surface-400 border-surface-600" },
+    EXTRACTED: { label: "Hazır", cls: "bg-accent/15 text-accent border-accent/25" },
+    LOW_CONFIDENCE: { label: "Düşük güven", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25" },
+    FAILED: { label: "Okunamadı", cls: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/25" },
+    CONFIRMED: { label: "Onaylandı", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25" },
+    DISCARDED: { label: "Atıldı", cls: "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]" },
   };
-  const m = map[status] ?? { label: status, cls: "bg-surface-700/60 text-surface-400 border-surface-600" };
+  const m = map[status] ?? { label: status, cls: "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]" };
   return (
     <span className={cn("text-[9px] uppercase px-1.5 py-0.5 rounded-full border", m.cls)}>
       {m.label}

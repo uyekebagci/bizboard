@@ -67,8 +67,8 @@ export default function AssetsPage() {
           <Car size={20} className="text-amber-300" />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-surface-100">Ayni Varlık</h1>
-          <p className="text-xs text-surface-400">İş karşılığı alınan araba/mal · satışta P&amp;L&apos;e döner</p>
+          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Ayni Varlık</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">İş karşılığı alınan araba/mal · satışta P&amp;L&apos;e döner</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
@@ -79,19 +79,19 @@ export default function AssetsPage() {
       </div>
 
       <section className="grid grid-cols-2 gap-3">
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Portföy Defter Değeri</p>
-          <p className="mt-1 text-lg font-bold text-amber-300">{formatCurrency(totalBook, "TRY")}</p>
+        <div className="v2-card p-3">
+          <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase">Portföy Defter Değeri</p>
+          <p className="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">{formatCurrency(totalBook, "TRY")}</p>
         </div>
-        <div className="glass-card p-3 flex items-center justify-between">
+        <div className="v2-card p-3 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-surface-400 uppercase">Kayıt</p>
-            <p className="mt-1 text-lg font-bold text-surface-100">{list.length}</p>
+            <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase">Kayıt</p>
+            <p className="mt-1 text-lg font-bold text-[rgb(var(--v2-ink))]">{list.length}</p>
           </div>
           <button
             onClick={() => setIncludeSold((v) => !v)}
             className={cn("text-[11px] px-2 py-1 rounded-md border",
-              includeSold ? "bg-surface-700 text-surface-200 border-surface-500" : "text-surface-400 border-surface-600")}
+              includeSold ? "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] border-[rgb(var(--v2-border))]" : "text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]")}
           >
             <Archive size={11} className="inline mr-1" />Satılanlar
           </button>
@@ -109,23 +109,23 @@ export default function AssetsPage() {
           <Loader2 size={28} className="animate-spin text-amber-400" />
         </div>
       ) : list.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Car size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henüz ayni varlık yok</p>
+        <div className="v2-card p-8 text-center">
+          <Car size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-muted))] font-medium">Henüz ayni varlık yok</p>
         </div>
       ) : (
-        <section className="glass-card divide-y divide-surface-700">
+        <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {list.map((a) => (
             <div key={a.account_id} className={cn("p-4 flex items-center justify-between gap-3", !a.active && "opacity-60")}>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-surface-100 truncate">{a.name}</p>
-                <p className="text-[11px] text-surface-400 mt-0.5">
+                <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{a.name}</p>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
                   {a.active ? "Portföyde" : "Satıldı / elden çıktı"}
                   {a.notes && <> · {a.notes}</>}
                 </p>
               </div>
               <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
-                <p className="text-sm font-semibold text-amber-300">{formatCurrency(a.book_value, "TRY")}</p>
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">{formatCurrency(a.book_value, "TRY")}</p>
                 {a.active && (
                   <button
                     onClick={() => handleSell(a)}
@@ -177,8 +177,8 @@ function AcquireAssetModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4" onClick={onClose}>
-      <div className="glass-card w-full sm:max-w-md p-5 space-y-3 rounded-t-2xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-surface-100">Ayni Varlık Edin</h2>
+      <div className="modal-surface w-full sm:max-w-md p-5 space-y-3 rounded-t-2xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Ayni Varlık Edin</h2>
         <input placeholder="Varlık adı (ör. Ford Transit 2019)" value={name} onChange={(e) => setName(e.target.value)} className="field w-full" />
         <input type="number" inputMode="decimal" placeholder="Defter değeri" value={bookValue} onChange={(e) => setBookValue(e.target.value)} className="field w-full" />
         <select value={counterpartId} onChange={(e) => setCounterpartId(e.target.value)} className="field w-full">
@@ -186,7 +186,7 @@ function AcquireAssetModal({
           {counterparts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <div className="flex gap-2 pt-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-xl bg-surface-700 text-surface-300 text-sm font-medium">İptal</button>
+          <button onClick={onClose} className="flex-1 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] text-sm font-medium">İptal</button>
           <button onClick={submit} disabled={busy} className="flex-1 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold disabled:opacity-50">
             {busy ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Kaydet"}
           </button>

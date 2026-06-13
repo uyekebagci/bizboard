@@ -69,12 +69,12 @@ export default function BankaImportPage() {
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
-          <ArrowLeft size={20} className="text-surface-300" />
+          className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] transition-colors">
+          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-white">Banka Hareketi Import</h1>
-          <p className="text-xs text-surface-400">Manuel satır girişi (PDF otomatik okuma yakında)</p>
+          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Banka Hareketi Import</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">Manuel satır girişi (PDF otomatik okuma yakında)</p>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ export default function BankaImportPage() {
             ))}
           </select>
           <button onClick={handleCreate}
-            className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold flex items-center gap-1.5 shrink-0">
+            className="v2-btn v2-btn--accent px-4 py-2 text-sm font-semibold flex items-center gap-1.5 shrink-0">
             <Plus size={15} /> Aç
           </button>
         </div>
@@ -107,25 +107,25 @@ export default function BankaImportPage() {
 
       {/* Parti listesi */}
       <section className="space-y-2">
-        <p className="text-sm font-semibold text-white">Partiler</p>
+        <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Partiler</p>
         {loading && batches.length === 0 ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 size={24} className="animate-spin text-surface-400" />
+            <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
           </div>
         ) : batches.length === 0 ? (
-          <div className="glass-card p-6 text-center text-surface-400 text-sm">Henüz parti yok</div>
+          <div className="v2-card p-6 text-center text-[rgb(var(--v2-muted))] text-sm">Henüz parti yok</div>
         ) : (
-          <div className="glass-card divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {batches.map((b) => (
               <button key={b.id} onClick={() => reloadActive(b.id)}
-                className="w-full p-3 flex items-center justify-between gap-2 hover:bg-surface-700/40 text-left">
+                className="w-full p-3 flex items-center justify-between gap-2 hover:bg-[rgb(var(--v2-sunken))] text-left">
                 <div className="min-w-0">
-                  <p className="text-sm text-white truncate">{b.account_name}</p>
-                  <p className="text-[11px] text-surface-400">
+                  <p className="text-sm text-[rgb(var(--v2-ink))] truncate">{b.account_name}</p>
+                  <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                     {b.line_count} satır · {b.matched_count} eşleşti · {b.unexplained_count} açıklanamayan
                   </p>
                 </div>
-                <span className="text-[10px] uppercase text-surface-400">{b.status}</span>
+                <span className="text-[10px] uppercase text-[rgb(var(--v2-muted))]">{b.status}</span>
               </button>
             ))}
           </div>
@@ -164,23 +164,23 @@ function ActiveBatchPanel({ batch, categories, onAddLine, onCategorize, onFlag, 
   return (
     <section className="card p-4 space-y-3 border border-brand-500/20">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-white">{batch.account_name} — Satırlar</p>
-        <span className="text-[10px] uppercase text-surface-400">{batch.status}</span>
+        <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{batch.account_name} — Satırlar</p>
+        <span className="text-[10px] uppercase text-[rgb(var(--v2-muted))]">{batch.status}</span>
       </div>
 
       {/* Yeni satır */}
       <div className="grid grid-cols-12 gap-2">
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
           className="input col-span-4" />
-        <div className="col-span-3 flex rounded-xl overflow-hidden border border-surface-600">
+        <div className="col-span-3 flex rounded-xl overflow-hidden border border-[rgb(var(--v2-border))]">
           <button type="button" onClick={() => setDirection("IN")}
             className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-              direction === "IN" ? "bg-emerald-600/25 text-emerald-300" : "bg-surface-700 text-surface-400")}>
+              direction === "IN" ? "bg-emerald-600/25 text-emerald-700 dark:text-emerald-300" : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]")}>
             Giriş
           </button>
           <button type="button" onClick={() => setDirection("OUT")}
             className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-              direction === "OUT" ? "bg-red-600/25 text-red-300" : "bg-surface-700 text-surface-400")}>
+              direction === "OUT" ? "bg-red-600/25 text-red-700 dark:text-red-300" : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]")}>
             Çıkış
           </button>
         </div>
@@ -188,7 +188,7 @@ function ActiveBatchPanel({ batch, categories, onAddLine, onCategorize, onFlag, 
           onChange={(e) => setAmount(formatMoneyInput(e.target.value))}
           className="input col-span-3" placeholder="Tutar" />
         <button onClick={add} disabled={adding}
-          className="col-span-2 px-2 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold flex items-center justify-center">
+          className="v2-btn v2-btn--accent col-span-2 px-2 py-2 text-sm font-semibold flex items-center justify-center">
           {adding ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
         </button>
       </div>
@@ -196,9 +196,9 @@ function ActiveBatchPanel({ batch, categories, onAddLine, onCategorize, onFlag, 
         className="input" placeholder="Karşı taraf (kategori önerisi için)" />
 
       {/* Satır listesi */}
-      <div className="glass-card divide-y divide-surface-700">
+      <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
         {(batch.lines ?? []).length === 0 && (
-          <p className="p-3 text-xs text-surface-400">Satır yok — yukarıdan ekleyin.</p>
+          <p className="p-3 text-xs text-[rgb(var(--v2-muted))]">Satır yok — yukarıdan ekleyin.</p>
         )}
         {(batch.lines ?? []).map((l) => (
           <LineRow key={l.id} line={l} categories={categories}
@@ -223,23 +223,23 @@ function LineRow({ line, categories, onCategorize, onFlag, onPost }: {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className={cn("text-sm font-semibold num",
-            line.parsed_amount < 0 ? "text-red-300" : "text-emerald-300")}>
+            line.parsed_amount < 0 ? "text-red-700 dark:text-red-300" : "text-emerald-700 dark:text-emerald-300")}>
             {line.parsed_amount > 0 ? "+" : ""}{formatCurrency(line.parsed_amount, "TRY")}
           </span>
-          <span className="text-xs text-surface-300 truncate">{line.parsed_counterpart ?? "—"}</span>
+          <span className="text-xs text-[rgb(var(--v2-muted))] truncate">{line.parsed_counterpart ?? "—"}</span>
           {flagged && (
-            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/25">
+            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/25">
               Açıklanamayan
             </span>
           )}
           {posted && (
-            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
               Postalandı
             </span>
           )}
         </div>
         {line.suggested_category_name && !line.confirmed_category_id && (
-          <p className="text-[11px] text-brand-300 mt-0.5">Öneri: {line.suggested_category_name}</p>
+          <p className="text-[11px] text-accent mt-0.5">Öneri: {line.suggested_category_name}</p>
         )}
       </div>
       {!posted && (
@@ -252,11 +252,11 @@ function LineRow({ line, categories, onCategorize, onFlag, onPost }: {
             ))}
           </select>
           <button onClick={() => onFlag(line.id)} title="Açıklanamayan"
-            className="p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-amber-300">
+            className="p-1.5 rounded-lg bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-amber-700 dark:text-amber-300">
             <Flag size={13} />
           </button>
           <button onClick={() => onPost(line.id)} disabled={!line.confirmed_category_id} title="Ledger'a postala"
-            className="p-1.5 rounded-lg bg-brand-600/20 text-brand-300 border border-brand-600/30 disabled:opacity-40">
+            className="p-1.5 rounded-lg bg-accent/20 text-accent border border-accent/30 disabled:opacity-40">
             <Send size={13} />
           </button>
         </div>

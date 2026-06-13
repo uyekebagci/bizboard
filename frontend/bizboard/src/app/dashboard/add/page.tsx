@@ -366,10 +366,10 @@ export default function AddBusinessPage() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-surface-600 rounded-lg w-48" />
+        <div className="h-8 bg-[rgb(var(--v2-sunken))] rounded-lg w-48" />
         <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-surface-600 rounded-2xl" />
+            <div key={i} className="h-32 bg-[rgb(var(--v2-sunken))] rounded-2xl" />
           ))}
         </div>
       </div>
@@ -382,15 +382,15 @@ export default function AddBusinessPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => (step > 1 ? setStep(step - 1) : router.back())}
-          className="p-2 rounded-xl hover:bg-surface-600 transition-colors"
+          className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors"
         >
-          <ArrowLeft size={20} className="text-surface-300" />
+          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-surface-100">
+          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">
             {form.isMockup ? "Mock-up İşletme" : "Yeni İşletme"}
           </h1>
-          <p className="text-sm text-surface-400">
+          <p className="text-sm text-[rgb(var(--v2-muted))]">
             Adım {step}/{STEPS.length} — {STEPS[step - 1].label}
           </p>
         </div>
@@ -403,7 +403,7 @@ export default function AddBusinessPage() {
             key={s.id}
             className={cn(
               "flex-1 h-1.5 rounded-full transition-colors",
-              s.id <= step ? "bg-brand-600" : "bg-surface-600"
+              s.id <= step ? "bg-accent" : "bg-[rgb(var(--v2-sunken))]"
             )}
           />
         ))}
@@ -416,28 +416,28 @@ export default function AddBusinessPage() {
             setForm((prev) => ({ ...prev, isMockup: !prev.isMockup }))
           }
           className={cn(
-            "w-full card p-4 flex items-center gap-3 transition-all",
+            "w-full v2-card p-4 flex items-center gap-3 transition-all",
             form.isMockup
               ? "border-2 border-amber-400 bg-amber-500/15"
-              : "border-2 border-transparent hover:border-surface-600"
+              : "border-2 border-transparent hover:border-[rgb(var(--v2-border))]"
           )}
         >
           <div
             className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center",
-              form.isMockup ? "bg-amber-500/20" : "bg-surface-700"
+              form.isMockup ? "bg-amber-500/20" : "bg-[rgb(var(--v2-sunken))]"
             )}
           >
             <FlaskConical
               size={20}
-              className={form.isMockup ? "text-amber-300" : "text-surface-400"}
+              className={form.isMockup ? "text-amber-300" : "text-[rgb(var(--v2-muted))]"}
             />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-sm font-semibold text-surface-100">
+            <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
               Mock-up / Fizibilite Modu
             </p>
-            <p className="text-xs text-surface-400">
+            <p className="text-xs text-[rgb(var(--v2-muted))]">
               Yeni bir iş fikri analiz et, gerçek verilerle karıştırma
             </p>
           </div>
@@ -449,14 +449,14 @@ export default function AddBusinessPage() {
                 : "border-surface-300"
             )}
           >
-            {form.isMockup && <Check size={12} className="text-surface-100" />}
+            {form.isMockup && <Check size={12} className="text-[rgb(var(--v2-card))]" />}
           </div>
         </button>
       )}
 
       {/* Error */}
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/15 text-red-300 text-sm">
+        <div className="p-3 rounded-xl bg-red-500/15 text-red-700 dark:text-red-300 text-sm">
           {error}
         </div>
       )}
@@ -582,10 +582,10 @@ function StepBusinessType({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-surface-300 font-medium">
+      <p className="text-sm text-[rgb(var(--v2-muted))] font-medium">
         İşletme tipini gir
       </p>
-      <div className="card p-4 space-y-2 relative">
+      <div className="v2-card p-4 space-y-2 relative">
         <label className="label">Tip Adı *</label>
         <input
           type="text"
@@ -600,12 +600,12 @@ function StepBusinessType({
           className="input"
           autoFocus
         />
-        <p className="text-[10px] text-surface-400">
+        <p className="text-[10px] text-[rgb(var(--v2-muted))]">
           Bu ad raporlama ve filtrelemede kullanılır. Daha önce yazılan tipler
           autocomplete olarak gösterilir.
         </p>
         {open && filtered.length > 0 && (
-          <div className="absolute z-20 left-4 right-4 top-[100%] mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface-800 border border-surface-600 shadow-card-hover">
+          <div className="absolute z-20 left-4 right-4 top-[100%] mt-1 max-h-48 overflow-y-auto rounded-xl bg-[rgb(var(--v2-card))] border border-[rgb(var(--v2-border))] shadow-card-hover">
             {filtered.map((s) => (
               <button
                 key={s}
@@ -615,7 +615,7 @@ function StepBusinessType({
                   onBusinessTypeNameChange(s);
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-surface-200 hover:bg-surface-700"
+                className="w-full text-left px-3 py-2 text-sm text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))]"
               >
                 {s}
               </button>
@@ -714,10 +714,10 @@ function StepBasicInfo({
 
       {/* Mockup Analysis Fields */}
       {form.isMockup && (
-        <div className="space-y-4 pt-4 border-t border-surface-600">
+        <div className="space-y-4 pt-4 border-t border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2 mb-2">
             <Lightbulb size={18} className="text-amber-500" />
-            <p className="text-sm font-semibold text-surface-100">
+            <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
               Fizibilite Analizi
             </p>
           </div>
@@ -815,7 +815,7 @@ function StepModules({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-surface-300 font-medium">
+      <p className="text-sm text-[rgb(var(--v2-muted))] font-medium">
         Kullanmak istediğiniz modülleri seçin
       </p>
       <div className="space-y-2">
@@ -829,42 +829,42 @@ function StepModules({
               key={mod}
               onClick={() => toggleModule(mod)}
               className={cn(
-                "w-full card p-3.5 flex items-center gap-3 transition-all",
+                "w-full v2-card p-3.5 flex items-center gap-3 transition-all",
                 isActive
-                  ? "ring-2 ring-brand-600 bg-brand-500/15"
-                  : "hover:bg-surface-700"
+                  ? "ring-2 ring-accent bg-accent/15"
+                  : "hover:bg-[rgb(var(--v2-sunken))]"
               )}
             >
               <div
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center",
-                  isActive ? "bg-brand-500/20" : "bg-surface-700"
+                  isActive ? "bg-accent/20" : "bg-[rgb(var(--v2-sunken))]"
                 )}
               >
                 <Icon
                   size={20}
                   className={
-                    isActive ? "text-brand-300" : "text-surface-400"
+                    isActive ? "text-accent" : "text-[rgb(var(--v2-muted))]"
                   }
                 />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-surface-100">
+                <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                   {moduleLabelMap[mod] || mod}
                 </p>
                 {isDefault && (
-                  <p className="text-xs text-surface-400">Önerilen</p>
+                  <p className="text-xs text-[rgb(var(--v2-muted))]">Önerilen</p>
                 )}
               </div>
               <div
                 className={cn(
                   "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors",
                   isActive
-                    ? "bg-brand-600 border-brand-600"
-                    : "border-surface-300"
+                    ? "bg-accent border-accent"
+                    : "border-[rgb(var(--v2-muted))]"
                 )}
               >
-                {isActive && <Check size={12} className="text-surface-100" />}
+                {isActive && <Check size={12} className="text-[rgb(var(--v2-card))]" />}
               </div>
             </button>
           );
@@ -896,7 +896,7 @@ function StepPreview({
   return (
     <div className="space-y-4">
       {/* Business Card Preview */}
-      <div className="card p-5">
+      <div className="v2-card p-5">
         <div className="flex items-center gap-4">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center"
@@ -906,30 +906,30 @@ function StepPreview({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-surface-100">
+              <h2 className="text-lg font-bold text-[rgb(var(--v2-ink))]">
                 {form.name || "İsimsiz İşletme"}
               </h2>
               {form.isMockup && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium">
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-medium">
                   Mock-up
                 </span>
               )}
             </div>
-            <p className="text-sm text-surface-400">
+            <p className="text-sm text-[rgb(var(--v2-muted))]">
               {selectedType?.label || "Tip seçilmedi"}
             </p>
           </div>
         </div>
         {form.description && (
-          <p className="text-sm text-surface-300 mt-3 leading-relaxed">
+          <p className="text-sm text-[rgb(var(--v2-muted))] mt-3 leading-relaxed">
             {form.description}
           </p>
         )}
       </div>
 
       {/* Selected Modules */}
-      <div className="card p-4">
-        <p className="text-xs text-surface-400 font-medium uppercase tracking-wide mb-3">
+      <div className="v2-card p-4">
+        <p className="text-xs text-[rgb(var(--v2-muted))] font-medium uppercase tracking-wide mb-3">
           Aktif Modüller
         </p>
         <div className="flex flex-wrap gap-2">
@@ -938,7 +938,7 @@ function StepPreview({
             return (
               <span
                 key={mod}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500/15 text-brand-300 text-xs font-medium"
+                className="v2-chip-accent inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
               >
                 <ModIcon size={14} />
                 {moduleLabelMap[mod] || mod}
@@ -952,18 +952,18 @@ function StepPreview({
 
       {/* v1.5.8: Wizard adim 4-5 ozet */}
       {(form.setupCostItems.length > 0 || form.monthlyFixedCostItems.some((it) => it.applicable && parseMoneyInput(it.amount) > 0)) && (
-        <div className="card p-4 space-y-4">
-          <p className="text-xs text-surface-400 font-medium uppercase tracking-wide">
+        <div className="v2-card p-4 space-y-4">
+          <p className="text-xs text-[rgb(var(--v2-muted))] font-medium uppercase tracking-wide">
             Atomic Oluşturulacak Kalemler
           </p>
 
           {form.setupCostItems.filter((it) => it.name.trim() && parseMoneyInput(it.amount) > 0).length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] uppercase tracking-wide text-surface-400">
+                <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--v2-muted))]">
                   Kuruluş tx&apos;leri
                 </p>
-                <p className="text-xs font-semibold text-red-400">
+                <p className="text-xs font-semibold text-red-700 dark:text-red-400">
                   {formatCurrency(
                     form.setupCostItems.reduce(
                       (s, it) => s + parseMoneyInput(it.amount), 0
@@ -980,8 +980,8 @@ function StepPreview({
                       key={it.id}
                       className="flex items-center justify-between text-xs bg-red-500/10 px-2 py-1.5 rounded"
                     >
-                      <span className="text-surface-200 truncate">{it.name}</span>
-                      <span className="text-surface-300 font-medium">
+                      <span className="text-[rgb(var(--v2-ink))] truncate">{it.name}</span>
+                      <span className="text-[rgb(var(--v2-muted))] font-medium">
                         {formatCurrency(parseMoneyInput(it.amount), form.currency)}
                       </span>
                     </div>
@@ -993,10 +993,10 @@ function StepPreview({
           {form.monthlyFixedCostItems.filter((it) => it.applicable && parseMoneyInput(it.amount) > 0).length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] uppercase tracking-wide text-surface-400">
+                <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--v2-muted))]">
                   Aylık sabit gider
                 </p>
-                <p className="text-xs font-semibold text-amber-400">
+                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
                   {formatCurrency(
                     form.monthlyFixedCostItems
                       .filter((it) => it.applicable)
@@ -1013,12 +1013,12 @@ function StepPreview({
                       key={it.category}
                       className="flex items-center justify-between text-xs bg-amber-500/10 px-2 py-1.5 rounded"
                     >
-                      <span className="text-surface-200 truncate">
+                      <span className="text-[rgb(var(--v2-ink))] truncate">
                         {it.category === "OTHER"
                           ? (it.customName?.trim() || it.label)
                           : it.label}
                       </span>
-                      <span className="text-surface-300 font-medium">
+                      <span className="text-[rgb(var(--v2-muted))] font-medium">
                         {formatCurrency(parseMoneyInput(it.amount), form.currency)}
                       </span>
                     </div>
@@ -1027,7 +1027,7 @@ function StepPreview({
             </div>
           )}
 
-          <p className="text-[10px] text-surface-500 pt-2 border-t border-surface-700">
+          <p className="text-[10px] text-[rgb(var(--v2-muted))] pt-2 border-t border-[rgb(var(--v2-border))]">
             Bu kalemler işletme oluşturma akışına <strong>atomic</strong> olarak dahildir —
             biri patlarsa hiçbir kayıt oluşturulmaz.
           </p>
@@ -1038,41 +1038,41 @@ function StepPreview({
 
       {/* Mockup Analysis Preview */}
       {form.isMockup && (
-        <div className="glass-card p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/10 !border-amber-500/30">
+        <div className="v2-card p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30">
           <div className="flex items-center gap-2 mb-4">
-            <Calculator size={18} className="text-amber-300" />
-            <p className="text-sm font-bold text-surface-100">
+            <Calculator size={18} className="text-amber-700 dark:text-amber-300" />
+            <p className="text-sm font-bold text-[rgb(var(--v2-ink))]">
               Fizibilite Özeti
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-surface-400">Tahmini Aylık Gelir</p>
-              <p className="text-lg font-bold text-green-300 mt-0.5">
+              <p className="text-xs text-[rgb(var(--v2-muted))]">Tahmini Aylık Gelir</p>
+              <p className="text-lg font-bold text-green-700 dark:text-green-300 mt-0.5">
                 {formatCurrency(form.mockupEstimatedRevenue, form.currency)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-surface-400">Tahmini Aylık Gider</p>
-              <p className="text-lg font-bold text-red-300 mt-0.5">
+              <p className="text-xs text-[rgb(var(--v2-muted))]">Tahmini Aylık Gider</p>
+              <p className="text-lg font-bold text-red-700 dark:text-red-300 mt-0.5">
                 {formatCurrency(form.mockupEstimatedExpense, form.currency)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-surface-400">Tahmini Net Kâr</p>
+              <p className="text-xs text-[rgb(var(--v2-muted))]">Tahmini Net Kâr</p>
               <p
                 className={cn(
                   "text-lg font-bold mt-0.5",
-                  estimatedProfit >= 0 ? "text-brand-300" : "text-red-300"
+                  estimatedProfit >= 0 ? "text-accent" : "text-red-700 dark:text-red-300"
                 )}
               >
                 {formatCurrency(estimatedProfit, form.currency)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-surface-400">Başlangıç Yatırımı</p>
-              <p className="text-lg font-bold text-surface-200 mt-0.5">
+              <p className="text-xs text-[rgb(var(--v2-muted))]">Başlangıç Yatırımı</p>
+              <p className="text-lg font-bold text-[rgb(var(--v2-ink))] mt-0.5">
                 {formatCurrency(form.mockupInitialInvestment, form.currency)}
               </p>
             </div>
@@ -1082,27 +1082,27 @@ function StepPreview({
           {roiMonths !== null && (
             <div className="mt-4 pt-4 border-t border-amber-500/30">
               <div className="flex items-center gap-2">
-                <Sparkles size={16} className="text-amber-300" />
-                <p className="text-sm text-surface-200">
+                <Sparkles size={16} className="text-amber-700 dark:text-amber-300" />
+                <p className="text-sm text-[rgb(var(--v2-ink))]">
                   Tahmini geri dönüş süresi:{" "}
-                  <span className="font-bold text-surface-100">
+                  <span className="font-bold text-[rgb(var(--v2-ink))]">
                     {roiMonths} ay
                   </span>
                 </p>
               </div>
               {roiMonths <= 6 && (
-                <p className="text-xs text-green-300 mt-1 flex items-center gap-1">
+                <p className="text-xs text-green-700 dark:text-green-300 mt-1 flex items-center gap-1">
                   <TrendingUp size={12} />
                   Hızlı geri dönüş — iyi bir yatırım fırsatı olabilir
                 </p>
               )}
               {roiMonths > 6 && roiMonths <= 18 && (
-                <p className="text-xs text-amber-300 mt-1">
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
                   Orta vadeli geri dönüş — detaylı planlama önerilir
                 </p>
               )}
               {roiMonths > 18 && (
-                <p className="text-xs text-red-300 mt-1 flex items-center gap-1">
+                <p className="text-xs text-red-700 dark:text-red-300 mt-1 flex items-center gap-1">
                   <TrendingDown size={12} />
                   Uzun vadeli geri dönüş — risk analizi yapmanız önerilir
                 </p>
@@ -1113,8 +1113,8 @@ function StepPreview({
           {/* Notes */}
           {form.mockupNotes && (
             <div className="mt-4 pt-4 border-t border-amber-500/30">
-              <p className="text-xs text-surface-400 mb-1">Notlar</p>
-              <p className="text-sm text-surface-200 leading-relaxed">
+              <p className="text-xs text-[rgb(var(--v2-muted))] mb-1">Notlar</p>
+              <p className="text-sm text-[rgb(var(--v2-ink))] leading-relaxed">
                 {form.mockupNotes}
               </p>
             </div>
@@ -1123,8 +1123,8 @@ function StepPreview({
       )}
 
       {/* Info */}
-      <div className="card p-4 bg-surface-700">
-        <p className="text-xs text-surface-400">
+      <div className="v2-card p-4 bg-[rgb(var(--v2-sunken))]">
+        <p className="text-xs text-[rgb(var(--v2-muted))]">
           <Building2
             size={14}
             className="inline-block mr-1 -mt-0.5 text-surface-400"
@@ -1152,10 +1152,10 @@ function StepSetupCosts({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm text-surface-300 font-medium">
+        <p className="text-sm text-[rgb(var(--v2-muted))] font-medium">
           Kuruluş / açılış maliyetleri
         </p>
-        <p className="text-xs text-surface-400 mt-1">
+        <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
           Bu işletmeyi kurmak için tek seferlik harcamalar. Her kalem ayrı bir
           transaction olarak yazılır ve raporda &quot;kurulum&quot; olarak işaretlenir.
           Bu adım opsiyonel — sonradan da eklenebilir.
@@ -1163,8 +1163,8 @@ function StepSetupCosts({
       </div>
 
       {items.length === 0 ? (
-        <div className="card p-6 text-center">
-          <p className="text-sm text-surface-400 mb-3">
+        <div className="v2-card p-6 text-center">
+          <p className="text-sm text-[rgb(var(--v2-muted))] mb-3">
             Henüz kalem yok
           </p>
           <button
@@ -1178,7 +1178,7 @@ function StepSetupCosts({
       ) : (
         <div className="space-y-2">
           {items.map((it) => (
-            <div key={it.id} className="card p-3 flex gap-2 items-start">
+            <div key={it.id} className="v2-card p-3 flex gap-2 items-start">
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input
                   type="text"
@@ -1200,7 +1200,7 @@ function StepSetupCosts({
               </div>
               <button
                 onClick={() => onRemove(it.id)}
-                className="p-2 rounded-lg hover:bg-red-500/10 text-surface-400 hover:text-red-400 shrink-0"
+                className="p-2 rounded-lg hover:bg-red-500/10 text-[rgb(var(--v2-muted))] hover:text-red-700 dark:hover:text-red-400 shrink-0"
                 title="Sil"
               >
                 <X size={16} />
@@ -1209,7 +1209,7 @@ function StepSetupCosts({
           ))}
           <button
             onClick={onAdd}
-            className="w-full card p-3 border-2 border-dashed border-surface-600 hover:border-brand-400 text-sm text-surface-300 hover:text-brand-400 inline-flex items-center justify-center gap-2 transition-colors"
+            className="w-full v2-card p-3 border-2 border-dashed border-[rgb(var(--v2-border))] hover:border-accent text-sm text-[rgb(var(--v2-muted))] hover:text-accent inline-flex items-center justify-center gap-2 transition-colors"
           >
             <Plus size={16} />
             Yeni kalem
@@ -1218,9 +1218,9 @@ function StepSetupCosts({
       )}
 
       {items.length > 0 && (
-        <div className="card p-3 flex items-center justify-between bg-surface-700/50">
-          <p className="text-sm text-surface-300">Toplam kuruluş</p>
-          <p className="text-lg font-bold text-red-400">
+        <div className="v2-card p-3 flex items-center justify-between bg-[rgb(var(--v2-sunken))]">
+          <p className="text-sm text-[rgb(var(--v2-muted))]">Toplam kuruluş</p>
+          <p className="text-lg font-bold text-red-700 dark:text-red-400">
             {formatCurrency(total, currency)}
           </p>
         </div>
@@ -1244,10 +1244,10 @@ function StepMonthlyFixedCosts({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm text-surface-300 font-medium">
+        <p className="text-sm text-[rgb(var(--v2-muted))] font-medium">
           Aylık sabit masraflar
         </p>
-        <p className="text-xs text-surface-400 mt-1">
+        <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
           Her ay düzenli olarak ödenen giderler. Uygulanmayanlar için
           &quot;Geçerli değil&quot; togglesini kullan — o kategori bu işletmede
           oluşturulmaz.
@@ -1261,20 +1261,20 @@ function StepMonthlyFixedCosts({
             <div
               key={it.category}
               className={cn(
-                "card p-3 transition-opacity",
+                "v2-card p-3 transition-opacity",
                 disabled && "opacity-50"
               )}
             >
               <div className="flex items-center justify-between gap-3 mb-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-surface-100">
+                  <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">
                     {it.label}
                   </p>
                   {it.required && (
-                    <p className="text-[10px] text-surface-400">Zorunlu</p>
+                    <p className="text-[10px] text-[rgb(var(--v2-muted))]">Zorunlu</p>
                   )}
                 </div>
-                <label className="flex items-center gap-2 text-[11px] text-surface-300 cursor-pointer shrink-0">
+                <label className="flex items-center gap-2 text-[11px] text-[rgb(var(--v2-muted))] cursor-pointer shrink-0">
                   <input
                     type="checkbox"
                     checked={!it.applicable}
@@ -1309,9 +1309,9 @@ function StepMonthlyFixedCosts({
         })}
       </div>
 
-      <div className="card p-3 flex items-center justify-between bg-surface-700/50">
-        <p className="text-sm text-surface-300">Aylık toplam</p>
-        <p className="text-lg font-bold text-amber-400">
+      <div className="v2-card p-3 flex items-center justify-between bg-[rgb(var(--v2-sunken))]">
+        <p className="text-sm text-[rgb(var(--v2-muted))]">Aylık toplam</p>
+        <p className="text-lg font-bold text-amber-700 dark:text-amber-400">
           {formatCurrency(monthlyTotal, currency)} / ay
         </p>
       </div>

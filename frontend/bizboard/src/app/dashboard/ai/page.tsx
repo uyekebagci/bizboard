@@ -133,16 +133,16 @@ export default function AiPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="w-9 h-9 rounded-xl bg-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-100 transition-colors"
+          className="w-9 h-9 rounded-xl bg-[rgb(var(--v2-sunken))] flex items-center justify-center text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
           aria-label="Geri"
         >
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 className="text-xl font-bold h-display text-surface-100 flex items-center gap-2">
-            <Bot size={20} className="text-brand" /> AI Asistan
+          <h1 className="text-xl font-bold h-display text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Bot size={20} className="text-accent" /> AI Asistan
           </h1>
-          <p className="text-surface-400 text-sm mt-0.5">
+          <p className="text-[rgb(var(--v2-muted))] text-sm mt-0.5">
             Finansal verinizi sorgulayın ve anomali uyarıları alın
           </p>
         </div>
@@ -150,9 +150,9 @@ export default function AiPage() {
 
       {/* AI kapalı/yapılandırılmamış uyarısı */}
       {aiUnavailable && (
-        <div className="glass-card p-4 flex items-start gap-3">
-          <Info size={18} className="text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-sm text-surface-300">
+        <div className="v2-card p-4 flex items-start gap-3">
+          <Info size={18} className="text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-[rgb(var(--v2-muted))]">
             AI asistanı şu an yapılandırılmamış (LLM anahtarı eksik veya modül
             kapalı). Yönetici anahtarları ortam değişkenlerinden ayarlayınca
             etkinleşir.
@@ -162,7 +162,7 @@ export default function AiPage() {
 
       {/* İşletme seçici */}
       {businesses.length > 0 && (
-        <div className="glass-card p-4">
+        <div className="v2-card p-4">
           <label className="label">İşletme</label>
           <select
             className="input mt-1"
@@ -182,7 +182,7 @@ export default function AiPage() {
       {selectedId ? (
         <ChatPanel businessId={selectedId} businessName={selectedBusiness?.name} />
       ) : (
-        <div className="glass-card p-8 text-center text-surface-400 text-sm">
+        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
           {businesses.length === 0
             ? "Henüz erişilebilir bir işletme yok."
             : "Bir işletme seçin."}
@@ -191,17 +191,17 @@ export default function AiPage() {
 
       {/* Admin paneli: yeniden-indeks + anomali opt-in */}
       {isAdmin && selectedId && (
-        <div className="glass-card p-4 space-y-4">
+        <div className="v2-card p-4 space-y-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-brand" />
-            <h2 className="text-sm font-bold text-surface-100">Yönetim</h2>
+            <ShieldCheck size={16} className="text-accent" />
+            <h2 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Yönetim</h2>
           </div>
 
           {/* Reindex */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="min-w-0">
-              <p className="text-sm text-surface-100">Finansal veriyi indeksle</p>
-              <p className="text-[11px] text-surface-400">
+              <p className="text-sm text-[rgb(var(--v2-ink))]">Finansal veriyi indeksle</p>
+              <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                 İşlem/kategori/aylık özetleri yeniden embed eder (RAG için).
               </p>
             </div>
@@ -219,16 +219,16 @@ export default function AiPage() {
             </button>
           </div>
           {reindexResult && (
-            <p className="text-[11px] text-surface-400">{reindexResult}</p>
+            <p className="text-[11px] text-[rgb(var(--v2-muted))]">{reindexResult}</p>
           )}
 
           {/* Anomali opt-in */}
-          <div className="flex items-center justify-between gap-3 flex-wrap border-t border-surface-700 pt-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap border-t border-[rgb(var(--v2-border))] pt-4">
             <div className="min-w-0 flex items-start gap-2">
-              <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+              <AlertTriangle size={16} className="text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm text-surface-100">Anomali tespiti</p>
-                <p className="text-[11px] text-surface-400">
+                <p className="text-sm text-[rgb(var(--v2-ink))]">Anomali tespiti</p>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                   Alışılmadık giderleri günlük tarar ve admin'lere bildirir
                   (varsayılan kapalı).
                 </p>
