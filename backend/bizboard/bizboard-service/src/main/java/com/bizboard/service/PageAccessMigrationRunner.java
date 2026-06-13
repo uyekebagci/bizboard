@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Order(12) // FirmsMigrationRunner (Order 11) sonrası
+@Order(28) // bağımsız (yalnız users tablosu); NotesModuleBackfill (12) ile çakışmasın diye boş slot
 public class PageAccessMigrationRunner implements ApplicationRunner {
 
     private final JdbcTemplate jdbc;

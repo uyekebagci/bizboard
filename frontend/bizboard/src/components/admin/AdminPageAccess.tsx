@@ -77,19 +77,32 @@ export function AdminPageAccess({
                 <p className="px-1 mb-1.5 v2-eyebrow">{grp.label}</p>
                 <div className="space-y-2">
                   {items.map((page) => {
-                    const checked = selectedKeys.includes(page.key);
+                    // "Ana Sayfa" (dashboard) zorunlu home/landing'tir: kullanıcı
+                    // ondan asla mahrum bırakılamaz (yoksa soft-lockout). Daima
+                    // seçili + devre dışı render edilir; admin seçimden çıkaramaz.
+                    const isMandatory = page.key === "dashboard";
+                    const checked = isMandatory || selectedKeys.includes(page.key);
                     return (
                       <button
                         key={page.key}
                         type="button"
-                        onClick={() => onToggleKey(page.key)}
+                        disabled={isMandatory}
+                        onClick={
+                          isMandatory ? undefined : () => onToggleKey(page.key)
+                        }
+                        title={
+                          isMandatory
+                            ? "Ana Sayfa zorunludur ve kaldırılamaz"
+                            : undefined
+                        }
                         className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm border transition-colors ${
                           checked
                             ? "bg-accent/12 border-accent/45 text-[rgb(var(--v2-ink))]"
                             : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
-                        }`}
+                        } ${isMandatory ? "opacity-70 cursor-not-allowed" : ""}`}
                         role="checkbox"
                         aria-checked={checked}
+                        aria-disabled={isMandatory}
                       >
                         <span>{page.label}</span>
                         {checked && (

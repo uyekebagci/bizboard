@@ -130,6 +130,7 @@ export function canAccessHref(
   if (isAllPages(allowed)) return true;
   const key = resolvePageKey(pathname);
   if (key == null) return true; // katalog dışı → kısıtlanmaz
+  if (key === "dashboard") return true; // zorunlu home/landing → hiç kilitlenmez
   return allowed!.includes(key);
 }
 
