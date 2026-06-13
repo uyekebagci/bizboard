@@ -67,16 +67,16 @@ export default function ClosuresListPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-surface-100 inline-flex items-center gap-2">
-              <CalendarClock size={18} className="text-emerald-400" />
+            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] inline-flex items-center gap-2">
+              <CalendarClock size={18} className="text-accent" />
               Gün Kapanışları
             </h1>
-            <p className="text-xs text-surface-400">Geçmiş kapanış kayıtları</p>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">Geçmiş kapanış kayıtları</p>
           </div>
         </div>
         <Link
@@ -88,8 +88,8 @@ export default function ClosuresListPage() {
       </div>
 
       {businesses.length > 1 && (
-        <div className="glass-card p-3">
-          <label className="text-[10px] uppercase text-surface-400 mb-1 block">İşletme</label>
+        <div className="v2-card p-3">
+          <label className="text-[10px] uppercase text-[rgb(var(--v2-muted))] mb-1 block">İşletme</label>
           <select
             value={businessId}
             onChange={(e) => setBusinessId(e.target.value)}
@@ -104,41 +104,41 @@ export default function ClosuresListPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-surface-500" />
+          <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : closings.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <CalendarClock size={28} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-sm text-surface-300">Henüz kapanış kaydı yok.</p>
+        <div className="v2-card p-8 text-center">
+          <CalendarClock size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-sm text-[rgb(var(--v2-ink))]">Henüz kapanış kaydı yok.</p>
         </div>
       ) : (
-        <ul className="glass-card divide-y divide-surface-700">
+        <ul className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {closings.map((c) => {
             const diff = c.difference ?? 0;
             return (
               <li key={c.id}>
                 <Link
                   href={`/dashboard/closure?business_id=${businessId}&date=${c.closing_date}`}
-                  className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface-700/30 transition-colors"
+                  className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-[rgb(var(--v2-sunken))] transition-colors"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-surface-100">{c.closing_date}</p>
-                    <p className="text-[11px] text-surface-400">
+                    <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{c.closing_date}</p>
+                    <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                       Açılış {formatCurrency(c.opening_balance, "TRY")}
                       {" → "}
                       Kapanış {formatCurrency(c.actual_balance ?? c.computed_closing, "TRY")}
                       {diff !== 0 && (
-                        <span className={diff > 0 ? "text-emerald-300" : "text-rose-300"}>
+                        <span className={diff > 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"}>
                           {" "}({diff > 0 ? "+" : ""}{formatCurrency(diff, "TRY")})
                         </span>
                       )}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
                       {c.status}
                     </span>
-                    <ChevronRight size={14} className="text-surface-400" />
+                    <ChevronRight size={14} className="text-[rgb(var(--v2-muted))]" />
                   </div>
                 </Link>
               </li>
