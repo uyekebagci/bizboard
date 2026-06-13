@@ -157,12 +157,12 @@ function UngroupedSection({
   onAddBusiness: () => void;
 }) {
   return (
-    <section className="glass-card relative overflow-hidden">
-      <div className="absolute inset-y-0 left-0 w-[3px] bg-surface-600" aria-hidden />
+    <section className="v2-card relative overflow-hidden rounded-2xl">
+      <div className="absolute inset-y-0 left-0 w-[3px] bg-[rgb(var(--v2-border))]" aria-hidden />
       <header className="modal-header">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-surface-300 text-sm">Grupsuz</h3>
-          <span className="text-[11px] text-surface-400">{businesses.length} işletme</span>
+          <h3 className="font-semibold text-[rgb(var(--v2-muted))] text-sm">Grupsuz</h3>
+          <span className="text-[11px] text-[rgb(var(--v2-muted))]/70">{businesses.length} işletme</span>
         </div>
       </header>
 

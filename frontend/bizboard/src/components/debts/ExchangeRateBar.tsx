@@ -92,24 +92,24 @@ export function ExchangeRateBar({ onRefreshed }: { onRefreshed?: () => void }) {
   ];
 
   return (
-    <section className="glass-card p-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-      <div className="flex items-center gap-1.5 text-surface-300">
+    <section className="v2-card p-3 rounded-2xl flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="flex items-center gap-1.5 text-[rgb(var(--v2-muted))]">
         <TrendingUp size={15} className="text-brand-300" />
         <span className="text-xs font-medium">Güncel Kur</span>
       </div>
 
       <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm">
         {items.map((it) => (
-          <span key={it.label} className="text-surface-200 whitespace-nowrap">
+          <span key={it.label} className="text-[rgb(var(--v2-muted))] whitespace-nowrap">
             {it.label}:{" "}
-            <span className="font-semibold text-surface-100">
+            <span className="font-semibold text-[rgb(var(--v2-ink))]">
               {it.rate ? formatRate(it.rate.rate_to_try) : "—"}
             </span>
           </span>
         ))}
       </div>
 
-      <span className="text-[11px] text-surface-400">
+      <span className="text-[11px] text-[rgb(var(--v2-muted))]">
         Son güncelleme: {formatWhen(lastFetched)}
         {isStale && <span className="ml-1 text-amber-300">(bayat)</span>}
       </span>

@@ -36,18 +36,18 @@ export function InventoryModule({ businessId, currency }: Props) {
 
   if (loading) {
     return (
-      <div className="glass-card p-6 flex items-center justify-center">
-        <Loader2 size={20} className="animate-spin text-surface-400" />
+      <div className="v2-card p-6 rounded-2xl flex items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
       </div>
     );
   }
 
   if (!summary || summary.total_items === 0) {
     return (
-      <div className="glass-card p-6 text-center">
-        <Package size={32} className="text-surface-300 mx-auto mb-2" />
-        <p className="text-surface-500 text-sm">Henüz envanter kalemi yok</p>
-        <p className="text-surface-400 text-xs mt-1">
+      <div className="v2-card p-6 rounded-2xl text-center">
+        <Package size={32} className="text-[rgb(var(--v2-muted))] mx-auto mb-2" />
+        <p className="text-[rgb(var(--v2-muted))] text-sm">Henüz envanter kalemi yok</p>
+        <p className="text-[rgb(var(--v2-muted))]/70 text-xs mt-1">
           Envanter sayfasından ekipman ve malzeme ekleyin
         </p>
         <button
@@ -71,10 +71,10 @@ export function InventoryModule({ businessId, currency }: Props) {
           if (count === 0) return null;
           const Icon = cat.icon;
           return (
-            <div key={cat.key} className={cn("p-3 rounded-xl border border-surface-200", cat.bg)}>
+            <div key={cat.key} className={cn("p-3 rounded-xl border border-[rgb(var(--v2-border))]", cat.bg)}>
               <div className="flex items-center gap-2">
                 <Icon size={16} className={cat.color} />
-                <span className="text-xs font-medium text-surface-600">{cat.label}</span>
+                <span className="text-xs font-medium text-[rgb(var(--v2-muted))]">{cat.label}</span>
               </div>
               <p className={cn("text-xl font-bold mt-1", cat.color)}>{count}</p>
             </div>
@@ -120,9 +120,9 @@ export function InventoryModule({ businessId, currency }: Props) {
       {/* Toplam Değer + Yönlendirme */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-surface-500">Toplam: {summary.total_items} kalem</p>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">Toplam: {summary.total_items} kalem</p>
           {summary.total_value > 0 && (
-            <p className="text-xs text-surface-400">Değer: {formatCurrency(summary.total_value)}</p>
+            <p className="text-xs text-[rgb(var(--v2-muted))]/80">Değer: {formatCurrency(summary.total_value)}</p>
           )}
         </div>
         <button
