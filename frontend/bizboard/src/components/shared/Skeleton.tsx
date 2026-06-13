@@ -96,7 +96,8 @@ export function StatSkeleton({
       role="status"
       aria-busy="true"
       aria-label="Yükleniyor"
-      className={cn(`grid grid-cols-${count} gap-2`, className)}
+      // count dinamik → Tailwind statik tarayamaz; grid sütunları inline style ile.
+      className={cn("grid gap-2", className)}
       style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}
     >
       {Array.from({ length: count }).map((_, i) => (
