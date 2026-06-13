@@ -97,6 +97,22 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
     restyle (cati-ux-backlog kapsamı) çakışması önlendi.
   - **STRICT:** saf izlenebilirlik — bakiye/Net Kâr DEĞİŞMEZ. Çift tema,
     loading/empty/error korundu.
+- **Kâr-Payı Yönetimi admin arayüzü (Ledger v2, Faz C §3.4 / TODO 3).** Backend
+  (`AdminProfitShareController`) hazırdı ama UI yoktu — admin kâr-payı oranlarını
+  ve kurallarını arayüzden ayarlayamıyordu (kullanıcı-engelleyici). Yeni
+  `/admin/profit-share` sayfası eklendi; yalnız frontend (backend'e dokunulmadı):
+  - **Global oran config:** Sahip baz% / Fatih marj% / Tuncay spread% görüntüle +
+    kaydet (`GET`/`PUT /admin/profit-share/config`). Her oran 0–100 doğrulaması.
+  - **Kâr-payı kuralları:** Listele / oluştur / düzenle / sil
+    (`GET`/`POST`/`PUT`/`DELETE /admin/profit-share/rules`). Kural tipi
+    (RATE_SPREAD / MARGIN_PCT / OWNER_COMMISSION / RESIDUAL), operatör (karşı
+    firma), hedef kâr-merkezi kasası, opsiyonel POS cihazı override, oran override
+    (boş = config), öncelik, aktif/pasif, not. RESIDUAL dışı kurallarda operatör +
+    hedef kasa zorunlu (backend ile aynı kural). T+1 (OWNER_COMMISSION) rozeti.
+  - İşletme-başına scope (`business_id`), admin RBAC (sayfa-içi guard +
+    `/admin/**` SecurityConfig + servis admin doğrular), loading/empty/error
+    durumları, çift tema (Daxa v2), a11y. Giriş noktası: Admin Paneli →
+    "Kar-Payi".
 
 ### Fixed
 
