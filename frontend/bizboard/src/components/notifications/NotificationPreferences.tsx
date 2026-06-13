@@ -83,9 +83,9 @@ export function NotificationPreferences() {
     <div className="space-y-4">
       <TelegramLinkSection />
 
-      <section className="glass-card p-5">
-        <h3 className="text-sm font-bold text-surface-100 mb-1">Bildirim Tercihleri</h3>
-        <p className="text-[11px] text-surface-400 mb-3">
+      <section className="v2-card rounded-2xl p-5">
+        <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-1">Bildirim Tercihleri</h3>
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] mb-3">
           Hangi olayda hangi kanaldan bildirim alacağınızı seçin. Telegram kapalıysa
           yalnız uygulama içi gösterilir.
         </p>
@@ -93,19 +93,19 @@ export function NotificationPreferences() {
         {loading ? (
           <div className="py-6 flex justify-center"><Loader2 size={18} className="animate-spin text-surface-400" /></div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="v2-table-wrap">
+            <table className="v2-table w-full text-sm">
               <thead>
-                <tr className="text-[11px] uppercase tracking-wider text-surface-400">
-                  <th className="text-left font-medium py-2">Olay</th>
-                  <th className="text-center font-medium py-2 w-20">Uygulama</th>
-                  <th className="text-center font-medium py-2 w-20">Telegram</th>
+                <tr>
+                  <th className="text-left">Olay</th>
+                  <th className="text-center w-20">Uygulama</th>
+                  <th className="text-center w-20">Telegram</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-700/60">
+              <tbody>
                 {EVENTS.map((ev) => (
                   <tr key={ev.key} className="row-hover">
-                    <td className="py-2.5 text-surface-200">{ev.label}</td>
+                    <td className="py-2.5 text-[rgb(var(--v2-ink))]">{ev.label}</td>
                     {(["IN_APP", "TELEGRAM"] as Channel[]).map((ch) => {
                       const on = isOn(ev.key, ch);
                       const busy = saving === cellKey(ev.key, ch);
@@ -118,7 +118,7 @@ export function NotificationPreferences() {
                             aria-checked={on}
                             aria-label={`${ev.label} — ${ch === "IN_APP" ? "Uygulama" : "Telegram"}`}
                             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                              on ? "bg-brand-600" : "bg-surface-600"
+                              on ? "bg-[rgb(var(--accent))]" : "bg-surface-600"
                             } ${busy ? "opacity-60" : ""}`}
                           >
                             <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${

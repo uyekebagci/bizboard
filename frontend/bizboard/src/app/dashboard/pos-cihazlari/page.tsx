@@ -128,12 +128,12 @@ export default function PosCihazlariPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
-              <CreditCard size={20} className="text-indigo-300" />
+            <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
+              <CreditCard size={20} className="text-[rgb(var(--accent-bright))]" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-surface-100">POS Cihazları</h1>
-              <p className="text-xs text-surface-400">
+              <p className="text-xs text-surface-500 dark:text-surface-400">
                 Tüm POS cihaz işlemleri + komisyon + trend
               </p>
             </div>
@@ -160,8 +160,7 @@ export default function PosCihazlariPage() {
         />
       )}
 
-      {/* v1.6.23.13 (TODO 06ae8217): POS cihazları (kayıtlı) listesi —
-          önceki sürümde sayfada hiç gösterilmiyordu. */}
+      {/* v1.6.23.13 (TODO 06ae8217): POS cihazları (kayıtlı) listesi */}
       <RegisteredDevicesCard devices={devices} />
 
       {/* v1.6.23.9 (TODO ddda6029): Bekleyen POS tahsilatları + toplu settle */}
@@ -170,13 +169,13 @@ export default function PosCihazlariPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-indigo-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--accent-bright))]" />
         </div>
       ) : summaries.length === 0 ? (
-        <div className="glass-card p-8 text-center">
+        <div className="v2-card rounded-2xl p-8 text-center">
           <CreditCard size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henüz POS işlemi yok</p>
-          <p className="text-surface-400 text-sm mt-1">
+          <p className="text-surface-700 dark:text-surface-300 font-medium">Henüz POS işlemi yok</p>
+          <p className="text-surface-500 dark:text-surface-400 text-sm mt-1">
             İşlem eklerken &quot;Ödeme Yöntemi&quot; olarak POS seçiniz.
           </p>
           <Link
@@ -189,47 +188,46 @@ export default function PosCihazlariPage() {
         </div>
       ) : (
         <>
-          {/* Totals */}
+          {/* Toplamlar */}
           <section className="grid grid-cols-3 gap-3">
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-2 text-[11px] text-surface-400 uppercase tracking-wider">
+            <div className="v2-card rounded-2xl p-4">
+              <div className="flex items-center gap-2 text-[11px] text-surface-500 dark:text-surface-400 uppercase tracking-wider">
                 <TrendingUp size={12} /> Toplam
               </div>
-              <p className="mt-1 text-lg font-bold text-surface-100">
+              <p className="mt-1 text-lg font-bold text-[rgb(var(--v2-ink))]">
                 {formatCurrency(totalGross, "TRY")}
               </p>
             </div>
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-2 text-[11px] text-surface-400 uppercase tracking-wider">
+            <div className="v2-card rounded-2xl p-4">
+              <div className="flex items-center gap-2 text-[11px] text-surface-500 dark:text-surface-400 uppercase tracking-wider">
                 <Percent size={12} /> Komisyon
               </div>
-              <p className="mt-1 text-lg font-bold text-red-300">
+              <p className="mt-1 text-lg font-bold text-status-danger">
                 -{formatCurrency(totalCommission, "TRY")}
               </p>
             </div>
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-2 text-[11px] text-surface-400 uppercase tracking-wider">
+            <div className="v2-card rounded-2xl p-4">
+              <div className="flex items-center gap-2 text-[11px] text-surface-500 dark:text-surface-400 uppercase tracking-wider">
                 <Receipt size={12} /> Net
               </div>
-              <p className="mt-1 text-lg font-bold text-emerald-300">
+              <p className="mt-1 text-lg font-bold text-emerald-700 dark:text-emerald-300">
                 {formatCurrency(totalNet, "TRY")}
               </p>
             </div>
           </section>
 
-          {/* v1.1 small-win: POS hacim dağılımı (pasta/donut) — mevcut
-              özet verisinden (total_gross) türetilir, yeni hesap yok. */}
+          {/* v1.1 small-win: POS hacim dağılımı (pasta/donut) */}
           <PosDistributionCard summaries={summaries} totalGross={totalGross} />
 
-          {/* Business filter chips */}
+          {/* İşletme filtre chip'leri */}
           <section>
-            <h2 className="text-sm font-semibold text-surface-200 mb-2">İşletme</h2>
+            <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))] mb-2">İşletme</h2>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedBiz("all")}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                   selectedBiz === "all"
-                    ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
+                    ? "bg-accent/20 border-[rgb(var(--accent))] text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent-bright))]"
                     : "bg-surface-700 border-surface-600 text-surface-300"
                 }`}
               >
@@ -241,7 +239,7 @@ export default function PosCihazlariPage() {
                   onClick={() => setSelectedBiz(s.business_id)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5 ${
                     selectedBiz === s.business_id
-                      ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
+                      ? "bg-accent/20 border-[rgb(var(--accent))] text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent-bright))]"
                       : "bg-surface-700 border-surface-600 text-surface-300"
                   }`}
                 >
@@ -252,29 +250,29 @@ export default function PosCihazlariPage() {
             </div>
           </section>
 
-          {/* Per-business cards */}
+          {/* İşletme bazlı özet */}
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-surface-200">İşletme Bazlı Özet</h2>
-            <div className="glass-card divide-y divide-surface-700">
+            <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">İşletme Bazlı Özet</h2>
+            <div className="v2-card rounded-2xl divide-y divide-[rgb(var(--v2-border))]">
               {summaries.map((s) => (
                 <Link
                   key={s.business_id}
                   href={`/business/${s.business_id}`}
-                  className="block p-4 hover:bg-surface-700 transition-colors"
+                  className="block p-4 hover:bg-[rgb(var(--v2-sunken))] transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-surface-100">{s.business_name}</p>
-                      <p className="text-xs text-surface-400 mt-0.5">
+                      <p className="font-medium text-[rgb(var(--v2-ink))]">{s.business_name}</p>
+                      <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">
                         {s.transaction_count} işlem · ort. %{s.weighted_avg_rate.toFixed(2)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-surface-100">
+                      <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                         {formatCurrency(s.total_gross, s.currency)}
                       </p>
-                      <p className="text-[11px] text-surface-400">
-                        Net: <span className="text-emerald-300">{formatCurrency(s.total_net, s.currency)}</span>
+                      <p className="text-[11px] text-[rgb(var(--v2-muted))]">
+                        Net: <span className="text-emerald-700 dark:text-emerald-300">{formatCurrency(s.total_net, s.currency)}</span>
                       </p>
                     </div>
                   </div>
@@ -283,15 +281,15 @@ export default function PosCihazlariPage() {
             </div>
           </section>
 
-          {/* Daily transactions */}
+          {/* Günlük POS işlemleri */}
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-surface-200">
+            <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
               Günlük POS İşlemleri
-              <span className="ml-2 text-xs font-normal text-surface-400">son 30 gün</span>
+              <span className="ml-2 text-xs font-normal text-[rgb(var(--v2-muted))]">son 30 gün</span>
             </h2>
             {sortedDates.length === 0 ? (
-              <div className="glass-card p-6 text-center">
-                <p className="text-surface-400 text-sm">Bu filtre için işlem yok</p>
+              <div className="v2-card rounded-2xl p-6 text-center">
+                <p className="text-[rgb(var(--v2-muted))] text-sm">Bu filtre için işlem yok</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -300,41 +298,41 @@ export default function PosCihazlariPage() {
                   const dayGross = rows.reduce((a, r) => a + r.amount, 0);
                   const dayNet = rows.reduce((a, r) => a + r.net, 0);
                   return (
-                    <div key={date} className="card">
-                      <div className="px-4 py-2.5 border-b border-surface-700 flex items-center justify-between">
-                        <p className="text-sm font-medium text-surface-200">
+                    <div key={date} className="v2-card rounded-2xl overflow-hidden">
+                      <div className="px-4 py-2.5 border-b border-[rgb(var(--v2-border))] flex items-center justify-between">
+                        <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">
                           {new Date(date).toLocaleDateString("tr-TR", {
                             day: "numeric", month: "long", weekday: "short",
                           })}
                         </p>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-surface-100">
+                          <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                             {formatCurrency(dayGross, rows[0]?.currency || "TRY")}
                           </p>
-                          <p className="text-[10px] text-emerald-300">
+                          <p className="text-[10px] text-emerald-700 dark:text-emerald-300">
                             Net {formatCurrency(dayNet, rows[0]?.currency || "TRY")}
                           </p>
                         </div>
                       </div>
-                      <div className="divide-y divide-surface-700">
+                      <div className="divide-y divide-[rgb(var(--v2-border))]">
                         {rows.map((r) => (
                           <div key={r.transaction_id} className="px-4 py-2.5 flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm text-surface-100 truncate">
+                              <p className="text-sm text-[rgb(var(--v2-ink))] truncate">
                                 {r.description || r.business_name}
                               </p>
-                              <p className="text-[11px] text-surface-400">
+                              <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                                 {r.business_name} · %{r.pos_rate}
                               </p>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-sm font-semibold text-surface-100">
+                              <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                                 {formatCurrency(r.amount, r.currency)}
                               </p>
-                              <p className="text-[10px] text-surface-400">
-                                <span className="text-red-300">-{formatCurrency(r.commission, r.currency)}</span>
+                              <p className="text-[10px] text-[rgb(var(--v2-muted))]">
+                                <span className="text-status-danger">-{formatCurrency(r.commission, r.currency)}</span>
                                 {" · "}
-                                <span className="text-emerald-300">{formatCurrency(r.net, r.currency)}</span>
+                                <span className="text-emerald-700 dark:text-emerald-300">{formatCurrency(r.net, r.currency)}</span>
                               </p>
                             </div>
                           </div>
@@ -353,16 +351,13 @@ export default function PosCihazlariPage() {
 }
 
 // ─── v1.1 small-win: POS hacim dağılımı (donut/pasta) ───────────────
-// İşletme bazlı POS brüt hacminin yüzdesel dağılımı. SALT SUNUM —
-// mevcut `summaries` verisindeki total_gross alanını kullanır, yeni
-// finansal hesap eklemez. Donut bileşeni stroke-dasharray ile saf SVG.
 const POS_PIE_COLORS = [
-  "#6366f1", // indigo
+  "#65a30d", // accent lime
   "#22c55e", // emerald
   "#f59e0b", // amber
   "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#8b5cf6", // violet
+  "#a78bfa", // violet
+  "#8b5cf6", // violet-alt
   "#f97316", // orange
   "#64748b", // slate (kalan/diğer)
 ];
@@ -374,10 +369,8 @@ function PosDistributionCard({
   summaries: PosBusinessSummary[];
   totalGross: number;
 }) {
-  // Tek işletme veya veri yoksa pasta anlamsız — gösterme.
   if (summaries.length < 2 || totalGross <= 0) return null;
 
-  // En büyük 7 işletmeyi göster, kalanı "Diğer" diliminde topla.
   const sorted = [...summaries]
     .filter((s) => (s.total_gross || 0) > 0)
     .sort((a, b) => (b.total_gross || 0) - (a.total_gross || 0));
@@ -407,22 +400,21 @@ function PosDistributionCard({
     pct: (s.gross / totalGross) * 100,
   }));
 
-  // En büyük dilimin payı — donut ortasında vurgulanır.
   const topPct = segments.length > 0 ? Math.round(segments[0].pct) : 0;
 
   return (
-    <section className="glass-card p-4">
+    <section className="v2-card rounded-2xl p-4">
       <div className="flex items-center gap-2 mb-3">
-        <CreditCard size={14} className="text-indigo-300" />
-        <h2 className="text-sm font-semibold text-surface-100">POS Hacim Dağılımı</h2>
-        <span className="text-[10px] text-surface-400">işletme bazlı brüt</span>
+        <CreditCard size={14} className="text-[rgb(var(--accent-bright))]" />
+        <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">POS Hacim Dağılımı</h2>
+        <span className="text-[10px] text-[rgb(var(--v2-muted))]">işletme bazlı brüt</span>
       </div>
       <div className="flex flex-col sm:flex-row items-center gap-5">
         <Donut
           segments={segments}
           centerBig={`%${topPct}`}
           centerSmall={slices[0]?.label}
-          centerColorClass="text-indigo-300"
+          centerColorClass="text-[rgb(var(--accent-bright))]"
           className="w-36 h-36 shrink-0"
         />
         <ul className="flex-1 w-full space-y-1.5">
@@ -435,11 +427,11 @@ function PosDistributionCard({
                   style={{ backgroundColor: s.color }}
                   aria-hidden="true"
                 />
-                <span className="text-surface-200 truncate flex-1 min-w-0">{s.label}</span>
-                <span className="text-surface-100 font-medium tabular-nums shrink-0">
+                <span className="text-[rgb(var(--v2-ink))] truncate flex-1 min-w-0">{s.label}</span>
+                <span className="text-[rgb(var(--v2-ink))] font-medium tabular-nums shrink-0">
                   {formatCurrency(s.gross, "TRY")}
                 </span>
-                <span className="text-surface-400 text-[11px] tabular-nums shrink-0 w-10 text-right">
+                <span className="text-[rgb(var(--v2-muted))] text-[11px] tabular-nums shrink-0 w-10 text-right">
                   %{pct.toFixed(1)}
                 </span>
               </li>
@@ -465,14 +457,14 @@ function PosTrendChart({
   const t = analytics.totals;
 
   return (
-    <section className="glass-card p-4 space-y-3">
+    <section className="v2-card rounded-2xl p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold text-surface-100">POS Hacmi (30 gün)</h2>
-          <p className="text-[11px] text-surface-400">
-            Brüt <span className="text-emerald-300">{formatCurrency(t.gross, "TRY")}</span>
+          <h2 className="text-sm font-bold text-[rgb(var(--v2-ink))]">POS Hacmi (30 gün)</h2>
+          <p className="text-[11px] text-[rgb(var(--v2-muted))]">
+            Brüt <span className="text-emerald-700 dark:text-emerald-300">{formatCurrency(t.gross, "TRY")}</span>
             {" · "}
-            <span className="text-surface-500 text-[10px]">
+            <span className="text-[rgb(var(--v2-muted))] text-[10px]">
               Beta v1.1: komisyon hesabı kaldırıldı — hacim = SUM(amount).
             </span>
           </p>
@@ -503,7 +495,7 @@ function PosTrendChart({
                   </p>
                   <p>{s.tx_count} çekim</p>
                   <p>Brüt: {formatCurrency(s.gross, "TRY")}</p>
-                  <p className="text-red-300">Komisyon: -{formatCurrency(s.commission, "TRY")}</p>
+                  <p className="text-status-danger">Komisyon: -{formatCurrency(s.commission, "TRY")}</p>
                   <p className="text-emerald-300">Net: {formatCurrency(s.net, "TRY")}</p>
                   {s.unsettled_count > 0 && (
                     <p className="text-amber-300">{s.unsettled_count} bekleyen</p>
@@ -512,7 +504,7 @@ function PosTrendChart({
               </div>
               <div className="w-full flex gap-px items-end h-28">
                 <div
-                  className="flex-1 bg-indigo-500/50 rounded-t-sm transition-all min-h-[1px]"
+                  className="flex-1 bg-accent/40 rounded-t-sm transition-all min-h-[1px]"
                   style={{ height: `${Math.max(grossH, 1)}%` }}
                   title="Brüt"
                 />
@@ -527,10 +519,10 @@ function PosTrendChart({
         })}
       </div>
 
-      <div className="flex items-center justify-between text-[10px] text-surface-400">
+      <div className="flex items-center justify-between text-[10px] text-[rgb(var(--v2-muted))]">
         <span>{series.length > 0 ? new Date(series[0].date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : ""}</span>
         <span className="flex items-center gap-3">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-indigo-500/50" /> Brüt</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-accent/40" /> Brüt</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> Net</span>
         </span>
         <span>{series.length > 0 ? new Date(series[series.length - 1].date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : ""}</span>
@@ -549,7 +541,6 @@ type UnsettledTx = {
   applied_pos_rate?: number | null;
   pos_rate?: number | null;
   pos_device_name?: string | null;
-  /** v1.7.0.x: POS cihazının firması — bulk-settle bank filter için. */
   pos_device_owner_my_company_id?: string | null;
   business_id: string;
   date: string;
@@ -560,14 +551,11 @@ type BankRow = {
   name: string;
   type: string;
   bank_name?: string | null;
-  /** v1.7.0.x: banka hesabının firması — filter için. */
   owner_my_company_id?: string | null;
   owner_my_company_name?: string | null;
 };
 
 function PendingSettlementsCard() {
-  // v1.6.23.10: bulk-settle sonrası global refresh — dashboard'daki diğer
-  // sayfalar (konsolide widget vs.) bir sonraki açılışta güncel olsun.
   const triggerRefresh = useAppStore((s) => s.triggerRefresh);
   const refreshKey = useAppStore((s) => s.refreshKey);
   const [items, setItems] = useState<UnsettledTx[]>([]);
@@ -587,8 +575,6 @@ function PendingSettlementsCard() {
     }
   }
 
-  // refreshKey global trigger'a tepki ver — başka sayfadan settle olduysa
-  // bu listeyi de senkron tut.
   useEffect(() => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -596,15 +582,15 @@ function PendingSettlementsCard() {
 
   if (loading) {
     return (
-      <section className="glass-card p-4">
-        <div className="flex items-center gap-2 text-sm text-surface-400">
+      <section className="v2-card rounded-2xl p-4">
+        <div className="flex items-center gap-2 text-sm text-[rgb(var(--v2-muted))]">
           <Loader2 size={14} className="animate-spin" />
           Bekleyen tahsilatlar yükleniyor…
         </div>
       </section>
     );
   }
-  if (items.length === 0) return null; // hiç bekleyen yoksa widget gizli
+  if (items.length === 0) return null;
 
   const totalNet = items.reduce((a, t) => a + (t.pos_net ?? 0), 0);
   const selectedItems = items.filter((t) => selectedIds.has(t.id));
@@ -622,12 +608,12 @@ function PendingSettlementsCard() {
   }
 
   return (
-    <section className="glass-card overflow-hidden border-amber-500/30">
-      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between bg-amber-500/5">
+    <section className="v2-card rounded-2xl overflow-hidden border-amber-500/30">
+      <div className="px-4 py-3 border-b border-[rgb(var(--v2-border))] flex items-center justify-between bg-amber-500/5">
         <div className="flex items-center gap-2">
-          <Receipt size={14} className="text-amber-400" />
-          <h2 className="text-sm font-semibold text-surface-100">Bekleyen POS Tahsilatları</h2>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <Receipt size={14} className="text-amber-600 dark:text-amber-400" />
+          <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Bekleyen POS Tahsilatları</h2>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
             {items.length} işlem · {formatCurrency(totalNet, "TRY")} net
           </span>
         </div>
@@ -640,7 +626,7 @@ function PendingSettlementsCard() {
           </button>
         )}
       </div>
-      <div className="px-4 py-2 border-b border-surface-700 flex items-center gap-2 text-[11px] text-surface-400">
+      <div className="px-4 py-2 border-b border-[rgb(var(--v2-border))] flex items-center gap-2 text-[11px] text-[rgb(var(--v2-muted))]">
         <input
           type="checkbox"
           checked={selectedIds.size === items.length}
@@ -649,12 +635,12 @@ function PendingSettlementsCard() {
         />
         <span>Hepsini seç</span>
         {selectedIds.size > 0 && (
-          <span className="ml-auto text-amber-300">
+          <span className="ml-auto text-amber-700 dark:text-amber-300">
             Seçili net: {formatCurrency(selectedNetTotal, "TRY")}
           </span>
         )}
       </div>
-      <div className="divide-y divide-surface-700 max-h-96 overflow-y-auto">
+      <div className="divide-y divide-[rgb(var(--v2-border))] max-h-96 overflow-y-auto">
         {items.map((t) => {
           const checked = selectedIds.has(t.id);
           return (
@@ -672,13 +658,13 @@ function PendingSettlementsCard() {
                 className="cursor-pointer"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-surface-100 truncate">
+                <p className="text-sm text-[rgb(var(--v2-ink))] truncate">
                   {t.description || "POS çekim"}
                   {t.pos_device_name && (
-                    <span className="ml-2 text-surface-400 text-xs">· {t.pos_device_name}</span>
+                    <span className="ml-2 text-[rgb(var(--v2-muted))] text-xs">· {t.pos_device_name}</span>
                   )}
                 </p>
-                <p className="text-[11px] text-surface-400">
+                <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                   {new Date(t.date).toLocaleDateString("tr-TR", {
                     day: "numeric",
                     month: "short",
@@ -687,10 +673,10 @@ function PendingSettlementsCard() {
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-sm font-semibold text-emerald-300">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                   +{formatCurrency(t.pos_net ?? t.amount, "TRY")}
                 </p>
-                <p className="text-[10px] text-surface-400">
+                <p className="text-[10px] text-[rgb(var(--v2-muted))]">
                   brüt {formatCurrency(t.amount, "TRY")}
                 </p>
               </div>
@@ -708,8 +694,6 @@ function PendingSettlementsCard() {
             setShowBulkModal(false);
             setSelectedIds(new Set());
             refresh();
-            // v1.6.23.10: global trigger — başka sayfalardaki konsolide
-            // widget refreshKey değişimiyle yeniden çekecek.
             triggerRefresh();
           }}
         />
@@ -739,13 +723,11 @@ function BulkSettleModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // v1.7.0.x: seçili POS tx'lerin firma'ları — ortak ise bank filtreliyoruz.
-  // Tüm tx'ler aynı firmadan ise common, farklı ise null (hepsi gösterilir + uyarı).
   const commonFirmId = (() => {
     const ids = selectedTxs.map((t) => t.pos_device_owner_my_company_id || null);
     const uniq = Array.from(new Set(ids));
     if (uniq.length === 1) return uniq[0];
-    return null; // karışık veya hepsi null
+    return null;
   })();
   const mixedFirms = (() => {
     const ids = selectedTxs
@@ -759,14 +741,10 @@ function BulkSettleModal({
       .get<BankRow[]>("/bank-accounts")
       .then((rows) => {
         let eligible = rows.filter((b) => b.type === "CHECKING" || b.type === "SAVINGS");
-        // v1.7.0.x: aynı firmadan POS tx'ler için sadece o firmanın banka
-        // hesaplarını göster. Karışıksa veya firma yoksa hepsi görünür.
         if (commonFirmId) {
           const firmFiltered = eligible.filter(
             (b) => b.owner_my_company_id === commonFirmId,
           );
-          // Hiç eşleşen yoksa boş dropdown'a düşmemek için tüm hesapları
-          // bırak (kullanıcı manuel seçebilsin).
           if (firmFiltered.length > 0) eligible = firmFiltered;
         }
         setBanks(eligible);
@@ -801,28 +779,28 @@ function BulkSettleModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
-        <div className="p-4 border-b border-surface-700">
-          <h3 className="text-base font-semibold text-surface-100">
+      <div className="modal-surface rounded-2xl shadow-xl w-full max-w-md">
+        <div className="p-4 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">
             Toplu Settle ({txIds.length} işlem · {formatCurrency(totalNet, "TRY")} net)
           </h3>
-          <p className="text-xs text-surface-400 mt-1">
+          <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
             Tüm seçili işlemler aynı banka hesabına aynı zamanda işaretlenecek.
           </p>
         </div>
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2 text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <div className="p-2 text-xs text-status-danger bg-status-danger/10 border border-status-danger/30 rounded-lg">
               {error}
             </div>
           )}
           {mixedFirms && (
-            <div className="p-2 text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-              ⚠ Seçili işlemler farklı firmalara ait POS cihazlarından — banka hesabı dropdown'unda hepsi gösteriliyor. Önerilen: aynı firma'nın işlemlerini ayrı ayrı settle et.
+            <div className="p-2 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+              Seçili işlemler farklı firmalara ait POS cihazlarından — banka hesabı dropdown'unda hepsi gösteriliyor. Önerilen: aynı firma'nın işlemlerini ayrı ayrı settle et.
             </div>
           )}
           <div>
-            <label className="text-xs text-surface-300 mb-1 block">Banka hesabı</label>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Banka hesabı</label>
             <DarkSelect
               value={selectedBank}
               onChange={setSelectedBank}
@@ -839,7 +817,7 @@ function BulkSettleModal({
             />
           </div>
           <div>
-            <label className="text-xs text-surface-300 mb-1 block">Düşme tarihi</label>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Düşme tarihi</label>
             <input
               type="datetime-local"
               value={settledAt}
@@ -848,7 +826,7 @@ function BulkSettleModal({
             />
           </div>
         </div>
-        <div className="p-4 border-t border-surface-700 flex justify-end gap-2">
+        <div className="p-4 border-t border-[rgb(var(--v2-border))] flex justify-end gap-2">
           <button
             onClick={onClose}
             disabled={submitting}
@@ -870,49 +848,48 @@ function BulkSettleModal({
 }
 
 // v1.6.23.13 (TODO 06ae8217 + 5cee5f99): Kayıtlı POS cihazları listesi.
-// Her satır tıklanabilir → /pos-cihazlari/{id} detay sayfası.
 function RegisteredDevicesCard({ devices }: { devices: PosDeviceListItem[] }) {
   if (!devices || devices.length === 0) return null;
   const active = devices.filter((d) => d.is_active);
   const inactive = devices.filter((d) => !d.is_active);
   return (
-    <section className="glass-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
+    <section className="v2-card rounded-2xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-[rgb(var(--v2-border))] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CreditCard size={14} className="text-indigo-300" />
-          <h2 className="text-sm font-semibold text-surface-100">Kayıtlı POS Cihazları</h2>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+          <CreditCard size={14} className="text-[rgb(var(--accent-bright))]" />
+          <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Kayıtlı POS Cihazları</h2>
+          <span className="v2-chip-accent text-[10px] px-1.5 py-0.5 rounded-full">
             {active.length} aktif{inactive.length > 0 ? ` · ${inactive.length} pasif` : ""}
           </span>
         </div>
       </div>
-      <div className="divide-y divide-surface-700">
+      <div className="divide-y divide-[rgb(var(--v2-border))]">
         {devices.map((d) => (
           <Link
             key={d.id}
             href={`/dashboard/pos-cihazlari/${d.id}`}
             className={cn(
-              "px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-surface-700/50 transition-colors",
+              "px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-[rgb(var(--v2-sunken))] transition-colors",
               !d.is_active && "opacity-60"
             )}
           >
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-surface-100 truncate">
+              <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">
                 {d.name}
                 {!d.is_active && (
-                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-surface-700 text-surface-400">
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]">
                     pasif
                   </span>
                 )}
               </p>
-              <p className="text-[11px] text-surface-400">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                 {d.owner_counterpart_name || "—"}
                 {d.bank_name && ` · ${d.bank_name}`}
                 {d.default_rate != null && ` · varsayılan %${d.default_rate}`}
                 {d.last_used_rate != null && ` · son %${d.last_used_rate}`}
               </p>
             </div>
-            <ChevronRight size={14} className="text-surface-400 shrink-0" />
+            <ChevronRight size={14} className="text-[rgb(var(--v2-muted))] shrink-0" />
           </Link>
         ))}
       </div>

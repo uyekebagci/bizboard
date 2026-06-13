@@ -33,7 +33,6 @@ export default function TelefonlarPage() {
   const [devices, setDevices] = useState<PhoneDevice[]>([]);
   const [brands, setBrands] = useState<PhoneBrand[]>([]);
   const [loading, setLoading] = useState(true);
-  // v1.6.23.12: counterpart_id query param ile pre-filled modal aç (yeni firma flow'undan gelen)
   const [showModal, setShowModal] = useState(false);
   const [pendingCounterpartId, setPendingCounterpartId] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<PhoneDevice | null>(null);
@@ -47,7 +46,7 @@ export default function TelefonlarPage() {
     }
   }, [searchParams]);
 
-  // Filters
+  // Filtreler
   const [search, setSearch] = useState("");
   const [filterBrand, setFilterBrand] = useState<string>("");
   const [filterActive, setFilterActive] = useState<"active" | "all">("active");
@@ -101,12 +100,12 @@ export default function TelefonlarPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
-              <Smartphone size={20} className="text-cyan-300" />
+            <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
+              <Smartphone size={20} className="text-[rgb(var(--accent-bright))]" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-surface-100">Telefonlar</h1>
-              <p className="text-xs text-surface-400">
+              <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Telefonlar</h1>
+              <p className="text-xs text-[rgb(var(--v2-muted))]">
                 Fiziki telefonlar + atanmış firmalar + bankacılık uygulamaları
               </p>
             </div>
@@ -114,14 +113,14 @@ export default function TelefonlarPage() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium"
+          className="v2-btn v2-btn--accent flex items-center gap-1.5 px-3 py-2 text-sm font-medium"
         >
           <Plus size={14} />
           Yeni Telefon
         </button>
       </div>
 
-      {/* Filters */}
+      {/* Filtreler */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500" />
@@ -154,63 +153,63 @@ export default function TelefonlarPage() {
         </div>
       </section>
 
-      {/* Table */}
+      {/* Tablo */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-cyan-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--accent-bright))]" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Smartphone size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Telefon yok</p>
-          <p className="text-surface-400 text-sm mt-1">
-            Üstteki "Yeni Telefon" butonu ile başla.
+        <div className="v2-card rounded-2xl p-8 text-center">
+          <Smartphone size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Telefon yok</p>
+          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
+            Üstteki &quot;Yeni Telefon&quot; butonu ile başla.
           </p>
         </div>
       ) : (
-        <div className="glass-card overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-700 text-[11px] text-surface-300 uppercase tracking-wider">
+        <div className="v2-table-wrap">
+          <table className="v2-table w-full text-sm">
+            <thead>
               <tr>
-                <th className="px-3 py-2 text-left">#</th>
-                <th className="px-3 py-2 text-left">Marka / Model</th>
-                <th className="px-3 py-2 text-left">Atanan Firma</th>
-                <th className="px-3 py-2 text-left">Telefon No</th>
-                <th className="px-3 py-2 text-left">Bankalar</th>
-                <th className="px-3 py-2 text-left">Notlar</th>
-                <th className="px-3 py-2 text-right">Aksiyon</th>
+                <th>#</th>
+                <th>Marka / Model</th>
+                <th>Atanan Firma</th>
+                <th>Telefon No</th>
+                <th>Bankalar</th>
+                <th>Notlar</th>
+                <th className="text-right">Aksiyon</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-700">
+            <tbody>
               {filtered.map((d) => (
                 <tr
                   key={d.id}
                   className={d.is_active ? "" : "opacity-50"}
                 >
-                  <td className="px-3 py-2 text-surface-400">#{d.device_number}</td>
-                  <td className="px-3 py-2 text-surface-100">
+                  <td className="text-[rgb(var(--v2-muted))]">#{d.device_number}</td>
+                  <td className="text-[rgb(var(--v2-ink))]">
                     {d.display_label}
                     {d.custom_model && (
-                      <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                         Custom
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-surface-200">
-                    {d.assigned_counterpart_name || <span className="text-surface-500">—</span>}
+                  <td className="text-[rgb(var(--v2-ink))]">
+                    {d.assigned_counterpart_name || <span className="text-[rgb(var(--v2-muted))]">—</span>}
                   </td>
-                  <td className="px-3 py-2 font-mono text-surface-200">
-                    {d.phone_number || <span className="text-surface-500">—</span>}
+                  <td className="font-mono text-[rgb(var(--v2-ink))]">
+                    {d.phone_number || <span className="text-[rgb(var(--v2-muted))]">—</span>}
                   </td>
-                  <td className="px-3 py-2">
+                  <td>
                     {(d.banks || []).length === 0 ? (
-                      <span className="text-surface-500">—</span>
+                      <span className="text-[rgb(var(--v2-muted))]">—</span>
                     ) : (
                       <span className="flex flex-wrap gap-1">
                         {d.banks.map((b) => (
                           <span
                             key={b.bank_name}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                           >
                             {b.bank_name}
                           </span>
@@ -218,13 +217,13 @@ export default function TelefonlarPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-surface-400 text-xs max-w-xs truncate">
+                  <td className="text-[rgb(var(--v2-muted))] text-xs max-w-xs truncate">
                     {d.notes || ""}
                   </td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="text-right">
                     <button
                       onClick={() => setEditTarget(d)}
-                      className="p-1.5 rounded hover:bg-surface-600 text-surface-400 hover:text-cyan-300"
+                      className="p-1.5 rounded hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--accent))]"
                       title="Düzenle"
                     >
                       <Edit2 size={14} />
@@ -232,7 +231,7 @@ export default function TelefonlarPage() {
                     {d.is_active && (
                       <button
                         onClick={() => setDeleteTarget(d)}
-                        className="p-1.5 rounded hover:bg-surface-600 text-surface-400 hover:text-red-300"
+                        className="p-1.5 rounded hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-status-danger"
                         title="Pasif yap"
                       >
                         <Trash2 size={14} />
@@ -320,7 +319,6 @@ function PhoneDeviceModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load businesses (mostly DGR, single) + counterparts
   useEffect(() => {
     Promise.all([
       api.get<Business[]>("/businesses").catch(() => []),
@@ -329,13 +327,11 @@ function PhoneDeviceModal({
       setBusinesses(bz || []);
       const cps = Array.isArray(cp) ? cp : (cp?.items ?? []);
       setCounterparts(cps || []);
-      // Default first business if not set
       if (!businessId && bz && bz.length > 0) setBusinessId(bz[0].id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cascading: brand seçilince modelleri çek
   useEffect(() => {
     if (!brandId) {
       setModels([]);
@@ -407,7 +403,6 @@ function PhoneDeviceModal({
           payload.custom_model = "";
         }
         await api.patch(`/phone-devices/${existing.id}`, payload);
-        // Edit'te bank diff'leri ayrı endpoint'lere POST/DELETE eder.
         const existingBankNames = new Set((existing.banks || []).map((b) => b.bank_name));
         const newBankNames = new Set(banks.map((b) => b.bank_name));
         for (const b of banks) {
@@ -434,26 +429,26 @@ function PhoneDeviceModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="modal-surface rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">
             {mode === "create" ? "Yeni Telefon" : `Telefon #${existing?.device_number} Düzenle`}
           </h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-surface-700">
-            <X size={16} className="text-surface-400" />
+          <button onClick={onClose} className="p-1 rounded hover:bg-[rgb(var(--v2-sunken))]">
+            <X size={16} className="text-[rgb(var(--v2-muted))]" />
           </button>
         </div>
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2 text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <div className="p-2 text-xs text-status-danger bg-status-danger/10 border border-status-danger/30 rounded-lg">
               {error}
             </div>
           )}
 
-          {/* Business */}
+          {/* İşletme */}
           {mode === "create" && (
             <div>
-              <label className="text-xs text-surface-300 mb-1 block">İşletme</label>
+              <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">İşletme</label>
               <DarkSelect
                 value={businessId}
                 onChange={setBusinessId}
@@ -464,11 +459,11 @@ function PhoneDeviceModal({
             </div>
           )}
 
-          {/* Brand / Model / Custom */}
+          {/* Marka / Model / Custom */}
           {!useCustom ? (
             <>
               <div>
-                <label className="text-xs text-surface-300 mb-1 block">Marka</label>
+                <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Marka</label>
                 <DarkSelect
                   value={brandId}
                   onChange={(v) => { setBrandId(v); setModelId(""); }}
@@ -479,7 +474,7 @@ function PhoneDeviceModal({
               </div>
               {brandId && (
                 <div>
-                  <label className="text-xs text-surface-300 mb-1 block">Model</label>
+                  <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Model</label>
                   <DarkSelect
                     value={modelId}
                     onChange={setModelId}
@@ -493,7 +488,7 @@ function PhoneDeviceModal({
                   <button
                     type="button"
                     onClick={() => { setUseCustom(true); setBrandId(""); setModelId(""); }}
-                    className="mt-1 text-[11px] text-cyan-300 hover:underline"
+                    className="mt-1 text-[11px] text-[rgb(var(--accent))] hover:underline"
                   >
                     Listede yok? Custom model yaz
                   </button>
@@ -503,7 +498,7 @@ function PhoneDeviceModal({
                 <button
                   type="button"
                   onClick={() => setUseCustom(true)}
-                  className="text-[11px] text-cyan-300 hover:underline"
+                  className="text-[11px] text-[rgb(var(--accent))] hover:underline"
                 >
                   Marka listede yok? Custom model yaz
                 </button>
@@ -511,12 +506,12 @@ function PhoneDeviceModal({
             </>
           ) : (
             <div>
-              <label className="text-xs text-surface-300 mb-1 block">
+              <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">
                 Custom Model
                 <button
                   type="button"
                   onClick={() => { setUseCustom(false); setCustomModel(""); }}
-                  className="ml-2 text-[10px] text-surface-400 hover:underline"
+                  className="ml-2 text-[10px] text-[rgb(var(--v2-muted))] hover:underline"
                 >
                   (master listeye dön)
                 </button>
@@ -531,9 +526,9 @@ function PhoneDeviceModal({
             </div>
           )}
 
-          {/* Phone number */}
+          {/* Telefon numarası */}
           <div>
-            <label className="text-xs text-surface-300 mb-1 block">Telefon No</label>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Telefon No</label>
             <input
               type="text"
               value={phoneNumber}
@@ -543,9 +538,9 @@ function PhoneDeviceModal({
             />
           </div>
 
-          {/* Counterpart */}
+          {/* Karşı firma */}
           <div>
-            <label className="text-xs text-surface-300 mb-1 block">Atanan Firma / Kişi</label>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Atanan Firma / Kişi</label>
             <DarkSelect
               value={counterpartId}
               onChange={setCounterpartId}
@@ -559,17 +554,17 @@ function PhoneDeviceModal({
             />
           </div>
 
-          {/* Banks */}
+          {/* Bankacılıklar */}
           <div>
-            <label className="text-xs text-surface-300 mb-1 block">Bankacılıklar</label>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Bankacılıklar</label>
             <div className="flex flex-wrap gap-1 mb-2">
               {banks.map((b) => (
                 <span
                   key={b.bank_name}
-                  className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                  className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                 >
                   {b.bank_name}
-                  <button onClick={() => removeBank(b.bank_name)} className="hover:text-surface-100">
+                  <button onClick={() => removeBank(b.bank_name)} className="hover:text-[rgb(var(--v2-ink))]">
                     <X size={10} />
                   </button>
                 </span>
@@ -594,9 +589,9 @@ function PhoneDeviceModal({
             </div>
           </div>
 
-          {/* Notes */}
+          {/* Notlar */}
           <div>
-            <label className="text-xs text-surface-300 mb-1 block">Notlar</label>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Notlar</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -605,7 +600,7 @@ function PhoneDeviceModal({
             />
           </div>
         </div>
-        <div className="p-4 border-t border-surface-700 flex justify-end gap-2">
+        <div className="p-4 border-t border-[rgb(var(--v2-border))] flex justify-end gap-2">
           <button
             onClick={onClose}
             disabled={submitting}
@@ -616,7 +611,7 @@ function PhoneDeviceModal({
           <button
             onClick={submit}
             disabled={submitting}
-            className="px-4 py-2 rounded-lg text-sm bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
+            className="v2-btn v2-btn--accent px-4 py-2 text-sm disabled:opacity-60"
           >
             {submitting ? "Kaydediliyor…" : mode === "create" ? "Oluştur" : "Kaydet"}
           </button>
@@ -651,17 +646,17 @@ function DeleteConfirmModal({
   }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-sm">
-        <div className="p-4 border-b border-surface-700">
-          <h3 className="text-base font-semibold text-surface-100">Telefonu pasif yap</h3>
+      <div className="modal-surface rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="p-4 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">Telefonu pasif yap</h3>
         </div>
-        <div className="p-4 text-sm text-surface-300">
+        <div className="p-4 text-sm text-[rgb(var(--v2-muted))]">
           <p>
             #{device.device_number} {device.display_label} pasif yapılacak. Tx referansları
             korunur (soft delete). Onaylıyor musun?
           </p>
         </div>
-        <div className="p-4 border-t border-surface-700 flex justify-end gap-2">
+        <div className="p-4 border-t border-[rgb(var(--v2-border))] flex justify-end gap-2">
           <button
             onClick={onClose}
             disabled={submitting}

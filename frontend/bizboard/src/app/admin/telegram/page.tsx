@@ -3,7 +3,7 @@
 /**
  * CHT-1 + CHT-2 (Telegram Admin Hedefli Gönderim): bağlı chat/grup/kişi listesi
  * + per-chat event tercih konfigürasyonu. ADMIN-only (backend zaten korur;
- * burada da yönlendirme guard'ı). Çift tema (surface tokens) + portal'lı modal.
+ * burada da yönlendirme guard'ı). Çift tema (v2 token'ları) + portal'lı modal.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -64,26 +64,26 @@ export default function AdminTelegramPage() {
   if (profile?.role !== "admin") return null;
 
   return (
-    <div className="min-h-[100dvh] bg-surface-900 text-surface-100">
-      <header className="sticky top-0 z-40 bg-surface-800/95 backdrop-blur-lg border-b border-surface-700">
+    <div className="min-h-[100dvh] bg-[rgb(var(--v2-app))] text-[rgb(var(--v2-ink))]">
+      <header className="sticky top-0 z-40 bg-[rgb(var(--v2-card))]/95 backdrop-blur-lg border-b border-[rgb(var(--v2-border))]">
         <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto">
           <button
             type="button"
             onClick={() => router.push("/admin")}
-            className="p-2 rounded-xl hover:bg-surface-700"
+            className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))]"
             aria-label="Geri"
           >
-            <ChevronLeft size={18} className="text-surface-300" />
+            <ChevronLeft size={18} className="text-[rgb(var(--v2-muted))]" />
           </button>
-          <Send size={20} className="text-sky-400" />
-          <h1 className="text-lg font-bold">Telegram Bağlı Hesaplar</h1>
-          <span className="ml-2 text-xs text-surface-400">
+          <Send size={20} className="text-[rgb(var(--accent))]" />
+          <h1 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Telegram Bağlı Hesaplar</h1>
+          <span className="ml-2 text-xs text-[rgb(var(--v2-muted))]">
             {chats.length > 0 ? `${chats.length} chat` : ""}
           </span>
           <div className="ml-auto flex items-center gap-2">
             <a
               href="/admin/telegram/manual-send"
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-medium"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg v2-btn v2-btn--accent font-medium"
             >
               <MessageSquarePlus size={14} />
               Manuel Gönderim
@@ -92,7 +92,7 @@ export default function AdminTelegramPage() {
               type="button"
               onClick={() => void load()}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-ink))] disabled:opacity-50"
             >
               <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
               Yenile
@@ -103,22 +103,22 @@ export default function AdminTelegramPage() {
 
       <main className="px-4 py-4 max-w-5xl mx-auto">
         {error && (
-          <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          <div className="mb-3 p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">
             {error}
           </div>
         )}
 
-        <div className="glass-card overflow-hidden divide-y divide-surface-700/60">
+        <div className="v2-card rounded-2xl overflow-hidden divide-y divide-[rgb(var(--v2-border))]">
           {loading && (
-            <div className="flex items-center justify-center py-10 text-surface-400">
+            <div className="flex items-center justify-center py-10 text-[rgb(var(--v2-muted))]">
               <Loader2 size={18} className="animate-spin" />
             </div>
           )}
 
           {!loading && chats.length === 0 && (
-            <p className="text-center text-surface-400 py-10 text-sm">
+            <p className="text-center text-[rgb(var(--v2-muted))] py-10 text-sm">
               Henüz bağlı Telegram hesabı/grubu yok. Kullanıcılar Profil &gt;
-              Bildirimler'den, gruplar bot eklenip bağlanarak görünür.
+              Bildirimler&apos;den, gruplar bot eklenip bağlanarak görünür.
             </p>
           )}
 
@@ -126,33 +126,33 @@ export default function AdminTelegramPage() {
             chats.map((c) => (
               <div
                 key={c.binding_id}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-surface-800/60 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-[rgb(var(--v2-sunken))] transition-colors"
               >
                 <div
                   className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 ${
                     c.chat_type === "GROUP"
-                      ? "bg-violet-500/15 text-violet-300"
-                      : "bg-sky-500/15 text-sky-300"
+                      ? "bg-violet-500/15 text-violet-700 dark:text-violet-300"
+                      : "bg-accent/15 text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent-bright))]"
                   }`}
                 >
                   {c.chat_type === "GROUP" ? <Users size={16} /> : <UserIcon size={16} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-surface-100 truncate">
+                    <span className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">
                       {c.chat_name}
                     </span>
                     <span
                       className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${
                         c.chat_type === "GROUP"
-                          ? "bg-violet-500/10 text-violet-300 border-violet-500/30"
-                          : "bg-sky-500/10 text-sky-300 border-sky-500/30"
+                          ? "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30"
+                          : "v2-chip-accent"
                       }`}
                     >
                       {c.chat_type === "GROUP" ? "Grup" : c.chat_type === "DM" ? "Kişi" : "?"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-surface-400">
+                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[rgb(var(--v2-muted))]">
                     <span className="truncate">
                       {c.user_name ?? "—"}
                       {c.username ? ` (@${c.username})` : ""}
@@ -162,15 +162,15 @@ export default function AdminTelegramPage() {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-[11px] text-surface-400">Aktif olay</div>
-                  <div className="text-sm font-semibold text-surface-200 num">
+                  <div className="text-[11px] text-[rgb(var(--v2-muted))]">Aktif olay</div>
+                  <div className="text-sm font-semibold text-[rgb(var(--v2-ink))] num">
                     {c.enabled_event_count}/{c.total_event_count}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setConfigChat(c)}
-                  className="ml-2 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-200 shrink-0"
+                  className="ml-2 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-ink))] shrink-0"
                 >
                   <Settings2 size={14} />
                   Konfigür
@@ -247,63 +247,65 @@ function ChatConfigModal({
       onClick={onClose}
     >
       <div
-        className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="modal-surface rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-surface-100 truncate">
+            <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] truncate">
               {chat.chat_name}
             </h3>
-            <p className="text-[11px] text-surface-400">
-              Bu chat'e hangi olayların gideceğini seçin
+            <p className="text-[11px] text-[rgb(var(--v2-muted))]">
+              Bu chat&apos;e hangi olayların gideceğini seçin
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] transition-colors"
             aria-label="Kapat"
           >
-            <X size={18} className="text-surface-400" />
+            <X size={18} className="text-[rgb(var(--v2-muted))]" />
           </button>
         </div>
 
         <div className="p-4">
           {loading ? (
             <div className="py-8 flex justify-center">
-              <Loader2 size={18} className="animate-spin text-surface-400" />
+              <Loader2 size={18} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <tbody className="divide-y divide-surface-700/60">
-                {prefs.map((p) => {
-                  const busy = saving === p.event;
-                  return (
-                    <tr key={p.event} className="row-hover">
-                      <td className="py-2.5 pr-3 text-surface-200">{eventLabel(p.event)}</td>
-                      <td className="py-2.5 text-right w-16">
-                        <button
-                          onClick={() => toggle(p.event, !p.enabled)}
-                          disabled={busy}
-                          role="switch"
-                          aria-checked={p.enabled}
-                          aria-label={eventLabel(p.event)}
-                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                            p.enabled ? "bg-sky-600" : "bg-surface-600"
-                          } ${busy ? "opacity-60" : ""}`}
-                        >
-                          <span
-                            className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                              p.enabled ? "translate-x-4" : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="v2-table-wrap">
+              <table className="v2-table w-full text-sm">
+                <tbody>
+                  {prefs.map((p) => {
+                    const busy = saving === p.event;
+                    return (
+                      <tr key={p.event} className="row-hover">
+                        <td className="py-2.5 pr-3 text-[rgb(var(--v2-ink))]">{eventLabel(p.event)}</td>
+                        <td className="py-2.5 text-right w-16">
+                          <button
+                            onClick={() => toggle(p.event, !p.enabled)}
+                            disabled={busy}
+                            role="switch"
+                            aria-checked={p.enabled}
+                            aria-label={eventLabel(p.event)}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                              p.enabled ? "bg-[rgb(var(--accent))]" : "bg-surface-600"
+                            } ${busy ? "opacity-60" : ""}`}
+                          >
+                            <span
+                              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                                p.enabled ? "translate-x-4" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

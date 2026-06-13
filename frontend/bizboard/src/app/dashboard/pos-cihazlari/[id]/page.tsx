@@ -88,13 +88,13 @@ export default function PosDeviceDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 size={28} className="animate-spin text-indigo-400" />
+        <Loader2 size={28} className="animate-spin text-[rgb(var(--accent-bright))]" />
       </div>
     );
   }
   if (error || !device) {
     return (
-      <div className="card p-8 text-center text-surface-400">
+      <div className="v2-card rounded-2xl p-8 text-center text-[rgb(var(--v2-muted))]">
         {error || "Cihaz bulunamadı"}
       </div>
     );
@@ -112,12 +112,12 @@ export default function PosDeviceDetailPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center shrink-0">
-              <CreditCard size={20} className="text-indigo-300" />
+            <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+              <CreditCard size={20} className="text-[rgb(var(--accent-bright))]" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-surface-100 truncate">{device.name}</h1>
-              <p className="text-xs text-surface-400 truncate">
+              <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">{device.name}</h1>
+              <p className="text-xs text-[rgb(var(--v2-muted))] truncate">
                 {device.owner_counterpart_name || "—"}
                 {device.bank_name && ` · ${device.bank_name}`}
                 {!device.is_active && " · pasif"}
@@ -136,15 +136,15 @@ export default function PosDeviceDetailPage() {
         )}
       </div>
 
-      {/* Device info */}
-      <section className="card p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+      {/* Cihaz bilgileri */}
+      <section className="v2-card rounded-2xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <Info label="Varsayılan oran" value={device.default_rate != null ? `%${device.default_rate}` : "—"} />
         <Info label="Son kullanılan" value={device.last_used_rate != null ? `%${device.last_used_rate}` : "—"} />
         <Info label="Durum" value={device.is_active ? "Aktif" : "Pasif"} tone={device.is_active ? "pos" : "neg"} />
         <Info label="Sahibi" value={device.owner_counterpart_name || "—"} />
       </section>
 
-      {/* Analytics totals */}
+      {/* Analytics toplamlar */}
       {analytics && (
         <section className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <StatCard icon={TrendingUp} label="Brüt" value={analytics.totals.gross} />
@@ -155,32 +155,32 @@ export default function PosDeviceDetailPage() {
         </section>
       )}
 
-      {/* Daily chart (basit bar grafiği) */}
+      {/* Günlük chart */}
       {analytics && analytics.series.length > 0 && (
-        <section className="card p-4">
-          <h2 className="text-sm font-semibold text-surface-100 mb-3">Son 30 Gün</h2>
+        <section className="v2-card rounded-2xl p-4">
+          <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))] mb-3">Son 30 Gün</h2>
           <DailyBarChart series={analytics.series} />
         </section>
       )}
 
       {/* Bekleyen tahsilatlar */}
       {unsettled.length > 0 && (
-        <section className="card overflow-hidden border-amber-500/30">
-          <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between bg-amber-500/5">
-            <h2 className="text-sm font-semibold text-surface-100">
+        <section className="v2-card rounded-2xl overflow-hidden border-amber-500/30">
+          <div className="px-4 py-3 border-b border-[rgb(var(--v2-border))] flex items-center justify-between bg-amber-500/5">
+            <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
               Bekleyen Tahsilatlar
-              <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                 {unsettled.length} işlem
               </span>
             </h2>
             <Link
               href="/dashboard/pos-cihazlari"
-              className="text-xs text-amber-300 hover:underline"
+              className="text-xs text-amber-700 dark:text-amber-300 hover:underline"
             >
               Toplu settle →
             </Link>
           </div>
-          <div className="divide-y divide-surface-700 max-h-72 overflow-y-auto">
+          <div className="divide-y divide-[rgb(var(--v2-border))] max-h-72 overflow-y-auto">
             {unsettled.slice(0, 20).map((t) => (
               <TxRow key={t.id} tx={t} />
             ))}
@@ -189,17 +189,17 @@ export default function PosDeviceDetailPage() {
       )}
 
       {/* Tüm işlemler */}
-      <section className="card overflow-hidden">
-        <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-surface-100">
+      <section className="v2-card rounded-2xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-[rgb(var(--v2-border))] flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
             Tüm İşlemler
-            <span className="ml-2 text-[10px] text-surface-400">({txs.length})</span>
+            <span className="ml-2 text-[10px] text-[rgb(var(--v2-muted))]">({txs.length})</span>
           </h2>
         </div>
         {txs.length === 0 ? (
-          <p className="px-4 py-6 text-center text-sm text-surface-500">Bu cihaz için işlem yok.</p>
+          <p className="px-4 py-6 text-center text-sm text-[rgb(var(--v2-muted))]">Bu cihaz için işlem yok.</p>
         ) : (
-          <div className="divide-y divide-surface-700 max-h-96 overflow-y-auto">
+          <div className="divide-y divide-[rgb(var(--v2-border))] max-h-96 overflow-y-auto">
             {txs.map((t) => (
               <TxRow key={t.id} tx={t} />
             ))}
@@ -213,11 +213,11 @@ export default function PosDeviceDetailPage() {
 function Info({ label, value, tone }: { label: string; value: string; tone?: "pos" | "neg" }) {
   return (
     <div>
-      <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
+      <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">{label}</p>
       <p className={cn("text-sm font-medium mt-0.5",
-        tone === "pos" && "text-emerald-300",
-        tone === "neg" && "text-red-300",
-        !tone && "text-surface-100",
+        tone === "pos" && "text-emerald-700 dark:text-emerald-300",
+        tone === "neg" && "text-status-danger",
+        !tone && "text-[rgb(var(--v2-ink))]",
       )}>
         {value}
       </p>
@@ -236,15 +236,15 @@ function StatCard({
 }) {
   const valStr = unit ? `${value} ${unit}` : formatCurrency(value, "TRY");
   return (
-    <div className="card p-3">
-      <div className="flex items-center gap-1.5 text-[10px] text-surface-400 uppercase tracking-wider">
+    <div className="v2-card rounded-2xl p-3">
+      <div className="flex items-center gap-1.5 text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">
         <Icon size={11} /> {label}
       </div>
       <p className={cn("mt-1 text-base font-bold",
-        tone === "pos" && "text-emerald-300",
-        tone === "neg" && "text-red-300",
-        tone === "warn" && "text-amber-300",
-        !tone && "text-surface-100",
+        tone === "pos" && "text-emerald-700 dark:text-emerald-300",
+        tone === "neg" && "text-status-danger",
+        tone === "warn" && "text-amber-700 dark:text-amber-300",
+        !tone && "text-[rgb(var(--v2-ink))]",
       )}>
         {valStr}
       </p>
@@ -253,25 +253,25 @@ function StatCard({
 }
 
 function TxRow({ tx }: { tx: Transaction }) {
-  const settled = tx.pos_settled === true;
+  const isSettled = tx.pos_settled === true;
   const net = tx.pos_net ?? tx.amount;
   return (
     <div className="px-4 py-2.5 flex items-center gap-3">
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-surface-100 truncate">{tx.description || "POS çekim"}</p>
-        <p className="text-[11px] text-surface-400">
+        <p className="text-sm text-[rgb(var(--v2-ink))] truncate">{tx.description || "POS çekim"}</p>
+        <p className="text-[11px] text-[rgb(var(--v2-muted))]">
           {new Date(tx.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}
           {tx.pos_rate != null && ` · %${tx.pos_rate}`}
-          {settled && tx.settled_bank_account_name && ` · ${tx.settled_bank_account_name}`}
+          {isSettled && tx.settled_bank_account_name && ` · ${tx.settled_bank_account_name}`}
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-sm font-semibold text-emerald-300">+{formatCurrency(net, tx.currency)}</p>
+        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">+{formatCurrency(net, tx.currency)}</p>
         <p className="text-[10px]">
-          {settled ? (
-            <span className="text-emerald-300">✓ hesaba düştü</span>
+          {isSettled ? (
+            <span className="text-emerald-700 dark:text-emerald-300">✓ hesaba düştü</span>
           ) : (
-            <span className="text-amber-300">⏳ bekleniyor</span>
+            <span className="text-amber-700 dark:text-amber-300">⏳ bekleniyor</span>
           )}
         </p>
       </div>
@@ -290,7 +290,7 @@ function DailyBarChart({ series }: { series: PosAnalytics["series"] }) {
           <div key={s.date} className="flex-1 flex flex-col items-center gap-0.5">
             <div className="w-full flex gap-px items-end h-full">
               <div
-                className="flex-1 bg-indigo-500/40 rounded-t-sm min-h-[1px]"
+                className="flex-1 bg-accent/40 rounded-t-sm min-h-[1px]"
                 style={{ height: `${Math.max(grossH, 1)}%` }}
                 title={`${s.date} brüt ${formatCurrency(s.gross, "TRY")}`}
               />
