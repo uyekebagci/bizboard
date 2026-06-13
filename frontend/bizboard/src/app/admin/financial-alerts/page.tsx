@@ -6,7 +6,7 @@
  * <p>İşletme-başına iki eşik: işletme toplam BAKİYE eşiği (altına düşünce
  * BALANCE_BELOW_THRESHOLD, debounce'lı) + tek HARCAMA eşiği (üstündeki gider
  * HIGH_EXPENSE_ALERT). Her eşik on/off + tutar input. <b>DEFAULT KAPALI</b> —
- * kapalıyken (off / 0) alarm üretilmez. Tema-duyarlı (glass-card / surface-*).</p>
+ * kapalıyken (off / 0) alarm üretilmez. Tema-duyarlı (Daxa v2: v2-card / v2-token).</p>
  */
 
 import { useEffect, useState } from "react";
@@ -165,17 +165,18 @@ export default function AdminFinancialAlertsPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn"
+          aria-label="Admin paneline dön"
         >
-          <ChevronLeft size={20} className="text-amber-400" />
+          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
         </button>
         <div className="flex items-center gap-2.5">
-          <BellRing size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Finansal Alarmlar</h1>
+          <BellRing size={24} className="text-accent-strong dark:text-accent" />
+          <h1 className="text-2xl v2-display">Finansal Alarmlar</h1>
         </div>
       </div>
 
-      <p className="text-sm text-surface-400 mb-6">
+      <p className="text-sm text-[rgb(var(--v2-muted))] mb-6">
         İşletme-başına proaktif finansal alarm eşikleri. Eşik kapalıyken (veya 0)
         alarm üretilmez. Alarmlar admin&apos;lere uygulama içi gönderilir; Telegram
         için bildirim tercihlerinden ilgili olayı açın.
@@ -183,25 +184,25 @@ export default function AdminFinancialAlertsPage() {
 
       {loading ? (
         <div className="py-10 flex justify-center">
-          <Loader2 size={20} className="animate-spin text-surface-400" />
+          <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : businesses.length === 0 ? (
-        <div className="glass-card p-8 text-center text-surface-400">
+        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))]">
           İşletme bulunamadı.
         </div>
       ) : (
         <div className="space-y-5">
           {/* İşletme seçimi */}
-          <div className="glass-card p-5">
-            <label className="block text-sm font-medium text-surface-300 mb-2">
+          <div className="v2-card p-5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-2">
               <span className="inline-flex items-center gap-2">
-                <Building2 size={15} className="text-surface-400" /> İşletme
+                <Building2 size={15} className="text-[rgb(var(--v2-muted))]" /> İşletme
               </span>
             </label>
             <select
               value={selectedId}
               onChange={(e) => setSelectedId(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm focus:outline-none focus:border-amber-500/50 transition-colors"
+              className="input w-full"
             >
               {businesses.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -213,13 +214,13 @@ export default function AdminFinancialAlertsPage() {
 
           {loadingCfg ? (
             <div className="py-8 flex justify-center">
-              <Loader2 size={18} className="animate-spin text-surface-400" />
+              <Loader2 size={18} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           ) : (
             <>
               {/* Bakiye eşiği */}
               <ThresholdCard
-                icon={<TrendingDown size={18} className="text-amber-400" />}
+                icon={<TrendingDown size={18} className="text-accent-strong dark:text-accent" />}
                 title="Düşük Bakiye Alarmı"
                 description="İşletme toplam bakiyesi bu tutarın altına düştüğünde bir kez uyarı (tekrar üstüne çıkıp düşerse yeniden)."
                 on={balanceOn}
@@ -231,7 +232,7 @@ export default function AdminFinancialAlertsPage() {
 
               {/* Harcama eşiği */}
               <ThresholdCard
-                icon={<Wallet size={18} className="text-amber-400" />}
+                icon={<Wallet size={18} className="text-accent-strong dark:text-accent" />}
                 title="Büyük Harcama Alarmı"
                 description="Tek bir gider işlemi bu tutarı aştığında anlık uyarı (borç/transfer hariç — yalnız gerçek gider)."
                 on={expenseOn}
@@ -244,7 +245,7 @@ export default function AdminFinancialAlertsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors inline-flex items-center justify-center gap-2"
+                className="w-full v2-btn v2-btn--accent v2-press !py-3"
               >
                 {saving && <Loader2 size={16} className="animate-spin" />}
                 {saving ? "Kaydediliyor..." : "Eşikleri Kaydet"}
@@ -252,24 +253,24 @@ export default function AdminFinancialAlertsPage() {
 
               {/* ── Tier 3 (EVT-2): Periyodik finansal özet ──────────── */}
               <div className="pt-3">
-                <h2 className="text-sm font-bold text-surface-200 mb-1.5 inline-flex items-center gap-2">
-                  <CalendarClock size={16} className="text-amber-400" /> Periyodik Finansal Özet
+                <h2 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-1.5 inline-flex items-center gap-2">
+                  <CalendarClock size={16} className="text-accent-strong dark:text-accent" /> Periyodik Finansal Özet
                 </h2>
-                <p className="text-[11px] text-surface-400 mb-3">
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] mb-3">
                   İşletme-başına zamanlanmış özet. Net kâr, gelir/gider, kasa, en
                   yüksek giderler ve dönem kaçak toplamı. <b>Varsayılan kapalı</b> —
                   açmadıkça özet gönderilmez.
                 </p>
 
                 <SummaryToggleCard
-                  icon={<CalendarDays size={18} className="text-amber-400" />}
+                  icon={<CalendarDays size={18} className="text-accent-strong dark:text-accent" />}
                   title="Haftalık Özet"
                   description="Her Pazartesi sabahı önceki haftanın (Pzt–Pzr) özeti."
                   on={weeklyOn}
                   onToggle={setWeeklyOn}
                 />
                 <SummaryToggleCard
-                  icon={<CalendarClock size={18} className="text-amber-400" />}
+                  icon={<CalendarClock size={18} className="text-accent-strong dark:text-accent" />}
                   title="Aylık Özet"
                   description="Her ayın 1'inde önceki ayın (1–son) özeti."
                   on={monthlyOn}
@@ -279,7 +280,7 @@ export default function AdminFinancialAlertsPage() {
                 <button
                   onClick={handleSaveSummary}
                   disabled={savingSummary}
-                  className="w-full py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="w-full v2-btn v2-btn--accent v2-press !py-3"
                 >
                   {savingSummary && <Loader2 size={16} className="animate-spin" />}
                   {savingSummary ? "Kaydediliyor..." : "Özet Tercihini Kaydet"}
@@ -290,7 +291,7 @@ export default function AdminFinancialAlertsPage() {
                   <button
                     onClick={() => handlePreview("weekly")}
                     disabled={previewing}
-                    className="flex-1 py-2 bg-surface-700 hover:bg-surface-600 disabled:opacity-50 text-surface-200 font-medium rounded-xl text-xs transition-colors inline-flex items-center justify-center gap-1.5"
+                    className="flex-1 v2-btn v2-press !py-2 text-xs border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] hover:border-accent/50"
                   >
                     {previewing && <Loader2 size={14} className="animate-spin" />}
                     Haftalık Önizle
@@ -298,7 +299,7 @@ export default function AdminFinancialAlertsPage() {
                   <button
                     onClick={() => handlePreview("monthly")}
                     disabled={previewing}
-                    className="flex-1 py-2 bg-surface-700 hover:bg-surface-600 disabled:opacity-50 text-surface-200 font-medium rounded-xl text-xs transition-colors inline-flex items-center justify-center gap-1.5"
+                    className="flex-1 v2-btn v2-press !py-2 text-xs border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] hover:border-accent/50"
                   >
                     {previewing && <Loader2 size={14} className="animate-spin" />}
                     Aylık Önizle
@@ -306,7 +307,7 @@ export default function AdminFinancialAlertsPage() {
                 </div>
 
                 {preview && (
-                  <pre className="mt-3 p-4 glass-card text-[11px] leading-relaxed text-surface-200 whitespace-pre-wrap font-mono">
+                  <pre className="mt-3 p-4 v2-card text-[11px] leading-relaxed text-[rgb(var(--v2-ink))] whitespace-pre-wrap font-mono">
                     {preview}
                   </pre>
                 )}
@@ -334,13 +335,13 @@ function SummaryToggleCard({
   onToggle: (v: boolean) => void;
 }) {
   return (
-    <div className="glass-card p-5 mb-3">
+    <div className="v2-card p-5 mb-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div className="mt-0.5 shrink-0">{icon}</div>
           <div className="min-w-0">
-            <h3 className="text-sm font-bold text-surface-100">{title}</h3>
-            <p className="text-[11px] text-surface-400 mt-0.5">{description}</p>
+            <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">{title}</h3>
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">{description}</p>
           </div>
         </div>
         <button
@@ -349,7 +350,7 @@ function SummaryToggleCard({
           aria-checked={on}
           aria-label={`${title} aç/kapat`}
           className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-            on ? "bg-amber-500" : "bg-surface-600"
+            on ? "bg-accent" : "bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))]"
           }`}
         >
           <span
@@ -384,13 +385,13 @@ function ThresholdCard({
   placeholder: string;
 }) {
   return (
-    <div className="glass-card p-5">
+    <div className="v2-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div className="mt-0.5 shrink-0">{icon}</div>
           <div className="min-w-0">
-            <h3 className="text-sm font-bold text-surface-100">{title}</h3>
-            <p className="text-[11px] text-surface-400 mt-0.5">{description}</p>
+            <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">{title}</h3>
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">{description}</p>
           </div>
         </div>
         <button
@@ -399,7 +400,7 @@ function ThresholdCard({
           aria-checked={on}
           aria-label={`${title} aç/kapat`}
           className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-            on ? "bg-amber-500" : "bg-surface-600"
+            on ? "bg-accent" : "bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))]"
           }`}
         >
           <span
@@ -412,7 +413,7 @@ function ThresholdCard({
 
       {on && (
         <div className="mt-4">
-          <label className="block text-xs font-medium text-surface-300 mb-1.5">
+          <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
             Eşik tutarı (TRY)
           </label>
           <input
@@ -423,7 +424,7 @@ function ThresholdCard({
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
             placeholder={placeholder}
-            className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+            className="input w-full"
           />
         </div>
       )}

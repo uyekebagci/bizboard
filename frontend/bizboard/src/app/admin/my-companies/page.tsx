@@ -138,33 +138,34 @@ export default function AdminMyCompaniesPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn"
+          aria-label="Admin paneline dön"
         >
-          <ChevronLeft size={20} className="text-amber-400" />
+          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
         </button>
         <div className="flex items-center gap-2.5">
-          <Building2 size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Benim Firmalarım</h1>
+          <Building2 size={24} className="text-accent-strong dark:text-accent" />
+          <h1 className="text-2xl v2-display">Benim Firmalarım</h1>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-900/30 border border-red-800 rounded-xl text-red-300 text-sm">
+        <div className="mb-6 p-4 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm">
           {error}
         </div>
       )}
 
-      <div className="glass-card overflow-hidden">
-        <div className="modal-header">
+      <div className="v2-card overflow-hidden">
+        <div className="flex items-center justify-between gap-3 p-5 border-b border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-lg font-semibold text-surface-100">Firmalar</h2>
-            <span className="ml-1 text-sm text-surface-400">
+            <h2 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">Firmalar</h2>
+            <span className="ml-1 text-sm text-[rgb(var(--v2-muted))]">
               ({companies.length})
             </span>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-colors"
+            className="v2-btn v2-btn--accent v2-press !py-2 !px-4 text-sm"
           >
             <Plus size={16} />
             Yeni Firma
@@ -172,32 +173,32 @@ export default function AdminMyCompaniesPage() {
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-surface-400">Yükleniyor...</div>
+          <div className="p-8 text-center text-[rgb(var(--v2-muted))]">Yükleniyor...</div>
         ) : companies.length === 0 ? (
-          <div className="p-8 text-center text-surface-400">Henüz firma yok</div>
+          <div className="p-8 text-center text-[rgb(var(--v2-muted))]">Henüz firma yok</div>
         ) : (
-          <div className="divide-y divide-surface-700">
+          <div className="divide-y divide-[rgb(var(--v2-border))]">
             {companies.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between p-4 hover:bg-surface-800 transition-colors group gap-4"
+                className="flex items-center justify-between p-4 hover:bg-[rgb(var(--v2-sunken))] transition-colors group gap-4"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-surface-100 text-sm truncate">
+                    <h3 className="font-semibold text-[rgb(var(--v2-ink))] text-sm truncate">
                       {c.legal_name}
                     </h3>
                     {c.is_default && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-[10px] font-medium">
+                      <span className="v2-chip-accent inline-flex items-center gap-1 text-[10px] font-medium">
                         <Star size={10} />
                         Varsayilan
                       </span>
                     )}
-                    <span className="px-2 py-0.5 rounded-md bg-surface-700 text-surface-400 text-[10px] font-medium">
+                    <span className="px-2 py-0.5 rounded-md bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] text-[10px] font-medium">
                       {typeLabel(c.company_type)}
                     </span>
                   </div>
-                  <div className="text-xs text-surface-400 flex flex-wrap gap-3">
+                  <div className="text-xs text-[rgb(var(--v2-muted))] flex flex-wrap gap-3">
                     {c.tax_id && <span>VKN/TC: {c.tax_id}</span>}
                     {c.tax_office && <span>{c.tax_office}</span>}
                     {c.activity_code && <span>NACE {c.activity_code}</span>}
@@ -206,7 +207,7 @@ export default function AdminMyCompaniesPage() {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => setEditing(c)}
-                    className="p-2 rounded-lg hover:bg-surface-600 text-surface-400 hover:text-surface-100 transition-colors"
+                    className="p-2 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
                     title="Düzenle"
                   >
                     <Pencil size={16} />
@@ -216,8 +217,8 @@ export default function AdminMyCompaniesPage() {
                     disabled={c.is_default}
                     className={`p-2 rounded-lg transition-colors ${
                       c.is_default
-                        ? "text-surface-200 cursor-not-allowed"
-                        : "hover:bg-red-900/30 text-surface-400 hover:text-red-400"
+                        ? "text-[rgb(var(--v2-muted))] opacity-50 cursor-not-allowed"
+                        : "hover:bg-status-danger/10 text-[rgb(var(--v2-muted))] hover:text-status-danger"
                     }`}
                     title={
                       c.is_default
@@ -267,12 +268,12 @@ export default function AdminMyCompaniesPage() {
       {/* Delete confirm */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="glass-card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-surface-100 mb-2">
+          <div className="modal-surface rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">
               Firmayı Sil
             </h3>
-            <p className="text-sm text-surface-400 mb-6">
-              <strong className="text-surface-100">{deleteConfirm.legal_name}</strong>{" "}
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-6">
+              <strong className="text-[rgb(var(--v2-ink))]">{deleteConfirm.legal_name}</strong>{" "}
               kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
             </p>
             <div className="flex justify-end gap-3">
@@ -284,7 +285,7 @@ export default function AdminMyCompaniesPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm"
+                className="v2-btn v2-press !py-2 !px-4 text-sm bg-status-danger hover:bg-status-danger/90 text-white"
               >
                 Evet, Sil
               </button>
@@ -360,21 +361,21 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <form
         onSubmit={handleSubmit}
-        className="glass-card p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
+        className="modal-surface rounded-2xl p-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-surface-100">{title}</h3>
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100"
+            className="p-2 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
           >
             <X size={18} />
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-300 text-sm">
+          <div className="mb-4 p-3 rounded-lg border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm">
             {error}
           </div>
         )}
@@ -402,12 +403,12 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
               value={form.tax_id}
               onChange={(e) => setForm({ ...form, tax_id: e.target.value })}
               placeholder="10 veya 11 hane"
-              className={`${inputClass} ${taxIdInvalid ? "border-red-500" : ""}`}
+              className={`${inputClass} ${taxIdInvalid ? "!border-status-danger" : ""}`}
               inputMode="numeric"
               maxLength={11}
             />
             {taxIdInvalid && (
-              <p className="mt-1 text-xs text-red-400">
+              <p className="mt-1 text-xs text-status-danger">
                 Geçersiz format / checksum
               </p>
             )}
@@ -513,7 +514,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-semibold text-sm"
+            className="v2-btn v2-btn--accent v2-press !py-2 !px-4 text-sm"
           >
             {submitting ? "Kaydediliyor..." : "Kaydet"}
           </button>
@@ -523,8 +524,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
   );
 }
 
-const inputClass =
-  "w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors";
+const inputClass = "input w-full";
 
 function Field({
   label,
@@ -537,7 +537,7 @@ function Field({
 }) {
   return (
     <div className={colSpan ?? ""}>
-      <label className="block text-xs font-medium text-surface-400 mb-1.5">
+      <label className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1.5">
         {label}
       </label>
       {children}
