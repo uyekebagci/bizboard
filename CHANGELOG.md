@@ -48,6 +48,24 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Changed
 
+- **UI v2 (Daxa) — liste/finans/rapor sayfaları yeni tasarım diline taşındı (salt görsel).**
+  Çatı'nın liste/tablo/finans/rapor sayfaları eski `glass-card`/pastel/indigo
+  görünümden Daxa diline (`v2-card`, solid/katmanlı yüzey, lime accent, segment/
+  badge, yuvarlak butonlar, yoğun-okunur tablolar) geçirildi: **İşlemler**
+  (Tüm İşlemler), **Cariler**, **Kişiler**, **Finans** (finans merkezi),
+  **Raporlar** (+ forecast + bütçe), **Çekler**, **Çek/Senetler**, **Krediler**,
+  **Alacaklar**, **Verecekler**, **Banka Hesapları**, **Kategoriler**,
+  **Firmalarım**, **Kapanışlar** ve **Gün Kapanışı** (görsel). Para-semantiği
+  renkleri tutarlı eşlendi (gelir/alacak/tahsil/fazla/denk → lime accent;
+  gider/borç/verecek/eksik/karşılıksız → `status-danger`; yaklaşan vade/uyarı/
+  ciro → `status-warning`). Kategorik ayrım hue'ları (instrument/hesap tipi
+  rozetleri) ve çok-seri grafik paletleri veri-görselleştirme amacıyla korundu.
+  **Veri, işlevsellik, filtre, pagination (server + client) ve infinite-scroll
+  AYNEN korundu** — yalnızca görsel katman değişti. Çift tema (light + dark),
+  a11y (icon-butonlarda `aria-label`, segment kontrollerde `aria-pressed`,
+  `focus:ring-accent`). Paylaşılan shell/base-primitive'lere (globals.css,
+  tailwind.config, layout, `components/v2`, `components/shared`) dokunulmadı.
+
 - **UI v2 (Daxa) — yeni "Genel Bakış" tasarımı GERÇEK `/dashboard` landing'ine taşındı (promote).**
   Showcase'teki (`/dashboard/ui-v2`) Daxa "Overview Panel" artık login sonrası
   gerçek ana sayfa. Görsel hero katmanı (metrik kartları + net-kâr marjı gauge'ı +
