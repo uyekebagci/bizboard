@@ -25,7 +25,7 @@ const TYPE_CONFIG: Record<string, { label: string; icon: typeof Home; color: str
   RENT: { label: "Kira", icon: Home, color: "text-orange-300", bg: "bg-orange-500/10" },
   PERSONNEL: { label: "Personel", icon: Users, color: "text-blue-300", bg: "bg-blue-500/15" },
   VEHICLE_RENTAL: { label: "Araç Kiralama", icon: TrendingDown, color: "text-teal-300", bg: "bg-teal-500/15" },
-  UTILITY: { label: "Fatura", icon: Zap, color: "text-yellow-600", bg: "bg-yellow-50" },
+  UTILITY: { label: "Fatura", icon: Zap, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-100 dark:bg-yellow-500/10" },
   OTHER: { label: "Diğer", icon: MoreHorizontal, color: "text-surface-300", bg: "bg-surface-700" },
 };
 
@@ -75,7 +75,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
 
   return (
     <>
-      <div className="glass-card overflow-hidden">
+      <div className="v2-card overflow-hidden">
         {/* Header */}
         <div className="modal-header">
           <div className="flex items-center gap-2">
@@ -334,7 +334,7 @@ function CreateFixedCostModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="text-lg font-bold text-surface-100">
             {isEdit ? "Sabit Gider Düzenle" : "Yeni Sabit Gider"}
@@ -519,7 +519,7 @@ function DeleteFixedCostModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
+      <div className="v2-card shadow-xl w-full max-w-md">
         <div className="modal-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">

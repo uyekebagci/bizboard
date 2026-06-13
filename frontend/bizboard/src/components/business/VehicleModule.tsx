@@ -97,7 +97,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
     <>
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
           <div className="p-3 bg-teal-500/15 border border-teal-500/30 rounded-xl text-center">
             <p className="text-[10px] text-teal-300 uppercase tracking-wider font-medium">Araç</p>
             <p className="text-lg font-bold text-teal-300 mt-0.5">
@@ -145,13 +145,13 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
 
       {/* Vehicle List */}
       {filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
+        <div className="v2-card p-8 text-center">
           <Car size={32} className="mx-auto text-surface-300 mb-2" />
           <p className="text-surface-400 text-sm">Henüz araç eklenmemiş</p>
           <p className="text-surface-400 text-xs mt-1">İlk aracı eklemek için yukarıdaki butonu kullanın</p>
         </div>
       ) : (
-        <div className="glass-card divide-y divide-surface-700">
+        <div className="v2-card divide-y divide-surface-700">
           {filtered.map((v) => (
             <div
               key={v.id}
@@ -272,7 +272,7 @@ function VehicleDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">Araç Detayı</h3>
@@ -609,7 +609,7 @@ function CreateVehicleModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="text-lg font-bold text-surface-100">
             {isEdit ? "Araç Düzenle" : "Yeni Araç"}
@@ -646,7 +646,7 @@ function CreateVehicleModal({
                 <div><label className={labelCls}>Model</label>
                   <input type="text" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Sprinter, 320i..." className={inputCls} /></div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div><label className={labelCls}>Model Yili</label>
                   <input type="number" value={modelYear} onChange={(e) => setModelYear(e.target.value)} placeholder="2024" className={inputCls} /></div>
                 <div><label className={labelCls}>Renk</label>
@@ -786,7 +786,7 @@ function DeleteVehicleModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
+      <div className="v2-card shadow-xl w-full max-w-md">
         <div className="modal-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">

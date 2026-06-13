@@ -139,7 +139,7 @@ export function DebtModule({ businessId, currency }: Props) {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="glass-card p-3">
+          <div className="v2-card p-3">
             <p className="text-xs text-surface-400 mb-1">Alacak</p>
             <p className="text-base font-bold text-emerald-300">
               {currency === "TRY" ? "₺" : currency}
@@ -149,7 +149,7 @@ export function DebtModule({ businessId, currency }: Props) {
               {summary.receivable_count} kayıt
 </p>
           </div>
-          <div className="glass-card p-3">
+          <div className="v2-card p-3">
             <p className="text-xs text-surface-400 mb-1">Verecek</p>
             <p className="text-base font-bold text-red-300">
               {currency === "TRY" ? "₺" : currency}
@@ -159,7 +159,7 @@ export function DebtModule({ businessId, currency }: Props) {
               {summary.payable_count} kayıt
 </p>
           </div>
-          <div className="glass-card p-3">
+          <div className="v2-card p-3">
             <p className="text-xs text-surface-400 mb-1">Net</p>
             <p
               className={`text-base font-bold ${
@@ -222,7 +222,7 @@ export function DebtModule({ businessId, currency }: Props) {
 
       {/* Debt List */}
       {filteredDebts.length === 0 ? (
-        <div className="glass-card p-6 text-center">
+        <div className="v2-card p-6 text-center">
           <p className="text-surface-400 text-sm">Kayıt bulunamadı</p>
         </div>
       ) : (
@@ -230,7 +230,7 @@ export function DebtModule({ businessId, currency }: Props) {
           {filteredDebts.map((debt) => (
             <div
               key={debt.id}
-              className={`glass-card p-3.5 group ${debt.is_settled ? "opacity-60" : ""}`}
+              className={`v2-card p-3.5 group ${debt.is_settled ? "opacity-60" : ""}`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3 min-w-0">
@@ -256,7 +256,7 @@ export function DebtModule({ businessId, currency }: Props) {
                       </p>
                       {debt.is_settled && (
                         <span className="px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 rounded-full font-medium">
-                          Kapatildi
+                          Kapatıldı
                         </span>
                       )}
                       {debt.admin_only && (
@@ -405,7 +405,7 @@ function ConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl p-6 max-w-sm w-full">
+      <div className="v2-card shadow-xl p-6 max-w-sm w-full">
         <h3 className="text-lg font-semibold text-surface-100 mb-2">
           {title}
         </h3>
@@ -558,7 +558,7 @@ function CreateDebtModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">
