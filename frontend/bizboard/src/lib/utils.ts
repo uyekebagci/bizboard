@@ -33,12 +33,15 @@ export function formatCurrency(
   currency: string = "TRY",
   locale: string = "tr-TR"
 ): string {
+  // NaN/Infinity koruması (kök çözüm): geçersiz tutar → "₺NaN" yerine 0.
+  // null/undefined/string gibi geçersiz girişler de Number.isFinite ile yakalanır.
+  const v = Number.isFinite(amount) ? amount : 0;
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(v);
 }
 
 /** Sansür maskesindeki SABİT asterisk sayısı (tutar büyüklüğünden bağımsız). */

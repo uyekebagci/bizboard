@@ -97,7 +97,7 @@ export default function TransferModePage() {
           href="/dashboard"
           className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] whitespace-nowrap"
         >
-          ← Dashboard
+          ← Ana Sayfa
         </Link>
       </div>
 

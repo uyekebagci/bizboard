@@ -44,7 +44,7 @@ export function BusinessHeader({ business }: Props) {
             {business.name}
           </h1>
           <p className="text-sm text-surface-400 capitalize mt-0.5">
-            {business.business_type_name || "Isletme"}
+            {business.business_type_name || "İşletme"}
           </p>
         </div>
       </div>
@@ -61,7 +61,7 @@ export function BusinessHeader({ business }: Props) {
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-surface-700">
           <Users size={16} className="text-surface-400" />
           <span className="text-xs text-surface-400">
-            {business.members.length} ekip uyesi
+            {business.members.length} ekip üyesi
           </span>
         </div>
       )}

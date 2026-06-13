@@ -71,9 +71,9 @@ const moduleLabelMap: Record<string, string> = {
   projects: "Projeler",
   documents: "Belgeler",
   reservations: "Rezervasyonlar",
-  vehicles: "Araclar",
-  menu: "Menu",
-  crm: "Musteriler",
+  vehicles: "Araçlar",
+  menu: "Menü",
+  crm: "Müşteriler",
 };
 
 // ===== COLOR PALETTE =====
@@ -666,10 +666,10 @@ function StepBasicInfo({
 
       {/* Description */}
       <div>
-        <label className="label">Aciklama</label>
+        <label className="label">Açıklama</label>
         <textarea
           className="input min-h-[80px] resize-none"
-          placeholder="Isletmeniz hakkinda kisa bir aciklama..."
+          placeholder="İşletmeniz hakkında kısa bir açıklama..."
           value={form.description}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, description: e.target.value }))
@@ -723,7 +723,7 @@ function StepBasicInfo({
           </div>
 
           <div>
-            <label className="label">Tahmini Aylik Gelir</label>
+            <label className="label">Tahmini Aylık Gelir</label>
             <input
               type="text"
               inputMode="numeric"
@@ -739,7 +739,7 @@ function StepBasicInfo({
           </div>
 
           <div>
-            <label className="label">Tahmini Aylik Gider</label>
+            <label className="label">Tahmini Aylık Gider</label>
             <input
               type="text"
               inputMode="numeric"
@@ -755,7 +755,7 @@ function StepBasicInfo({
           </div>
 
           <div>
-            <label className="label">Baslangic Yatirimi</label>
+            <label className="label">Başlangıç Yatırımı</label>
             <input
               type="text"
               inputMode="numeric"
@@ -774,7 +774,7 @@ function StepBasicInfo({
             <label className="label">Notlar / Planlar</label>
             <textarea
               className="input min-h-[80px] resize-none"
-              placeholder="Bu is fikri hakkindaki dusunceleriniz..."
+              placeholder="Bu iş fikri hakkındaki düşünceleriniz..."
               value={form.mockupNotes}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, mockupNotes: e.target.value }))
@@ -816,7 +816,7 @@ function StepModules({
   return (
     <div className="space-y-3">
       <p className="text-sm text-surface-300 font-medium">
-        Kullanmak istediginiz modulleri secin
+        Kullanmak istediğiniz modülleri seçin
       </p>
       <div className="space-y-2">
         {allModules.map((mod) => {
@@ -853,7 +853,7 @@ function StepModules({
                   {moduleLabelMap[mod] || mod}
                 </p>
                 {isDefault && (
-                  <p className="text-xs text-surface-400">Onerilen</p>
+                  <p className="text-xs text-surface-400">Önerilen</p>
                 )}
               </div>
               <div
@@ -907,7 +907,7 @@ function StepPreview({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-surface-100">
-                {form.name || "Isimsiz Isletme"}
+                {form.name || "İsimsiz İşletme"}
               </h2>
               {form.isMockup && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium">
@@ -916,7 +916,7 @@ function StepPreview({
               )}
             </div>
             <p className="text-sm text-surface-400">
-              {selectedType?.label || "Tip secilmedi"}
+              {selectedType?.label || "Tip seçilmedi"}
             </p>
           </div>
         </div>
@@ -930,7 +930,7 @@ function StepPreview({
       {/* Selected Modules */}
       <div className="card p-4">
         <p className="text-xs text-surface-400 font-medium uppercase tracking-wide mb-3">
-          Aktif Moduller
+          Aktif Modüller
         </p>
         <div className="flex flex-wrap gap-2">
           {form.modules.map((mod) => {
@@ -954,14 +954,14 @@ function StepPreview({
       {(form.setupCostItems.length > 0 || form.monthlyFixedCostItems.some((it) => it.applicable && parseMoneyInput(it.amount) > 0)) && (
         <div className="card p-4 space-y-4">
           <p className="text-xs text-surface-400 font-medium uppercase tracking-wide">
-            Atomic Olusturulacak Kalemler
+            Atomic Oluşturulacak Kalemler
           </p>
 
           {form.setupCostItems.filter((it) => it.name.trim() && parseMoneyInput(it.amount) > 0).length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[11px] uppercase tracking-wide text-surface-400">
-                  Kurulus tx&apos;leri
+                  Kuruluş tx&apos;leri
                 </p>
                 <p className="text-xs font-semibold text-red-400">
                   {formatCurrency(
@@ -994,7 +994,7 @@ function StepPreview({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[11px] uppercase tracking-wide text-surface-400">
-                  Aylik sabit gider
+                  Aylık sabit gider
                 </p>
                 <p className="text-xs font-semibold text-amber-400">
                   {formatCurrency(
@@ -1028,8 +1028,8 @@ function StepPreview({
           )}
 
           <p className="text-[10px] text-surface-500 pt-2 border-t border-surface-700">
-            Bu kalemler isletme olusturma akisina <strong>atomic</strong> olarak dahildir —
-            biri patlarsa hicbir kayit olusturulmaz.
+            Bu kalemler işletme oluşturma akışına <strong>atomic</strong> olarak dahildir —
+            biri patlarsa hiçbir kayıt oluşturulmaz.
           </p>
         </div>
       )}
@@ -1042,25 +1042,25 @@ function StepPreview({
           <div className="flex items-center gap-2 mb-4">
             <Calculator size={18} className="text-amber-300" />
             <p className="text-sm font-bold text-surface-100">
-              Fizibilite Ozeti
+              Fizibilite Özeti
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-surface-400">Tahmini Aylik Gelir</p>
+              <p className="text-xs text-surface-400">Tahmini Aylık Gelir</p>
               <p className="text-lg font-bold text-green-300 mt-0.5">
                 {formatCurrency(form.mockupEstimatedRevenue, form.currency)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-surface-400">Tahmini Aylik Gider</p>
+              <p className="text-xs text-surface-400">Tahmini Aylık Gider</p>
               <p className="text-lg font-bold text-red-300 mt-0.5">
                 {formatCurrency(form.mockupEstimatedExpense, form.currency)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-surface-400">Tahmini Net Kar</p>
+              <p className="text-xs text-surface-400">Tahmini Net Kâr</p>
               <p
                 className={cn(
                   "text-lg font-bold mt-0.5",
@@ -1071,7 +1071,7 @@ function StepPreview({
               </p>
             </div>
             <div>
-              <p className="text-xs text-surface-400">Baslangic Yatirimi</p>
+              <p className="text-xs text-surface-400">Başlangıç Yatırımı</p>
               <p className="text-lg font-bold text-surface-200 mt-0.5">
                 {formatCurrency(form.mockupInitialInvestment, form.currency)}
               </p>
@@ -1084,7 +1084,7 @@ function StepPreview({
               <div className="flex items-center gap-2">
                 <Sparkles size={16} className="text-amber-300" />
                 <p className="text-sm text-surface-200">
-                  Tahmini geri donus suresi:{" "}
+                  Tahmini geri dönüş süresi:{" "}
                   <span className="font-bold text-surface-100">
                     {roiMonths} ay
                   </span>
@@ -1093,18 +1093,18 @@ function StepPreview({
               {roiMonths <= 6 && (
                 <p className="text-xs text-green-300 mt-1 flex items-center gap-1">
                   <TrendingUp size={12} />
-                  Hizli geri donus — iyi bir yatirim firsati olabilir
+                  Hızlı geri dönüş — iyi bir yatırım fırsatı olabilir
                 </p>
               )}
               {roiMonths > 6 && roiMonths <= 18 && (
                 <p className="text-xs text-amber-300 mt-1">
-                  Orta vadeli geri donus — detayli planlama onerilir
+                  Orta vadeli geri dönüş — detaylı planlama önerilir
                 </p>
               )}
               {roiMonths > 18 && (
                 <p className="text-xs text-red-300 mt-1 flex items-center gap-1">
                   <TrendingDown size={12} />
-                  Uzun vadeli geri donus — risk analizi yapmaniz onerilir
+                  Uzun vadeli geri dönüş — risk analizi yapmanız önerilir
                 </p>
               )}
             </div>
@@ -1130,8 +1130,8 @@ function StepPreview({
             className="inline-block mr-1 -mt-0.5 text-surface-400"
           />
           {form.isMockup
-            ? "Bu isletme mock-up olarak olusturulacak ve gercek verilerinizle karistirilmayacaktir. Dashboard'da ayri bir etiket ile gorunecektir."
-            : "Isletmeniz varsayilan kategoriler ve sectiginiz moduller ile olusturulacaktir. Daha sonra ayarlardan duzenleyebilirsiniz."}
+            ? "Bu işletme mock-up olarak oluşturulacak ve gerçek verilerinizle karıştırılmayacaktır. Dashboard'da ayrı bir etiket ile görünecektir."
+            : "İşletmeniz varsayılan kategoriler ve seçtiğiniz modüller ile oluşturulacaktır. Daha sonra ayarlardan düzenleyebilirsiniz."}
         </p>
       </div>
     </div>
@@ -1153,26 +1153,26 @@ function StepSetupCosts({
     <div className="space-y-4">
       <div>
         <p className="text-sm text-surface-300 font-medium">
-          Kurulus / acilis maliyetleri
+          Kuruluş / açılış maliyetleri
         </p>
         <p className="text-xs text-surface-400 mt-1">
-          Bu isletmeyi kurmak icin tek seferlik harcamalar. Her kalem ayri bir
-          transaction olarak yazilir ve raporda &quot;kurulum&quot; olarak isaretlenir.
-          Bu adim opsiyonel — sonradan da eklenebilir.
+          Bu işletmeyi kurmak için tek seferlik harcamalar. Her kalem ayrı bir
+          transaction olarak yazılır ve raporda &quot;kurulum&quot; olarak işaretlenir.
+          Bu adım opsiyonel — sonradan da eklenebilir.
         </p>
       </div>
 
       {items.length === 0 ? (
         <div className="card p-6 text-center">
           <p className="text-sm text-surface-400 mb-3">
-            Henuz kalem yok
+            Henüz kalem yok
           </p>
           <button
             onClick={onAdd}
             className="btn-primary inline-flex items-center gap-2"
           >
             <Plus size={16} />
-            Ilk kalemi ekle
+            İlk kalemi ekle
           </button>
         </div>
       ) : (
@@ -1184,7 +1184,7 @@ function StepSetupCosts({
                   type="text"
                   value={it.name}
                   onChange={(e) => onChange(it.id, { name: e.target.value })}
-                  placeholder="orn. Depozit, Tabela"
+                  placeholder="örn. Depozit, Tabela"
                   className="input"
                 />
                 <input
@@ -1219,7 +1219,7 @@ function StepSetupCosts({
 
       {items.length > 0 && (
         <div className="card p-3 flex items-center justify-between bg-surface-700/50">
-          <p className="text-sm text-surface-300">Toplam kurulum</p>
+          <p className="text-sm text-surface-300">Toplam kuruluş</p>
           <p className="text-lg font-bold text-red-400">
             {formatCurrency(total, currency)}
           </p>
@@ -1245,12 +1245,12 @@ function StepMonthlyFixedCosts({
     <div className="space-y-4">
       <div>
         <p className="text-sm text-surface-300 font-medium">
-          Aylik sabit masraflar
+          Aylık sabit masraflar
         </p>
         <p className="text-xs text-surface-400 mt-1">
-          Her ay duzenli olarak odenen giderler. Uygulanmayanlar icin
-          &quot;Gecerli degil&quot; togglesini kullan — o kategori bu isletmede
-          olusturulmaz.
+          Her ay düzenli olarak ödenen giderler. Uygulanmayanlar için
+          &quot;Geçerli değil&quot; togglesini kullan — o kategori bu işletmede
+          oluşturulmaz.
         </p>
       </div>
 
@@ -1281,7 +1281,7 @@ function StepMonthlyFixedCosts({
                     onChange={(e) => onChange(idx, { applicable: !e.target.checked })}
                     className="w-3.5 h-3.5 rounded accent-amber-500"
                   />
-                  <span>Gecerli degil</span>
+                  <span>Geçerli değil</span>
                 </label>
               </div>
               {it.category === "OTHER" && it.applicable && (
@@ -1289,7 +1289,7 @@ function StepMonthlyFixedCosts({
                   type="text"
                   value={it.customName || ""}
                   onChange={(e) => onChange(idx, { customName: e.target.value })}
-                  placeholder="Kategori adi (orn. Lisans bedelleri)"
+                  placeholder="Kategori adı (örn. Lisans bedelleri)"
                   className="input text-sm mb-2"
                 />
               )}
@@ -1301,7 +1301,7 @@ function StepMonthlyFixedCosts({
                 onChange={(e) =>
                   onChange(idx, { amount: formatMoneyInput(e.target.value) })
                 }
-                placeholder={`Aylik tutar (${currency})`}
+                placeholder={`Aylık tutar (${currency})`}
                 className="input text-right disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
@@ -1310,7 +1310,7 @@ function StepMonthlyFixedCosts({
       </div>
 
       <div className="card p-3 flex items-center justify-between bg-surface-700/50">
-        <p className="text-sm text-surface-300">Aylik toplam</p>
+        <p className="text-sm text-surface-300">Aylık toplam</p>
         <p className="text-lg font-bold text-amber-400">
           {formatCurrency(monthlyTotal, currency)} / ay
         </p>

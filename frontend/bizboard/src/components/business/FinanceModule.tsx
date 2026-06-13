@@ -124,7 +124,7 @@ export function FinanceModule({ businessId, currency }: Props) {
 
       {/* ─── Gelir/Gider Oranı Barı ─────────────────────────── */}
       <div className="glass-card p-4">
-        <h4 className="text-xs font-semibold text-surface-300 mb-3">Gelir / Gider Orani</h4>
+        <h4 className="text-xs font-semibold text-surface-300 mb-3">Gelir / Gider Oranı</h4>
         <div className="relative h-7 rounded-full overflow-hidden flex bg-surface-700">
           <div
             className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-700 flex items-center justify-center"
@@ -184,7 +184,7 @@ export function FinanceModule({ businessId, currency }: Props) {
       {monthlyTrend.length > 0 && (
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-semibold text-surface-300">Aylik Trend</h4>
+            <h4 className="text-xs font-semibold text-surface-300">Aylık Trend</h4>
             <div className="flex items-center gap-3 text-[9px] font-medium">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-green-500" /> Gelir</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-400" /> Gider</span>
@@ -223,7 +223,7 @@ export function FinanceModule({ businessId, currency }: Props) {
       {categories.length > 0 && (
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-semibold text-surface-300">Kategori Kirilimi</h4>
+            <h4 className="text-xs font-semibold text-surface-300">Kategori Kırılımı</h4>
             <span className="text-[9px] text-surface-400" title="POS kategorileri için kâr (= bizim komisyon − banka komisyon) baz alınır.">
               POS = kâr
             </span>
@@ -269,7 +269,7 @@ export function FinanceModule({ businessId, currency }: Props) {
       {/* ─── Sabit Gider Özeti ───────────────────────────────── */}
       {fixedCosts && fixedCosts.total_monthly_cost > 0 && (
         <div className="glass-card p-4">
-          <h4 className="text-xs font-semibold text-surface-300 mb-3">Aylik Sabit Giderler</h4>
+          <h4 className="text-xs font-semibold text-surface-300 mb-3">Aylık Sabit Giderler</h4>
           <div className="grid grid-cols-3 gap-2">
             {fixedCosts.rent_cost > 0 && (
               <FixedCostMini label="Kira" value={fixedCosts.rent_cost} currency={currency} color="text-amber-500" />
@@ -278,7 +278,7 @@ export function FinanceModule({ businessId, currency }: Props) {
               <FixedCostMini label="Personel" value={fixedCosts.personnel_cost} currency={currency} color="text-blue-400" />
             )}
             {fixedCosts.other_cost > 0 && (
-              <FixedCostMini label="Diger" value={fixedCosts.other_cost} currency={currency} color="text-surface-300" />
+              <FixedCostMini label="Diğer" value={fixedCosts.other_cost} currency={currency} color="text-surface-300" />
             )}
           </div>
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-700">
@@ -291,7 +291,7 @@ export function FinanceModule({ businessId, currency }: Props) {
       {/* ─── Son İşlemler ────────────────────────────────────── */}
       {recentTx.length > 0 && (
         <div className="glass-card p-4">
-          <h4 className="text-xs font-semibold text-surface-300 mb-3">Son Islemler</h4>
+          <h4 className="text-xs font-semibold text-surface-300 mb-3">Son İşlemler</h4>
           <div className="space-y-1.5">
             {recentTx.map((tx) => {
               const isIncome = tx.direction === "income";
@@ -339,10 +339,10 @@ export function FinanceModule({ businessId, currency }: Props) {
           </div>
           <div className="text-left">
             <p className="text-sm font-semibold text-surface-100 group-hover:text-brand-400 transition-colors">
-              Detayli Finans Analizi
+              Detaylı Finans Analizi
             </p>
             <p className="text-[10px] text-surface-400">
-              Tum isletmelerin finansal karsilastirmasi, trendler ve raporlar
+              Tüm işletmelerin finansal karşılaştırması, trendler ve raporlar
             </p>
           </div>
         </div>
@@ -380,8 +380,8 @@ function EmptyFinance() {
       <div className="w-12 h-12 rounded-xl bg-surface-700 flex items-center justify-center mx-auto mb-3">
         <Wallet size={24} className="text-surface-400" />
       </div>
-      <p className="text-sm font-medium text-surface-300">Henuz finansal veri yok</p>
-      <p className="text-xs text-surface-400 mt-1">Islem ekleyerek finansal takibe baslayin</p>
+      <p className="text-sm font-medium text-surface-300">Henüz finansal veri yok</p>
+      <p className="text-xs text-surface-400 mt-1">İşlem ekleyerek finansal takibe başlayın</p>
     </div>
   );
 }

@@ -32,6 +32,29 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Fixed
 
+- **DEPLOY-6 — login teması, ₺NaN kök çözümü, kategoriler 404 ve sistemik
+  aksansız-Türkçe metin düzeltmesi (self-verify bulguları).**
+  - **Login (`auth/login`):** light temada görünmeyen başlık/alt-başlık ve
+    dark'a geçmeyen sayfa zemini düzeltildi. Sayfa kabuğu tema-duyarlı v2
+    token'larına geçirildi (`v2-app-bg`, `--v2-ink`, `--v2-muted`, `v2-logo-tile`;
+    hardcoded beyaz metin/`surface-50` zemin kaldırıldı). Tüm metinler doğru
+    Türkçe karakterlerle: "Tekrar Hoşgeldiniz", "ÇATI hesabınıza giriş yapın",
+    "Kullanıcı Adı", "Şifre", "Giriş Yap" + hata mesajları.
+  - **₺NaN kök çözümü (`lib/utils.ts` `formatCurrency`):** `Intl...format()`
+    öncesi `Number.isFinite` guard'ı eklendi (geçersiz/NaN tutar → 0); bu tek
+    nokta tüm para gösteren sayfaları korur. `nakit` bakiyesi de `|| 0` ile
+    güvenceye alındı.
+  - **`/dashboard/kategoriler` 404:** Türkçe URL kısayolu eklendi → kanonik
+    `/dashboard/categories`'e server-side redirect (mevcut `cekler` redirect
+    pattern'iyle aynı).
+  - **Sistemik aksansız-Türkçe (i18n):** ~55 dosyada kullanıcı-yüzü metinler
+    doğru Türkçe karakterlere düzeltildi (İşletme, Açıklama, Ödeme Yöntemi,
+    Karşı Taraf, Müşteri/Tedarikçi/Diğer/Tümü filtreleri, "cari hesabı",
+    "dış paydaş", Düzenle/Vazgeç/Güncelle/Oluştur, Fotoğraf, vb.). Salt metin;
+    kod identifier/enum/path/className ve backend hata-eşleştirme string'leri
+    korundu. add-transaction sayfalarında "← Dashboard" → "← Ana Sayfa".
+    `layout.tsx` meta title/description ÇATI'lı doğru Türkçe.
+
 - **Tüm İşlemler — işletme filtresi "Tüm İşletmeler" seçeneği eklendi.**
   Dropdown'da yalnızca tekil işletmeler listeleniyordu; bir işletme (örn. dgr)
   seçildikten sonra tüm işletmelere geri dönmek mümkün değildi. Artık

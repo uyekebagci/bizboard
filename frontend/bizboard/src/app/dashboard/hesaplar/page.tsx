@@ -73,7 +73,7 @@ export default function HesaplarPage() {
       setError(null);
     } catch (err) {
       logger.error("api", "bank-accounts fetch failed", undefined, err);
-      setError("Hesap listesi yuklenemedi");
+      setError("Hesap listesi yüklenemedi");
     } finally {
       setLoading(false);
     }
@@ -544,7 +544,7 @@ function ConfirmToggleModal({
             onClick={onClose}
             className="flex-1 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm transition-colors"
           >
-            Vazgec
+            Vazgeç
           </button>
           <button
             onClick={onConfirm}

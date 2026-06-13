@@ -473,7 +473,7 @@ export function AddTransactionForm({
         setTimeout(() => onSuccess(tx.id), compact ? 400 : 1200);
       }
     } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Islem eklenirken bir hata olustu");
+      const msg = getErrorMessage(err, "İşlem eklenirken bir hata oluştu");
       // Gün Açılışı enforcement reddi → özel "Günü Aç" yönlendirmesi.
       if (msg.includes("[DAY_NOT_OPEN]")) {
         setDayNotOpen(msg.replace("[DAY_NOT_OPEN]", "").trim());
@@ -493,7 +493,7 @@ export function AddTransactionForm({
       {/* Success Banner */}
       {success && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-center">
-          <p className="text-green-700 dark:text-green-300 text-sm font-medium">Islem basariyla eklendi!</p>
+          <p className="text-green-700 dark:text-green-300 text-sm font-medium">İşlem başarıyla eklendi!</p>
         </div>
       )}
 
@@ -542,7 +542,7 @@ export function AddTransactionForm({
         {!lockPaymentMethod && (
         <>
         <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
-          Odeme Yontemi *
+          Ödeme Yöntemi *
         </label>
         <div className="grid gap-3 grid-cols-2">
           <button
@@ -720,7 +720,7 @@ export function AddTransactionForm({
       {/* Business */}
       {!preselectedBusinessId && (
         <div>
-          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Isletme *</label>
+          <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">İşletme *</label>
           {isLoadingBiz ? (
             <div className="h-12 v2-sunken rounded-xl animate-pulse" />
           ) : (
@@ -743,7 +743,7 @@ export function AddTransactionForm({
       {/* Counterpart */}
       <div>
         <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
-          Karsi Taraf <span className="text-[rgb(var(--v2-muted))] font-normal text-xs">(opsiyonel)</span>
+          Karşı Taraf <span className="text-[rgb(var(--v2-muted))] font-normal text-xs">(opsiyonel)</span>
         </label>
         <DarkSelect
           value={targetCounterpartId}
@@ -942,12 +942,12 @@ export function AddTransactionForm({
       {/* Description */}
       <div>
         <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
-          <FileText size={14} className="inline mr-1" /> Aciklama
+          <FileText size={14} className="inline mr-1" /> Açıklama
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Islem aciklamasi..."
+          placeholder="İşlem açıklaması..."
           rows={2}
           className="field field-sm py-2.5 resize-none"
         />
@@ -955,7 +955,7 @@ export function AddTransactionForm({
 
       {/* File Upload */}
       <div>
-        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Dosya / Fotograf</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Dosya / Fotoğraf</label>
         <InlineFileUpload
           category="receipt"
           entityType={businessId ? "business" : undefined}
@@ -1068,7 +1068,7 @@ export function AddTransactionForm({
               compact ? "flex-1" : "w-full order-2",
             )}
           >
-            Vazgec
+            Vazgeç
           </button>
         )}
         <button

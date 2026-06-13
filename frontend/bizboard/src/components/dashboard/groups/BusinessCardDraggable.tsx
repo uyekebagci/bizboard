@@ -93,7 +93,7 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
                 {business.name}
               </h3>
               <p className="text-[11px] text-surface-400 capitalize truncate">
-                {business.business_type_name || "Isletme"}
+                {business.business_type_name || "İşletme"}
               </p>
             </div>
           </div>

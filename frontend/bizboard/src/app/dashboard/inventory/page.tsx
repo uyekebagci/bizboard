@@ -140,7 +140,7 @@ function InventoryPage() {
             <ArrowLeft size={20} className="text-surface-300" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Envanter Yonetimi</h1>
+            <h1 className="text-xl font-bold text-surface-100">Envanter Yönetimi</h1>
             <p className="text-xs text-surface-400">{totalCount} kalem</p>
           </div>
         </div>
@@ -178,8 +178,8 @@ function InventoryPage() {
         <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center gap-2 text-xs">
           <AlertTriangle size={14} className="text-amber-600 shrink-0" />
           <div className="flex gap-3">
-            {brokenCount > 0 && <span className="text-amber-400 font-medium">{brokenCount} arizali</span>}
-            {lowStockCount > 0 && <span className="text-red-600 font-medium">{lowStockCount} dusuk stok</span>}
+            {brokenCount > 0 && <span className="text-amber-400 font-medium">{brokenCount} arızalı</span>}
+            {lowStockCount > 0 && <span className="text-red-600 font-medium">{lowStockCount} düşük stok</span>}
           </div>
         </div>
       )}
@@ -194,12 +194,12 @@ function InventoryPage() {
         </div>
         <select value={filterBusiness} onChange={(e) => setFilterBusiness(e.target.value)}
           className="field-sm py-2 text-xs">
-          <option value="">Tum Isletmeler</option>
+          <option value="">Tüm İşletmeler</option>
           {businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
           className="field-sm py-2 text-xs">
-          <option value="">Tum Durumlar</option>
+          <option value="">Tüm Durumlar</option>
           {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
       </div>
@@ -212,7 +212,7 @@ function InventoryPage() {
       ) : filtered.length === 0 ? (
         <div className="glass-card p-8 text-center">
           <p className="text-surface-400 text-sm">
-            {items.length === 0 ? "Henuz envanter kalemi yok" : "Filtreye uygun kalem bulunamadi"}
+            {items.length === 0 ? "Henüz envanter kalemi yok" : "Filtreye uygun kalem bulunamadı"}
           </p>
           {hasClientFilter && hasNext && (
             <div className="mt-4">
@@ -222,7 +222,7 @@ function InventoryPage() {
                 disabled={loadingMore}
                 className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium transition-colors disabled:opacity-50"
               >
-                {loadingMore ? "Yukleniyor..." : "Daha fazla kalem ara"}
+                {loadingMore ? "Yükleniyor..." : "Daha fazla kalem ara"}
               </button>
             </div>
           )}

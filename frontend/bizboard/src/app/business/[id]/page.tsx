@@ -72,9 +72,9 @@ export default function BusinessDetailPage() {
   if (!business) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <p className="text-surface-300 text-lg">Isletme bulunamadi</p>
+        <p className="text-surface-300 text-lg">İşletme bulunamadı</p>
         <button onClick={() => router.push("/dashboard")} className="btn-primary mt-4">
-          Panele Don
+          Panele Dön
         </button>
       </div>
     );
@@ -99,13 +99,13 @@ export default function BusinessDetailPage() {
               {business.name}
             </h1>
             <p className="text-[11px] text-surface-400 flex items-center gap-1.5 mt-0.5">
-              <span className="capitalize">{business.business_type_name || "Isletme"}</span>
+              <span className="capitalize">{business.business_type_name || "İşletme"}</span>
               {business.members && business.members.length > 0 && (
                 <>
                   <span className="opacity-40">·</span>
                   <span className="inline-flex items-center gap-1">
                     <UsersIcon size={10} />
-                    {business.members.length} ekip uyesi
+                    {business.members.length} ekip üyesi
                   </span>
                 </>
               )}
@@ -117,7 +117,7 @@ export default function BusinessDetailPage() {
             <button
               onClick={() => setDeleteConfirm(true)}
               className="p-2 rounded-xl hover:bg-red-500/10 text-surface-400 hover:text-red-400 transition-colors"
-              title="Isletmeyi sil (admin)"
+              title="İşletmeyi sil (admin)"
             >
               <Trash2 size={20} />
             </button>
@@ -137,12 +137,12 @@ export default function BusinessDetailPage() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="glass-card p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-surface-100 mb-2">
-              Isletmeyi Sil
+              İşletmeyi Sil
             </h3>
             <p className="text-sm text-surface-400 mb-4">
-              <strong className="text-surface-100">{business.name}</strong> isletmesini
-              silmek istediginden emin misin? Bu islem geri alinamaz. Bagli
-              kayitlar (islemler, sabit giderler, personel, vb.) var ise silme
+              <strong className="text-surface-100">{business.name}</strong> işletmesini
+              silmek istediğinden emin misin? Bu işlem geri alınamaz. Bağlı
+              kayıtlar (işlemler, sabit giderler, personel, vb.) var ise silme
               reddedilebilir.
             </p>
             {deleteError && (
@@ -156,7 +156,7 @@ export default function BusinessDetailPage() {
                 disabled={deleting}
                 className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm disabled:opacity-50"
               >
-                Iptal
+                İptal
               </button>
               <button
                 onClick={handleDelete}

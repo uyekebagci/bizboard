@@ -25,11 +25,11 @@ export default function ChangePasswordPage() {
     setFieldErrors({});
 
     if (newPassword !== confirmPassword) {
-      setFieldErrors({ confirm_password: "Sifre tekrari eslesmiyor" });
+      setFieldErrors({ confirm_password: "Şifre tekrarı eşleşmiyor" });
       return;
     }
     if (newPassword.length < 10) {
-      setFieldErrors({ new_password: "Yeni sifre en az 10 karakter olmali" });
+      setFieldErrors({ new_password: "Yeni şifre en az 10 karakter olmalı" });
       return;
     }
 
@@ -54,19 +54,19 @@ export default function ChangePasswordPage() {
         if (err.code === "VAL-400" && err.fieldErrors) {
           // Backend field hatalarını snake_case ile dönüyor
           setFieldErrors(err.fieldErrors);
-          setError("Lutfen formdaki hatalari duzeltin.");
+          setError("Lütfen formdaki hataları düzeltin.");
         } else if (err.message?.includes("Mevcut sifre")) {
-          setFieldErrors({ current_password: "Mevcut sifre hatali" });
+          setFieldErrors({ current_password: "Mevcut şifre hatalı" });
         } else if (err.message?.includes("eski sifre ile ayni")) {
-          setFieldErrors({ new_password: "Yeni sifre eski sifreyle ayni olamaz" });
+          setFieldErrors({ new_password: "Yeni şifre eski şifreyle aynı olamaz" });
         } else {
-          setError(err.message || "Sifre degistirilemedi");
+          setError(err.message || "Şifre değiştirilemedi");
         }
         setErrorRequestId(err.requestId ?? null);
       } else if (err instanceof Error) {
         setError(getErrorMessage(err));
       } else {
-        setError("Sifre degistirilemedi");
+        setError("Şifre değiştirilemedi");
       }
     } finally {
       setIsLoading(false);
@@ -79,9 +79,9 @@ export default function ChangePasswordPage() {
         <div className="w-16 h-16 rounded-2xl bg-green-500/15 flex items-center justify-center mb-4">
           <ShieldCheck size={36} className="text-green-700 dark:text-green-300" />
         </div>
-        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] mb-1">Sifre Degistirildi</h1>
+        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] mb-1">Şifre Değiştirildi</h1>
         <p className="text-[rgb(var(--v2-muted))] text-sm">
-          Guvenlik icin yeniden giris yapmaniz gerekiyor...
+          Güvenlik için yeniden giriş yapmanız gerekiyor...
         </p>
       </div>
     );
@@ -93,9 +93,9 @@ export default function ChangePasswordPage() {
         <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--v2-ink))] flex items-center justify-center mx-auto mb-3">
           <Lock size={20} className="text-[rgb(var(--v2-card))]" />
         </div>
-        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Sifre Degistir</h1>
+        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Şifre Değiştir</h1>
         <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
-          Guvenlik icin yeni bir sifre belirleyin
+          Güvenlik için yeni bir şifre belirleyin
         </p>
       </div>
 
@@ -105,7 +105,7 @@ export default function ChangePasswordPage() {
             <div>{error}</div>
             {errorRequestId && (
               <div className="mt-1 text-[10px] font-mono text-red-700/80 dark:text-red-400/80">
-                Destek icin referans: {errorRequestId}
+                Destek için referans: {errorRequestId}
               </div>
             )}
           </div>
@@ -113,7 +113,7 @@ export default function ChangePasswordPage() {
 
         <div>
           <label htmlFor="current_password" className="label">
-            Mevcut Sifre
+            Mevcut Şifre
           </label>
           <input
             id="current_password"
@@ -131,7 +131,7 @@ export default function ChangePasswordPage() {
 
         <div>
           <label htmlFor="new_password" className="label">
-            Yeni Sifre
+            Yeni Şifre
           </label>
           <input
             id="new_password"
@@ -147,14 +147,14 @@ export default function ChangePasswordPage() {
             <p className="mt-1 text-xs text-red-500">{fieldErrors.new_password}</p>
           ) : (
             <p className="mt-1 text-xs text-[rgb(var(--v2-muted))]">
-              En az 10 karakter. Tahmin edilmesi zor bir sifre secin.
+              En az 10 karakter. Tahmin edilmesi zor bir şifre seçin.
             </p>
           )}
         </div>
 
         <div>
           <label htmlFor="confirm_password" className="label">
-            Yeni Sifre (Tekrar)
+            Yeni Şifre (Tekrar)
           </label>
           <input
             id="confirm_password"
@@ -181,12 +181,12 @@ export default function ChangePasswordPage() {
               Kaydediliyor...
             </>
           ) : (
-            "Sifreyi Degistir"
+            "Şifreyi Değiştir"
           )}
         </button>
 
         <p className="text-[11px] text-[rgb(var(--v2-muted))] text-center">
-          Sifre degisikliginden sonra tum cihazlarda yeniden giris yapmaniz gerekecektir.
+          Şifre değişikliğinden sonra tüm cihazlarda yeniden giriş yapmanız gerekecektir.
         </p>
       </form>
     </div>

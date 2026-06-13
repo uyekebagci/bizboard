@@ -209,7 +209,7 @@ export default function AlacaklarPage() {
       {/* Header — UX-07 paylaşılan PageHeader. */}
       <PageHeader
         title="Alacaklar"
-        subtitle="Acik (tahsil edilmemis) alacaklarin kisi bazli ozeti"
+        subtitle="Açık (tahsil edilmemiş) alacakların kişi bazlı özeti"
         icon={HandCoins}
         iconClassName="bg-status-warning/15 border-status-warning/30 text-status-warning"
         actions={
@@ -288,8 +288,8 @@ export default function AlacaklarPage() {
       ) : rows.length === 0 ? (
         <EmptyState
           icon={HandCoins}
-          title="Acik alacaginiz yok"
-          description={'Yukaridaki "+ Alacak Ekle" butonu ile yeni bir alacak kaydi olusturabilirsiniz.'}
+          title="Açık alacağınız yok"
+          description={'Yukarıdaki "+ Alacak Ekle" butonu ile yeni bir alacak kaydı oluşturabilirsiniz.'}
           action={
             <button
               onClick={() => setShowAddModal(true)}
@@ -357,12 +357,12 @@ export default function AlacaklarPage() {
                 />
               </div>
               <div className="v2-card p-4">
-                <p className="v2-eyebrow text-[11px]">Acik Kayit</p>
+                <p className="v2-eyebrow text-[11px]">Açık Kayıt</p>
                 <p className="mt-1 text-2xl font-bold text-[rgb(var(--v2-ink))]">
                   {totalCount}
                 </p>
                 <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
-                  {visibleRows.length} farkli kisi/firma
+                  {visibleRows.length} farklı kişi/firma
                 </p>
               </div>
             </section>
@@ -370,12 +370,12 @@ export default function AlacaklarPage() {
             {/* Sort chips + UX-10 Kart/Tablo toggle */}
             <section className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-[rgb(var(--v2-muted))]">Sirala:</span>
+                <span className="text-xs text-[rgb(var(--v2-muted))]">Sırala:</span>
                 <div className="flex gap-2">
                   {([
-                    { v: "amount_desc", label: "Tutar (cok→az)" },
-                    { v: "due_asc", label: "Vade (yakin→uzak)" },
-                    { v: "name_asc", label: "Isim (A-Z)" },
+                    { v: "amount_desc", label: "Tutar (çok→az)" },
+                    { v: "due_asc", label: "Vade (yakın→uzak)" },
+                    { v: "name_asc", label: "İsim (A-Z)" },
                   ] as { v: SortMode; label: string }[]).map((opt) => (
                     <button
                       key={opt.v}
@@ -402,7 +402,7 @@ export default function AlacaklarPage() {
                 <table className="v2-table">
                   <thead>
                     <tr>
-                      <th scope="col">Kisi / Firma</th>
+                      <th scope="col">Kişi / Firma</th>
                       <th scope="col">Tip</th>
                       <th scope="col">Son Vade</th>
                       <th scope="col" className="v2-td-num">Tutar</th>
@@ -474,7 +474,7 @@ export default function AlacaklarPage() {
                         {maskAmount(r.total_amount, censored, "TRY")}
                       </p>
                       <p className="text-[11px] text-[rgb(var(--v2-muted))]">
-                        {r.count} kayit
+                        {r.count} kayıt
                       </p>
                     </div>
                   </div>
@@ -538,11 +538,11 @@ function TypeBadge({
 }) {
   const labelMap: Record<string, string> = {
     SENET: "Senet",
-    CEK: "Cek",
-    ALTIN: "Altin",
+    CEK: "Çek",
+    ALTIN: "Altın",
     NAKIT: "Nakit",
-    DIGER: breakdown.label || "Diger",
-    UNSPECIFIED: "Belirtilmemis",
+    DIGER: breakdown.label || "Diğer",
+    UNSPECIFIED: "Belirtilmemiş",
   };
   const colorMap: Record<string, string> = {
     SENET: "bg-purple-500/15 text-purple-300 border-purple-500/30",
@@ -559,7 +559,7 @@ function TypeBadge({
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${cls}`}
-      title={censored ? label : `${label}: ${formatCurrency(breakdown.amount, "TRY")} (${breakdown.count} kayit)`}
+      title={censored ? label : `${label}: ${formatCurrency(breakdown.amount, "TRY")} (${breakdown.count} kayıt)`}
     >
       <span>{label}</span>
       <span className="opacity-70">·</span>

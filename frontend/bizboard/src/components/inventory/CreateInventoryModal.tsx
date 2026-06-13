@@ -120,7 +120,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
       toast.success("Stok eklendi");
       onCreated();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Hata olustu"));
+      setError(getErrorMessage(err, "Hata oluştu"));
       toast.error(err);
     } finally {
       setSaving(false);
@@ -138,7 +138,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
         <div className="p-4 space-y-3">
           {/* İşletme */}
           <div>
-            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Isletme</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">İşletme</label>
             <select value={businessId} onChange={(e) => setBusinessId(e.target.value)} className={inputCls}>
               {businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -164,7 +164,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           <div>
             <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Kalem Adi *</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder={category === "CONSUMABLE" ? "Ornek: Cimento, Insaat Demiri" : category === "HEAVY_VEHICLE" ? "Ornek: CAT 320 Ekskavatör" : "Ad girin"}
+              placeholder={category === "CONSUMABLE" ? "Örnek: Çimento, İnşaat Demiri" : category === "HEAVY_VEHICLE" ? "Örnek: CAT 320 Ekskavatör" : "Ad girin"}
               className={inputCls} />
           </div>
 
@@ -195,7 +195,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
               )}
               {hasField("company_barcode") && (
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Sirket Barkod/QR</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Şirket Barkod/QR</label>
                   <input type="text" value={companyBarcode} onChange={(e) => setCompanyBarcode(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -207,15 +207,15 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <div className="grid grid-cols-2 gap-3">
               {hasField("power_capacity") && (
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Guc Kapasitesi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Güç Kapasitesi</label>
                   <input type="text" value={powerCapacity} onChange={(e) => setPowerCapacity(e.target.value)} placeholder="150 kVA" className={inputCls} />
                 </div>
               )}
               {hasField("energy_source") && (
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Enerji Kaynagi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Enerji Kaynağı</label>
                   <select value={energySource} onChange={(e) => setEnergySource(e.target.value)} className={inputCls}>
-                    <option value="">Seciniz</option>
+                    <option value="">Seçiniz</option>
                     {Object.entries(ENERGY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
@@ -244,16 +244,16 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Reorder Esigi (ops.)</label>
-                  <input type="number" value={reorderPoint} onChange={(e) => setReorderPoint(e.target.value)} step="0.01" className={inputCls} placeholder="Bos = otomatik" />
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Reorder Eşiği (ops.)</label>
+                  <input type="number" value={reorderPoint} onChange={(e) => setReorderPoint(e.target.value)} step="0.01" className={inputCls} placeholder="Boş = otomatik" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Temin Suresi (gun)</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Temin Süresi (gün)</label>
                   <input type="number" value={reorderLeadDays} onChange={(e) => setReorderLeadDays(e.target.value)} step="1" className={inputCls} />
                 </div>
               </div>
               <p className="text-xs text-[rgb(var(--v2-muted))] -mt-1">
-                Reorder esigi bos birakilirsa min. stok + temin suresi tamponuyla otomatik hesaplanir; stok bu esigin altina dustugunde &quot;Siparis Gerekli&quot; uyarisi cikar.
+                Reorder eşiği boş bırakılırsa min. stok + temin süresi tamponuyla otomatik hesaplanır; stok bu eşiğin altına düştüğünde &quot;Sipariş Gerekli&quot; uyarısı çıkar.
               </p>
               {hasField("sku") && (
                 <div className="grid grid-cols-2 gap-3">
@@ -265,7 +265,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
                     <div>
                       <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Malzeme Kategorisi</label>
                       <select value={stockCategory} onChange={(e) => setStockCategory(e.target.value)} className={inputCls}>
-                        <option value="">Seciniz</option>
+                        <option value="">Seçiniz</option>
                         {Object.entries(STOCK_CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                     </div>
@@ -311,14 +311,14 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
               {hasField("module_count") && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Modul Sayisi</label>
+                    <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Modül Sayısı</label>
                     <input type="number" value={moduleCount} onChange={(e) => setModuleCount(e.target.value)} className={inputCls} />
                   </div>
                 </div>
               )}
               {hasField("interior_details") && (
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Ic Donanim</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">İç Donanım</label>
                   <textarea value={interiorDetails} onChange={(e) => setInteriorDetails(e.target.value)} rows={2}
                     placeholder="4 yatak, 1 klima, 2 masa" className={inputCls + " resize-none"} />
                 </div>
@@ -333,7 +333,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
                 <div>
                   <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Zimmetli Personel</label>
                   <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className={inputCls}>
-                    <option value="">Seciniz</option>
+                    <option value="">Seçiniz</option>
                     {employees.filter(e => e.is_active).map((emp) => (
                       <option key={emp.id} value={emp.full_name}>{emp.full_name}{emp.position ? ` (${emp.position})` : ""}</option>
                     ))}
@@ -352,9 +352,9 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <div>
               <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Zimmet Tipi</label>
               <select value={assignedType} onChange={(e) => setAssignedType(e.target.value)} className={inputCls}>
-                <option value="">Seciniz</option>
+                <option value="">Seçiniz</option>
                 <option value="PERSONNEL">Personel</option>
-                <option value="SUBCONTRACTOR">Taseron</option>
+                <option value="SUBCONTRACTOR">Taşeron</option>
               </select>
             </div>
           )}
@@ -364,13 +364,13 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <div className="grid grid-cols-2 gap-3">
               {hasField("warranty_expiry") && (
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Garanti Bitis</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Garanti Bitiş</label>
                   <input type="date" value={warrantyExpiry} onChange={(e) => setWarrantyExpiry(e.target.value)} className={inputCls} />
                 </div>
               )}
               {hasField("last_maintenance_date") && (
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Son Bakim</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Son Bakım</label>
                   <input type="date" value={lastMaintenanceDate} onChange={(e) => setLastMaintenanceDate(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -379,12 +379,12 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           {hasField("purchase_price") && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Satin Alma Fiyati</label>
+                <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Satın Alma Fiyatı</label>
                 <input type="text" inputMode="numeric" value={purchasePrice} onChange={(e) => setPurchasePrice(formatMoneyInput(e.target.value))} className={inputCls} />
               </div>
               {hasField("purchase_date") && (
                 <div>
-                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Satin Alma Tarihi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Satın Alma Tarihi</label>
                   <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -404,7 +404,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           )}
 
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="btn-secondary flex-1 py-2.5 text-sm">Vazgec</button>
+            <button onClick={onClose} className="btn-secondary flex-1 py-2.5 text-sm">Vazgeç</button>
             <button onClick={handleSave} disabled={saving || !name || !businessId}
               className="btn-primary flex-1 py-2.5 text-sm gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Kaydet

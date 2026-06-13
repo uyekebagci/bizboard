@@ -111,14 +111,14 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
             <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center">
               <Fuel size={16} className="text-orange-700 dark:text-orange-300" />
             </div>
-            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Yakit Kaydi Ekle</h3>
+            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Yakıt Kaydı Ekle</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"><X size={20} /></button>
         </div>
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Yakit Tipi</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Yakıt Tipi</label>
               <select value={fuelType} onChange={(e) => setFuelType(e.target.value)} className={inputCls}>
                 {Object.entries(FUEL_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
@@ -147,7 +147,7 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} step="0.01" min="0" className={inputCls} placeholder="50" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Litre Fiyati (TRY) *</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Litre Fiyatı (TRY) *</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -174,8 +174,8 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
               <input type="number" value={odometerKm} onChange={(e) => setOdometerKm(e.target.value)} step="0.1" className={inputCls} placeholder="15230" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Istasyon</label>
-              <input type="text" value={station} onChange={(e) => setStation(e.target.value)} className={inputCls} placeholder="Shell - Kadikoy" />
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">İstasyon</label>
+              <input type="text" value={station} onChange={(e) => setStation(e.target.value)} className={inputCls} placeholder="Shell - Kadıköy" />
             </div>
           </div>
 
@@ -186,7 +186,7 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
 
           {/* Fiş/Fatura Fotoğrafı */}
           <div>
-            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Fis / Fatura Fotografi</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Fiş / Fatura Fotoğrafı</label>
             <InlineFileUpload
               category="fuel_receipt"
               onUploaded={(file) => {
@@ -205,7 +205,7 @@ export function AddFuelLogModal({ itemId, onClose, onAdded }: {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="btn-secondary flex-1 py-2.5">Vazgec</button>
+            <button onClick={onClose} className="btn-secondary flex-1 py-2.5">Vazgeç</button>
             <button onClick={handleSave} disabled={saving || !amount || priceRaw.length !== 4}
               className="flex-1 py-2.5 rounded-xl font-semibold bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Kaydet

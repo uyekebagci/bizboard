@@ -121,7 +121,7 @@ export function BankAccountCreateForm({
       toast.success("Hesap kaydedildi");
       onCreated();
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "Hesap olusturulamadi";
+      const msg = err instanceof ApiError ? err.message : "Hesap oluşturulamadı";
       setError(msg);
       logger.error("api", "bank-account create failed", { type, businessId }, err);
       toast.error(err);

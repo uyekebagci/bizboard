@@ -31,7 +31,7 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
     e.preventDefault();
     setError(null);
     if (!name.trim()) {
-      setError("Grup adi zorunlu");
+      setError("Grup adı zorunlu");
       return;
     }
     setSubmitting(true);
@@ -39,7 +39,7 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
       await onSubmit({ name: name.trim(), color, priority });
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Grup olusturulamadi");
+      setError(err instanceof Error ? err.message : "Grup oluşturulamadı");
     } finally {
       setSubmitting(false);
     }
@@ -49,7 +49,7 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="v2-card shadow-xl w-full max-w-md">
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">Yeni Grup Olustur</h3>
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">Yeni Grup Oluştur</h3>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
@@ -68,14 +68,14 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
 
           {/* Name */}
           <div>
-            <label className="label">Grup Adi</label>
+            <label className="label">Grup Adı</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={80}
               className="input"
-              placeholder="orn. Kuzey Subeleri"
+              placeholder="örn. Kuzey Şubeleri"
               autoFocus
             />
             <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">{name.length}/80</p>
@@ -106,7 +106,7 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
 
           {/* Priority */}
           <div>
-            <label className="label">Oncelik</label>
+            <label className="label">Öncelik</label>
             <div className="grid grid-cols-3 gap-2">
               {([PRIORITY_PINNED, PRIORITY_HIGH, PRIORITY_NORMAL] as GroupPriority[]).map((p) => {
                 const active = priority === p;
@@ -138,7 +138,7 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
               disabled={submitting}
               className="btn-secondary flex-1 px-4 py-2.5 text-sm"
             >
-              Vazgec
+              Vazgeç
             </button>
             <button
               type="submit"
@@ -146,9 +146,9 @@ export function CreateGroupModal({ onClose, onSubmit }: Props) {
               className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 disabled:opacity-50 rounded-xl text-sm font-semibold transition-opacity flex items-center justify-center gap-2"
             >
               {submitting ? (
-                <><Loader2 size={16} className="animate-spin" /> Olusturuluyor...</>
+                <><Loader2 size={16} className="animate-spin" /> Oluşturuluyor...</>
               ) : (
-                "Olustur"
+                "Oluştur"
               )}
             </button>
           </div>

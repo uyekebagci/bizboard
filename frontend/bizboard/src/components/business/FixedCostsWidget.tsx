@@ -24,9 +24,9 @@ function formatMoney(n: number) {
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Home; color: string; bg: string }> = {
   RENT: { label: "Kira", icon: Home, color: "text-orange-300", bg: "bg-orange-500/10" },
   PERSONNEL: { label: "Personel", icon: Users, color: "text-blue-300", bg: "bg-blue-500/15" },
-  VEHICLE_RENTAL: { label: "Arac Kiralama", icon: TrendingDown, color: "text-teal-300", bg: "bg-teal-500/15" },
+  VEHICLE_RENTAL: { label: "Araç Kiralama", icon: TrendingDown, color: "text-teal-300", bg: "bg-teal-500/15" },
   UTILITY: { label: "Fatura", icon: Zap, color: "text-yellow-600", bg: "bg-yellow-50" },
-  OTHER: { label: "Diger", icon: MoreHorizontal, color: "text-surface-300", bg: "bg-surface-700" },
+  OTHER: { label: "Diğer", icon: MoreHorizontal, color: "text-surface-300", bg: "bg-surface-700" },
 };
 
 interface Props {
@@ -131,7 +131,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
               )}
               {summary.other_cost > 0 && (
                 <span className="flex items-center gap-1 text-surface-400">
-                  <span className="w-2 h-2 rounded-full bg-surface-300" /> Diger
+                  <span className="w-2 h-2 rounded-full bg-surface-300" /> Diğer
                 </span>
               )}
             </div>
@@ -141,7 +141,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
         {/* Fixed Cost List */}
         {summary.fixed_costs.length === 0 ? (
           <div className="p-6 text-center">
-            <p className="text-surface-400 text-sm">Henuz sabit gider eklenmemis</p>
+            <p className="text-surface-400 text-sm">Henüz sabit gider eklenmemiş</p>
           </div>
         ) : (
           <div className="divide-y divide-surface-700">
@@ -177,7 +177,7 @@ export function FixedCostsWidget({ businessId, currency = "TRY" }: Props) {
                     )}
                     {fc.auto_generate && fc.last_auto_run && (
                       <p className="text-[10px] text-emerald-400/80 mt-0.5">
-                        Son uretim: {new Date(fc.last_auto_run).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
+                        Son üretim: {new Date(fc.last_auto_run).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
                       </p>
                     )}
                   </div>
@@ -312,19 +312,19 @@ function CreateFixedCostModal({
         if (err.code === "CONF-409") {
           // Otomatik yonetilen FixedCost (personel/arac) manuel duzenlenemez.
           setError(
-            "Bu kayit personel veya arac modulunden otomatik yonetiliyor. " +
-              "Degisiklik icin ilgili modulu kullanin."
+            "Bu kayıt personel veya araç modülünden otomatik yönetiliyor. " +
+              "Değişiklik için ilgili modülü kullanın."
           );
         } else if (err.code === "VAL-400" && err.fieldErrors) {
           setFieldErrors(err.fieldErrors);
-          setError("Lutfen formdaki hatalari duzeltin.");
+          setError("Lütfen formdaki hataları düzeltin.");
         } else {
-          setError(err.message || "Bir hata olustu");
+          setError(err.message || "Bir hata oluştu");
         }
       } else if (err instanceof Error) {
-        setError(err.message || "Bir hata olustu");
+        setError(err.message || "Bir hata oluştu");
       } else {
-        setError("Bir hata olustu");
+        setError("Bir hata oluştu");
       }
       toast.error(err);
     } finally {
@@ -337,7 +337,7 @@ function CreateFixedCostModal({
       <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="text-lg font-bold text-surface-100">
-            {isEdit ? "Sabit Gider Duzenle" : "Yeni Sabit Gider"}
+            {isEdit ? "Sabit Gider Düzenle" : "Yeni Sabit Gider"}
           </h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
             <X size={20} className="text-surface-400" />
@@ -351,7 +351,7 @@ function CreateFixedCostModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ornegin: Ofis Kirasi, Elektrik, vb."
+              placeholder="Örneğin: Ofis Kirası, Elektrik, vb."
               aria-invalid={!!fieldErrors.name}
               className={`w-full px-4 py-3 rounded-xl border bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
@@ -422,16 +422,16 @@ function CreateFixedCostModal({
               />
               <div className="flex-1">
                 <p className="text-sm font-medium text-surface-100">
-                  Her ay otomatik tx olustur
+                  Her ay otomatik tx oluştur
                 </p>
                 <p className="text-xs text-surface-400 mt-0.5">
-                  Acikken sistem her ayin 1&apos;inde otomatik bir gider transaction&apos;i
-                  yaratir. Idempotent — ayni ay icinde iki kere uretmez. Audit log&apos;a
-                  source=RECURRING ile dusurulur.
+                  Açıkken sistem her ayın 1&apos;inde otomatik bir gider transaction&apos;i
+                  yaratır. Idempotent — aynı ay içinde iki kere üretmez. Audit log&apos;a
+                  source=RECURRING ile düşürülür.
                 </p>
                 {isEdit && fixedCost?.last_auto_run && (
                   <p className="text-[10px] text-emerald-400 mt-1">
-                    Son otomatik uretim: {new Date(fixedCost.last_auto_run).toLocaleString("tr-TR")}
+                    Son otomatik üretim: {new Date(fixedCost.last_auto_run).toLocaleString("tr-TR")}
                   </p>
                 )}
               </div>
@@ -441,8 +441,8 @@ function CreateFixedCostModal({
           {/* Belge / Sözleşme Yükleme */}
           <div>
             <label className="block text-sm font-medium text-surface-200 mb-1.5">
-              Belge / Sozlesme
-            </label>
+              Belge / Sözleşme
+</label>
             <InlineFileUpload
               category="contract"
               entityType="fixed_cost"
@@ -453,7 +453,7 @@ function CreateFixedCostModal({
               }
             />
             <p className="text-xs text-surface-400 mt-1">
-              Kira sozlesmesi, fatura ornegi vb. yukleyebilirsiniz
+              Kira sözleşmesi, fatura örneği vb. yükleyebilirsiniz
             </p>
           </div>
 
@@ -465,14 +465,14 @@ function CreateFixedCostModal({
 
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="btn-secondary flex-1 py-3">
-              Vazgec
+              Vazgeç
             </button>
             <button
               type="submit"
               disabled={saving || !name.trim() || !amount}
               className="flex-1 py-3 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 transition-colors flex items-center justify-center gap-2"
             >
-              {saving ? <><Loader2 size={18} className="animate-spin" /> Kaydediliyor...</> : isEdit ? "Guncelle" : <><Plus size={18} /> Ekle</>}
+              {saving ? <><Loader2 size={18} className="animate-spin" /> Kaydediliyor...</> : isEdit ? "Güncelle" : <><Plus size={18} /> Ekle</>}
             </button>
           </div>
         </form>
@@ -505,12 +505,12 @@ function DeleteFixedCostModal({
       toast.error(err);
       if (err instanceof ApiError && err.code === "CONF-409") {
         setError(
-          "Bu kayit otomatik yonetiliyor; personel/arac modulunden silinmeden buradan silinemez."
+          "Bu kayıt otomatik yönetiliyor; personel/araç modülünden silinmeden buradan silinemez."
         );
       } else if (err instanceof Error) {
-        setError(err.message || "Sabit gider silinirken hata olustu");
+        setError(err.message || "Sabit gider silinirken hata oluştu");
       } else {
-        setError("Sabit gider silinirken hata olustu");
+        setError("Sabit gider silinirken hata oluştu");
       }
     } finally {
       setIsDeleting(false);
@@ -534,7 +534,7 @@ function DeleteFixedCostModal({
 
         <div className="p-4">
           <p className="text-sm text-surface-300 mb-4">
-            <strong>{fixedCost.name}</strong> ({formatMoney(fixedCost.amount)} TL/ay) sabit giderini silmek istediginize emin misiniz?
+            <strong>{fixedCost.name}</strong> ({formatMoney(fixedCost.amount)} TL/ay) sabit giderini silmek istediğinize emin misiniz?
           </p>
 
           {error && (
@@ -545,7 +545,7 @@ function DeleteFixedCostModal({
 
           <div className="flex gap-3">
             <button onClick={onClose} className="btn-secondary flex-1 py-3">
-              Vazgec
+              Vazgeç
             </button>
             <button
               onClick={handleDelete}

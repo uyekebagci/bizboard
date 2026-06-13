@@ -16,7 +16,7 @@ interface Props {
 }
 
 const CATEGORY_CONFIG = [
-  { key: "heavy_vehicle_count", label: "Agir Arac / Is Makinesi", icon: Truck, color: "text-orange-300", bg: "bg-orange-500/15" },
+  { key: "heavy_vehicle_count", label: "Ağır Araç / İş Makinesi", icon: Truck, color: "text-orange-300", bg: "bg-orange-500/15" },
   { key: "light_equipment_count", label: "Hafif Ekipman", icon: Wrench, color: "text-blue-300", bg: "bg-blue-500/15" },
   { key: "site_setup_count", label: "Santiye Kurulum", icon: Building, color: "text-teal-300", bg: "bg-teal-500/15" },
   { key: "consumable_count", label: "Sarf Malzeme", icon: Package, color: "text-purple-300", bg: "bg-purple-500/15" },
@@ -46,15 +46,15 @@ export function InventoryModule({ businessId, currency }: Props) {
     return (
       <div className="glass-card p-6 text-center">
         <Package size={32} className="text-surface-300 mx-auto mb-2" />
-        <p className="text-surface-500 text-sm">Henuz envanter kalemi yok</p>
+        <p className="text-surface-500 text-sm">Henüz envanter kalemi yok</p>
         <p className="text-surface-400 text-xs mt-1">
-          Envanter sayfasindan ekipman ve malzeme ekleyin
+          Envanter sayfasından ekipman ve malzeme ekleyin
         </p>
         <button
           onClick={() => router.push(`/dashboard/inventory?business=${businessId}`)}
           className="mt-3 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700 transition-colors"
         >
-          Envanter Sayfasi
+          Envanter Sayfası
         </button>
       </div>
     );
@@ -93,7 +93,7 @@ export function InventoryModule({ businessId, currency }: Props) {
             {summary.broken_count > 0 && (
               <span className="text-xs text-amber-300">
                 <ShieldAlert size={12} className="inline mr-1" />
-                {summary.broken_count} arizali
+                {summary.broken_count} arızalı
               </span>
             )}
             {summary.in_repair_count > 0 && (
@@ -105,12 +105,12 @@ export function InventoryModule({ businessId, currency }: Props) {
             {summary.low_stock_count > 0 && (
               <span className="text-xs text-red-300">
                 <Package size={12} className="inline mr-1" />
-                {summary.low_stock_count} dusuk stok
+                {summary.low_stock_count} düşük stok
               </span>
             )}
             {summary.warranty_expiring_count > 0 && (
               <span className="text-xs text-amber-300">
-                {summary.warranty_expiring_count} garanti bitmek uzere
+                {summary.warranty_expiring_count} garanti bitmek üzere
               </span>
             )}
           </div>
@@ -122,14 +122,14 @@ export function InventoryModule({ businessId, currency }: Props) {
         <div>
           <p className="text-xs text-surface-500">Toplam: {summary.total_items} kalem</p>
           {summary.total_value > 0 && (
-            <p className="text-xs text-surface-400">Deger: {formatCurrency(summary.total_value)}</p>
+            <p className="text-xs text-surface-400">Değer: {formatCurrency(summary.total_value)}</p>
           )}
         </div>
         <button
           onClick={() => router.push(`/dashboard/inventory?business=${businessId}`)}
           className="flex items-center gap-1 text-sm font-medium text-brand-300 hover:text-brand-300 transition-colors"
         >
-          Tum Envanter
+          Tüm Envanter
           <ExternalLink size={14} />
         </button>
       </div>

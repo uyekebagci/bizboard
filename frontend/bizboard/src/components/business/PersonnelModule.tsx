@@ -100,7 +100,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
             </p>
           </div>
           <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
-            <p className="text-[10px] text-amber-300 uppercase tracking-wider font-medium">Maas</p>
+            <p className="text-[10px] text-amber-300 uppercase tracking-wider font-medium">Maaş</p>
             <p className="text-sm font-bold text-amber-400 mt-0.5">
               {formatMoney(summary.total_salary)} {currency}
             </p>
@@ -125,7 +125,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
                 : "bg-surface-700 text-surface-400"
             }`}
           >
-            {showInactive ? "Tumunu Goster" : "Sadece Aktif"}
+            {showInactive ? "Tümünü Göster" : "Sadece Aktif"}
           </button>
         </div>
         <button
@@ -141,9 +141,9 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
       {filtered.length === 0 ? (
         <div className="glass-card p-8 text-center">
           <Users size={32} className="mx-auto text-surface-300 mb-2" />
-          <p className="text-surface-400 text-sm">Henuz personel eklenmemis</p>
+          <p className="text-surface-400 text-sm">Henüz personel eklenmemiş</p>
           <p className="text-surface-400 text-xs mt-1">
-            Ilk personeli eklemek icin yukaridaki butonu kullanin
+            İlk personeli eklemek için yukarıdaki butonu kullanın
           </p>
         </div>
       ) : (
@@ -174,7 +174,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
                   )}
                 </div>
                 <p className="text-xs text-surface-400 mt-0.5">
-                  {emp.position || "Pozisyon belirtilmemis"}
+                  {emp.position || "Pozisyon belirtilmemiş"}
                   {emp.start_date && ` · ${formatDate(emp.start_date)}`}
                 </p>
               </div>
@@ -184,7 +184,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
                   {formatMoney(emp.total_cost)} {currency}
                 </p>
                 <p className="text-[10px] text-surface-400">
-                  Maas: {formatMoney(emp.salary)}
+                  Maaş: {formatMoney(emp.salary)}
                 </p>
               </div>
 
@@ -269,7 +269,7 @@ function EmployeeDetailModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-surface-100">Personel Detayi</h3>
+          <h3 className="text-lg font-semibold text-surface-100">Personel Detayı</h3>
           <button onClick={onClose} className="modal-close">
             <X size={18} className="text-surface-400" />
           </button>
@@ -298,7 +298,7 @@ function EmployeeDetailModal({
           {/* Cost Breakdown */}
           <div className="grid grid-cols-3 gap-2">
             <div className="p-3 bg-amber-500/10 rounded-xl text-center">
-              <p className="text-[10px] text-amber-300 uppercase tracking-wider font-medium">Maas (Brut)</p>
+              <p className="text-[10px] text-amber-300 uppercase tracking-wider font-medium">Maaş (Brüt)</p>
               <p className="text-sm font-bold text-amber-400 mt-0.5">
                 {formatMoney(employee.salary)} {currency}
               </p>
@@ -343,7 +343,7 @@ function EmployeeDetailModal({
               <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                 <Calendar size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ise Baslama</p>
+                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">İşe Başlama</p>
                   <p className="text-sm text-surface-100 font-medium">
                     {formatDate(employee.start_date)}
                   </p>
@@ -352,7 +352,7 @@ function EmployeeDetailModal({
               <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                 <Calendar size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Isten Ayrilis</p>
+                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">İşten Ayrılış</p>
                   <p className="text-sm text-surface-100 font-medium">
                     {employee.end_date ? formatDate(employee.end_date) : "Devam Ediyor"}
                   </p>
@@ -378,7 +378,7 @@ function EmployeeDetailModal({
             </button>
             <button onClick={onEdit} className="px-4 py-2.5 bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
               <Edit3 size={14} />
-              Duzenle
+              Düzenle
             </button>
             <button
               onClick={onToggleActive}
@@ -455,7 +455,7 @@ function CreateEmployeeModal({
       }
       onCreated();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Bir hata olustu"));
+      setError(getErrorMessage(err, "Bir hata oluştu"));
       toast.error(err);
     } finally {
       setSaving(false);
@@ -467,7 +467,7 @@ function CreateEmployeeModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="text-lg font-bold text-surface-100">
-            {isEdit ? "Personel Duzenle" : "Yeni Personel"}
+            {isEdit ? "Personel Düzenle" : "Yeni Personel"}
           </h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-700">
             <X size={20} className="text-surface-400" />
@@ -484,7 +484,7 @@ function CreateEmployeeModal({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Personel adi"
+              placeholder="Personel adı"
               className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all"
@@ -494,13 +494,13 @@ function CreateEmployeeModal({
           {/* Pozisyon */}
           <div>
             <label className="block text-sm font-medium text-surface-200 mb-1.5">
-              Pozisyon / Gorev
+              Pozisyon / Görev
             </label>
             <input
               type="text"
               value={position}
               onChange={(e) => setPosition(e.target.value)}
-              placeholder="Ornegin: Muhasebeci, Sofor, vb."
+              placeholder="Örneğin: Muhasebeci, Şoför, vb."
               className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                          placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                          focus:border-transparent transition-all"
@@ -511,7 +511,7 @@ function CreateEmployeeModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-surface-200 mb-1.5">
-                Maas (Brut)
+                Maaş (Brüt)
               </label>
               <input
                 type="text"
@@ -578,7 +578,7 @@ function CreateEmployeeModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-surface-200 mb-1.5">
-                Ise Baslama Tarihi
+                İşe Başlama Tarihi
               </label>
               <input
                 type="date"
@@ -591,7 +591,7 @@ function CreateEmployeeModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-surface-200 mb-1.5">
-                Isten Ayrilis Tarihi
+                İşten Ayrılış Tarihi
               </label>
               <input
                 type="date"
@@ -633,7 +633,7 @@ function CreateEmployeeModal({
               onClick={onClose}
               className="btn-secondary flex-1 py-3"
             >
-              Vazgec
+              Vazgeç
             </button>
             <button
               type="submit"
@@ -643,7 +643,7 @@ function CreateEmployeeModal({
               {saving ? (
                 <><Loader2 size={18} className="animate-spin" /> Kaydediliyor...</>
               ) : isEdit ? (
-                "Guncelle"
+                "Güncelle"
               ) : (
                 <><Plus size={18} /> Ekle</>
               )}
@@ -676,7 +676,7 @@ function DeleteEmployeeModal({
       toast.info("Personel silindi");
       onDeleted();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Personel silinirken bir hata olustu"));
+      setError(getErrorMessage(err, "Personel silinirken bir hata oluştu"));
       toast.error(err);
     } finally {
       setIsDeleting(false);
@@ -702,13 +702,13 @@ function DeleteEmployeeModal({
           <div className="bg-surface-700 rounded-xl p-3 mb-4">
             <p className="text-sm font-medium text-surface-100">{employee.full_name}</p>
             <p className="text-xs text-surface-400 mt-0.5">
-              {employee.position || "Pozisyon belirtilmemis"} · Toplam Maliyet: {formatMoney(employee.total_cost)} TL
+              {employee.position || "Pozisyon belirtilmemiş"} · Toplam Maliyet: {formatMoney(employee.total_cost)} TL
             </p>
           </div>
 
           <p className="text-sm text-surface-300 mb-4">
-            Bu personeli silmek istediginize emin misiniz? Bu islem geri alinamaz.
-            Personeli pasif yapmak daha guvenli bir secenektir.
+            Bu personeli silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            Personeli pasif yapmak daha güvenli bir seçenektir.
           </p>
 
           {error && (
@@ -719,7 +719,7 @@ function DeleteEmployeeModal({
 
           <div className="flex gap-3">
             <button onClick={onClose} className="btn-secondary flex-1 py-3">
-              Vazgec
+              Vazgeç
             </button>
             <button
               onClick={handleDelete}

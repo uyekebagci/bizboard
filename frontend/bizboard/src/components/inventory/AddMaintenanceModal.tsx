@@ -41,12 +41,12 @@ export function AddMaintenanceModal({ itemId, onClose, onAdded }: {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <div className="v2-card shadow-xl w-full max-w-md">
         <div className="modal-header">
-          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Bakim Kaydi Ekle</h3>
+          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Bakım Kaydı Ekle</h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"><X size={20} /></button>
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Bakim Tipi</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Bakım Tipi</label>
             <select value={type} onChange={(e) => setType(e.target.value)} className={inputCls}>
               {Object.entries(MAINTENANCE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
@@ -56,7 +56,7 @@ export function AddMaintenanceModal({ itemId, onClose, onAdded }: {
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Aciklama</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Açıklama</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className={inputCls + " resize-none"} />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -70,7 +70,7 @@ export function AddMaintenanceModal({ itemId, onClose, onAdded }: {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="btn-secondary flex-1 py-2.5">Vazgec</button>
+            <button onClick={onClose} className="btn-secondary flex-1 py-2.5">Vazgeç</button>
             <button onClick={handleSave} disabled={saving}
               className="flex-1 py-2.5 rounded-xl font-semibold bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Kaydet

@@ -57,7 +57,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
     api.get<BankAccountListItem[]>("/bank-accounts")
       .then((r) => setAccounts(r || []))
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Hesap listesi yuklenemedi");
+        setError(err instanceof ApiError ? err.message : "Hesap listesi yüklenemedi");
         logger.error("api", "transfer-form bank-accounts fetch failed", undefined, err);
       })
       .finally(() => setLoadingAccs(false));
@@ -122,7 +122,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
       toast.success("Transfer tamamlandı");
       onSuccess?.(dto);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Transfer olusturulamadi");
+      setError(err instanceof ApiError ? err.message : "Transfer oluşturulamadı");
       logger.error("api", "transfer create failed", { fromId, target: trimmedTarget, parsedAmount }, err);
       toast.error(err);
     } finally {

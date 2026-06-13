@@ -87,13 +87,13 @@ export function TransactionList({
       <div className="p-8 text-center">
         <p className="text-surface-400">
           {paymentFilter === "POS"
-            ? "POS ile odenmis islem yok"
+            ? "POS ile ödenmiş işlem yok"
             : paymentFilter === "NAKIT"
-            ? "Nakit islem yok"
-            : "Henuz islem yok"}
+            ? "Nakit işlem yok"
+            : "Henüz işlem yok"}
         </p>
         <p className="text-surface-400 text-sm mt-1">
-          Ilk isleminizi kaydetmek icin &quot;Ekle&quot; butonuna basin
+          İlk işleminizi kaydetmek için &quot;Ekle&quot; butonuna basın
         </p>
       </div>
     );
@@ -198,7 +198,7 @@ const TransactionRow = memo(function TransactionRow({
         <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
           {/* Beta v1.1: POS komisyon UI tamamen kaldırıldı — POS satırı
               da normal title formatı kullanır (description / kategori). */}
-          {tx.description || tx.category?.name || (isTransfer ? "Transfer" : isPos ? "POS İşlemi" : "Islem")}
+          {tx.description || tx.category?.name || (isTransfer ? "Transfer" : isPos ? "POS İşlemi" : "İşlem")}
           {isTransfer && (
             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40">
               ⇄ {tx.direction === "expense" ? "OUT" : "IN"}
@@ -272,7 +272,7 @@ const TransactionRow = memo(function TransactionRow({
           onClick={(e) => { e.stopPropagation(); onDelete(tx); }}
           className="p-1.5 rounded-lg text-surface-300 hover:text-red-400 hover:bg-rose-500/10
                      opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-          title="Islemi sil"
+          title="İşlemi sil"
         >
           <Trash2 size={16} />
         </button>
@@ -435,7 +435,7 @@ export function TransactionDetailModal({
       toast.success("İşlem güncellendi");
       onClose();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Guncelleme sirasinda hata olustu"));
+      setError(getErrorMessage(err, "Güncelleme sırasında hata oluştu"));
       toast.error(err);
     } finally {
       setSaving(false);
@@ -472,7 +472,7 @@ export function TransactionDetailModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">
-            {editing ? "Islemi Duzenle" : "Islem Detayi"}
+            {editing ? "İşlemi Düzenle" : "İşlem Detayı"}
           </h3>
           <button
             onClick={onClose}
@@ -509,7 +509,7 @@ export function TransactionDetailModal({
 
               {/* Payment Method (v1.6.3+) */}
               <div>
-                <label className="block text-sm font-medium text-surface-200 mb-1">Odeme Yontemi</label>
+                <label className="block text-sm font-medium text-surface-200 mb-1">Ödeme Yöntemi</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -649,7 +649,7 @@ export function TransactionDetailModal({
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-surface-200 mb-1">Aciklama</label>
+                <label className="block text-sm font-medium text-surface-200 mb-1">Açıklama</label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
@@ -657,7 +657,7 @@ export function TransactionDetailModal({
                   className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
                              placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
                              focus:border-transparent resize-none"
-                  placeholder="Aciklama ekleyin..."
+                  placeholder="Açıklama ekleyin..."
                 />
               </div>
 
@@ -698,7 +698,7 @@ export function TransactionDetailModal({
                   disabled={saving}
                   className="btn-secondary flex-1 px-4 py-2.5 text-sm"
                 >
-                  Vazgec
+                  Vazgeç
                 </button>
                 <button
                   onClick={handleSave}
@@ -766,7 +766,7 @@ export function TransactionDetailModal({
                   <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
                     <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-[10px] text-surface-400 uppercase tracking-wider">Aciklama</p>
+                      <p className="text-[10px] text-surface-400 uppercase tracking-wider">Açıklama</p>
                       <p className="text-sm text-surface-100">{transaction.description}</p>
                     </div>
                   </div>
@@ -804,7 +804,7 @@ export function TransactionDetailModal({
                   <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
                     <Building2 size={16} className="text-surface-400 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-[10px] text-surface-400 uppercase tracking-wider">Isletme</p>
+                      <p className="text-[10px] text-surface-400 uppercase tracking-wider">İşletme</p>
                       <p className="text-sm text-surface-100 font-medium">{transaction.business_name}</p>
                     </div>
                   </div>
@@ -818,7 +818,7 @@ export function TransactionDetailModal({
                     <Banknote size={16} className="text-emerald-300 mt-0.5 shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Odeme</p>
+                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ödeme</p>
                     <p className="text-sm text-surface-100 font-medium">
                       {/* Beta v1.1: POS komisyon UI kaldırıldı — sadece method + cihaz adı. */}
                       {(transaction.payment_method || "NAKIT") === "POS" ? "POS" : "Nakit"}
@@ -910,7 +910,7 @@ export function TransactionDetailModal({
 
                 {transaction.created_at && (
                   <div className="p-3 bg-surface-700 rounded-xl">
-                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Olusturulma</p>
+                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Oluşturulma</p>
                     <p className="text-sm text-surface-100">
                       {new Date(transaction.created_at).toLocaleDateString("tr-TR", {
                         day: "numeric", month: "long", year: "numeric",
@@ -934,7 +934,7 @@ export function TransactionDetailModal({
                   className="px-4 py-2.5 bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Pencil size={14} />
-                  Duzenle
+                  Düzenle
                 </button>
                 {onDelete && (
                   <button
@@ -1011,7 +1011,7 @@ function DeleteTransactionModal({
       toast.info("İşlem silindi");
       onClose();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Islem silinirken bir hata olustu"));
+      setError(getErrorMessage(err, "İşlem silinirken bir hata oluştu"));
       toast.error(err);
     } finally {
       setIsDeleting(false);
@@ -1034,7 +1034,7 @@ function DeleteTransactionModal({
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />
             </div>
-            <h3 className="text-lg font-bold text-surface-100">Islemi Sil</h3>
+            <h3 className="text-lg font-bold text-surface-100">İşlemi Sil</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-700 transition-colors">
             <X size={20} className="text-surface-400" />
@@ -1046,7 +1046,7 @@ function DeleteTransactionModal({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-surface-100">
-                  {transaction.description || transaction.category?.name || "Islem"}
+                  {transaction.description || transaction.category?.name || "İşlem"}
                 </p>
                 <p className="text-xs text-surface-400 mt-0.5">
                   {new Date(transaction.date).toLocaleDateString("tr-TR", {
@@ -1067,7 +1067,7 @@ function DeleteTransactionModal({
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Bu islemi neden siliyorsunuz? (zorunlu)"
+              placeholder="Bu işlemi neden siliyorsunuz? (zorunlu)"
               rows={3}
               autoFocus
               className="w-full px-4 py-3 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
@@ -1075,7 +1075,7 @@ function DeleteTransactionModal({
                          focus:border-transparent transition-all resize-none"
             />
             <p className="text-xs text-surface-400 mt-1">
-              Silinen islemler kalici olarak kayit defterine kaydedilir
+              Silinen işlemler kalıcı olarak kayıt defterine kaydedilir
             </p>
           </div>
 
@@ -1091,7 +1091,7 @@ function DeleteTransactionModal({
               disabled={isDeleting}
               className="btn-secondary flex-1 py-3"
             >
-              Vazgec
+              Vazgeç
             </button>
             <button
               onClick={handleDelete}

@@ -20,11 +20,11 @@ import { toast } from "@/lib/toast";
 import type { BusinessNote } from "@/types";
 
 const NOTE_COLORS = [
-  { value: null, label: "Varsayilan", bg: "bg-surface-800", border: "border-surface-600" },
-  { value: "yellow", label: "Sari", bg: "bg-yellow-50", border: "border-yellow-200" },
+  { value: null, label: "Varsayılan", bg: "bg-surface-800", border: "border-surface-600" },
+  { value: "yellow", label: "Sarı", bg: "bg-yellow-50", border: "border-yellow-200" },
   { value: "blue", label: "Mavi", bg: "bg-blue-500/15", border: "border-blue-500/30" },
-  { value: "green", label: "Yesil", bg: "bg-emerald-500/15", border: "border-emerald-500/30" },
-  { value: "red", label: "Kirmizi", bg: "bg-red-500/15", border: "border-red-500/30" },
+  { value: "green", label: "Yeşil", bg: "bg-emerald-500/15", border: "border-emerald-500/30" },
+  { value: "red", label: "Kırmızı", bg: "bg-red-500/15", border: "border-red-500/30" },
   { value: "purple", label: "Mor", bg: "bg-purple-500/15", border: "border-purple-500/30" },
 ];
 
@@ -38,12 +38,12 @@ function timeAgo(dateStr: string) {
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "az once";
-  if (diffMin < 60) return `${diffMin} dk once`;
+  if (diffMin < 1) return "az önce";
+  if (diffMin < 60) return `${diffMin} dk önce`;
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH} saat once`;
+  if (diffH < 24) return `${diffH} saat önce`;
   const diffD = Math.floor(diffH / 24);
-  if (diffD < 30) return `${diffD} gun once`;
+  if (diffD < 30) return `${diffD} gün önce`;
   return d.toLocaleDateString("tr-TR");
 }
 
@@ -132,9 +132,9 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
       {/* Notes Grid */}
       {notes.length === 0 ? (
         <div className="glass-card p-8 text-center">
-          <p className="text-surface-400 text-sm">Henuz not eklenmemis</p>
+          <p className="text-surface-400 text-sm">Henüz not eklenmemiş</p>
           <p className="text-surface-400 text-xs mt-1">
-            Bu isletmeyle ilgili notlarinizi buraya ekleyebilirsiniz.
+            Bu işletmeyle ilgili notlarınızı buraya ekleyebilirsiniz.
           </p>
         </div>
       ) : (
@@ -194,7 +194,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
                     <button
                       onClick={() => setEditingNote(note)}
                       className="p-1.5 rounded-lg hover:bg-surface-600/50 transition-colors"
-                      title="Duzenle"
+                      title="Düzenle"
                     >
                       <Pencil size={13} className="text-surface-400" />
                     </button>
@@ -250,7 +250,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
               Notu Sil
             </h3>
             <p className="text-surface-300 text-sm mb-1">
-              Bu notu silmek istediginize emin misiniz?
+              Bu notu silmek istediğinize emin misiniz?
             </p>
             <p className="text-surface-400 text-xs mb-6 line-clamp-2">
               &quot;{deleteConfirm.content}&quot;
@@ -260,7 +260,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
                 onClick={() => setDeleteConfirm(null)}
                 className="btn-secondary flex-1 px-4 py-2.5 text-sm"
               >
-                Iptal
+                İptal
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
@@ -307,7 +307,7 @@ function NoteFormModal({
     setError(null);
 
     if (!content.trim()) {
-      setError("Not icerigi zorunludur");
+      setError("Not içeriği zorunludur");
       return;
     }
 
@@ -348,7 +348,7 @@ function NoteFormModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="modal-title">
-            {isEdit ? "Notu Duzenle" : "Yeni Not"}
+            {isEdit ? "Notu Düzenle" : "Yeni Not"}
           </h3>
           <button onClick={onClose} className="modal-close" aria-label="Kapat">
             <X size={18} />
@@ -369,7 +369,7 @@ function NoteFormModal({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="input min-h-[120px] resize-none"
-              placeholder="Notunuzu yazin..."
+              placeholder="Notunuzu yazın..."
               autoFocus
             />
           </div>
@@ -419,7 +419,7 @@ function NoteFormModal({
                 <EyeOff size={15} className="text-amber-300" />
                 <div>
                   <span className="text-sm font-medium text-surface-200">Gizli Not</span>
-                  <p className="text-[10px] text-surface-400">Sadece admin gorebilir</p>
+                  <p className="text-[10px] text-surface-400">Sadece admin görebilir</p>
                 </div>
               </div>
               <button
@@ -443,7 +443,7 @@ function NoteFormModal({
             {submitting
               ? "Kaydediliyor..."
               : isEdit
-              ? "Guncelle"
+              ? "Güncelle"
               : "Not Ekle"}
           </button>
         </form>

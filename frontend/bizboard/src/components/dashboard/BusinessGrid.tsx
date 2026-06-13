@@ -70,7 +70,7 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
                     {biz.name}
                   </h3>
                   <p className="text-[11px] text-surface-400 capitalize">
-                    {biz.business_type_name || "Isletme"}
+                    {biz.business_type_name || "İşletme"}
                   </p>
                 </div>
               </div>
@@ -121,7 +121,7 @@ export function BusinessGrid({ businesses, portfolio }: Props) {
       >
         <Plus size={24} className="text-surface-400" />
         <span className="text-sm font-medium text-surface-400">
-          Isletme Ekle
+          İşletme Ekle
         </span>
       </button>
     </div>

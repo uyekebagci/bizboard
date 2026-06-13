@@ -95,7 +95,7 @@ export function GroupedBusinessGrid({ businesses, portfolio }: Props) {
       <div className="space-y-4">
         {/* Top toolbar */}
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold text-surface-100 sr-only">Isletmeler ve Gruplar</h2>
+          <h2 className="text-base font-semibold text-surface-100 sr-only">İşletmeler ve Gruplar</h2>
           <button
             type="button"
             onClick={() => setShowCreate(true)}
@@ -162,7 +162,7 @@ function UngroupedSection({
       <header className="modal-header">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-surface-300 text-sm">Grupsuz</h3>
-          <span className="text-[11px] text-surface-400">{businesses.length} isletme</span>
+          <span className="text-[11px] text-surface-400">{businesses.length} işletme</span>
         </div>
       </header>
 
@@ -188,7 +188,7 @@ function UngroupedSection({
             <span className="w-11 h-11 rounded-2xl bg-surface-700/50 grid place-items-center group-hover:bg-brand-500/15 group-hover:scale-105 transition">
               <Plus size={22} className="text-surface-400 group-hover:text-brand-300" />
             </span>
-            <span className="text-sm font-semibold text-surface-400 group-hover:text-surface-100">Isletme Ekle</span>
+            <span className="text-sm font-semibold text-surface-400 group-hover:text-surface-100">İşletme Ekle</span>
           </button>
         </div>
       </div>

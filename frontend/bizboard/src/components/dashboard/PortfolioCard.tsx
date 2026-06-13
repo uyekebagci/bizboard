@@ -16,7 +16,7 @@ export function PortfolioCard({ portfolio, period }: Props) {
   if (!portfolio) {
     return (
       <div className="card p-6 text-center text-surface-400">
-        Henuz veri yok. Baslamak icin ilk isletmenizi ekleyin.
+        Henüz veri yok. Başlamak için ilk işletmenizi ekleyin.
       </div>
     );
   }
@@ -89,7 +89,7 @@ export function PortfolioCard({ portfolio, period }: Props) {
           </p>
           {fixedCost > 0 && (
             <p className="text-white/60 text-[10px] mt-0.5">
-              Islem: {formatCurrency(total_expense)} + Sabit: {formatCurrency(fixedCost)}
+              İşlem: {formatCurrency(total_expense)} + Sabit: {formatCurrency(fixedCost)}
             </p>
           )}
         </div>
@@ -98,7 +98,7 @@ export function PortfolioCard({ portfolio, period }: Props) {
       {/* Fixed cost info + business count */}
       <div className="relative flex items-center justify-between mt-4">
         <p className="text-white/60 text-xs">
-          {portfolio.business_count} isletme genelinde
+          {portfolio.business_count} işletme genelinde
         </p>
         {fixedCost > 0 && (
           <div className="flex items-center gap-1 text-white/60 text-[10px]">

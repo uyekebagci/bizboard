@@ -43,7 +43,7 @@ export function CounterpartCombobox({
   onChange,
   label,
   defaultNewRole = "CUSTOMER",
-  placeholder = "Karsi firma sec veya ad gir...",
+  placeholder = "Karşı firma seç veya ad gir...",
 }: Props) {
   const [list, setList] = useState<Counterpart[]>([]);
   const [loading, setLoading] = useState(false);
@@ -136,7 +136,7 @@ export function CounterpartCombobox({
               type="button"
               onClick={(e) => { e.stopPropagation(); handleClear(); }}
               className="ml-auto p-0.5 rounded hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
-              title="Secimi kaldir"
+              title="Seçimi kaldır"
             >
               <X size={14} />
             </button>
@@ -161,7 +161,7 @@ export function CounterpartCombobox({
           {loading ? (
             <div className="flex items-center gap-2 px-3 py-3 text-xs text-[rgb(var(--v2-muted))]">
               <Loader2 size={14} className="animate-spin" />
-              Yukleniyor...
+              Yükleniyor...
             </div>
           ) : error ? (
             <div className="px-3 py-3 text-xs text-red-700 dark:text-red-400">{error}</div>
@@ -169,7 +169,7 @@ export function CounterpartCombobox({
             <>
               {filtered.length === 0 && !showCreateCta && (
                 <div className="px-3 py-3 text-xs text-[rgb(var(--v2-muted))]">
-                  Esleson kayit yok. Yazmaya devam et.
+                  Eşleşen kayıt yok. Yazmaya devam et.
                 </div>
               )}
               {filtered.map((c) => (
@@ -193,7 +193,7 @@ export function CounterpartCombobox({
                   className="w-full flex items-center gap-2 px-3 py-2 border-t border-[rgb(var(--v2-border))] hover:bg-[rgb(var(--v2-sunken))] transition-colors text-accent-strong dark:text-accent text-sm"
                 >
                   <Plus size={14} />
-                  &quot;{textValue.trim()}&quot; karsi firma olarak olustur
+                  &quot;{textValue.trim()}&quot; karşı firma olarak oluştur
                 </button>
               )}
             </>
@@ -215,10 +215,10 @@ export function CounterpartCombobox({
 
 function roleLabel(r: CounterpartRole): string {
   switch (r) {
-    case "CUSTOMER": return "Musteri";
-    case "SUPPLIER": return "Tedarikci";
+    case "CUSTOMER": return "Müşteri";
+    case "SUPPLIER": return "Tedarikçi";
     case "BOTH": return "Her ikisi";
-    default: return "Diger";
+    default: return "Diğer";
   }
 }
 
@@ -241,7 +241,7 @@ function InlineCreateModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) { setError("Isim zorunlu"); return; }
+    if (!name.trim()) { setError("İsim zorunlu"); return; }
     setSubmitting(true);
     setError(null);
     try {
@@ -252,7 +252,7 @@ function InlineCreateModal({
       toast.success("Cari oluşturuldu");
       onCreated(created);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "Olusturma basarisiz";
+      const msg = e instanceof ApiError ? e.message : "Oluşturma başarısız";
       setError(msg);
       toast.error(e);
     } finally {
@@ -267,7 +267,7 @@ function InlineCreateModal({
         className="v2-card w-full max-w-md p-5 shadow-xl"
       >
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-[rgb(var(--v2-border))]">
-          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">Yeni Karsi Firma</h3>
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">Yeni Karşı Firma</h3>
           <button
             type="button"
             onClick={onClose}
@@ -284,7 +284,7 @@ function InlineCreateModal({
         )}
         <div className="space-y-3">
           <div>
-            <label className="label">Isim *</label>
+            <label className="label">İsim *</label>
             <input
               autoFocus
               required
@@ -299,14 +299,14 @@ function InlineCreateModal({
               value={role}
               onChange={(v) => setRole(v as CounterpartRole)}
               options={[
-                { value: "CUSTOMER", label: "Musteri" },
-                { value: "SUPPLIER", label: "Tedarikci" },
+                { value: "CUSTOMER", label: "Müşteri" },
+                { value: "SUPPLIER", label: "Tedarikçi" },
                 { value: "BOTH", label: "Her ikisi" },
-                { value: "OTHER", label: "Diger" },
+                { value: "OTHER", label: "Diğer" },
               ]}
             />
             <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-1">
-              Vergi no, iletisim gibi ek detaylar Cari Hesap sayfasindan eklenebilir.
+              Vergi no, iletişim gibi ek detaylar Cari Hesap sayfasından eklenebilir.
             </p>
           </div>
         </div>
@@ -316,14 +316,14 @@ function InlineCreateModal({
             onClick={onClose}
             className="btn-secondary px-3 py-1.5 text-xs"
           >
-            Iptal
+            İptal
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="px-3 py-1.5 rounded-lg bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] text-xs font-semibold disabled:opacity-50"
           >
-            {submitting ? "Olusturuluyor..." : "Olustur ve Sec"}
+            {submitting ? "Oluşturuluyor..." : "Oluştur ve Seç"}
           </button>
         </div>
       </form>

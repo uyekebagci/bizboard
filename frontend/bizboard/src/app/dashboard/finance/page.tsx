@@ -775,7 +775,7 @@ function DailyCashFlowList({ data }: { data: DailyCashFlowData[] }) {
                 <span className="num text-xs font-medium text-status-danger">-{formatCurrency(d.expense)}</span>
               )}
               {d.income === 0 && d.expense === 0 && (
-                <span className="text-xs text-[rgb(var(--v2-muted))]">Islem yok</span>
+                <span className="text-xs text-[rgb(var(--v2-muted))]">İşlem yok</span>
               )}
             </div>
             <div className="text-right">
@@ -824,7 +824,7 @@ function CategoriesTab({ data }: { data: FinanceOverview }) {
       </div>
 
       {categories.length === 0 ? (
-        <EmptySection text="Bu donemde kategori verisi yok" />
+        <EmptySection text="Bu dönemde kategori verisi yok" />
       ) : (
         <>
           {/* Donut / Ring Chart */}
@@ -858,7 +858,7 @@ function CategoryRingChart({
   return (
     <div className="v2-card p-5">
       <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-4">
-        {type === "expense" ? "Gider" : "Gelir"} Dagilimi
+        {type === "expense" ? "Gider" : "Gelir"} Dağılımı
       </h3>
       <div className="flex items-center gap-8">
         {/* SVG Ring */}
@@ -936,7 +936,7 @@ function CategoryList({
 }) {
   return (
     <div className="v2-card p-4">
-      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-3">Kategori Detaylari</h3>
+      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-3">Kategori Detayları</h3>
       <div className="space-y-2">
         {categories.map((cat) => (
           <div key={cat.name} className="flex items-center gap-3 p-3 rounded-xl v2-sunken">
@@ -945,7 +945,7 @@ function CategoryList({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{cat.name}</p>
-              <p className="text-[10px] text-[rgb(var(--v2-muted))]">{cat.transaction_count} islem</p>
+              <p className="text-[10px] text-[rgb(var(--v2-muted))]">{cat.transaction_count} işlem</p>
             </div>
             <div className="text-right">
               <p className={cn(
@@ -970,7 +970,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
   const businesses = data.business_breakdown;
 
   if (businesses.length === 0) {
-    return <EmptySection text="Isletme verisi bulunamadi" />;
+    return <EmptySection text="İşletme verisi bulunamadı" />;
   }
 
   const totalIncome = businesses.reduce((s, b) => s + b.income, 0);
@@ -980,7 +980,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
     <div className="space-y-4">
       {/* İşletme Karşılaştırma */}
       <div className="v2-card p-5">
-        <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-4">Isletme Karsilastirmasi</h3>
+        <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-4">İşletme Karşılaştırması</h3>
         <div className="space-y-4">
           {businesses.map((biz) => {
             const incomeShare = totalIncome > 0 ? (biz.income / totalIncome) * 100 : 0;
@@ -999,7 +999,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{biz.business_name}</p>
-                      <p className="text-[10px] text-[rgb(var(--v2-muted))]">{biz.transaction_count} islem</p>
+                      <p className="text-[10px] text-[rgb(var(--v2-muted))]">{biz.transaction_count} işlem</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -1065,7 +1065,7 @@ function BusinessesTab({ data }: { data: FinanceOverview }) {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[rgb(var(--v2-border))]">
-              <th className="text-left py-2 px-2 text-[rgb(var(--v2-muted))] font-medium">Isletme</th>
+              <th className="text-left py-2 px-2 text-[rgb(var(--v2-muted))] font-medium">İşletme</th>
               <th className="text-right py-2 px-2 text-[rgb(var(--v2-muted))] font-medium">Gelir</th>
               <th className="text-right py-2 px-2 text-[rgb(var(--v2-muted))] font-medium">Gider</th>
               <th className="text-right py-2 px-2 text-[rgb(var(--v2-muted))] font-medium">Sabit</th>
@@ -1155,8 +1155,8 @@ function EmptyState() {
       <div className="w-16 h-16 rounded-2xl v2-sunken flex items-center justify-center mb-4">
         <BarChart3 size={28} className="text-[rgb(var(--v2-muted))]" />
       </div>
-      <h2 className="text-lg font-bold text-[rgb(var(--v2-ink))] mb-1">Finans Verileri Yuklenemedi</h2>
-      <p className="text-[rgb(var(--v2-muted))] text-sm">Lutfen daha sonra tekrar deneyin.</p>
+      <h2 className="text-lg font-bold text-[rgb(var(--v2-ink))] mb-1">Finans Verileri Yüklenemedi</h2>
+      <p className="text-[rgb(var(--v2-muted))] text-sm">Lütfen daha sonra tekrar deneyin.</p>
     </div>
   );
 }
