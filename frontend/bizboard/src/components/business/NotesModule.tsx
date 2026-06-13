@@ -131,7 +131,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
 
       {/* Notes Grid */}
       {notes.length === 0 ? (
-        <div className="glass-card p-8 text-center">
+        <div className="v2-card p-8 text-center">
           <p className="text-surface-400 text-sm">Henüz not eklenmemiş</p>
           <p className="text-surface-400 text-xs mt-1">
             Bu işletmeyle ilgili notlarınızı buraya ekleyebilirsiniz.
@@ -155,7 +155,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
 
                 {/* Admin only badge */}
                 {note.admin_only && isAdmin && (
-                  <div className="absolute -top-1.5 -left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 rounded-full">
+                  <div className="absolute -top-1.5 -left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-[rgb(var(--accent))] rounded-full">
                     <EyeOff size={9} className="text-surface-100" />
                     <span className="text-[9px] text-surface-100 font-medium">Gizli</span>
                   </div>
@@ -245,7 +245,7 @@ export function NotesModule({ businessId, scope = "BUSINESS" }: Props) {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="glass-card shadow-xl p-6 max-w-sm w-full">
+          <div className="v2-card shadow-xl p-6 max-w-sm w-full">
             <h3 className="text-lg font-semibold text-surface-100 mb-2">
               Notu Sil
             </h3>
@@ -344,7 +344,7 @@ function NoteFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg">
+      <div className="v2-card shadow-xl w-full max-w-lg">
         {/* Header */}
         <div className="modal-header">
           <h3 className="modal-title">
@@ -414,9 +414,9 @@ function NoteFormModal({
 
           {/* Admin Only toggle — sadece admin görür */}
           {isAdmin && (
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-[rgb(var(--accent)/0.12)] border border-[rgb(var(--accent)/0.3)]">
               <div className="flex items-center gap-2.5">
-                <EyeOff size={15} className="text-amber-300" />
+                <EyeOff size={15} className="text-[rgb(var(--accent-bright))]" />
                 <div>
                   <span className="text-sm font-medium text-surface-200">Gizli Not</span>
                   <p className="text-[10px] text-surface-400">Sadece admin görebilir</p>

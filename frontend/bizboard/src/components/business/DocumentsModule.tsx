@@ -103,7 +103,7 @@ export function DocumentsModule({ businessId }: Props) {
 
       {/* File List */}
       {files.length === 0 ? (
-        <div className="glass-card p-8 text-center">
+        <div className="v2-card p-8 text-center">
           <FileText size={32} className="text-surface-300 mx-auto mb-2" />
           <p className="text-surface-400 text-sm">Henüz belge yüklenmemiş</p>
           <p className="text-surface-400 text-xs mt-1">
@@ -189,7 +189,7 @@ export function DocumentsModule({ businessId }: Props) {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="glass-card shadow-xl p-6 max-w-sm w-full">
+          <div className="v2-card shadow-xl p-6 max-w-sm w-full">
             <h3 className="text-lg font-semibold text-surface-100 mb-2">Belgeyi Sil</h3>
             <p className="text-surface-300 text-sm mb-1">Bu belgeyi silmek istediğinize emin misiniz?</p>
             <p className="text-surface-400 text-xs mb-6 truncate">&quot;{deleteConfirm.original_name}&quot;</p>
@@ -232,7 +232,7 @@ function FileDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100 truncate pr-4">

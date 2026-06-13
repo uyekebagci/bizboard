@@ -82,7 +82,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
         actions={
           <Link
             href="/dashboard/hesaplar"
-            className="text-[11px] text-amber-300 hover:text-amber-200 inline-flex items-center gap-1"
+            className="text-[11px] text-brand-300 hover:text-brand-200 inline-flex items-center gap-1"
           >
             Tümünü Yönet <ArrowRight size={11} />
           </Link>
@@ -99,7 +99,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
             <button
               type="button"
               onClick={() => setShowCreate(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium"
             >
               <Plus size={12} /> Kişide Nakit Ekle
             </button>
@@ -116,7 +116,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
                     className="px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-surface-700/40 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <UserCircle2 size={16} className="text-amber-300 shrink-0" />
+                      <UserCircle2 size={16} className="text-brand-300 shrink-0" />
                       <div className="min-w-0">
                         <p className="text-sm text-surface-100 truncate">{display}</p>
                         {it.holder_name && it.holder_name !== it.name && (
@@ -138,13 +138,13 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
                 TOPLAM: <strong>{summary!.total_count}</strong> kişide
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-amber-300">
+                <span className="text-sm font-bold text-brand-300">
                   {formatCurrency(summary!.total_amount, "TRY")}
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowCreate(true)}
-                  className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40"
+                  className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/40"
                 >
                   <Plus size={10} /> Yeni
                 </button>
@@ -153,7 +153,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
 
             {/* Şeffaflık notu — çift sayım korkusunu önler */}
             <div className="px-4 py-2 border-t border-[rgb(var(--v2-border))] text-[10px] text-surface-400 flex items-center gap-1.5">
-              <Info size={11} className="text-amber-400 shrink-0" />
+              <Info size={11} className="text-brand-400 shrink-0" />
               <span>Bu tutarlar <strong>Ana Kasa</strong> toplamına dahildir — çift sayım yok.</span>
             </div>
           </>
@@ -171,7 +171,7 @@ export function CashHoldersWidget({ businessId, businessName, onChange }: Props)
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b border-[rgb(var(--v2-border))] flex items-center gap-2">
-              <UserCircle2 size={16} className="text-amber-300" />
+              <UserCircle2 size={16} className="text-brand-300" />
               <h3 className="text-sm font-semibold text-surface-100">
                 Kişide Nakit Ekle
                 {businessName && (

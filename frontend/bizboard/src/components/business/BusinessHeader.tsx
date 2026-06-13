@@ -25,10 +25,10 @@ interface Props {
 export function BusinessHeader({ business }: Props) {
   // v1.6.2: BusinessType FK kaldırıldı, serbest metin tipi var; ikon default.
   const Icon = LayoutGrid;
-  const color = business.color || "#4c6ef5";
+  const color = business.color || "rgb(var(--color-brand))";
 
   return (
-    <div className="card p-5">
+    <div className="v2-card p-5">
       <div className="flex items-center gap-4">
         {/* Icon */}
         <div

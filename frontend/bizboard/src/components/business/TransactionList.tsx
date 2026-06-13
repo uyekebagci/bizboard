@@ -214,10 +214,10 @@ const TransactionRow = memo(function TransactionRow({
               className={cn(
                 "ml-1 inline-flex items-center gap-1 px-1.5 py-[1px] rounded-full text-[10px] font-medium",
                 isPos
-                  ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30"
+                  ? "bg-brand-500/15 text-brand-300 border border-brand-500/30"
                   : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
               )}
-              title={isPos ? "POS odeme" : "Nakit odeme"}
+              title={isPos ? "POS ödeme" : "Nakit ödeme"}
             >
               {isPos ? <CreditCard size={10} /> : <Banknote size={10} />}
               {isPos ? "POS" : "Nakit"}
@@ -530,7 +530,7 @@ export function TransactionDetailModal({
                     className={cn(
                       "flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all border",
                       editPaymentMethod === "POS"
-                        ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-300"
+                        ? "bg-brand-500/15 border-brand-500/40 text-brand-300"
                         : "bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-300",
                     )}
                   >
@@ -556,7 +556,7 @@ export function TransactionDetailModal({
                           className={cn(
                             "py-2 px-3 rounded-xl text-xs font-medium border transition-all",
                             editPosTxSubtype === opt
-                              ? "bg-indigo-500/15 border-indigo-500/50 text-indigo-200"
+                              ? "bg-brand-500/15 border-brand-500/50 text-brand-200"
                               : "bg-surface-800 border-surface-600 text-surface-400 hover:border-surface-300",
                           )}
                         >
@@ -813,7 +813,7 @@ export function TransactionDetailModal({
                 {/* v1.6.3+: Odeme yontemi + v1.6.21 (WP-4) POS settled toggle */}
                 <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
                   {(transaction.payment_method || "NAKIT") === "POS" ? (
-                    <CreditCard size={16} className="text-indigo-300 mt-0.5 shrink-0" />
+                    <CreditCard size={16} className="text-brand-300 mt-0.5 shrink-0" />
                   ) : (
                     <Banknote size={16} className="text-emerald-300 mt-0.5 shrink-0" />
                   )}
@@ -831,7 +831,7 @@ export function TransactionDetailModal({
                       && transaction.direction === "expense"
                       && transaction.pos_tx_subtype && (
                       <p className="text-[11px] text-surface-400 mt-1">
-                        <span className="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[10px] font-medium">
+                        <span className="px-1.5 py-0.5 rounded bg-brand-500/15 text-brand-300 border border-brand-500/30 text-[10px] font-medium">
                           {transaction.pos_tx_subtype === "NAKIT" ? "Nakit" : "Transfer"}
                         </span>
                         {transaction.pos_tx_subtype === "TRANSFER" && transaction.related_bank_account_name && (
@@ -1268,7 +1268,7 @@ function SettleModal({
   // containing-block sorunu — TransactionDetailModal ile aynı kök neden).
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
+      <div className="v2-card shadow-xl w-full max-w-md">
         <div className="modal-header">
           <h3 className="text-base font-semibold text-surface-100">POS işlemi hesaba düştü</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-surface-700">

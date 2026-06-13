@@ -71,7 +71,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
   if (loading) {
     return (
       <div className="space-y-3 animate-pulse">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-20 bg-surface-600 rounded-xl" />
           ))}
@@ -87,7 +87,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
     <>
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
           <div className="p-3 bg-blue-500/15 border border-blue-500/30 rounded-xl text-center">
             <p className="text-[10px] text-blue-300 uppercase tracking-wider font-medium">Personel</p>
             <p className="text-lg font-bold text-blue-300 mt-0.5">
@@ -139,7 +139,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
 
       {/* Employee List */}
       {filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
+        <div className="v2-card p-8 text-center">
           <Users size={32} className="mx-auto text-surface-300 mb-2" />
           <p className="text-surface-400 text-sm">Henüz personel eklenmemiş</p>
           <p className="text-surface-400 text-xs mt-1">
@@ -147,7 +147,7 @@ export function PersonnelModule({ businessId, currency = "TRY" }: Props) {
           </p>
         </div>
       ) : (
-        <div className="glass-card divide-y divide-surface-700">
+        <div className="v2-card divide-y divide-surface-700">
           {filtered.map((emp) => (
             <div
               key={emp.id}
@@ -266,7 +266,7 @@ function EmployeeDetailModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">Personel Detayı</h3>
@@ -286,7 +286,7 @@ function EmployeeDetailModal({
               {employee.full_name}
             </p>
             <p className="text-sm text-surface-400 mt-1">
-              {employee.position || "Pozisyon belirtilmemis"}
+              {employee.position || "Pozisyon belirtilmemiş"}
             </p>
             {!employee.is_active && (
               <span className="inline-block mt-2 px-2 py-0.5 bg-surface-600 text-surface-400 text-xs rounded-full">
@@ -296,7 +296,7 @@ function EmployeeDetailModal({
           </div>
 
           {/* Cost Breakdown */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="p-3 bg-amber-500/10 rounded-xl text-center">
               <p className="text-[10px] text-amber-300 uppercase tracking-wider font-medium">Maaş (Brüt)</p>
               <p className="text-sm font-bold text-amber-400 mt-0.5">
@@ -464,7 +464,7 @@ function CreateEmployeeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="text-lg font-bold text-surface-100">
             {isEdit ? "Personel Düzenle" : "Yeni Personel"}
@@ -685,7 +685,7 @@ function DeleteEmployeeModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
+      <div className="v2-card shadow-xl w-full max-w-md">
         <div className="modal-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">

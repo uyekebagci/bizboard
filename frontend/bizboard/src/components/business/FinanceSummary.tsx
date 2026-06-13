@@ -21,7 +21,7 @@ export function FinanceSummary({ summary, currency }: Props) {
       {/* Ana kartlar */}
       {/* Redesign Inc.2: glass + token-correct ikon renkleri + .num. */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="glass-card p-3.5">
+        <div className="v2-card p-3.5">
           <div className="flex items-center gap-1.5 mb-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-500/15">
               <TrendingUp size={14} className="text-emerald-400" />
@@ -33,7 +33,7 @@ export function FinanceSummary({ summary, currency }: Props) {
           </p>
         </div>
 
-        <div className="glass-card p-3.5">
+        <div className="v2-card p-3.5">
           <div className="flex items-center gap-1.5 mb-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-500/15">
               <TrendingDown size={14} className="text-rose-400" />
@@ -45,12 +45,12 @@ export function FinanceSummary({ summary, currency }: Props) {
           </p>
           {fixedCost > 0 && (
             <p className="text-[10px] text-surface-400 mt-0.5 truncate">
-              Islem: {formatCurrency(expense, currency)} + Sabit: {formatCurrency(fixedCost, currency)}
+              İşlem: {formatCurrency(expense, currency)} + Sabit: {formatCurrency(fixedCost, currency)}
             </p>
           )}
         </div>
 
-        <div className="glass-card p-3.5">
+        <div className="v2-card p-3.5">
           <div className="flex items-center gap-1.5 mb-2">
             <div className={cn(
               "w-7 h-7 rounded-lg flex items-center justify-center",
@@ -75,7 +75,7 @@ export function FinanceSummary({ summary, currency }: Props) {
           <Pin size={12} className="text-amber-600 shrink-0" />
           <p className="text-[11px] text-amber-400">
             <span className="font-medium">Sabit Giderler:</span>{" "}
-            {formatCurrency(fixedCost, currency)} (bu doneme oranlanmis)
+            {formatCurrency(fixedCost, currency)} (bu döneme oranlanmış)
           </p>
         </div>
       )}
