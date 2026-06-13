@@ -30,6 +30,30 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Added
+
+- **Kullanıcı-bazlı sidebar SAYFA erişimi (per-user page access).** İşletme-erişimi
+  desenine paralel olarak, admin artık her kullanıcının sidebar'da göreceği
+  sayfaları sınırlayabilir (bazı işletme kullanıcıları tüm sayfalara ihtiyaç
+  duymaz). NAVIGASYON/görünürlük seviyesidir; sayfa endpoint RBAC'ı AYRI ve
+  dokunulmamıştır.
+  - **Backend:** `users.allowed_pages` (TEXT, nullable) kolonu + idempotent
+    startup migration (`PageAccessMigrationRunner`). Kanonik sayfa-anahtarı
+    whitelist'i `SidebarPage` enum'unda. Normalize/resolve mantığı
+    `PageAccessService`'te toplandı. Admin API (`/admin/users` create/update)
+    `allowed_pages` alanını kabul eder; `/me` ve `/admin/users` response'ları
+    `allowed_pages` döner.
+  - **DEFAULT = TÜM sayfalar (default-permissive).** `null`/boş/`"all"` → kullanıcı
+    tüm sayfaları görür; MEVCUT kullanıcılar etkilenmez, kısıtlama opt-in. **ADMIN
+    her zaman tüm sayfaları görür** (kolon yok sayılır).
+  - **Admin UI:** kullanıcı oluştur/düzenle modal'larına "Görebileceği Sayfalar"
+    bölümü (Daxa stili, çift tema). "Tüm sayfalara erişim" toggle + bölüm-gruplu
+    sayfa checkbox'ları (`AdminPageAccess`).
+  - **FE enforcement:** Sidebar item'ları `allowed_pages`'e göre filtrelenir;
+    izinsiz route'a doğrudan gidilirse guard kullanıcıyı Ana Sayfa'ya yönlendirir
+    (`DashboardShell` `usePageAccessGuard`). Kanonik sayfa kayıt defteri
+    `lib/pages.ts` (backend `SidebarPage` aynası).
+
 ### Fixed
 
 - **DEPLOY-6 — login teması, ₺NaN kök çözümü, kategoriler 404 ve sistemik

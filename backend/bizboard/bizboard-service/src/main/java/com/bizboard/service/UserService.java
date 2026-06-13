@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,11 +26,22 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final AuditLogService auditLogService;
+    // Kullanıcı-bazlı sidebar sayfa-erişimini /me response'una eklemek için.
+    private final PageAccessService pageAccessService;
 
     public ProfileDto getProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return DtoMapper.toProfileDto(user);
+        ProfileDto dto = DtoMapper.toProfileDto(user);
+        // İzinli sayfaları FE'ye expose. "all"/admin → ["all"] sentinel'i (FE
+        // tüm sayfaları gösterir); aksi takdirde açık anahtar listesi.
+        if (pageAccessService.isAll(user.getAllowedPages(), user.getRole())) {
+            dto.setAllowedPages(List.of(PageAccessService.ALL));
+        } else {
+            dto.setAllowedPages(List.copyOf(
+                    pageAccessService.resolveAllowed(user.getAllowedPages(), user.getRole())));
+        }
+        return dto;
     }
 
     /**

@@ -25,4 +25,12 @@ public class UpdateUserRequest {
 
     @JsonProperty("is_active")
     private Boolean active;
+
+    /**
+     * Erişilebilir sidebar sayfa anahtarları (page key). {@code null} → değiştirme
+     * (mevcut korunur). Boş liste → default-permissive (tüm sayfalar). Admin için
+     * yok sayılır.
+     */
+    @JsonProperty("allowed_pages")
+    private List<String> allowedPages;
 }

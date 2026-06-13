@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -31,6 +32,15 @@ public class ProfileDto {
     private boolean onboardingCompleted;
 
     private String role;
+
+    /**
+     * Kullanıcının görebileceği sidebar SAYFA anahtarları (page key). FE bunu
+     * sidebar filtreleme + route guard için kullanır. {@code ["all"]} → tüm
+     * sayfalar (default-permissive; admin her zaman böyle). Navigasyon seviyesi;
+     * sayfa endpoint RBAC'ından ayrı.
+     */
+    @JsonProperty("allowed_pages")
+    private List<String> allowedPages;
 
     @JsonProperty("created_at")
     private LocalDateTime createdAt;

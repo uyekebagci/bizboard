@@ -29,4 +29,12 @@ public class CreateUserRequest {
     @NotEmpty(message = "En az bir isletme secilmelidir")
     @JsonProperty("business_ids")
     private List<UUID> businessIds;
+
+    /**
+     * Erişilebilir sidebar sayfa anahtarları (page key). OPSIYONEL — gönderilmezse
+     * veya boşsa kullanıcı TÜM sayfaları görür (default-permissive). Admin için
+     * yok sayılır (admin her zaman tüm sayfalar).
+     */
+    @JsonProperty("allowed_pages")
+    private List<String> allowedPages;
 }
