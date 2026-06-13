@@ -85,6 +85,15 @@ export function useInstruments(businessId?: string | null, status?: string) {
     return d;
   }, [businessId, load]);
 
+  // PENDING_OCR (OCR/Telegram taslağı) → CONFIRMED: evrakı portföye al.
+  // Para hareketi yok; sadece durum geçişi. Backend yalnız PENDING_OCR'ı onaylar.
+  const confirm = useCallback(async (id: string) => {
+    if (!businessId) throw new Error("business_id zorunlu");
+    const d = await api.post<Instrument>(`/instruments/${id}/confirm?business_id=${businessId}`, {});
+    await load();
+    return d;
+  }, [businessId, load]);
+
   const cash = useCallback(async (id: string, accountId: string, cashedDate?: string) => {
     if (!businessId) throw new Error("business_id zorunlu");
     const d = await api.post<Instrument>(`/instruments/${id}/cash?business_id=${businessId}`, {
@@ -139,5 +148,5 @@ export function useInstruments(businessId?: string | null, status?: string) {
     return d;
   }, [businessId, load]);
 
-  return { list, loading, error, reload: load, create, cash, uncash, listOpenByCounterpart, bounce, endorse };
+  return { list, loading, error, reload: load, create, confirm, cash, uncash, listOpenByCounterpart, bounce, endorse };
 }

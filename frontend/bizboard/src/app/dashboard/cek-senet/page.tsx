@@ -13,7 +13,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  FileText, Plus, Loader2, AlertTriangle, Check, XCircle, ArrowRightLeft, BadgeCheck, Undo2,
+  FileText, Plus, Loader2, AlertTriangle, Check, XCircle, ArrowRightLeft, BadgeCheck, Undo2, X,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useBusinesses } from "@/hooks/useBusinesses";
@@ -22,6 +22,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { BankAccountListItem, Counterpart } from "@/types";
 import { CashLedgerInstrumentModal } from "@/components/instruments/CashLedgerInstrumentModal";
+import { DarkSelect } from "@/components/shared/DarkSelect";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING_OCR: "OCR Bekliyor",
@@ -42,7 +43,7 @@ const STATUS_STYLE: Record<string, string> = {
 export default function InstrumentsPage() {
   const { businesses } = useBusinesses();
   const businessId = businesses?.[0]?.id ?? null;
-  const { list, loading, error, create, cash, uncash, bounce, endorse } = useInstruments(businessId);
+  const { list, loading, error, create, confirm, cash, uncash, bounce, endorse } = useInstruments(businessId);
 
   const [accounts, setAccounts] = useState<BankAccountListItem[]>([]);
   const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
@@ -50,6 +51,8 @@ export default function InstrumentsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   // Çek/senet ↔ nakit tahsilat bağlama modalı (prompt() yerine proper modal).
   const [cashTarget, setCashTarget] = useState<Instrument | null>(null);
+  // Ciro (devir) modalı — prompt() yerine cari dropdown'lu proper modal.
+  const [endorseTarget, setEndorseTarget] = useState<Instrument | null>(null);
 
   useEffect(() => {
     api.get<BankAccountListItem[]>("/bank-accounts").then((r) => setAccounts(r ?? [])).catch(() => setAccounts([]));
@@ -83,17 +86,17 @@ export default function InstrumentsPage() {
     catch (e) { toast.error(e); } finally { setBusyId(null); }
   }
 
-  async function handleEndorse(ins: Instrument) {
-    const firms = counterparts;
-    if (firms.length === 0) { toast.error("Devralan için cari yok"); return; }
-    const cpId = window.prompt(
-      `Ciro — devralan cari (id):\n${firms.map((c) => `${c.name} → ${c.id}`).join("\n")}`,
-      firms[0].id,
-    );
-    if (!cpId) return;
+  // PENDING_OCR (OCR/Telegram taslağı) → CONFIRMED: evrakı portföye al.
+  async function handleConfirm(ins: Instrument) {
     setBusyId(ins.id);
-    try { await endorse(ins.id, cpId.trim()); toast.success("Ciro edildi"); }
+    try { await confirm(ins.id); toast.success("Onaylandı — portföye alındı"); }
     catch (e) { toast.error(e); } finally { setBusyId(null); }
+  }
+
+  // Ciro → proper modal (cari dropdown) aç; id'yi elle yapıştırmak yerine seçtirir.
+  function handleEndorse(ins: Instrument) {
+    if (counterparts.length === 0) { toast.error("Devralan için cari yok"); return; }
+    setEndorseTarget(ins);
   }
 
   return (
@@ -182,6 +185,13 @@ export default function InstrumentsPage() {
                   <p className={cn("text-sm font-semibold num", i.direction === "RECEIVED" ? "text-accent-strong dark:text-accent" : "text-status-danger")}>
                     {formatCurrency(i.amount, i.currency || "TRY")}
                   </p>
+                  {i.status === "PENDING_OCR" && (
+                    <button onClick={() => handleConfirm(i)} disabled={busyId === i.id}
+                      className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-accent/15 text-accent-strong dark:text-accent hover:bg-accent/25 border border-accent/30 disabled:opacity-50 v2-press">
+                      {busyId === i.id ? <Loader2 size={10} className="animate-spin" /> : <BadgeCheck size={10} />}
+                      Onayla
+                    </button>
+                  )}
                   {canAct && (
                     <div className="flex gap-1">
                       <button onClick={() => handleCash(i)} disabled={busyId === i.id}
@@ -245,6 +255,140 @@ export default function InstrumentsPage() {
           onClose={() => setCashTarget(null)}
         />
       )}
+
+      {/* Ciro (devir) modalı — cari dropdown (prompt() yerine) */}
+      {endorseTarget && (
+        <EndorseInstrumentModal
+          instrument={endorseTarget}
+          counterparts={counterparts}
+          onClose={() => setEndorseTarget(null)}
+          onEndorse={async (toCounterpartId) => {
+            await endorse(endorseTarget.id, toCounterpartId);
+            setEndorseTarget(null);
+            toast.success("Ciro edildi");
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Ciro (devir) modalı — alacak (RECEIVED) evrakı devralan cariye aktarır.
+ *
+ * <p>Eski {@code window.prompt(id yapıştır)} yaklaşımının yerine geçer: yanlış-id
+ * → yanlış paraya ciro riskini ortadan kaldırır. Devralan, {@link DarkSelect} ile
+ * cari listesinden SEÇİLİR. Para hareketi yok; durum CONFIRMED → ENDORSED.</p>
+ */
+function EndorseInstrumentModal({
+  instrument, counterparts, onClose, onEndorse,
+}: {
+  instrument: Instrument;
+  counterparts: Counterpart[];
+  onClose: () => void;
+  onEndorse: (toCounterpartId: string) => Promise<void>;
+}) {
+  const [toId, setToId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Keşideci kendine ciro edilemez (anlamsız) — listeden çıkar.
+  const options = counterparts
+    .filter((c) => c.id !== instrument.issuer_counterpart_id)
+    .map((c) => ({ value: c.id, label: c.name, meta: c.tax_id ?? undefined }));
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!toId) { setError("Devralan cari seçin"); return; }
+    setBusy(true);
+    try {
+      await onEndorse(toId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ciro başarısız");
+      toast.error(err);
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      onClick={onClose}>
+      <form
+        onSubmit={submit}
+        onClick={(e) => e.stopPropagation()}
+        className="v2-card w-full max-w-md shadow-xl">
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <ArrowRightLeft size={16} className="text-status-warning" />
+            Ciro (Devir)
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-3">
+          {error && (
+            <div className="p-2.5 rounded-lg bg-status-danger/10 border border-status-danger/30 text-status-danger text-xs flex items-start gap-2">
+              <AlertTriangle size={12} className="mt-0.5" /><span>{error}</span>
+            </div>
+          )}
+
+          {/* Evrak özeti */}
+          <div className="rounded-lg v2-sunken p-3 text-xs space-y-1 border border-[rgb(var(--v2-border))]">
+            <p className="text-[rgb(var(--v2-ink))] flex items-center gap-1.5">
+              <FileText size={12} className="text-[rgb(var(--v2-muted))]" />
+              <strong>{instrument.serial_no || (instrument.type === "CHECK" ? "Çek" : "Senet")}</strong>
+              {" · "}
+              {formatCurrency(instrument.amount, instrument.currency || "TRY")}
+            </p>
+            <p className="text-[rgb(var(--v2-muted))]">
+              {instrument.issuer_name || "—"} · vade: {instrument.due_date}
+              {instrument.bank_name && ` · ${instrument.bank_name}`}
+            </p>
+            <p className="text-[11px] text-status-warning">
+              Alınan evrak başka cariye devredilir (alacak kapanır). Para hareketi yok.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Devralan Cari *
+            </label>
+            <DarkSelect
+              required
+              value={toId}
+              onChange={setToId}
+              placeholder="Cari seçin"
+              searchable={options.length > 6}
+              options={options}
+            />
+            {options.length === 0 && (
+              <p className="mt-1.5 text-[11px] text-status-warning">
+                Devredilebilecek başka cari yok.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2 p-4 border-t border-[rgb(var(--v2-border))] shrink-0">
+          <button type="button" onClick={onClose} disabled={busy}
+            className="flex-1 py-2 rounded-xl v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] text-sm font-medium v2-press">
+            Vazgeç
+          </button>
+          <button type="submit" disabled={busy || !toId}
+            className="flex-1 py-2 v2-btn v2-btn--ink v2-press text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <ArrowRightLeft size={14} />}
+            Ciro Et
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
