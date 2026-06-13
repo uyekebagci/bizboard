@@ -136,12 +136,12 @@ function InventoryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
-            <ArrowLeft size={20} className="text-surface-300" />
+          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors">
+            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Envanter Yönetimi</h1>
-            <p className="text-xs text-surface-400">{totalCount} kalem</p>
+            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Envanter Yönetimi</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">{totalCount} kalem</p>
           </div>
         </div>
         <button
@@ -163,7 +163,7 @@ function InventoryPage() {
               onClick={() => setActiveCategory(cat.key)}
               className={cn(
                 "flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
-                isActive ? "bg-brand-600 text-white shadow-sm" : "bg-surface-700 text-surface-300 hover:bg-surface-600"
+                isActive ? "v2-btn--accent text-white shadow-sm" : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
               )}
             >
               <Icon size={16} />
@@ -176,10 +176,10 @@ function InventoryPage() {
       {/* Uyarı Barı */}
       {(brokenCount > 0 || lowStockCount > 0) && (
         <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center gap-2 text-xs">
-          <AlertTriangle size={14} className="text-amber-600 shrink-0" />
+          <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
           <div className="flex gap-3">
-            {brokenCount > 0 && <span className="text-amber-400 font-medium">{brokenCount} arızalı</span>}
-            {lowStockCount > 0 && <span className="text-red-600 font-medium">{lowStockCount} düşük stok</span>}
+            {brokenCount > 0 && <span className="text-amber-700 dark:text-amber-400 font-medium">{brokenCount} arızalı</span>}
+            {lowStockCount > 0 && <span className="text-status-danger font-medium">{lowStockCount} düşük stok</span>}
           </div>
         </div>
       )}
@@ -187,7 +187,7 @@ function InventoryPage() {
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
           <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Ara... (ad, marka, seri no, lokasyon)"
             className="field field-sm py-2.5 pl-9 pr-4" />
@@ -207,11 +207,11 @@ function InventoryPage() {
       {/* Content */}
       {loading ? (
         <div className="space-y-3 animate-pulse">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 bg-surface-600 rounded-xl" />)}
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 bg-[rgb(var(--v2-sunken))] rounded-xl" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <p className="text-surface-400 text-sm">
+        <div className="v2-card p-8 text-center">
+          <p className="text-[rgb(var(--v2-muted))] text-sm">
             {items.length === 0 ? "Henüz envanter kalemi yok" : "Filtreye uygun kalem bulunamadı"}
           </p>
           {hasClientFilter && hasNext && (
@@ -220,7 +220,7 @@ function InventoryPage() {
                 type="button"
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-ink))] text-xs font-medium transition-colors disabled:opacity-50"
               >
                 {loadingMore ? "Yükleniyor..." : "Daha fazla kalem ara"}
               </button>
@@ -229,7 +229,7 @@ function InventoryPage() {
         </div>
       ) : (
         <>
-          <div className="glass-card divide-y divide-surface-700 overflow-hidden">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
             {filtered.map((item) => (
               <InventoryRow key={item.id} item={item} onSelect={handleSelectItem} showBusiness={!filterBusiness} />
             ))}

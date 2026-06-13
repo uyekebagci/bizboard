@@ -236,30 +236,30 @@ function ClosurePage() {
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
           </button>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-surface-100 truncate">
+            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">
               Gün Kapanışı — {closureDate}
             </h1>
             {isPast && (
-              <p className="text-[11px] text-amber-300">Geçmiş tarih (read-only)</p>
+              <p className="text-[11px] text-amber-600 dark:text-amber-300">Geçmiş tarih (read-only)</p>
             )}
             {alreadyClosed && (
-              <p className="text-[11px] text-emerald-300">Bu gün kapatıldı</p>
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-300">Bu gün kapatıldı</p>
             )}
           </div>
         </div>
-        <Link href="/dashboard/closures" className="text-xs text-surface-400 hover:text-surface-200">
+        <Link href="/dashboard/closures" className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
           ← Tümü
         </Link>
       </div>
 
       {businesses.length > 1 && (
-        <div className="glass-card p-3">
-          <label className="text-[10px] uppercase text-surface-400 mb-1 block">İşletme</label>
+        <div className="v2-card p-3">
+          <label className="text-[10px] uppercase text-[rgb(var(--v2-muted))] mb-1 block">İşletme</label>
           <select
             value={businessId}
             onChange={(e) => setBusinessId(e.target.value)}
@@ -274,14 +274,14 @@ function ClosurePage() {
 
       {/* WP 08617251: session indicator banner — inline tx eklemeden sonra görünür */}
       {sessionTxCount > 0 && !isReadOnly && (
-        <div className="glass-card p-3 border-amber-500/40 bg-amber-500/[0.06] flex items-center gap-3">
+        <div className="v2-card p-3 border-amber-500/40 bg-amber-500/[0.06] flex items-center gap-3">
           <Zap size={16} className="text-amber-400 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-amber-200">
+            <p className="text-sm text-amber-700 dark:text-amber-200">
               Bu kapanışta <strong>{sessionTxCount}</strong> yeni işlem eklendi —
               kapanışı tamamladığında kalıcı olur.
             </p>
-            <p className="text-[10px] text-amber-300/70 mt-0.5">
+            <p className="text-[10px] text-amber-600/70 dark:text-amber-300/70 mt-0.5">
               Sayfayı kapatırsan tarayıcı uyarısı çıkar; onaylarsan eklenenler otomatik silinir.
             </p>
           </div>
@@ -289,7 +289,7 @@ function ClosurePage() {
             type="button"
             onClick={handleRollbackSession}
             disabled={rollbacking}
-            className="px-2.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-medium border border-rose-500/40 inline-flex items-center gap-1 disabled:opacity-50"
+            className="px-2.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-700 dark:text-rose-300 text-xs font-medium border border-rose-500/40 inline-flex items-center gap-1 disabled:opacity-50"
           >
             {rollbacking ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
             Vazgeç & Hepsini Sil
@@ -299,10 +299,10 @@ function ClosurePage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-surface-500" />
+          <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : !sectioned ? (
-        <div className="glass-card p-6 text-center text-sm text-red-300">
+        <div className="v2-card p-6 text-center text-sm text-status-danger">
           Veri yüklenemedi.
         </div>
       ) : (
@@ -348,18 +348,18 @@ function ClosurePage() {
             )}
             {/* Genel toplam + net fark */}
             {sectioned.pos.grand_count > 0 && (
-              <div className="rounded-xl border-2 border-blue-500/40 bg-blue-500/10 px-3 py-2.5 space-y-1.5">
+              <div className="rounded-xl border-2 border-accent/40 bg-accent/10 px-3 py-2.5 space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-emerald-300 font-medium">+ Gelir</span>
-                  <span className="text-emerald-300 font-mono">{formatCurrency(sectioned.pos.income.grand_total, "TRY")}</span>
+                  <span className="text-emerald-600 dark:text-emerald-300 font-medium">+ Gelir</span>
+                  <span className="text-emerald-600 dark:text-emerald-300 font-mono">{formatCurrency(sectioned.pos.income.grand_total, "TRY")}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-rose-300 font-medium">− Gider</span>
-                  <span className="text-rose-300 font-mono">−{formatCurrency(sectioned.pos.expense.grand_total, "TRY")}</span>
+                  <span className="text-rose-600 dark:text-rose-300 font-medium">− Gider</span>
+                  <span className="text-rose-600 dark:text-rose-300 font-mono">−{formatCurrency(sectioned.pos.expense.grand_total, "TRY")}</span>
                 </div>
-                <div className="border-t border-blue-500/30 pt-1 flex items-center justify-between text-sm font-bold">
-                  <span className="text-blue-200">POS NET</span>
-                  <span className={cn("font-mono", sectioned.pos.net >= 0 ? "text-emerald-300" : "text-rose-300")}>
+                <div className="border-t border-accent/30 pt-1 flex items-center justify-between text-sm font-bold">
+                  <span className="text-accent">POS NET</span>
+                  <span className={cn("font-mono", sectioned.pos.net >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300")}>
                     {sectioned.pos.net >= 0 ? "" : "−"}{formatCurrency(Math.abs(sectioned.pos.net), "TRY")}
                   </span>
                 </div>
@@ -402,11 +402,11 @@ function ClosurePage() {
           <Section title="Borç / Alacak Hareketleri" icon={FileText} color="indigo">
             <GroupCard title="Yeni Alacaklar" count={sectioned.debts.new_receivables.count} total={sectioned.debts.new_receivables.total}>
               {sectioned.debts.new_receivables.list.length === 0 ? <Empty msg="—" /> : (
-                <ul className="divide-y divide-surface-700">
+                <ul className="divide-y divide-[rgb(var(--v2-border))]">
                   {sectioned.debts.new_receivables.list.map((d) => (
                     <li key={d.id} className="px-3 py-2 text-xs flex items-center justify-between">
-                      <span className="text-surface-200">{d.counterparty}</span>
-                      <span className="text-emerald-300 font-medium">+{formatCurrency(d.amount, "TRY")}</span>
+                      <span className="text-[rgb(var(--v2-ink))]">{d.counterparty}</span>
+                      <span className="text-emerald-600 dark:text-emerald-300 font-medium">+{formatCurrency(d.amount, "TRY")}</span>
                     </li>
                   ))}
                 </ul>
@@ -414,11 +414,11 @@ function ClosurePage() {
             </GroupCard>
             <GroupCard title="Yeni Verecekler" count={sectioned.debts.new_payables.count} total={sectioned.debts.new_payables.total}>
               {sectioned.debts.new_payables.list.length === 0 ? <Empty msg="—" /> : (
-                <ul className="divide-y divide-surface-700">
+                <ul className="divide-y divide-[rgb(var(--v2-border))]">
                   {sectioned.debts.new_payables.list.map((d) => (
                     <li key={d.id} className="px-3 py-2 text-xs flex items-center justify-between">
-                      <span className="text-surface-200">{d.counterparty}</span>
-                      <span className="text-rose-300 font-medium">−{formatCurrency(d.amount, "TRY")}</span>
+                      <span className="text-[rgb(var(--v2-ink))]">{d.counterparty}</span>
+                      <span className="text-rose-600 dark:text-rose-300 font-medium">−{formatCurrency(d.amount, "TRY")}</span>
                     </li>
                   ))}
                 </ul>
@@ -449,28 +449,28 @@ function ClosurePage() {
           </Section>
 
           {/* SUMMARY */}
-          <section className="glass-card p-5 space-y-3">
-            <h2 className="text-sm font-bold text-surface-100 flex items-center gap-2">
-              <BarChart3 size={14} className="text-emerald-400" />
+          <section className="v2-card p-5 space-y-3">
+            <h2 className="text-sm font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+              <BarChart3 size={14} className="text-accent" />
               Gün Özeti
             </h2>
             <div className="space-y-1.5 text-xs">
               <Row label="Açılış Bakiyesi" value={opening} />
-              <Row label="+ POS Hacmi" value={sectioned.pos.grand_total} colorClass="text-emerald-300" />
-              <Row label="+ Gelen Havale" value={sectioned.transfers.incoming_external.total} colorClass="text-emerald-300" />
-              <Row label="− Dışarı Giden" value={sectioned.transfers.outgoing_external.total} colorClass="text-rose-300" prefix="−" />
-              <Row label="− Harcamalar" value={sectioned.expenses.grand_total} colorClass="text-rose-300" prefix="−" />
-              <Row label="± İç Transfer (net 0)" value={0} colorClass="text-surface-500" />
-              <div className="border-t border-surface-700 pt-2 mt-2 flex justify-between font-bold text-sm">
-                <span className="text-surface-100">Hesaplanan Kapanış</span>
-                <span className="text-emerald-300">{formatCurrency(computed, "TRY")}</span>
+              <Row label="+ POS Hacmi" value={sectioned.pos.grand_total} colorClass="text-emerald-600 dark:text-emerald-300" />
+              <Row label="+ Gelen Havale" value={sectioned.transfers.incoming_external.total} colorClass="text-emerald-600 dark:text-emerald-300" />
+              <Row label="− Dışarı Giden" value={sectioned.transfers.outgoing_external.total} colorClass="text-rose-600 dark:text-rose-300" prefix="−" />
+              <Row label="− Harcamalar" value={sectioned.expenses.grand_total} colorClass="text-rose-600 dark:text-rose-300" prefix="−" />
+              <Row label="± İç Transfer (net 0)" value={0} colorClass="text-[rgb(var(--v2-muted))]" />
+              <div className="border-t border-[rgb(var(--v2-border))] pt-2 mt-2 flex justify-between font-bold text-sm">
+                <span className="text-[rgb(var(--v2-ink))]">Hesaplanan Kapanış</span>
+                <span className="text-emerald-600 dark:text-emerald-300">{formatCurrency(computed, "TRY")}</span>
               </div>
             </div>
 
             {!isReadOnly && (
-              <form onSubmit={saveClosure} className="space-y-3 pt-3 border-t border-surface-700">
+              <form onSubmit={saveClosure} className="space-y-3 pt-3 border-t border-[rgb(var(--v2-border))]">
                 <div>
-                  <label className="text-[10px] uppercase text-surface-400 mb-1 block">Fiili Bakiye</label>
+                  <label className="text-[10px] uppercase text-[rgb(var(--v2-muted))] mb-1 block">Fiili Bakiye</label>
                   <input
                     type="number"
                     step="0.01"
@@ -480,7 +480,7 @@ function ClosurePage() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase text-surface-400 mb-1 block">Açıklama (opsiyonel)</label>
+                  <label className="text-[10px] uppercase text-[rgb(var(--v2-muted))] mb-1 block">Açıklama (opsiyonel)</label>
                   <input
                     type="text"
                     value={description}
@@ -489,12 +489,12 @@ function ClosurePage() {
                   />
                 </div>
                 {error && (
-                  <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+                  <div className="p-2 rounded-lg bg-status-danger/10 border border-status-danger/30 text-status-danger text-xs flex items-start gap-2">
                     <AlertTriangle size={12} className="mt-0.5" /> {error}
                   </div>
                 )}
                 {success && (
-                  <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
                     <CheckCircle2 size={12} /> {success}
                   </div>
                 )}
@@ -509,7 +509,7 @@ function ClosurePage() {
               </form>
             )}
             {isReadOnly && (
-              <div className="pt-3 border-t border-surface-700 text-center text-xs text-surface-400">
+              <div className="pt-3 border-t border-[rgb(var(--v2-border))] text-center text-xs text-[rgb(var(--v2-muted))]">
                 {alreadyClosed ? "Bu gün kapatıldı — read-only." : "Geçmiş tarih — read-only."}
               </div>
             )}
@@ -540,11 +540,11 @@ function AddBtn({ label, color, onClick }: {
   onClick: () => void;
 }) {
   const colorMap: Record<string, string> = {
-    blue:    "bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-500/40",
-    rose:    "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border-rose-500/40",
-    emerald: "bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border-emerald-500/40",
-    amber:   "bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border-amber-500/40",
-    indigo:  "bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border-indigo-500/40",
+    blue:    "bg-accent/10 hover:bg-accent/20 text-accent border-accent/40",
+    rose:    "bg-rose-600/20 hover:bg-rose-600/30 text-rose-700 dark:text-rose-300 border-rose-500/40",
+    emerald: "bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 border-emerald-500/40",
+    amber:   "bg-amber-600/20 hover:bg-amber-600/30 text-amber-700 dark:text-amber-300 border-amber-500/40",
+    indigo:  "bg-accent/10 hover:bg-accent/20 text-accent border-accent/40",
   };
   return (
     <button
@@ -572,15 +572,15 @@ function Section({ title, icon: Icon, color, count, total, action, children }: {
 }) {
   const [open, setOpen] = useState(true);
   const colorMap: Record<string, string> = {
-    blue: "text-blue-400",
-    purple: "text-purple-400",
-    amber: "text-amber-400",
-    indigo: "text-indigo-400",
-    rose: "text-rose-400",
+    blue: "text-accent",
+    purple: "text-accent",
+    amber: "text-amber-600 dark:text-amber-400",
+    indigo: "text-accent",
+    rose: "text-rose-600 dark:text-rose-400",
   };
   return (
-    <section className="glass-card overflow-hidden">
-      <div className="w-full px-4 py-3 border-b border-surface-700 flex items-center justify-between gap-2">
+    <section className="v2-card overflow-hidden">
+      <div className="w-full px-4 py-3 border-b border-[rgb(var(--v2-border))] flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setOpen(!open)}
@@ -588,9 +588,9 @@ function Section({ title, icon: Icon, color, count, total, action, children }: {
         >
           <Icon size={16} className={colorMap[color]} />
           <div>
-            <h2 className="text-sm font-semibold text-surface-100">{title}</h2>
+            <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{title}</h2>
             {count != null && (
-              <p className="text-[10px] text-surface-400">
+              <p className="text-[10px] text-[rgb(var(--v2-muted))]">
                 {count} işlem
                 {total != null && total > 0 && <> · {formatCurrency(total, "TRY")}</>}
               </p>
@@ -599,7 +599,7 @@ function Section({ title, icon: Icon, color, count, total, action, children }: {
         </button>
         <div className="flex items-center gap-1.5">
           {action}
-          {open ? <ChevronUp size={14} className="text-surface-400" /> : <ChevronDown size={14} className="text-surface-400" />}
+          {open ? <ChevronUp size={14} className="text-[rgb(var(--v2-muted))]" /> : <ChevronDown size={14} className="text-[rgb(var(--v2-muted))]" />}
         </div>
       </div>
       {open && <div className="p-3 space-y-3">{children}</div>}
@@ -614,10 +614,10 @@ function GroupCard({ title, count, total, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-surface-700 overflow-hidden">
-      <div className="px-3 py-2 bg-surface-700/40 flex items-center justify-between">
-        <span className="text-xs font-semibold text-surface-200">{title}</span>
-        <span className="text-[11px] text-surface-300">
+    <div className="rounded-xl border border-[rgb(var(--v2-border))] overflow-hidden">
+      <div className="px-3 py-2 bg-[rgb(var(--v2-sunken))] flex items-center justify-between">
+        <span className="text-xs font-semibold text-[rgb(var(--v2-ink))]">{title}</span>
+        <span className="text-[11px] text-[rgb(var(--v2-muted))]">
           {count} · {formatCurrency(total, "TRY")}
         </span>
       </div>
@@ -629,14 +629,14 @@ function GroupCard({ title, count, total, children }: {
 function TxList({ txs }: { txs: TxSummary[] }) {
   if (txs.length === 0) return <Empty msg="—" />;
   return (
-    <ul className="divide-y divide-surface-700">
+    <ul className="divide-y divide-[rgb(var(--v2-border))]">
       {txs.map((t) => (
         <li key={t.id} className="px-3 py-2 text-xs flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-surface-200 truncate">
+            <p className="text-[rgb(var(--v2-ink))] truncate">
               {t.description || "—"}
             </p>
-            <p className="text-[10px] text-surface-500 truncate">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))] truncate">
               {t.payment_method}
               {t.pos_device_name && ` · ${t.pos_device_name}`}
               {t.counterpart_name && ` · ${t.counterpart_name}`}
@@ -645,7 +645,7 @@ function TxList({ txs }: { txs: TxSummary[] }) {
           </div>
           <span className={cn(
             "font-medium shrink-0",
-            t.direction === "INCOME" ? "text-emerald-300" : "text-rose-300",
+            t.direction === "INCOME" ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300",
           )}>
             {t.direction === "INCOME" ? "+" : "−"}{formatCurrency(t.amount, "TRY")}
           </span>
@@ -657,9 +657,9 @@ function TxList({ txs }: { txs: TxSummary[] }) {
 
 function GrandRow({ label, count, total }: { label: string; count: number; total: number }) {
   return (
-    <div className="rounded-xl border-2 border-blue-500/40 bg-blue-500/10 px-3 py-2.5 flex items-center justify-between">
-      <span className="text-xs font-bold text-blue-200">{label}</span>
-      <span className="text-sm font-bold text-blue-100">
+    <div className="rounded-xl border-2 border-accent/40 bg-accent/10 px-3 py-2.5 flex items-center justify-between">
+      <span className="text-xs font-bold text-accent">{label}</span>
+      <span className="text-sm font-bold text-[rgb(var(--v2-ink))]">
         {count} işlem · {formatCurrency(total, "TRY")}
       </span>
     </div>
@@ -674,8 +674,8 @@ function Row({ label, value, colorClass, prefix }: {
 }) {
   return (
     <div className="flex justify-between">
-      <span className="text-surface-400">{label}</span>
-      <span className={cn("font-mono", colorClass || "text-surface-200")}>
+      <span className="text-[rgb(var(--v2-muted))]">{label}</span>
+      <span className={cn("font-mono", colorClass || "text-[rgb(var(--v2-ink))]")}>
         {prefix || ""}{formatCurrency(Math.abs(value), "TRY")}
       </span>
     </div>
@@ -683,5 +683,5 @@ function Row({ label, value, colorClass, prefix }: {
 }
 
 function Empty({ msg }: { msg: string }) {
-  return <p className="px-3 py-3 text-[11px] text-surface-500 italic">{msg}</p>;
+  return <p className="px-3 py-3 text-[11px] text-[rgb(var(--v2-muted))] italic">{msg}</p>;
 }

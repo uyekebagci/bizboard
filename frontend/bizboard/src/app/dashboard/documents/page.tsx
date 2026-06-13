@@ -96,11 +96,11 @@ export default function DocumentsPage() {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse max-w-2xl mx-auto">
-        <div className="h-8 bg-surface-600 rounded-lg w-48" />
-        <div className="h-10 bg-surface-600 rounded-xl" />
+        <div className="h-8 bg-[rgb(var(--v2-sunken))] rounded-lg w-48" />
+        <div className="h-10 bg-[rgb(var(--v2-sunken))] rounded-xl" />
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 bg-surface-600 rounded-xl" />
+            <div key={i} className="h-16 bg-[rgb(var(--v2-sunken))] rounded-xl" />
           ))}
         </div>
       </div>
@@ -114,13 +114,13 @@ export default function DocumentsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Belgeler</h1>
-            <p className="text-xs text-surface-400">{filtered.length} belge</p>
+            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Belgeler</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">{filtered.length} belge</p>
           </div>
         </div>
         <button
@@ -134,14 +134,14 @@ export default function DocumentsPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Belge ara..."
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm text-surface-100
-                     placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))]
+                     placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-transparent transition-all"
         />
       </div>
 
@@ -159,7 +159,7 @@ export default function DocumentsPage() {
         </div>
 
         {/* Type filter */}
-        <div className="flex rounded-xl border border-surface-600 overflow-hidden">
+        <div className="flex rounded-xl border border-[rgb(var(--v2-border))] overflow-hidden">
           {([
             { key: "all", label: "Tümü" },
             { key: "image", label: "Fotoğraf" },
@@ -170,8 +170,8 @@ export default function DocumentsPage() {
               onClick={() => setFilterType(opt.key)}
               className={`px-3 py-2 text-xs font-medium transition-colors ${
                 filterType === opt.key
-                  ? "bg-brand-600 text-white"
-                  : "bg-surface-800 text-surface-300 hover:bg-surface-700"
+                  ? "v2-btn--accent text-white"
+                  : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
               }`}
             >
               {opt.label}
@@ -182,9 +182,9 @@ export default function DocumentsPage() {
 
       {/* File List */}
       {filtered.length === 0 ? (
-        <div className="card p-8 text-center">
-          <FileText size={32} className="text-surface-300 mx-auto mb-2" />
-          <p className="text-surface-400 text-sm">
+        <div className="v2-card p-8 text-center">
+          <FileText size={32} className="text-[rgb(var(--v2-muted))] mx-auto mb-2" />
+          <p className="text-[rgb(var(--v2-muted))] text-sm">
             {files.length === 0 ? "Henüz belge yüklenmemiş" : "Filtreye uygun belge bulunamadı"}
           </p>
         </div>
@@ -194,12 +194,11 @@ export default function DocumentsPage() {
             <div
               key={file.id}
               onClick={() => setSelectedFile(file)}
-              className="flex items-center gap-3 p-3 rounded-xl border border-surface-600 bg-surface-800
-                         hover:shadow-card-hover hover:border-surface-300 transition-all cursor-pointer group"
+              className="v2-card flex items-center gap-3 p-3 hover:border-accent/50 transition-all cursor-pointer group"
             >
               {/* Thumbnail */}
               {isImage(file.content_type) ? (
-                <div className="w-11 h-11 rounded-lg bg-surface-700 overflow-hidden shrink-0">
+                <div className="w-11 h-11 rounded-lg bg-[rgb(var(--v2-sunken))] overflow-hidden shrink-0">
                   <img
                     src={`${API_URL}/files/${file.id}`}
                     alt={file.original_name}
@@ -207,23 +206,23 @@ export default function DocumentsPage() {
                   />
                 </div>
               ) : (
-                <div className="w-11 h-11 rounded-lg bg-surface-700 flex items-center justify-center shrink-0">
-                  <FileText size={20} className="text-surface-400" />
+                <div className="w-11 h-11 rounded-lg bg-[rgb(var(--v2-sunken))] flex items-center justify-center shrink-0">
+                  <FileText size={20} className="text-[rgb(var(--v2-muted))]" />
                 </div>
               )}
 
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-sm font-medium text-surface-100 truncate">
+                  <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">
                     {file.original_name}
                   </p>
                   {file.admin_only && isAdmin && (
-                    <EyeOff size={11} className="text-amber-500 shrink-0" />
+                    <EyeOff size={11} className="text-amber-600 dark:text-amber-500 shrink-0" />
                   )}
                 </div>
-                <p className="text-[10px] text-surface-400">
-                  {file.business_name && <span className="text-brand-500">{file.business_name}</span>}
+                <p className="text-[10px] text-[rgb(var(--v2-muted))]">
+                  {file.business_name && <span className="text-accent">{file.business_name}</span>}
                   {file.business_name && " • "}
                   {formatSize(file.size)}
                   {file.description && ` • ${file.description}`}
@@ -232,8 +231,8 @@ export default function DocumentsPage() {
 
               {/* Meta */}
               <div className="text-right shrink-0 hidden sm:block">
-                <p className="text-[10px] text-surface-400">{file.uploaded_by_name}</p>
-                <p className="text-[10px] text-surface-300">{formatDate(file.created_at)}</p>
+                <p className="text-[10px] text-[rgb(var(--v2-muted))]">{file.uploaded_by_name}</p>
+                <p className="text-[10px] text-[rgb(var(--v2-ink))]">{formatDate(file.created_at)}</p>
               </div>
             </div>
           ))}
@@ -264,10 +263,10 @@ export default function DocumentsPage() {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="glass-card shadow-xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-surface-100 mb-2">Belgeyi Sil</h3>
-            <p className="text-surface-300 text-sm mb-1">Bu belgeyi silmek istediğinize emin misiniz?</p>
-            <p className="text-surface-400 text-xs mb-6 truncate">&quot;{deleteConfirm.original_name}&quot;</p>
+          <div className="modal-surface shadow-xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">Belgeyi Sil</h3>
+            <p className="text-[rgb(var(--v2-ink))] text-sm mb-1">Bu belgeyi silmek istediğinize emin misiniz?</p>
+            <p className="text-[rgb(var(--v2-muted))] text-xs mb-6 truncate">&quot;{deleteConfirm.original_name}&quot;</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
@@ -305,24 +304,24 @@ function FileDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="modal-surface shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-surface-100 truncate pr-4">
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] truncate pr-4">
             Belge Detayı
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors shrink-0"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] transition-colors shrink-0"
           >
-            <X size={18} className="text-surface-400" />
+            <X size={18} className="text-[rgb(var(--v2-muted))]" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
           {/* Preview */}
           {isImage(file.content_type) ? (
-            <div className="rounded-xl overflow-hidden bg-surface-700 border border-surface-600">
+            <div className="rounded-xl overflow-hidden bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))]">
               <img
                 src={fileUrl}
                 alt={file.original_name}
@@ -330,75 +329,75 @@ function FileDetailModal({
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 bg-surface-700 rounded-xl border border-surface-600">
-              <FileText size={48} className="text-surface-400 mb-2" />
-              <p className="text-sm text-surface-300 font-medium">{file.original_name}</p>
-              <p className="text-xs text-surface-400 mt-1">{file.content_type}</p>
+            <div className="flex flex-col items-center justify-center py-8 bg-[rgb(var(--v2-sunken))] rounded-xl border border-[rgb(var(--v2-border))]">
+              <FileText size={48} className="text-[rgb(var(--v2-muted))] mb-2" />
+              <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">{file.original_name}</p>
+              <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">{file.content_type}</p>
             </div>
           )}
 
           {/* Details */}
           <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
-              <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-3 p-3 bg-[rgb(var(--v2-sunken))] rounded-xl">
+              <FileText size={16} className="text-[rgb(var(--v2-muted))] mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Dosya Adi</p>
-                <p className="text-sm text-surface-100 font-medium break-all">{file.original_name}</p>
+                <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Dosya Adı</p>
+                <p className="text-sm text-[rgb(var(--v2-ink))] font-medium break-all">{file.original_name}</p>
               </div>
             </div>
 
             {file.description && (
-              <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
-                <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 p-3 bg-[rgb(var(--v2-sunken))] rounded-xl">
+                <FileText size={16} className="text-[rgb(var(--v2-muted))] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Açıklama</p>
-                  <p className="text-sm text-surface-100">{file.description}</p>
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Açıklama</p>
+                  <p className="text-sm text-[rgb(var(--v2-ink))]">{file.description}</p>
                 </div>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 bg-surface-700 rounded-xl">
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Boyut</p>
-                <p className="text-sm text-surface-100 font-medium">{formatSize(file.size)}</p>
+              <div className="p-3 bg-[rgb(var(--v2-sunken))] rounded-xl">
+                <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Boyut</p>
+                <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">{formatSize(file.size)}</p>
               </div>
-              <div className="p-3 bg-surface-700 rounded-xl">
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Tip</p>
-                <p className="text-sm text-surface-100 font-medium">{file.category}</p>
+              <div className="p-3 bg-[rgb(var(--v2-sunken))] rounded-xl">
+                <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Tip</p>
+                <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">{file.category}</p>
               </div>
             </div>
 
             {file.business_name && (
-              <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
-                <Building2 size={16} className="text-surface-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 p-3 bg-[rgb(var(--v2-sunken))] rounded-xl">
+                <Building2 size={16} className="text-[rgb(var(--v2-muted))] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">İşletme</p>
-                  <p className="text-sm text-surface-100 font-medium">{file.business_name}</p>
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">İşletme</p>
+                  <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">{file.business_name}</p>
                 </div>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
-                <User size={14} className="text-surface-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2 p-3 bg-[rgb(var(--v2-sunken))] rounded-xl">
+                <User size={14} className="text-[rgb(var(--v2-muted))] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Yükleyen</p>
-                  <p className="text-sm text-surface-100">{file.uploaded_by_name || "-"}</p>
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Yükleyen</p>
+                  <p className="text-sm text-[rgb(var(--v2-ink))]">{file.uploaded_by_name || "-"}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
-                <Calendar size={14} className="text-surface-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2 p-3 bg-[rgb(var(--v2-sunken))] rounded-xl">
+                <Calendar size={14} className="text-[rgb(var(--v2-muted))] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Tarih</p>
-                  <p className="text-sm text-surface-100">{formatDate(file.created_at)}</p>
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Tarih</p>
+                  <p className="text-sm text-[rgb(var(--v2-ink))]">{formatDate(file.created_at)}</p>
                 </div>
               </div>
             </div>
 
             {file.admin_only && isAdmin && (
               <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                <EyeOff size={14} className="text-amber-300" />
-                <span className="text-sm text-amber-400 font-medium">Gizli Belge — Sadece admin görebilir</span>
+                <EyeOff size={14} className="text-amber-600 dark:text-amber-300" />
+                <span className="text-sm text-amber-700 dark:text-amber-400 font-medium">Gizli Belge — Sadece admin görebilir</span>
               </div>
             )}
           </div>
