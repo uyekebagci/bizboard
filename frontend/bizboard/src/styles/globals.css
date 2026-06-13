@@ -985,6 +985,49 @@
     animation: v2Draw 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
     animation-delay: var(--rd, 0ms);
   }
+
+  /* ════════════════════════════════════════════════════════════
+   * UX-10 — Yoğun "Excel-vari" tablo görünümü (Kart/Tablo toggle).
+   * Sabit (sticky) başlık, hizalı sütunlar, ~38px satır, zebra + hover,
+   * sağ-hizalı para sütunları için .num (tabular). Çift tema token-tabanlı.
+   * ════════════════════════════════════════════════════════════ */
+  .v2-table-wrap {
+    @apply overflow-x-auto;
+    border-radius: var(--radius-card);
+  }
+  .v2-table {
+    @apply w-full text-sm border-collapse;
+    color: rgb(var(--v2-ink));
+  }
+  /* Yapışkan başlık — yoğun listede kaydırırken sütun adları kaybolmaz. */
+  .v2-table thead th {
+    @apply sticky top-0 z-10 text-left font-semibold text-xs px-3 py-2 whitespace-nowrap;
+    background: rgb(var(--v2-sunken));
+    color: rgb(var(--v2-muted));
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+  .v2-table tbody td {
+    @apply px-3 py-2 align-middle;
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+  .v2-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  /* Zebra — okuma takibini kolaylaştırır (yarı-saydam, çift-tema güvenli). */
+  .v2-table tbody tr:nth-child(even) td {
+    background: rgb(var(--v2-sunken) / 0.5);
+  }
+  .v2-table tbody tr:hover td {
+    background: rgb(var(--v2-sunken));
+  }
+  /* Sağ-hizalı sayısal sütun. */
+  .v2-table .v2-td-num {
+    @apply text-right;
+    font-variant-numeric: tabular-nums;
+  }
+  .v2-table th.v2-td-num {
+    @apply text-right;
+  }
 }
 
 /* ============================================================
