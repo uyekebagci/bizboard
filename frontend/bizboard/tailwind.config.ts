@@ -43,6 +43,16 @@ const config: Config = {
           danger: "#fa5252",
           info: "#339af0",
         },
+        // UI v2 (Daxa / Overview Panel): lime-yeşil accent — token-bazlı, CSS
+        // değişkenine bağlı → kullanıcı tonu tek yerden (globals.css) değiştirir.
+        // <alpha-value> korunur (accent/20 vb. tint'ler çalışır).
+        accent: {
+          DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+          bright: "rgb(var(--accent-bright) / <alpha-value>)",
+          strong: "rgb(var(--accent-strong) / <alpha-value>)",
+          soft: "rgb(var(--accent-soft) / <alpha-value>)",
+          ink: "rgb(var(--accent-ink) / <alpha-value>)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
@@ -51,6 +61,8 @@ const config: Config = {
       borderRadius: {
         xl: "1rem",
         "2xl": "1.25rem",
+        // UI v2: büyük yuvarlak kart radius'u (~20px Daxa estetiği).
+        card: "var(--radius-card)",
       },
       boxShadow: {
         card: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)",
@@ -58,11 +70,21 @@ const config: Config = {
           "0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04)",
         // Mockup-fidelity (styles.css/tw.config): ring + güçlü brand drop-shadow.
         glow: "0 0 0 1px rgba(92,124,250,.25), 0 18px 40px -12px rgba(76,110,245,.45)",
+        // UI v2: çok-katmanlı yumuşak gölge (blur YOK; derinlik = gölge + border).
+        v2: "var(--shadow-card)",
+        "v2-hover": "var(--shadow-card-hover)",
+        // UI v2: accent (lime) glow — aktif/highlight öğeler.
+        "accent-glow":
+          "0 0 0 1px rgb(var(--accent) / .35), 0 14px 30px -12px rgb(var(--accent) / .45)",
       },
       animation: {
         "fade-in": "fadeIn 0.15s ease-out",
         "slide-up": "slideUp 0.2s ease-out",
         "slide-in-right": "slideInRight 0.15s ease-out",
+        // UI v2 motion sistemi.
+        "v2-rise": "v2Rise 0.5s cubic-bezier(0.2,0.7,0.2,1) both",
+        "v2-fade-up": "v2FadeUp 0.3s cubic-bezier(0.2,0.7,0.2,1) both",
+        "v2-grow": "v2Grow 0.7s cubic-bezier(0.2,0.7,0.2,1) both",
       },
       keyframes: {
         fadeIn: {
@@ -76,6 +98,18 @@ const config: Config = {
         slideInRight: {
           "0%": { opacity: "0", transform: "translateX(10px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        v2Rise: {
+          "0%": { opacity: "0", transform: "translateY(16px) scale(0.985)" },
+          "100%": { opacity: "1", transform: "none" },
+        },
+        v2FadeUp: {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "none" },
+        },
+        v2Grow: {
+          "0%": { transform: "scaleY(0)" },
+          "100%": { transform: "scaleY(1)" },
         },
       },
     },
