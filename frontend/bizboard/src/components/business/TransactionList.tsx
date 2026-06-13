@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import {
   ArrowDownLeft, ArrowUpRight, Trash2, X, Loader2,
   AlertTriangle, Calendar, Building2, Tag, FileText, Plus,
-  Pencil, Save, Paperclip, CreditCard, Banknote, ArrowLeftRight, Link2,
+  Pencil, Save, Paperclip, CreditCard, Banknote, ArrowLeftRight, Link2, Route,
 } from "lucide-react";
 import { formatCurrency, formatRelativeDate, cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { api } from "@/lib/api/client";
@@ -237,17 +237,22 @@ const TransactionRow = memo(function TransactionRow({
         {isIncome ? "+" : "-"}{formatCurrency(tx.amount, currency)}
       </span>
 
-      {/* Para Bağla kısayolu (satır içi keşfedilebilir giriş noktası).
-          TRANSFER'de fon-izi yok. Hover'da açılır; satır click'ini engeller. */}
+      {/* Para İzi / Para Bağla — satır-içi KEŞFEDİLEBİLİR giriş noktası.
+          Hover-only DEĞİL: her zaman görünür (kullanıcı tek bakışta bulsun).
+          Geniş ekranda ikon+etiket pill, dar ekranda yalnız ikon. TRANSFER'de
+          fon-izi yok. Satır click'ini engeller → doğrudan bağlama akışı açılır. */}
       {!isTransfer && (
         <button
           onClick={(e) => { e.stopPropagation(); onBind(tx); }}
-          className="p-1.5 rounded-lg text-surface-300 hover:text-brand-300 hover:bg-brand-500/10
-                     opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-          title="Para bağla (kaynağını işaretle)"
-          aria-label="Para bağla"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0
+                     text-[11px] font-medium border transition-colors
+                     bg-brand-500/10 text-brand-300 border-brand-500/25
+                     hover:bg-brand-500/20 hover:text-brand-200"
+          title="Para İzi — bu işlemin parasını bir kaynağa bağla (bakiye değişmez)"
+          aria-label="Para bağla (para izi)"
         >
-          <Link2 size={15} />
+          <Route size={13} />
+          <span className="hidden sm:inline">Para İzi</span>
         </button>
       )}
 

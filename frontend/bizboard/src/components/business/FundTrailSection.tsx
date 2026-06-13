@@ -217,10 +217,10 @@ export function FundTrailSection({
           targetAmount={txAmount}
           currency={currency}
           loadCandidates={listSourceCandidates}
-          onBind={async (sourceTxId, amount, note) => {
-            setBinding(false);
-            return bind(sourceTxId, amount, note);
-          }}
+          // Modalı erkenden KAPATMA: bind() çözülene kadar açık kalsın ki
+          // BE over-alloc 400'ünde inline hata görünür olsun. Başarıda modal
+          // kendi handleSubmit'inde onClose() çağırır (→ setBinding(false)).
+          onBind={(sourceTxId, amount, note) => bind(sourceTxId, amount, note)}
           onClose={() => setBinding(false)}
         />
       )}
