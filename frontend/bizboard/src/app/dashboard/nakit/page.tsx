@@ -49,8 +49,10 @@ export default function NakitPage() {
         <button
           onClick={() => router.back()}
           className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          aria-label="Geri"
+          title="Geri"
         >
-          <ArrowLeft size={20} className="text-surface-300" />
+          <ArrowLeft size={20} className="text-surface-300" aria-hidden="true" />
         </button>
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
