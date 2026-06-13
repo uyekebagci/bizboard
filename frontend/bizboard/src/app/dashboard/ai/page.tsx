@@ -9,9 +9,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Bot,
   AlertTriangle,
   RefreshCw,
@@ -24,9 +22,10 @@ import { ApiError } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { logger } from "@/lib/logger";
 import { ChatPanel } from "@/components/ai/ChatPanel";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function AiPage() {
-  const router = useRouter();
   const profile = useAppStore((s) => s.profile);
   const businesses = useAppStore((s) => s.businesses);
   const activeBusiness = useAppStore((s) => s.activeBusiness);
@@ -129,24 +128,11 @@ export default function AiPage() {
 
   return (
     <div className="space-y-5">
-      {/* Başlık */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="w-9 h-9 rounded-xl bg-[rgb(var(--v2-sunken))] flex items-center justify-center text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold h-display text-[rgb(var(--v2-ink))] flex items-center gap-2">
-            <Bot size={20} className="text-accent" /> AI Asistan
-          </h1>
-          <p className="text-[rgb(var(--v2-muted))] text-sm mt-0.5">
-            Finansal verinizi sorgulayın ve anomali uyarıları alın
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="AI Asistan"
+        subtitle="Finansal verinizi sorgulayın ve anomali uyarıları alın"
+        icon={Bot}
+      />
 
       {/* AI kapalı/yapılandırılmamış uyarısı */}
       {aiUnavailable && (
@@ -182,11 +168,10 @@ export default function AiPage() {
       {selectedId ? (
         <ChatPanel businessId={selectedId} businessName={selectedBusiness?.name} />
       ) : (
-        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
-          {businesses.length === 0
-            ? "Henüz erişilebilir bir işletme yok."
-            : "Bir işletme seçin."}
-        </div>
+        <EmptyState
+          icon={Bot}
+          title={businesses.length === 0 ? "Henüz erişilebilir bir işletme yok" : "Bir işletme seçin"}
+        />
       )}
 
       {/* Admin paneli: yeniden-indeks + anomali opt-in */}

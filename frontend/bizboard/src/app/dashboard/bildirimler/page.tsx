@@ -13,14 +13,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Bell, Check, CheckCheck, Loader2, Inbox,
+  Bell, Check, CheckCheck, Loader2, Inbox,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import type { Notification } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 const PAGE_SIZE = 100;
 
@@ -39,7 +41,6 @@ function levelClasses(type: string): { dot: string; ring: string } {
 }
 
 export default function BildirimlerPage() {
-  const router = useRouter();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -97,35 +98,21 @@ export default function BildirimlerPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={20} className="text-surface-300" />
-        </button>
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center shrink-0">
-            <Bell size={20} className="text-brand-400" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-surface-100">Tüm Bildirimler</h1>
-            <p className="text-xs text-surface-400">
-              {unreadCount > 0 ? `${unreadCount} okunmamış` : "Tümü okundu"}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={markAll}
-          disabled={busyAll || unreadCount === 0}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {busyAll ? <Loader2 size={14} className="animate-spin" /> : <CheckCheck size={14} />}
-          Tümünü okundu işaretle
-        </button>
-      </div>
+      <PageHeader
+        title="Tüm Bildirimler"
+        subtitle={unreadCount > 0 ? `${unreadCount} okunmamış` : "Tümü okundu"}
+        icon={Bell}
+        actions={
+          <button
+            onClick={markAll}
+            disabled={busyAll || unreadCount === 0}
+            className="v2-btn v2-btn--ink v2-press text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {busyAll ? <Loader2 size={14} className="animate-spin" /> : <CheckCheck size={14} />}
+            Tümünü okundu işaretle
+          </button>
+        }
+      />
 
       {/* Filter tabs */}
       <div className="flex items-center gap-2">
@@ -147,16 +134,12 @@ export default function BildirimlerPage() {
 
       {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-brand-400" />
-        </div>
+        <ListSkeleton rows={5} />
       ) : visible.length === 0 ? (
-        <div className="v2-card rounded-2xl p-8 text-center">
-          <Inbox size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">
-            {filter === "unread" ? "Okunmamış bildiriminiz yok" : "Henüz bildiriminiz yok"}
-          </p>
-        </div>
+        <EmptyState
+          icon={Inbox}
+          title={filter === "unread" ? "Okunmamış bildiriminiz yok" : "Henüz bildiriminiz yok"}
+        />
       ) : (
         <div className="v2-card rounded-2xl divide-y divide-[rgb(var(--v2-border))]">
           {visible.map((n) => (
@@ -189,22 +172,22 @@ function NotificationRow({ notification, busy, onMarkRead }: RowProps) {
           <p
             className={cn(
               "text-sm truncate",
-              notification.is_read ? "text-surface-300 font-medium" : "text-surface-100 font-semibold",
+              notification.is_read ? "text-[rgb(var(--v2-muted))] font-medium" : "text-[rgb(var(--v2-ink))] font-semibold",
             )}
           >
             {notification.title}
           </p>
           {!notification.is_read && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-semibold shrink-0">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent-strong dark:text-accent font-semibold shrink-0">
               YENİ
             </span>
           )}
         </div>
-        <p className="text-xs text-surface-300 mt-0.5 whitespace-pre-line">{notification.message}</p>
+        <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5 whitespace-pre-line">{notification.message}</p>
         <div className="flex items-center gap-2 mt-1">
-          <p className="text-[10px] text-surface-400">{formatTime(notification.created_at)}</p>
+          <p className="text-[10px] text-[rgb(var(--v2-muted))]">{formatTime(notification.created_at)}</p>
           {notification.business_name && (
-            <span className="text-[10px] text-surface-400">· {notification.business_name}</span>
+            <span className="text-[10px] text-[rgb(var(--v2-muted))]">· {notification.business_name}</span>
           )}
         </div>
       </div>
@@ -218,7 +201,7 @@ function NotificationRow({ notification, busy, onMarkRead }: RowProps) {
           }}
           disabled={busy}
           aria-label="Okundu işaretle"
-          className="p-1.5 rounded-lg text-surface-400 hover:text-brand-400 hover:bg-surface-700 transition shrink-0"
+          className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-accent hover:bg-[rgb(var(--v2-sunken))] transition shrink-0"
         >
           {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={16} />}
         </button>

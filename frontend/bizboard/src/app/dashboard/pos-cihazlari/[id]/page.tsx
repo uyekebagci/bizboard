@@ -15,13 +15,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, CreditCard, Loader2, TrendingUp, Percent, Receipt,
+  CreditCard, Loader2, TrendingUp, Percent, Receipt,
   CheckCircle, Clock, Settings,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { Transaction, PosDeviceListItem } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 interface PosAnalytics {
   from: string;
@@ -102,39 +103,26 @@ export default function PosDeviceDetailPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600"
-          >
-            <ArrowLeft size={20} className="text-surface-300" />
-          </button>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
-              <CreditCard size={20} className="text-[rgb(var(--accent-bright))]" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">{device.name}</h1>
-              <p className="text-xs text-[rgb(var(--v2-muted))] truncate">
-                {device.owner_counterpart_name || "—"}
-                {device.bank_name && ` · ${device.bank_name}`}
-                {!device.is_active && " · pasif"}
-              </p>
-            </div>
-          </div>
-        </div>
-        {isAdmin && (
-          <Link
-            href="/dashboard/pos-cihazlari/yonetim"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium"
-          >
-            <Settings size={14} />
-            Yönetim
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title={device.name}
+        subtitle={[
+          device.owner_counterpart_name,
+          device.bank_name,
+          !device.is_active ? "pasif" : undefined,
+        ].filter(Boolean).join(" · ") || undefined}
+        icon={CreditCard}
+        actions={
+          isAdmin ? (
+            <Link
+              href="/dashboard/pos-cihazlari/yonetim"
+              className="v2-btn v2-btn--ink v2-press text-sm"
+            >
+              <Settings size={14} />
+              Yönetim
+            </Link>
+          ) : undefined
+        }
+      />
 
       {/* Cihaz bilgileri */}
       <section className="v2-card rounded-2xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">

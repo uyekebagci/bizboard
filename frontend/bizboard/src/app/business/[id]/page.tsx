@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon, ArrowLeftRight } from "lucide-react";
+import { Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon, ArrowLeftRight, Building2 } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { ConsolidatedWidgets } from "@/components/business/dashboard/ConsolidatedWidgets";
 import { QuickActionsWidget } from "@/components/business/dashboard/QuickActionsWidget";
@@ -26,6 +26,7 @@ import { toast } from "@/lib/toast";
 import { AddTransactionModal } from "@/components/transactions/AddTransactionModal";
 import { Widget } from "@/components/v2";
 import Link from "next/link";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function BusinessDetailPage() {
   const params = useParams();
@@ -84,53 +85,37 @@ export default function BusinessDetailPage() {
     <div className="space-y-5 pb-24 overflow-x-hidden max-w-full">
       {/* v1.6.23: Tek-satırlı page header — geri butonu + işletme adı + ekip
           üyesi sayısı + admin aksiyonları. Eski BusinessHeader card'ı kaldırıldı. */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))] transition-colors shrink-0"
-            aria-label="Geri"
-            title="Geri"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold text-[rgb(var(--v2-ink))] truncate leading-tight">
-              {business.name}
-            </h1>
-            <p className="text-[11px] text-[rgb(var(--v2-muted))] flex items-center gap-1.5 mt-0.5">
-              <span className="capitalize">{business.business_type_name || "İşletme"}</span>
-              {business.members && business.members.length > 0 && (
-                <>
-                  <span className="opacity-40">·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <UsersIcon size={10} />
-                    {business.members.length} ekip üyesi
-                  </span>
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {isAdmin && (
-            <button
-              onClick={() => setDeleteConfirm(true)}
-              className="p-2 rounded-xl hover:bg-red-500/10 text-surface-400 hover:text-red-400 transition-colors"
-              title="İşletmeyi sil (admin)"
+      <PageHeader
+        title={business.name}
+        subtitle={[
+          business.business_type_name || "İşletme",
+          business.members && business.members.length > 0
+            ? `${business.members.length} ekip üyesi`
+            : undefined,
+        ].filter(Boolean).join(" · ")}
+        icon={Building2}
+        size="sm"
+        actions={
+          <div className="flex items-center gap-1">
+            {isAdmin && (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="p-2 rounded-xl hover:bg-red-500/10 text-[rgb(var(--v2-muted))] hover:text-status-danger transition-colors"
+                title="İşletmeyi sil (admin)"
+              >
+                <Trash2 size={20} />
+              </button>
+            )}
+            <Link
+              href={`/business/${businessId}/settings`}
+              className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors"
+              title="Ayarlar"
             >
-              <Trash2 size={20} />
-            </button>
-          )}
-          <Link
-            href={`/business/${businessId}/settings`}
-            className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors"
-            title="Ayarlar"
-          >
-            <Settings size={20} className="text-[rgb(var(--v2-muted))]" />
-          </Link>
-        </div>
-      </div>
+              <Settings size={20} className="text-[rgb(var(--v2-muted))]" />
+            </Link>
+          </div>
+        }
+      />
 
       {/* v1.6.2: Admin delete confirm modal */}
       {deleteConfirm && (

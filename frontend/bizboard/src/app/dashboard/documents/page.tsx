@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, FileText, Image as ImageIcon, Download, Trash2,
+  FileText, Image as ImageIcon, Download, Trash2,
   X, EyeOff, Calendar, User, Building2, Filter, Search, Plus,
 } from "lucide-react";
 import { api, API_URL } from "@/lib/api/client";
@@ -14,6 +13,9 @@ import { toast } from "@/lib/toast";
 import { FileUploadModal } from "@/components/shared/FileUploadModal";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { Business, FileUploadInfo } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return bytes + " B";
@@ -32,7 +34,6 @@ function isImage(contentType: string) {
 }
 
 export default function DocumentsPage() {
-  const router = useRouter();
   const profile = useAppStore((s) => s.profile);
   const isAdmin = profile?.role === "admin";
 
@@ -95,42 +96,29 @@ export default function DocumentsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse max-w-2xl mx-auto">
-        <div className="h-8 bg-[rgb(var(--v2-sunken))] rounded-lg w-48" />
-        <div className="h-10 bg-[rgb(var(--v2-sunken))] rounded-xl" />
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 bg-[rgb(var(--v2-sunken))] rounded-xl" />
-          ))}
-        </div>
+      <div className="max-w-2xl mx-auto space-y-5">
+        <div className="h-8 w-48 rounded-lg bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+        <ListSkeleton rows={5} />
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <PageHeader
+        title="Belgeler"
+        subtitle={`${filtered.length} belge`}
+        icon={FileText}
+        actions={
           <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors"
+            onClick={() => setShowUpload(true)}
+            className="v2-btn v2-btn--ink v2-press text-sm shrink-0"
           >
-            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
+            <Plus size={14} />
+            Yükle
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Belgeler</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">{filtered.length} belge</p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowUpload(true)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-brand-600 text-white text-xs font-medium rounded-xl hover:bg-brand-700 transition-colors"
-        >
-          <Plus size={14} />
-          Yükle
-        </button>
-      </div>
+        }
+      />
 
       {/* Search */}
       <div className="relative">
@@ -182,12 +170,10 @@ export default function DocumentsPage() {
 
       {/* File List */}
       {filtered.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <FileText size={32} className="text-[rgb(var(--v2-muted))] mx-auto mb-2" />
-          <p className="text-[rgb(var(--v2-muted))] text-sm">
-            {files.length === 0 ? "Henüz belge yüklenmemiş" : "Filtreye uygun belge bulunamadı"}
-          </p>
-        </div>
+        <EmptyState
+          icon={FileText}
+          title={files.length === 0 ? "Henüz belge yüklenmemiş" : "Filtreye uygun belge bulunamadı"}
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((file) => (
