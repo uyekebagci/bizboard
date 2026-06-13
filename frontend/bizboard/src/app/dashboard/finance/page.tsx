@@ -144,18 +144,18 @@ export default function FinancePage() {
           </button>
           <div>
             <h1 className="v2-display text-xl">Finans Merkezi</h1>
-            <p className="text-[rgb(var(--v2-muted))] text-sm mt-0.5">Detayli finansal analiz ve raporlar</p>
+            <p className="text-[rgb(var(--v2-muted))] text-sm mt-0.5">Detaylı finansal analiz ve raporlar</p>
           </div>
         </div>
         {/* Dönem Seçici (v1.6.15+: 'Bugun' default) — UI v2: sunken segment + accent aktif. */}
         <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
           {([
-            { value: "daily", label: "Bugun" },
+            { value: "daily", label: "Bugün" },
             { value: "1m",    label: "1 Ay" },
             { value: "3m",    label: "3 Ay" },
             { value: "6m",    label: "6 Ay" },
-            { value: "1y",    label: "1 Yil" },
-            { value: "all",   label: "Tumu" },
+            { value: "1y",    label: "1 Yıl" },
+            { value: "all",   label: "Tümü" },
           ] as const).map(({ value, label }) => (
             <button
               key={value}
@@ -177,10 +177,10 @@ export default function FinancePage() {
       {/* Tabs — UI v2: sunken segment + accent aktif. */}
       <section className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
         {([
-          { key: "overview", label: "Genel Bakis", icon: BarChart3 },
-          { key: "cashflow", label: "Nakit Akisi", icon: Activity },
+          { key: "overview", label: "Genel Bakış", icon: BarChart3 },
+          { key: "cashflow", label: "Nakit Akışı", icon: Activity },
           { key: "categories", label: "Kategoriler", icon: Layers },
-          { key: "businesses", label: "Isletmeler", icon: Building2 },
+          { key: "businesses", label: "İşletmeler", icon: Building2 },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -245,7 +245,7 @@ export default function FinancePage() {
           index={2}
         />
         <SummaryCard
-          title="Islem Sayisi"
+          title="İşlem Sayısı"
           value={cur.transaction_count}
           icon={Receipt}
           iconBg="bg-[rgb(var(--v2-sunken))]"
@@ -334,7 +334,7 @@ function OverviewTab({ data, dailyMode }: { data: FinanceOverview; dailyMode: bo
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* En Yüksek Giderler */}
         <TopTransactionsList
-          title="En Yuksek Giderler"
+          title="En Yüksek Giderler"
           items={data.top_expenses}
           icon={ArrowUpRight}
           iconColor="text-status-danger"
@@ -343,7 +343,7 @@ function OverviewTab({ data, dailyMode }: { data: FinanceOverview; dailyMode: bo
 
         {/* En Yüksek Gelirler */}
         <TopTransactionsList
-          title="En Yuksek Gelirler"
+          title="En Yüksek Gelirler"
           items={data.top_incomes}
           icon={ArrowDownLeft}
           iconColor="text-accent-strong dark:text-accent"
@@ -373,7 +373,7 @@ function MonthlyTrendChart({ trend }: { trend: FinanceMonthData[] }) {
   return (
     <div className="v2-card p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Aylik Gelir / Gider Trendi</h3>
+        <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Aylık Gelir / Gider Trendi</h3>
         <div className="flex items-center gap-4 text-[10px] font-medium text-[rgb(var(--v2-muted))]">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-accent" /> Gelir
@@ -405,7 +405,7 @@ function MonthlyTrendChart({ trend }: { trend: FinanceMonthData[] }) {
                   <p className={isProfit ? "text-accent-strong dark:text-accent" : "text-status-danger"}>
                     Net: {formatCurrency(m.net_profit)}
                   </p>
-                  <p className="text-[rgb(var(--v2-muted))]">{m.transaction_count} islem</p>
+                  <p className="text-[rgb(var(--v2-muted))]">{m.transaction_count} işlem</p>
                 </div>
               </div>
 
@@ -442,7 +442,7 @@ function DailyTrendChart({ cashFlow }: { cashFlow: DailyCashFlowData[] }) {
   if (cashFlow.length === 0) {
     return (
       <div className="v2-card p-5 text-center text-sm text-[rgb(var(--v2-muted))]">
-        Henuz gunluk veri yok.
+        Henüz günlük veri yok.
       </div>
     );
   }
@@ -457,7 +457,7 @@ function DailyTrendChart({ cashFlow }: { cashFlow: DailyCashFlowData[] }) {
   return (
     <div className="v2-card p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Gunluk Gelir / Gider (son 30 gun)</h3>
+        <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Günlük Gelir / Gider (son 30 gün)</h3>
         <div className="flex items-center gap-4 text-[10px] font-medium text-[rgb(var(--v2-muted))]">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-accent" /> Gelir
@@ -528,7 +528,7 @@ function TopTransactionsList({
     return (
       <div className="v2-card p-4">
         <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-3">{title}</h3>
-        <p className="text-[rgb(var(--v2-muted))] text-xs text-center py-6">Henuz islem yok</p>
+        <p className="text-[rgb(var(--v2-muted))] text-xs text-center py-6">Henüz işlem yok</p>
       </div>
     );
   }
@@ -577,7 +577,7 @@ function IncomeExpenseCompare({
 
   return (
     <div className="v2-card p-5">
-      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-4">Gelir / Gider Karsilastirmasi</h3>
+      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-4">Gelir / Gider Karşılaştırması</h3>
 
       {/* Büyük bar */}
       <div className="relative h-10 rounded-xl overflow-hidden flex bg-[rgb(var(--v2-sunken))]">
@@ -611,7 +611,7 @@ function IncomeExpenseCompare({
           <p className="num text-base font-bold text-accent-strong dark:text-accent mt-0.5">{formatCurrency(income)}</p>
         </div>
         <div className="text-center p-3 bg-status-danger/15 rounded-xl">
-          <p className="text-[10px] text-status-danger font-medium uppercase">Islem Gideri</p>
+          <p className="text-[10px] text-status-danger font-medium uppercase">İşlem Gideri</p>
           <p className="num text-base font-bold text-status-danger mt-0.5">{formatCurrency(variableExpense > 0 ? variableExpense : expense)}</p>
         </div>
         {fixedCost > 0 && (
@@ -640,7 +640,7 @@ function CashFlowTab({ data }: { data: FinanceOverview }) {
   const cashFlow = data.daily_cash_flow;
 
   if (cashFlow.length === 0) {
-    return <EmptySection text="Nakit akisi verisi bulunamadi" />;
+    return <EmptySection text="Nakit akışı verisi bulunamadı" />;
   }
 
   // Son 30 güne ait veri
@@ -664,10 +664,10 @@ function CashFlowTab({ data }: { data: FinanceOverview }) {
     <div className="space-y-4">
       {/* Nakit Akışı Özet Kartları */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <MiniCard label="Gunluk Ort. Gelir" value={formatCurrency(avgIncome)} color="text-accent-strong dark:text-accent" />
-        <MiniCard label="Gunluk Ort. Gider" value={formatCurrency(avgExpense)} color="text-status-danger" />
-        <MiniCard label="Pozitif Gun" value={`${positiveDays} gun`} color="text-accent-strong dark:text-accent" />
-        <MiniCard label="Negatif Gun" value={`${negativeDays} gun`} color="text-status-danger" />
+        <MiniCard label="Günlük Ort. Gelir" value={formatCurrency(avgIncome)} color="text-accent-strong dark:text-accent" />
+        <MiniCard label="Günlük Ort. Gider" value={formatCurrency(avgExpense)} color="text-status-danger" />
+        <MiniCard label="Pozitif Gün" value={`${positiveDays} gün`} color="text-accent-strong dark:text-accent" />
+        <MiniCard label="Negatif Gün" value={`${negativeDays} gün`} color="text-status-danger" />
       </div>
 
       {/* Kümülatif Nakit Akışı Grafiği */}
@@ -686,7 +686,7 @@ function CumulativeCashFlowChart({ data }: { data: DailyCashFlowData[] }) {
 
   return (
     <div className="v2-card p-5">
-      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-4">Kumulatif Nakit Akisi (Son 30 Gun)</h3>
+      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-4">Kümülatif Nakit Akışı (Son 30 Gün)</h3>
       <div className="relative h-48 flex items-end gap-px">
         {/* Y-axis center line */}
         <div className="absolute top-1/2 left-0 right-0 border-t border-dashed border-[rgb(var(--v2-border))] z-0" />
@@ -755,7 +755,7 @@ function DailyCashFlowList({ data }: { data: DailyCashFlowData[] }) {
 
   return (
     <div className="v2-card p-4">
-      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-3">Son 7 Gunluk Nakit Akisi</h3>
+      <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-3">Son 7 Günlük Nakit Akışı</h3>
       <div className="space-y-1.5">
         {recent.map((d) => (
           <div key={d.date} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors">

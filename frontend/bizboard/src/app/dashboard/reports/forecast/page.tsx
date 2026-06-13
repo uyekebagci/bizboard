@@ -168,7 +168,7 @@ export default function ForecastPage() {
             </h3>
             {scenarioActive && (
               <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-status-warning/15 text-status-warning font-semibold">
-                <Sparkles size={11} /> What-If aktif
+                <Sparkles size={11} /> Senaryo aktif
               </span>
             )}
           </div>
@@ -314,7 +314,7 @@ function WhatIfPanel({
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-[rgb(var(--v2-ink))] inline-flex items-center gap-2">
           <Sparkles size={18} className="text-status-warning" />
-          What-If Senaryo
+          Senaryo Analizi
         </h3>
         <div className="flex gap-2">
           <button
