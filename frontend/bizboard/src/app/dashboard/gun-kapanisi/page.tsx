@@ -15,7 +15,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, CalendarCheck, Lock, ShieldAlert, Search, FileEdit,
+  Loader2, CalendarCheck, Lock, ShieldAlert, Search, FileEdit,
   RefreshCw, CheckCircle2, XCircle, History, Sunrise, Unlock,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -31,6 +31,9 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { getErrorMessage } from "@/lib/errors";
 import type { DayClose } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 export default function GunKapanisiPage() {
   const router = useRouter();
@@ -90,23 +93,22 @@ export default function GunKapanisiPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.back()}
-          className="v2-icon-btn v2-press" aria-label="Geri">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1">
-          <h1 className="v2-display text-xl">Gün Kapanışı — Mutabakat</h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">SAĞLAMA HESAP · kaçak tespiti · devir zinciri</p>
-        </div>
-        {isAdmin && (
-          <button onClick={handleRecompute}
-            className="v2-sunken hover:border-accent/50 v2-press rounded-xl px-3 py-2 text-xs flex items-center gap-1.5 text-[rgb(var(--v2-ink))] transition-colors"
-            title="Devir zincirini yeniden hesapla">
-            <RefreshCw size={13} /> Zincir
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Gün Kapanışı — Mutabakat"
+        subtitle="SAĞLAMA HESAP · kaçak tespiti · devir zinciri"
+        icon={CalendarCheck}
+        actions={
+          isAdmin ? (
+            <button
+              onClick={handleRecompute}
+              className="v2-sunken hover:border-accent/50 v2-press rounded-xl px-3 py-2 text-xs flex items-center gap-1.5 text-[rgb(var(--v2-ink))] transition-colors"
+              title="Devir zincirini yeniden hesapla"
+            >
+              <RefreshCw size={13} /> Zincir
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Gün Açılışı durumu — state machine: AÇILMAMIŞ → AÇIK → KAPALI */}
       {dayStatus && !todayClosed && (
@@ -247,14 +249,12 @@ export default function GunKapanisiPage() {
 
       {/* Kapanış geçmişi */}
       {loading && closings.length === 0 ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={5} />
       ) : closings.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <CalendarCheck size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Geçmiş kapanış kaydı yok</p>
-        </div>
+        <EmptyState
+          icon={CalendarCheck}
+          title="Geçmiş kapanış kaydı yok"
+        />
       ) : (
         <section className="space-y-2">
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">

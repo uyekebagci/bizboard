@@ -20,9 +20,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, Landmark, Eye, EyeOff, ArrowDownLeft, ArrowUpRight,
+  Landmark, Eye, EyeOff, ArrowDownLeft, ArrowUpRight,
   CalendarClock, TrendingUp, TrendingDown, Wallet,
 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { api } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
 import { formatCurrency, maskAmount, cn } from "@/lib/utils";
@@ -146,28 +148,21 @@ export default function KredilerPage() {
   return (
     <div className="space-y-5 pb-24">
       {/* ── Header ───────────────────────────────────────────── */}
-      <section className="flex items-center gap-3">
-        <button onClick={() => router.back()}
-          className="v2-icon-btn v2-press"
-          title="Geri" aria-label="Geri">
-          <ArrowLeft size={18} />
-        </button>
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          <Landmark size={20} className="text-accent-strong dark:text-accent shrink-0" />
-          <h1 className="v2-display text-xl truncate">Krediler</h1>
-        </div>
-        <button onClick={toggleCensor}
-          className="v2-icon-btn v2-press"
-          title={censored ? "Tutarları göster" : "Tutarları gizle"}
-          aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}>
-          {censored ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
-      </section>
-
-      <p className="text-xs text-[rgb(var(--v2-muted))] -mt-2">
-        Verilen/Alınan Borç kayıtları. <span className="text-accent-strong dark:text-accent">Verilen</span> = bize geri ödenecek (alacak),{" "}
-        <span className="text-status-danger">Alınan</span> = biz geri ödeyeceğiz (verecek). Salt görüntü.
-      </p>
+      <PageHeader
+        title="Krediler"
+        subtitle="Verilen/Alınan Borç kayıtları. Salt görüntü."
+        icon={Landmark}
+        actions={
+          <button
+            onClick={toggleCensor}
+            className="v2-icon-btn v2-press"
+            title={censored ? "Tutarları göster" : "Tutarları gizle"}
+            aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
+          >
+            {censored ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        }
+      />
 
       {/* ── Özet kartlar ─────────────────────────────────────── */}
       <section className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -230,15 +225,18 @@ export default function KredilerPage() {
       {/* ── Liste ────────────────────────────────────────────── */}
       <section>
         {loading ? (
-          <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm flex items-center justify-center gap-2">
-            <Loader2 size={16} className="animate-spin" /> Yükleniyor...
+          <div className="space-y-2">
+            {[0,1,2].map((i) => (
+              <div key={i} className="h-16 rounded-xl bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+            ))}
           </div>
         ) : error ? (
           <div className="v2-card p-8 text-center text-status-danger text-sm">{error}</div>
         ) : filtered.length === 0 ? (
-          <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
-            Bu filtrede kredi kaydı yok.
-          </div>
+          <EmptyState
+            icon={Landmark}
+            title="Bu filtrede kredi kaydı yok"
+          />
         ) : (
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
             {filtered.map((d) => (

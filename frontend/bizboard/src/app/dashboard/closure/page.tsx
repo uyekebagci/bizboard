@@ -12,9 +12,9 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp,
+  Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp,
   CreditCard, ArrowLeftRight, Banknote, FileText, TrendingDown, BarChart3,
-  Plus, Trash2, Zap,
+  Plus, Trash2, Zap, CalendarCheck,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -22,6 +22,8 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import { ClosureQuickAddModal, type ClosureSection } from "@/components/closure/ClosureQuickAddModal";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 interface TxSummary {
   id: string;
@@ -232,30 +234,24 @@ function ClosurePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-5 pb-24">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors"
+      <PageHeader
+        title={`Gün Kapanışı — ${closureDate}`}
+        icon={CalendarCheck}
+        subtitle={
+          isPast ? "Geçmiş tarih (read-only)"
+          : alreadyClosed ? "Bu gün kapatıldı"
+          : undefined
+        }
+        fallbackHref="/dashboard/closures"
+        actions={
+          <Link
+            href="/dashboard/closures"
+            className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
           >
-            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-          </button>
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">
-              Gün Kapanışı — {closureDate}
-            </h1>
-            {isPast && (
-              <p className="text-[11px] text-amber-600 dark:text-amber-300">Geçmiş tarih (read-only)</p>
-            )}
-            {alreadyClosed && (
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-300">Bu gün kapatıldı</p>
-            )}
-          </div>
-        </div>
-        <Link href="/dashboard/closures" className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
-          ← Tümü
-        </Link>
-      </div>
+            ← Tümü
+          </Link>
+        }
+      />
 
       {businesses.length > 1 && (
         <div className="v2-card p-3">
@@ -298,9 +294,7 @@ function ClosurePage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={5} />
       ) : !sectioned ? (
         <div className="v2-card p-6 text-center text-sm text-status-danger">
           Veri yüklenemedi.

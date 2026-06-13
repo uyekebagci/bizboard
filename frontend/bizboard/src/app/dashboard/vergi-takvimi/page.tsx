@@ -16,12 +16,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, CalendarClock, AlertTriangle, Landmark, ReceiptText,
+  Loader2, CalendarClock, AlertTriangle, Landmark, ReceiptText,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import type { TaxDeadline } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const RANGE_CHIPS = [30, 60, 90] as const;
 
@@ -101,24 +103,11 @@ export default function VergiTakvimiPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="v2-icon-btn -ml-2"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-        </button>
-        <div className="flex items-center gap-2 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
-            <Landmark size={20} className="text-accent-strong dark:text-accent" />
-          </div>
-          <div>
-            <h1 className="text-xl v2-display">Vergi Takvimi</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">TR vergi son tarihleri (GİB takvimi)</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Vergi Takvimi"
+        subtitle="TR vergi son tarihleri (GİB takvimi)"
+        icon={Landmark}
+      />
 
       {/* Özet kartlar */}
       <section className="grid grid-cols-3 gap-3">
@@ -170,10 +159,10 @@ export default function VergiTakvimiPage() {
           <Loader2 size={28} className="animate-spin text-accent-strong dark:text-accent" />
         </div>
       ) : list.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <CalendarClock size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">{days} gün içinde vergi son tarihi yok</p>
-        </div>
+        <EmptyState
+          icon={CalendarClock}
+          title={`${days} gün içinde vergi son tarihi yok`}
+        />
       ) : (
         <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {list.map((d, i) => {

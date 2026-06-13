@@ -15,7 +15,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Plus, Pencil, Trash2,
+  Plus, Pencil, Trash2,
   Loader2, Tags,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
@@ -24,6 +24,7 @@ import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { Business, Category } from "@/types";
 import { CategoryFormModal } from "@/components/transactions/CategoryFormModal";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CategoriesPage() {
   const router = useRouter();
@@ -105,26 +106,12 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <section>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <button
-              onClick={() => router.back()}
-              className="v2-icon-btn v2-press mt-0.5"
-              aria-label="Geri dön"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="v2-display text-2xl flex items-center gap-2">
-                <Tags size={22} className="text-accent-strong dark:text-accent" /> Kategoriler
-              </h1>
-              <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
-                Kategorileriniz hem gelir hem gider işlemlerinde kullanılır.
-                İşlemlerde kategori zorunludur.
-              </p>
-            </div>
-          </div>
+      <PageHeader
+        title="Kategoriler"
+        subtitle="Kategorileriniz hem gelir hem gider işlemlerinde kullanılır. İşlemlerde kategori zorunludur."
+        icon={Tags}
+        size="lg"
+        actions={
           <button
             onClick={openCreate}
             disabled={!businessId}
@@ -133,8 +120,8 @@ export default function CategoriesPage() {
             <Plus size={16} />
             Yeni Kategori
           </button>
-        </div>
-      </section>
+        }
+      />
 
       {error && (
         <div className="p-4 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">
