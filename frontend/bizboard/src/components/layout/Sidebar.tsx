@@ -77,8 +77,9 @@ const ALL_LINKS: SidebarLink[] = [
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins,       group: "cari" },
   { href: "/dashboard/verecekler",       label: "Verecekler",    icon: HandCoins,       group: "cari" },
   { href: "/dashboard/krediler",         label: "Krediler",      icon: Landmark,        group: "cari" },
-  { href: "/dashboard/cekler",           label: "Çekler",        icon: FileText,        group: "cari" },
-  { href: "/dashboard/cek-senet",        label: "Çek/Senet (Ledger)", icon: FileText,   group: "cari" },
+  // Legacy "Çekler" (/dashboard/cekler, Debt-tabanlı) kanonik Çek/Senet
+  // (Instrument/Ledger v2) ile birleştirildi; eski route /cek-senet'e redirect.
+  { href: "/dashboard/cek-senet",        label: "Çek/Senet",     icon: FileText,        group: "cari" },
   // ── Kasa & Banka ──
   { href: "/dashboard/hesaplar",         label: "Banka Hesapları", icon: Wallet,        group: "kasa" },
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote,        group: "kasa" },
