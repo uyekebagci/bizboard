@@ -32,9 +32,21 @@ export default function BankaImportPage() {
   const [selectedAccount, setSelectedAccount] = useState("");
   const [active, setActive] = useState<BankImportBatch | null>(null);
 
+  // BUG fix (banka-import "Aç" → 403 "Yetki yok"): hesap dropdown'ı SEÇİLİ
+  // işletmeyle (businessId) DARALTILMALI. Aksi hâlde /bank-accounts param'sız
+  // çağrılınca erişilebilir TÜM işletmelerin hesapları listeleniyordu; çoklu
+  // işletmeli (admin/QA) kullanıcı businesses[0] dışındaki bir "Ana Kasa"yı
+  // seçince createBatch(business_id=businesses[0]) backend'in cross-tenant
+  // guard'ına takılıp SecurityException → 403 dönüyordu. Tenant-scope KORUNUR:
+  // gevşetme değil, doğru scope. business_id değişince yeniden yüklenir ve
+  // stale seçim sıfırlanır.
   useEffect(() => {
-    api.get<BankAccountListItem[]>("/bank-accounts").then(setAccounts).catch(() => setAccounts([]));
-  }, []);
+    if (!businessId) { setAccounts([]); setSelectedAccount(""); return; }
+    api.get<BankAccountListItem[]>(`/bank-accounts?business_id=${businessId}`)
+      .then(setAccounts)
+      .catch(() => setAccounts([]));
+    setSelectedAccount("");
+  }, [businessId]);
   useEffect(() => {
     if (!businessId) return;
     api.get<Category[]>(`/businesses/${businessId}/categories`).then(setCategories).catch(() => setCategories([]));

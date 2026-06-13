@@ -116,6 +116,19 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Fixed
 
+- **Banka İçe Aktar "Aç" → "Yetki yok" (403) düzeltildi.** Banka Hareketi Import
+  sayfasında "Yeni Parti → hesap seç → Aç" akışı, çoklu işletmeye erişimi olan
+  (admin/QA) kullanıcılarda 403 "Yetki yok" dönüyordu. Kök neden: hesap dropdown'ı
+  `/bank-accounts`'i `business_id` PARAMETRESİZ çağırıyor → erişilebilir TÜM
+  işletmelerin hesapları listeleniyordu; oysa `createBatch` `business_id`'yi
+  `businesses[0]` ile gönderiyor. `businesses[0]` dışındaki bir hesap (ör. başka
+  işletmenin "Ana Kasa"sı) seçilince backend'in cross-tenant guard'ı
+  (`BankImportService.createBatch` → "Hesap bu işletmeye ait değil")
+  `SecurityException` fırlatıp 403 dönüyordu. Düzeltme FE'de: dropdown artık
+  `/bank-accounts?business_id={businessId}` ile seçili işletmeye DARALTILIYOR ve
+  `business_id` değişince yeniden yüklenip stale seçim sıfırlanıyor. **Tenant-scope
+  KORUNDU** — backend guard'ı gevşetilmedi, FE'ye doğru scope verildi
+  (`app/dashboard/banka-import/page.tsx`).
 - **MetricCard "Toplam Gider" delta tonu — artan gider artık yeşil değil
   kırmızı.** `MetricCard`'a (`components/v2`) `goodDirection: "up" | "down"`
   prop'u eklendi: ok yönü değerin gerçek işaretini gösterir (↑ artış / ↓ azalış),
