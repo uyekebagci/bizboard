@@ -596,7 +596,7 @@ function IncomeExpenseCompare({
           style={{ width: `${expensePct}%` }}
         >
           {expensePct > 15 && (
-            <span className="text-white text-xs font-bold">
+            <span className="text-red-900 dark:text-white text-xs font-bold">
               {formatCurrency(expense)} ({expensePct.toFixed(0)}%)
             </span>
           )}

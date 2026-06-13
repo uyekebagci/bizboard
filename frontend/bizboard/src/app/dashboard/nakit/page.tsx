@@ -48,19 +48,19 @@ export default function NakitPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn v2-press"
           aria-label="Geri"
           title="Geri"
         >
-          <ArrowLeft size={20} className="text-surface-300" aria-hidden="true" />
+          <ArrowLeft size={18} aria-hidden="true" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-            <Banknote size={20} className="text-emerald-300" />
+          <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+            <Banknote size={20} className="text-accent-strong dark:text-accent" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Nakit</h1>
-            <p className="text-xs text-surface-400">
+            <h1 className="v2-display text-xl">Nakit</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">
               İşletmelerin nakit bakiye dağılımı
             </p>
           </div>
@@ -69,21 +69,19 @@ export default function NakitPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-emerald-400" />
+          <Loader2 size={28} className="animate-spin text-accent-strong dark:text-accent" />
         </div>
       ) : (
         <>
           {/* Total */}
-          <section className="glass-card p-5">
+          <section className="v2-card p-5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-                <Wallet size={22} className="text-emerald-300" />
+              <div className="w-12 h-12 rounded-2xl bg-accent/15 flex items-center justify-center">
+                <Wallet size={22} className="text-accent-strong dark:text-accent" />
               </div>
               <div>
-                <p className="text-xs text-surface-400 uppercase tracking-wider">
-                  Toplam Nakit
-                </p>
-                <p className="text-2xl font-bold text-emerald-300">
+                <p className="v2-eyebrow">Toplam Nakit</p>
+                <p className="text-2xl font-bold text-accent-strong dark:text-accent num">
                   {formatCurrency(total, "TRY")}
                 </p>
               </div>
@@ -92,15 +90,15 @@ export default function NakitPage() {
 
           {/* Per-business list */}
           {balances.length === 0 ? (
-            <div className="glass-card p-8 text-center">
-              <Banknote size={32} className="mx-auto text-surface-500 mb-2" />
-              <p className="text-surface-300 font-medium">Henüz nakit bakiye yok</p>
-              <p className="text-surface-400 text-sm mt-1">
+            <div className="v2-card p-8 text-center">
+              <Banknote size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+              <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz nakit bakiye yok</p>
+              <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
                 İşlem eklerken &quot;Ödeme Yöntemi&quot; olarak Nakit seçiniz.
               </p>
               <Link
                 href="/dashboard/add-transaction?payment_method=NAKIT&type=income"
-                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
+                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-accent-ink text-sm font-medium transition-colors hover:opacity-90"
               >
                 <Plus size={16} />
                 Nakit İşlem Ekle
@@ -108,19 +106,19 @@ export default function NakitPage() {
             </div>
           ) : (
             <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-surface-200">İşletme Bakiyeleri</h2>
-              <div className="glass-card divide-y divide-surface-700">
+              <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">İşletme Bakiyeleri</h2>
+              <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
                 {balances.map((b) => (
                   <Link
                     key={b.business_id}
                     href={`/business/${b.business_id}`}
-                    className="flex items-center justify-between p-4 hover:bg-surface-700 transition-colors"
+                    className="flex items-center justify-between p-4 hover:bg-[rgb(var(--v2-sunken))] transition-colors"
                   >
                     <div>
-                      <p className="font-medium text-surface-100">{b.business_name}</p>
-                      <p className="text-xs text-surface-400 mt-0.5">{b.currency}</p>
+                      <p className="font-medium text-[rgb(var(--v2-ink))]">{b.business_name}</p>
+                      <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">{b.currency}</p>
                     </div>
-                    <p className="text-base font-semibold text-emerald-300">
+                    <p className="text-base font-semibold text-accent-strong dark:text-accent num">
                       {formatCurrency(b.balance || 0, b.currency)}
                     </p>
                   </Link>
