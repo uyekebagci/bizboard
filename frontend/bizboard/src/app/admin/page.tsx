@@ -158,6 +158,12 @@ export default function AdminPage() {
             >
               Finansal Alarmlar
             </a>
+            <a
+              href="/admin/profit-share"
+              className="btn-secondary px-3 py-2 text-sm"
+            >
+              Kar-Payi
+            </a>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-colors"
