@@ -64,14 +64,14 @@ export function TelegramLinkSection() {
   if (!status?.botConfigured) return null;
 
   return (
-    <section className="glass-card p-5 space-y-3">
+    <section className="v2-card rounded-2xl p-5 space-y-3">
       <div className="flex items-center gap-2">
-        <div className="w-9 h-9 rounded-xl bg-sky-500/15 grid place-items-center">
-          <Send size={18} className="text-sky-400" />
+        <div className="w-9 h-9 rounded-xl bg-accent/15 grid place-items-center">
+          <Send size={18} className="text-[rgb(var(--accent))]" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-surface-100">Telegram Bildirimleri</h3>
-          <p className="text-[11px] text-surface-400">Bildirimleri Telegram'dan da alın.</p>
+          <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Telegram Bildirimleri</h3>
+          <p className="text-[11px] text-[rgb(var(--v2-muted))]">Bildirimleri Telegram&apos;dan da alın.</p>
         </div>
         {status.linked && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-medium">
@@ -84,25 +84,25 @@ export function TelegramLinkSection() {
         <button
           onClick={handleUnlink}
           disabled={unlinking}
-          className="w-full py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium border border-surface-600 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-xl bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-ink))] text-sm font-medium border border-[rgb(var(--v2-border))] disabled:opacity-50 inline-flex items-center justify-center gap-2"
         >
           {unlinking ? <Loader2 size={14} className="animate-spin" /> : null}
           Bağlantıyı Kaldır
         </button>
       ) : code ? (
         <div className="space-y-2">
-          <p className="text-[11px] text-surface-400">
+          <p className="text-[11px] text-[rgb(var(--v2-muted))]">
             Aşağıdaki bağlantıya tıklayın (mobilde Telegram açılır) ya da botta
-            <span className="text-surface-200"> /start {code.code}</span> yazın.
+            <span className="text-[rgb(var(--v2-ink))]"> /start {code.code}</span> yazın.
           </p>
           <div className="flex items-center gap-2">
-            <code className="num flex-1 text-center text-lg font-bold tracking-widest text-surface-100 bg-surface-800/60 border border-surface-600 rounded-xl py-2">
+            <code className="num flex-1 text-center text-lg font-bold tracking-widest text-[rgb(var(--v2-ink))] bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))] rounded-xl py-2">
               {code.code}
             </code>
             <button
               onClick={() => { navigator.clipboard?.writeText(code.code); toast.success("Kod kopyalandı"); }}
               title="Kodu kopyala"
-              className="p-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-300"
+              className="p-2.5 rounded-xl bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))]"
             >
               <Copy size={16} />
             </button>
@@ -111,14 +111,14 @@ export function TelegramLinkSection() {
             href={code.deeplink}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl v2-btn v2-btn--accent text-sm font-semibold inline-flex items-center justify-center gap-2"
             onClick={() => { setTimeout(() => void loadStatus(), 4000); }}
           >
             <ExternalLink size={15} /> Telegram'da Aç
           </a>
           <button
             onClick={() => void loadStatus()}
-            className="w-full text-[11px] text-surface-400 hover:text-surface-100"
+            className="w-full text-[11px] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
           >
             Bağladım, durumu yenile
           </button>
@@ -127,7 +127,7 @@ export function TelegramLinkSection() {
         <button
           onClick={handleLink}
           disabled={issuing}
-          className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-xl v2-btn v2-btn--accent text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
         >
           {issuing ? <Loader2 size={14} className="animate-spin" /> : <Send size={15} />}
           Telegram Bağla

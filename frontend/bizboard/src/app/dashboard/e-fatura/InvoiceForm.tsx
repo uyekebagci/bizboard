@@ -46,7 +46,7 @@ function newLine(): LineRow {
 }
 
 const inputCls =
-  "w-full rounded-lg border border-surface-600/50 bg-surface-800/60 px-3 py-2 text-sm text-surface-100 placeholder:text-surface-500 focus:border-brand focus:outline-none";
+  "w-full rounded-lg border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] px-3 py-2 text-sm text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:border-brand focus:outline-none";
 
 export function InvoiceForm({
   business,
@@ -142,7 +142,7 @@ export function InvoiceForm({
       {/* Üst: satıcı + meta */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-xs text-surface-400">Satıcı Firma</span>
+          <span className="mb-1 block text-xs text-[rgb(var(--v2-muted))]">Satıcı Firma</span>
           <select
             className={inputCls}
             value={supplierCompanyId}
@@ -157,7 +157,7 @@ export function InvoiceForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs text-surface-400">Fatura Tarihi</span>
+          <span className="mb-1 block text-xs text-[rgb(var(--v2-muted))]">Fatura Tarihi</span>
           <input
             type="date"
             className={inputCls}
@@ -166,7 +166,7 @@ export function InvoiceForm({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs text-surface-400">Senaryo</span>
+          <span className="mb-1 block text-xs text-[rgb(var(--v2-muted))]">Senaryo</span>
           <select
             className={inputCls}
             value={scenario}
@@ -177,7 +177,7 @@ export function InvoiceForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs text-surface-400">Fatura Tipi</span>
+          <span className="mb-1 block text-xs text-[rgb(var(--v2-muted))]">Fatura Tipi</span>
           <select
             className={inputCls}
             value={invoiceType}
@@ -193,9 +193,9 @@ export function InvoiceForm({
       </div>
 
       {/* Alıcı */}
-      <div className="rounded-xl border border-surface-600/40 bg-surface-800/40 p-3">
+      <div className="rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] p-3">
         <div className="mb-2 flex items-center gap-3">
-          <span className="text-sm font-medium text-surface-200">Alıcı</span>
+          <span className="text-sm font-medium text-[rgb(var(--v2-ink))]">Alıcı</span>
           <div className="ml-auto flex gap-1 text-xs">
             <button
               type="button"
@@ -204,7 +204,7 @@ export function InvoiceForm({
                 "rounded-md px-2 py-1",
                 customerMode === "counterpart"
                   ? "bg-brand/20 text-brand"
-                  : "text-surface-400 hover:text-surface-200"
+                  : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
               )}
             >
               Karşı Firma
@@ -216,7 +216,7 @@ export function InvoiceForm({
                 "rounded-md px-2 py-1",
                 customerMode === "manual"
                   ? "bg-brand/20 text-brand"
-                  : "text-surface-400 hover:text-surface-200"
+                  : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
               )}
             >
               Serbest Giriş
@@ -263,7 +263,7 @@ export function InvoiceForm({
       {/* Satır kalemleri */}
       <div>
         <div className="mb-2 flex items-center">
-          <span className="text-sm font-medium text-surface-200">Satır Kalemleri</span>
+          <span className="text-sm font-medium text-[rgb(var(--v2-ink))]">Satır Kalemleri</span>
           <button
             type="button"
             onClick={() => setLines((r) => [...r, newLine()])}
@@ -279,7 +279,7 @@ export function InvoiceForm({
             return (
               <div
                 key={l._key}
-                className="grid grid-cols-12 gap-2 rounded-lg border border-surface-600/30 bg-surface-800/30 p-2"
+                className="grid grid-cols-12 gap-2 rounded-lg border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] p-2"
               >
                 <input
                   className={cn(inputCls, "col-span-12 sm:col-span-4")}
@@ -324,13 +324,13 @@ export function InvoiceForm({
                     </option>
                   ))}
                 </select>
-                <div className="col-span-6 flex items-center justify-end text-sm text-surface-200 sm:col-span-1">
+                <div className="col-span-6 flex items-center justify-end text-sm text-[rgb(var(--v2-ink))] sm:col-span-1">
                   {formatMoney(lineExt)}
                 </div>
                 <button
                   type="button"
                   onClick={() => removeLine(l._key)}
-                  className="col-span-1 flex items-center justify-center text-surface-500 hover:text-red-400"
+                  className="col-span-1 flex items-center justify-center text-[rgb(var(--v2-muted))] hover:text-status-danger"
                   aria-label="Satırı sil"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -349,16 +349,16 @@ export function InvoiceForm({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
-        <div className="space-y-1 rounded-xl border border-surface-600/40 bg-surface-800/40 p-3 text-sm">
-          <div className="flex justify-between text-surface-300">
+        <div className="space-y-1 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] p-3 text-sm">
+          <div className="flex justify-between text-[rgb(var(--v2-muted))]">
             <span>Mal/Hizmet (KDV hariç)</span>
             <span>{formatMoney(totals.ext)}</span>
           </div>
-          <div className="flex justify-between text-surface-300">
+          <div className="flex justify-between text-[rgb(var(--v2-muted))]">
             <span>Toplam KDV</span>
             <span>{formatMoney(totals.vat)}</span>
           </div>
-          <div className="flex justify-between border-t border-surface-600/40 pt-1 font-semibold text-surface-100">
+          <div className="flex justify-between border-t border-[rgb(var(--v2-border))] pt-1 font-semibold text-[rgb(var(--v2-ink))]">
             <span>Ödenecek</span>
             <span>{formatMoney(totals.total)}</span>
           </div>
@@ -369,7 +369,7 @@ export function InvoiceForm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-surface-600/50 px-4 py-2 text-sm text-surface-300 hover:bg-surface-700/40"
+          className="rounded-lg border border-[rgb(var(--v2-border))] px-4 py-2 text-sm text-[rgb(var(--v2-muted))] hover:bg-[rgb(var(--v2-sunken))]"
         >
           Vazgeç
         </button>

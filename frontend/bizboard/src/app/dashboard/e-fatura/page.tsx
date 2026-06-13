@@ -8,7 +8,7 @@
  * entegratör yapılandırılmamışsa backend graceful "yapılandırılmadı" döner;
  * sayfa bunu kullanıcıya net mesajla gösterir (hata değil, bilgi).</p>
  *
- * <p>Çift tema: surface-* token'ları ile otomatik dark/light.</p>
+ * <p>Çift tema: v2 token'ları ile dark/light otomatik uyumlu.</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -52,7 +52,6 @@ export default function EInvoicePage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [xmlPreview, setXmlPreview] = useState<{ number: string; xml: string } | null>(null);
 
-  // Form için satıcı firma + karşı firma listeleri.
   useEffect(() => {
     api.get<MyCompany[]>("/firms").then(setCompanies).catch(() => setCompanies([]));
   }, []);
@@ -87,7 +86,6 @@ export default function EInvoicePage() {
     try {
       const updated = await fn();
       if (detail?.id === id) setDetail(updated);
-      // Entegratör yoksa send/cancel/status integrator_error doldurur — bilgi ver.
       if (updated.integrator_status === "NOT_CONFIGURED" && updated.integrator_error) {
         toast.info(updated.integrator_error);
       } else {
@@ -104,7 +102,6 @@ export default function EInvoicePage() {
   async function previewXml(inv: Invoice) {
     setBusyId(inv.id);
     try {
-      // Henüz üretilmediyse önce üret.
       if (!inv.has_xml) {
         await invoicesApi.generateXml(inv.id);
         reload();
@@ -133,10 +130,10 @@ export default function EInvoicePage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <Receipt className="h-6 w-6 text-brand" />
-          <h1 className="text-xl font-semibold text-surface-100">e-Fatura</h1>
+          <h1 className="text-xl font-semibold text-[rgb(var(--v2-ink))]">e-Fatura</h1>
         </div>
         <select
-          className="rounded-lg border border-surface-600/50 bg-surface-800/60 px-3 py-1.5 text-sm text-surface-100"
+          className="rounded-lg border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] px-3 py-1.5 text-sm text-[rgb(var(--v2-ink))]"
           value={businessId ?? ""}
           onChange={(e) => setBusinessId(e.target.value || null)}
         >
@@ -157,7 +154,7 @@ export default function EInvoicePage() {
       </div>
 
       {companies.length === 0 && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
           Fatura kesebilmek için en az bir firma (Firmalarım) tanımlı olmalı ve
           VKN/TCKN bilgisi girilmiş olmalıdır.
         </div>
@@ -165,38 +162,35 @@ export default function EInvoicePage() {
 
       {/* Liste */}
       {loading ? (
-        <div className="flex items-center gap-2 p-8 text-surface-400">
+        <div className="flex items-center gap-2 p-8 text-[rgb(var(--v2-muted))]">
           <Loader2 className="h-5 w-5 animate-spin" /> Yükleniyor…
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+        <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 p-3 text-sm text-status-danger">
           {error}
         </div>
       ) : list.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-surface-600/40 bg-surface-800/30 p-10 text-surface-400">
+        <div className="flex flex-col items-center gap-2 v2-card rounded-2xl p-10 text-[rgb(var(--v2-muted))]">
           <FileText className="h-8 w-8" />
           <p>Henüz fatura yok.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-surface-600/40">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-800/60 text-left text-xs uppercase text-surface-400">
+        <div className="v2-table-wrap">
+          <table className="v2-table w-full text-sm">
+            <thead>
               <tr>
-                <th className="px-3 py-2">Fatura No</th>
-                <th className="px-3 py-2">Tarih</th>
-                <th className="px-3 py-2">Alıcı</th>
-                <th className="px-3 py-2 text-right">Tutar</th>
-                <th className="px-3 py-2">Durum</th>
-                <th className="px-3 py-2 text-right">İşlem</th>
+                <th>Fatura No</th>
+                <th>Tarih</th>
+                <th>Alıcı</th>
+                <th className="v2-td-num">Tutar</th>
+                <th>Durum</th>
+                <th className="v2-td-num">İşlem</th>
               </tr>
             </thead>
             <tbody>
               {list.map((inv) => (
-                <tr
-                  key={inv.id}
-                  className="border-t border-surface-600/30 hover:bg-surface-800/30"
-                >
-                  <td className="px-3 py-2">
+                <tr key={inv.id}>
+                  <td>
                     <button
                       className="font-mono text-brand hover:underline"
                       onClick={() => openDetail(inv.id)}
@@ -204,12 +198,12 @@ export default function EInvoicePage() {
                       {inv.invoice_number}
                     </button>
                   </td>
-                  <td className="px-3 py-2 text-surface-300">{inv.issue_date}</td>
-                  <td className="px-3 py-2 text-surface-200">{inv.customer_title}</td>
-                  <td className="px-3 py-2 text-right text-surface-100">
+                  <td className="text-[rgb(var(--v2-muted))]">{inv.issue_date}</td>
+                  <td className="text-[rgb(var(--v2-ink))]">{inv.customer_title}</td>
+                  <td className="v2-td-num text-[rgb(var(--v2-ink))]">
                     {formatMoney(inv.payable_amount, inv.currency)}
                   </td>
-                  <td className="px-3 py-2">
+                  <td>
                     <span
                       className={cn(
                         "rounded-md border px-2 py-0.5 text-xs",
@@ -219,7 +213,7 @@ export default function EInvoicePage() {
                       {STATUS_LABEL[inv.status]}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
+                  <td>
                     <div className="flex items-center justify-end gap-1">
                       <IconBtn
                         title="XML Önizle"
@@ -312,7 +306,7 @@ export default function EInvoicePage() {
           onClose={() => setXmlPreview(null)}
           wide
         >
-          <pre className="max-h-[60vh] overflow-auto rounded-lg border border-surface-600/40 bg-surface-900/60 p-3 text-xs text-surface-200">
+          <pre className="max-h-[60vh] overflow-auto rounded-lg border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] p-3 text-xs text-[rgb(var(--v2-ink))]">
             {xmlPreview.xml}
           </pre>
         </Modal>
@@ -338,7 +332,7 @@ function IconBtn({
       title={title}
       disabled={disabled || busy}
       onClick={onClick}
-      className="rounded-md p-1.5 text-surface-400 hover:bg-surface-700/40 hover:text-surface-100 disabled:opacity-40"
+      className="rounded-md p-1.5 text-[rgb(var(--v2-muted))] hover:bg-[rgb(var(--v2-sunken))] hover:text-[rgb(var(--v2-ink))] disabled:opacity-40"
     >
       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : children}
     </button>
@@ -357,16 +351,16 @@ function Modal({
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm">
       <div
         className={cn(
-          "my-8 w-full rounded-2xl border border-surface-600/50 bg-surface-900 p-5 shadow-xl",
+          "my-8 w-full modal-surface rounded-2xl p-5 shadow-xl",
           wide ? "max-w-4xl" : "max-w-lg"
         )}
       >
         <div className="mb-4 flex items-center">
-          <h2 className="text-lg font-semibold text-surface-100">{title}</h2>
+          <h2 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto text-surface-400 hover:text-surface-100"
+            className="ml-auto text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             aria-label="Kapat"
           >
             <X className="h-5 w-5" />

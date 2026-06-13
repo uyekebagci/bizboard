@@ -151,14 +151,14 @@ export default function BildirimlerPage() {
           <Loader2 size={28} className="animate-spin text-brand-400" />
         </div>
       ) : visible.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Inbox size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">
+        <div className="v2-card rounded-2xl p-8 text-center">
+          <Inbox size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">
             {filter === "unread" ? "Okunmamış bildiriminiz yok" : "Henüz bildiriminiz yok"}
           </p>
         </div>
       ) : (
-        <div className="glass-card divide-y divide-surface-700">
+        <div className="v2-card rounded-2xl divide-y divide-[rgb(var(--v2-border))]">
           {visible.map((n) => (
             <NotificationRow
               key={n.id}
