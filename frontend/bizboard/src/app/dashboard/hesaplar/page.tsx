@@ -339,10 +339,11 @@ export default function HesaplarPage() {
                   }
                 }}
                 className={cn(
-                  "p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-[rgb(var(--v2-sunken))] transition-colors focus:outline-none focus:ring-1 focus:ring-accent/50",
-                  !a.is_active && "opacity-50",
-                  isMain && "bg-status-warning/[0.04]",
-                  isSystem && !isMain && "bg-purple-500/[0.04]",
+                  // QA bank rows: global .v2-list-row primitive (Daxa).
+                  "v2-list-row v2-list-row--interactive justify-between",
+                  !a.is_active && "v2-list-row--muted",
+                  isMain && "v2-list-row--warn",
+                  isSystem && !isMain && "v2-list-row--system",
                 )}
               >
                 <div className="flex items-center gap-2 min-w-0">

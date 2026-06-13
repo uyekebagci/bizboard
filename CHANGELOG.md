@@ -184,6 +184,25 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Changed
 
+- **UI v2 (Daxa) — global `.v2-list-row` liste-satırı primitive'i + Banka Hesapları
+  satırları + Alt Kasa (sub-cash) detay modalı Daxa'ya geçirildi.** Salt görsel;
+  veri/hesap/işlevsellik DEĞİŞMEDİ.
+  - **Yeni global primitive (`globals.css`):** `.v2-list-row` — tüm liste
+    satırlarının TEK kaynağı. Solid/katmanlı yüzey, hover, divider, yuvarlak köşe,
+    çift tema, a11y odak halkası. Modifier'lar: `--interactive` (tıklanabilir +
+    `:focus-visible` accent halkası), `--accent` (lime sol rail), `--warn` (amber
+    rail+tint, Ana Kasa), `--system` (mor rail+tint, sistem hesabı), `--muted`
+    (pasif/soluk), `--card` (standalone satır). `.v2-widget*` (widget-primitive)
+    ile çakışmaz — ayrı isim uzayı.
+  - **Banka Hesapları sayfası** (`/dashboard/hesaplar`): hesap satırları eski
+    inline yüzey/tint sınıflarından `.v2-list-row` primitive'ine geçirildi
+    (rozetler, bakiye, bakiye-düzelt/aktiflik-toggle/sil ikonları korundu).
+  - **Alt Kasa detay modalı** (`SubCashDetailContent` + `AssignmentPicker`):
+    Mevcut Bakiye / Ana Kasa / Atanmamış kartları, INVARIANT satırı, atanan
+    entity'ler listesi, gelir-dağılımı tablosu, işlemler listesi ve "Atama Ekle"/
+    "Geri Dönük Ekle" eski `surface-*`/`brand-*`/`emerald-*` temasından v2
+    token'larına (`--v2-*`, lime accent, `v2-card`/`v2-list-row`/`v2-table`/
+    `v2-btn--ink`) taşındı. Çift tema + a11y.
 - **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**
   - **Logo:** Sidebar sol-üst "ÇATI" plakası yeniden tasarlandı — katmanlı ink
     zemin (radial gradient + iç ışık + accent halka + yumuşak gölge), Daxa imza
