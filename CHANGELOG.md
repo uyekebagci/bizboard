@@ -30,6 +30,17 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Tüm İşlemler — işletme filtresi "Tüm İşletmeler" seçeneği eklendi.**
+  Dropdown'da yalnızca tekil işletmeler listeleniyordu; bir işletme (örn. dgr)
+  seçildikten sonra tüm işletmelere geri dönmek mümkün değildi. Artık
+  dropdown'un en üstünde sabit bir "Tum Isletmeler" girişi bulunuyor; seçilince
+  `filterBusiness` `""` sıfırlanır → tüm işletmelerin işlemleri gösterilir.
+  Değişiklik `transactions/page.tsx`'e özel (yerel `options` dizisine prepend);
+  paylaşılan `DarkSelect` bileşeni ve per-business sayfaları (gün-kapanışı,
+  kapanışlar vb.) etkilenmez.
+
 ### Added
 
 - **Dashboard grafikleri gerçek veriye bağlandı — "Haftalık Hareket" bar-chart'ı
