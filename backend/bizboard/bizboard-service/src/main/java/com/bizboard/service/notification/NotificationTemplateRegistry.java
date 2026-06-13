@@ -100,6 +100,13 @@ public class NotificationTemplateRegistry {
                     NotificationType.INFO,
                     "📊 Aylık Özet: {business} ({period})",
                     "{summary}")),
+            // GUN-1..4: gün-kapanışı tamamlandı → bağlı Telegram grubuna patron-okur
+            // gün özeti. {summary} çok-satırlı Excel-vari gövdeyi
+            // DayClosingNotificationService hazırlar (newline-korur).
+            Map.entry(NotificationEvent.DAY_CLOSING_COMPLETED, new Template(
+                    NotificationType.SUCCESS,
+                    "✅ Gün kapanışı yapıldı: {business} ({date})",
+                    "{summary}")),
             // Raporlar v1.1 (R7): bütçe-eşik aşımı uyarısı (WARNING; opt-in/debounce).
             Map.entry(NotificationEvent.BUDGET_THRESHOLD_EXCEEDED, new Template(
                     NotificationType.WARNING,

@@ -164,6 +164,12 @@ public final class AuditAction {
     /** İşletme-başına haftalık/aylık özet bildirim tercihi admin tarafından güncellendi. */
     public static final String PERIODIC_SUMMARY_CONFIG_UPDATE = "PERIODIC_SUMMARY_CONFIG_UPDATE";
 
+    // ── GUN-1..4: gün-kapanışı → Telegram grubu özeti (per-business, default kapalı) ──
+    /** İşletme-başına "gün kapanışı → Telegram grubu" bildirimi admin tarafından açıldı/kapatıldı. */
+    public static final String DAY_CLOSING_NOTIFY_CONFIG_UPDATE = "DAY_CLOSING_NOTIFY_CONFIG_UPDATE";
+    /** Gün-kapanışı tamamlandı → Telegram grubuna özet gönderildi (teşhis izi). */
+    public static final String DAY_CLOSING_NOTIFY_DISPATCHED = "DAY_CLOSING_NOTIFY_DISPATCHED";
+
     // ── Raporlar v1.1 (R7): kategori/dönem bütçe-eşik konfigürasyonu (per-business+category) ──
     /** İşletme+kategori-başına bütçe eşiği admin tarafından güncellendi. */
     public static final String BUDGET_THRESHOLD_UPDATE = "BUDGET_THRESHOLD_UPDATE";
