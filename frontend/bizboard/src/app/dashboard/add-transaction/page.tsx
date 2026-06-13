@@ -21,9 +21,10 @@
 
 import { useRouter } from "next/navigation";
 import {
-  ArrowDownLeft, ArrowUpRight, CreditCard, ArrowLeftRight, ChevronRight, ArrowLeft,
+  ArrowDownLeft, ArrowUpRight, CreditCard, ArrowLeftRight, ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 // Kart tiplerini href yerine type key ile tutuyoruz; onClick'te router.replace kullanılır
 // (Link/push kullanmak chooser↔form history loop'una yol açar — bkz. dosya başı notu)
@@ -82,16 +83,7 @@ export default function AddTransactionChooserPage() {
 
   return (
     <div className="max-w-3xl mx-auto pb-24 space-y-8">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="v2-press p-2 -ml-2 rounded-xl v2-sunken hover:border-[rgb(var(--accent))]/50 transition-colors"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-        </button>
-        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Yeni İşlem</h1>
-      </div>
+      <PageHeader title="Yeni İşlem" fallbackHref="/dashboard" />
 
       <div className="text-center space-y-1">
         <h2 className="v2-display text-2xl">
