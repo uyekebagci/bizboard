@@ -251,14 +251,18 @@ export default function AllTransactionsPage() {
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
-        {/* Business filter */}
+        {/* Business filter — "Tüm İşletmeler" entry allows resetting back to all after a specific business was selected. */}
         <div className="min-w-[180px]">
           <DarkSelect
             value={filterBusiness}
             onChange={setFilterBusiness}
             placeholder="Tum Isletmeler"
             searchable={businesses.length > 6}
-            options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+            aria-label="İşletme filtresi"
+            options={[
+              { value: "", label: "Tum Isletmeler" },
+              ...businesses.map((b) => ({ value: b.id, label: b.name })),
+            ]}
           />
         </div>
 
