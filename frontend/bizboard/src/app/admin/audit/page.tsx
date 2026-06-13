@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Loader2,
   ChevronLeft,
   ChevronRight,
   Filter,
+  ClipboardList,
 } from "lucide-react";
 import {
   api,
@@ -27,6 +27,8 @@ import { AuditToolbar } from "./AuditToolbar";
 import { AuditAnonymizeModal } from "./AuditAnonymizeModal";
 import { AuditChainBanner, type ChainVerification } from "./AuditChainBanner";
 import { AuditLivePanel } from "./AuditLivePanel";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 /** mod-audit: zincir-onar (backfill-chain) cevabı (backend record alanları). */
 interface BackfillResult {
@@ -335,38 +337,30 @@ export default function AdminAuditPage() {
 
   return (
     <div className="space-y-5">
-      {/* Daxa başlık + üst aksiyonlar — DashboardShell içeriği (kendi tam-ekran zemini yok). */}
-      <section className="rise flex flex-wrap items-start gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mt-1 p-2 rounded-xl text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))] transition-colors"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div className="min-w-0">
-          <p className="v2-eyebrow">Güvenlik &amp; İzlenebilirlik</p>
-          <h1 className="v2-display text-2xl mt-1">Denetim Kaydı</h1>
-          <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
-            {data?.total_elements != null
-              ? `${data.total_elements} kayıt — değiştirilemez (immutable) denetim izi`
-              : "Değiştirilemez (immutable) denetim izi"}
-          </p>
-        </div>
-
-        <AuditToolbar
-          verifying={verifying}
-          onVerifyChain={verifyChain}
-          live={live}
-          liveConnected={liveConnected}
-          onToggleLive={toggleLive}
-          exporting={exporting}
-          onExport={serverExport}
-          anonymizing={anonymizing}
-          onAnonymize={() => setShowAnonymize(true)}
-        />
-      </section>
+      {/* Header — UX-07 paylaşılan PageHeader. */}
+      <PageHeader
+        title="Denetim Kaydı"
+        subtitle={
+          data?.total_elements != null
+            ? `${data.total_elements} kayıt — değiştirilemez (immutable) denetim izi`
+            : "Değiştirilemez (immutable) denetim izi"
+        }
+        icon={ClipboardList}
+        fallbackHref="/admin"
+        actions={
+          <AuditToolbar
+            verifying={verifying}
+            onVerifyChain={verifyChain}
+            live={live}
+            liveConnected={liveConnected}
+            onToggleLive={toggleLive}
+            exporting={exporting}
+            onExport={serverExport}
+            anonymizing={anonymizing}
+            onAnonymize={() => setShowAnonymize(true)}
+          />
+        }
+      />
 
       {/* Filtreler — Daxa kart yüzeyi */}
       <section className="v2-card p-3">
@@ -453,9 +447,13 @@ export default function AdminAuditPage() {
         )}
 
         {!loading && data && data.items.length === 0 && (
-          <p className="text-center text-[rgb(var(--v2-muted))] py-10 text-sm">
-            Kayıt bulunamadı
-          </p>
+          <EmptyState
+            icon={ClipboardList}
+            title="Kayıt bulunamadı"
+            description="Seçilen filtrelerle eşleşen denetim kaydı yok."
+            bare
+            size="sm"
+          />
         )}
 
         {!loading &&

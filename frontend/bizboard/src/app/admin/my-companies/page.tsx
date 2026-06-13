@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ChevronLeft,
   Building2,
   Plus,
   Pencil,
@@ -17,6 +16,9 @@ import { DarkSelect } from "@/components/shared/DarkSelect";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { isValidTaxId } from "@/lib/taxId";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 import type { MyCompany, CompanyType } from "@/types";
 
 // ── company_type label ────────────────────────────────────────
@@ -134,20 +136,21 @@ export default function AdminMyCompaniesPage() {
 
   return (
     <div className="px-4 py-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <button
-          onClick={() => router.push("/admin")}
-          className="v2-icon-btn"
-          aria-label="Admin paneline dön"
-        >
-          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
-        </button>
-        <div className="flex items-center gap-2.5">
-          <Building2 size={24} className="text-accent-strong dark:text-accent" />
-          <h1 className="text-2xl v2-display">Benim Firmalarım</h1>
-        </div>
-      </div>
+      <PageHeader
+        title="Benim Firmalarım"
+        icon={Building2}
+        fallbackHref="/admin"
+        className="mb-8"
+        actions={
+          <button
+            onClick={() => setShowCreate(true)}
+            className="v2-btn v2-btn--accent v2-press !py-2 !px-4 text-sm"
+          >
+            <Plus size={16} />
+            Yeni Firma
+          </button>
+        }
+      />
 
       {error && (
         <div className="mb-6 p-4 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm">
@@ -156,26 +159,22 @@ export default function AdminMyCompaniesPage() {
       )}
 
       <div className="v2-card overflow-hidden">
-        <div className="flex items-center justify-between gap-3 p-5 border-b border-[rgb(var(--v2-border))]">
-          <div className="flex items-center gap-2.5">
-            <h2 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">Firmalar</h2>
-            <span className="ml-1 text-sm text-[rgb(var(--v2-muted))]">
-              ({companies.length})
-            </span>
-          </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="v2-btn v2-btn--accent v2-press !py-2 !px-4 text-sm"
-          >
-            <Plus size={16} />
-            Yeni Firma
-          </button>
+        <div className="flex items-center gap-2.5 p-5 border-b border-[rgb(var(--v2-border))]">
+          <h2 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">Firmalar</h2>
+          <span className="ml-1 text-sm text-[rgb(var(--v2-muted))]">
+            ({companies.length})
+          </span>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-[rgb(var(--v2-muted))]">Yükleniyor...</div>
+          <ListSkeleton rows={3} />
         ) : companies.length === 0 ? (
-          <div className="p-8 text-center text-[rgb(var(--v2-muted))]">Henüz firma yok</div>
+          <EmptyState
+            icon={Building2}
+            title="Henüz firma yok"
+            description='"Yeni Firma" butonu ile ilk firmayı ekleyebilirsin.'
+            bare
+          />
         ) : (
           <div className="divide-y divide-[rgb(var(--v2-border))]">
             {companies.map((c) => (

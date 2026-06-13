@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ChevronLeft, GitMerge, Loader2, CheckCircle2, AlertCircle, Info,
+  GitMerge, Loader2, CheckCircle2, AlertCircle, Info,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 interface MigrationResult {
   dry_run: boolean;
@@ -76,19 +77,12 @@ export default function DebtMigrationPage() {
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <button
-          onClick={() => router.push("/admin")}
-          className="v2-icon-btn"
-          aria-label="Admin paneline dön"
-        >
-          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
-        </button>
-        <div className="flex items-center gap-2.5">
-          <GitMerge size={24} className="text-accent-strong dark:text-accent" />
-          <h1 className="text-2xl v2-display">Borç Cari Taşıma</h1>
-        </div>
-      </div>
+      <PageHeader
+        title="Borç Cari Taşıma"
+        icon={GitMerge}
+        fallbackHref="/admin"
+        className="mb-8"
+      />
 
       {/* Info card */}
       <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800/40 rounded-xl text-sm text-blue-200">
