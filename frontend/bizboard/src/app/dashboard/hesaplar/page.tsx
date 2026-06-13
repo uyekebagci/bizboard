@@ -11,9 +11,8 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, AlertTriangle, Wallet, Banknote, Building2, HandCoins,
+  Loader2, AlertTriangle, Wallet, Banknote, Building2, HandCoins,
   ToggleLeft, ToggleRight, X, Search, Plus, Trash2, Lock, Scale,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
@@ -25,6 +24,9 @@ import type { BankAccountListItem, BankAccountType } from "@/types";
 import { BankAccountDetailModal } from "@/components/bank/BankAccountDetailModal";
 import { BankAccountCreateForm } from "@/components/bank/BankAccountCreateForm";
 import { AdjustBalanceModal } from "@/components/bank/AdjustBalanceModal";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 /**
  * Bankalar WP (bakiye düzeltme): doğrudan bakiyesi tutulan (düzeltilebilir)
@@ -41,7 +43,6 @@ const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
 ];
 
 export default function HesaplarPage() {
-  const router = useRouter();
   // Bankalar WP (bakiye düzeltme): admin-only aksiyon görünürlüğü.
   const profile = useAppStore((s) => s.profile);
   const isAdmin = profile?.role === "admin";
@@ -172,30 +173,21 @@ export default function HesaplarPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      {/* Header — UX-07 paylaşılan PageHeader. */}
+      <PageHeader
+        title="Banka Hesapları"
+        subtitle="Banka + kasa + kişide tutulan — tüm hesaplarınız tek panelde"
+        icon={Wallet}
+        actions={
           <button
-            onClick={() => router.back()}
-            className="v2-icon-btn v2-press"
-            aria-label="Geri"
+            onClick={() => setShowCreateModal(true)}
+            className="v2-btn v2-btn--ink v2-press inline-flex items-center gap-1.5 text-sm"
           >
-            <ArrowLeft size={20} />
+            <Plus size={14} aria-hidden="true" />
+            Yeni Hesap
           </button>
-          <div>
-            <h1 className="v2-display text-xl">Banka Hesapları</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">
-              Banka + kasa + kişide tutulan — tüm hesaplarınız tek panelde
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="v2-btn v2-btn--ink v2-press inline-flex items-center gap-1.5 text-sm"
-        >
-          <Plus size={14} />
-          Yeni Hesap
-        </button>
-      </div>
+        }
+      />
 
       {/* Stats */}
       <section className="grid grid-cols-3 gap-3">
@@ -309,26 +301,23 @@ export default function HesaplarPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        // UX-08: ilk yükleme = skeleton (spinner yerine).
+        <ListSkeleton rows={6} />
       ) : sortedFiltered.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <Wallet size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">
-            {list.length === 0
-              ? "Henüz hesap eklenmemiş"
-              : "Filtreyle eşleşen hesap yok"}
-          </p>
-          {list.length > 0 && (query || typeFilter !== "ALL" || businessFilter) && (
-            <button
-              onClick={() => { setQuery(""); setTypeFilter("ALL"); setBusinessFilter(null); }}
-              className="mt-3 text-xs text-accent-strong dark:text-accent hover:opacity-80"
-            >
-              Filtreleri temizle
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon={Wallet}
+          title={list.length === 0 ? "Henüz hesap eklenmemiş" : "Filtreyle eşleşen hesap yok"}
+          action={
+            list.length > 0 && (query || typeFilter !== "ALL" || businessFilter) ? (
+              <button
+                onClick={() => { setQuery(""); setTypeFilter("ALL"); setBusinessFilter(null); }}
+                className="text-xs text-accent-strong dark:text-accent hover:opacity-80"
+              >
+                Filtreleri temizle
+              </button>
+            ) : undefined
+          }
+        />
       ) : (
         <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {sortedFiltered.map((a) => {
