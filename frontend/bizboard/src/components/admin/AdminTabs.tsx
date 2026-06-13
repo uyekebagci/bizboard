@@ -25,6 +25,8 @@ import {
   Send,
   BellRing,
   PieChart,
+  Database,
+  BellPlus,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,12 +41,14 @@ interface AdminTab {
 const ADMIN_TABS: AdminTab[] = [
   { href: "/admin", label: "Kullanıcılar", icon: Users },
   { href: "/admin/my-companies", label: "Firmalarım", icon: Building2 },
-  { href: "/admin/debt-migration", label: "Borç Migration", icon: ArrowLeftRight },
-  { href: "/admin/recurring", label: "Recurring", icon: Repeat },
+  { href: "/admin/debt-migration", label: "Borç Göçü", icon: ArrowLeftRight },
+  { href: "/admin/recurring", label: "Tekrarlayan", icon: Repeat },
   { href: "/admin/audit", label: "Audit Log", icon: ScrollText },
   { href: "/admin/telegram", label: "Telegram", icon: Send },
   { href: "/admin/financial-alerts", label: "Finansal Alarmlar", icon: BellRing },
   { href: "/admin/profit-share", label: "Kâr-Payı", icon: PieChart },
+  { href: "/admin/ledger", label: "Ledger Bakım", icon: Database },
+  { href: "/admin/day-closing-notify", label: "Gün-Kapanışı Bildirimi", icon: BellPlus },
 ];
 
 /**
