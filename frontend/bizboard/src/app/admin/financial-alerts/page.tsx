@@ -12,7 +12,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ChevronLeft,
   BellRing,
   Loader2,
   Building2,
@@ -34,6 +33,8 @@ import {
   setPeriodicSummaryConfig,
   previewPeriodicSummary,
 } from "@/lib/api/periodic-summary";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 import type { Business } from "@/types";
 
 export default function AdminFinancialAlertsPage() {
@@ -161,35 +162,24 @@ export default function AdminFinancialAlertsPage() {
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <button
-          onClick={() => router.push("/admin")}
-          className="v2-icon-btn"
-          aria-label="Admin paneline dön"
-        >
-          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
-        </button>
-        <div className="flex items-center gap-2.5">
-          <BellRing size={24} className="text-accent-strong dark:text-accent" />
-          <h1 className="text-2xl v2-display">Finansal Alarmlar</h1>
-        </div>
-      </div>
-
-      <p className="text-sm text-[rgb(var(--v2-muted))] mb-6">
-        İşletme-başına proaktif finansal alarm eşikleri. Eşik kapalıyken (veya 0)
-        alarm üretilmez. Alarmlar admin&apos;lere uygulama içi gönderilir; Telegram
-        için bildirim tercihlerinden ilgili olayı açın.
-      </p>
+      <PageHeader
+        title="Finansal Alarmlar"
+        subtitle="İşletme-başına proaktif finansal alarm eşikleri. Eşik kapalıyken alarm üretilmez."
+        icon={BellRing}
+        fallbackHref="/admin"
+        className="mb-8"
+      />
 
       {loading ? (
         <div className="py-10 flex justify-center">
           <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : businesses.length === 0 ? (
-        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))]">
-          İşletme bulunamadı.
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="İşletme bulunamadı"
+          description="Alarm eşiklerini yönetmek için önce bir işletme oluşturun."
+        />
       ) : (
         <div className="space-y-5">
           {/* İşletme seçimi */}

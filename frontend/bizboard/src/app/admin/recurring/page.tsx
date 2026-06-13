@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ChevronLeft, RefreshCw, Loader2, CheckCircle2, AlertCircle, Info, Clock,
+  RefreshCw, Loader2, CheckCircle2, AlertCircle, Info, Clock,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 interface RunResult {
   processed: number;
@@ -47,18 +48,12 @@ export default function RecurringPage() {
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <button
-          onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
-        >
-          <ChevronLeft size={20} className="text-amber-400" />
-        </button>
-        <div className="flex items-center gap-2.5">
-          <RefreshCw size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Tekrarlayan İşlem Üreteci</h1>
-        </div>
-      </div>
+      <PageHeader
+        title="Tekrarlayan İşlem Üreteci"
+        icon={RefreshCw}
+        fallbackHref="/admin"
+        className="mb-8"
+      />
 
       <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800/40 rounded-xl text-sm text-blue-200">
         <div className="flex gap-3">
@@ -87,7 +82,7 @@ export default function RecurringPage() {
         <button
           onClick={runNow}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-sm font-semibold"
+          className="v2-btn v2-btn--accent v2-press !py-2.5 !px-4 text-sm disabled:opacity-50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />}
           Şimdi Çalıştır
@@ -95,20 +90,20 @@ export default function RecurringPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-900/30 border border-red-800 rounded-xl text-red-300 text-sm flex items-start gap-3">
+        <div className="mb-6 p-4 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm flex items-start gap-3">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <div>{error}</div>
         </div>
       )}
 
       {result && (
-        <div className="p-5 border rounded-xl bg-green-900/20 border-green-800/40 text-green-200">
-          <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-            <CheckCircle2 size={18} />
+        <div className="v2-card p-5">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] mb-3 flex items-center gap-2">
+            <CheckCircle2 size={18} className="text-status-success" />
             Çalıştırma sonucu
           </h3>
           <div className="grid grid-cols-3 gap-3 text-sm">
-            <Stat label="Incelenen" value={result.processed} />
+            <Stat label="İncelenen" value={result.processed} />
             <Stat label="Oluşturulan" value={result.created} positive />
             <Stat label="Atlanan" value={result.skipped} />
           </div>
@@ -121,8 +116,8 @@ export default function RecurringPage() {
 function Stat({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] text-surface-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-surface-100"}`}>
+      <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wide">{label}</p>
+      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-status-success" : "text-[rgb(var(--v2-ink))]"}`}>
         {value}
       </p>
     </div>

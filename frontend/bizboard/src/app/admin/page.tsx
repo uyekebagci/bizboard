@@ -8,7 +8,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ChevronLeft,
   Building2,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
@@ -21,6 +20,9 @@ import {
   getRoleLabel,
 } from "@/components/admin/AdminUserModals";
 import { EditUserModal } from "@/components/admin/AdminEditUserModal";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 import type { AdminUser, Business } from "@/types";
 
 // ── Admin Panel Page ────────────────────────────────────────
@@ -82,20 +84,22 @@ export default function AdminPage() {
 
   return (
     <div className="px-4 py-6 max-w-5xl mx-auto">
-      {/* Header — Daxa: geri butonu + Shield + başlık (accent token). */}
-      <div className="flex items-center gap-3 mb-5">
-        <button
-          onClick={() => router.push("/dashboard")}
-          aria-label="Panoya dön"
-          className="v2-icon-btn"
-        >
-          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
-        </button>
-        <div className="flex items-center gap-2.5">
-          <Shield size={24} className="text-accent-strong dark:text-accent" />
-          <h1 className="text-2xl v2-display">Admin Paneli</h1>
-        </div>
-      </div>
+      <PageHeader
+        title="Admin Paneli"
+        icon={Shield}
+        fallbackHref="/dashboard"
+        className="mb-5"
+        actions={
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="v2-btn v2-btn--accent v2-press shrink-0 px-4 py-2"
+          >
+            <Plus size={16} aria-hidden="true" />
+            <span className="hidden sm:inline">Yeni Kullanıcı</span>
+            <span className="sm:hidden">Yeni</span>
+          </button>
+        }
+      />
 
       {/* Tab şeridi (Daxa segment/pill) — sığmazsa yatay-scroll. */}
       <AdminTabs className="mb-6" />
@@ -112,37 +116,34 @@ export default function AdminPage() {
 
       {/* Users Section — Daxa kart (v2-card, çift tema). */}
       <div className="v2-card overflow-hidden">
-        {/* Section Header — başlık + sayaç (sol), aksiyon butonu (sağ). */}
-        <div className="flex items-center justify-between gap-3 p-5 border-b border-[rgb(var(--v2-border))]">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Users size={20} className="text-accent-strong dark:text-accent shrink-0" />
-            <h2 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
-              Kullanıcılar
-            </h2>
-            <span className="ml-1 text-sm text-[rgb(var(--v2-muted))]">
-              ({users.length})
-            </span>
-          </div>
-          {/* "Yeni Kullanıcı" SEKME DEĞİL → ayrı accent aksiyon butonu. */}
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="v2-btn v2-btn--accent v2-press shrink-0 px-4 py-2"
-          >
-            <Plus size={16} aria-hidden="true" />
-            <span className="hidden sm:inline">Yeni Kullanıcı</span>
-            <span className="sm:hidden">Yeni</span>
-          </button>
+        {/* Section Header — başlık + sayaç. */}
+        <div className="flex items-center gap-2.5 min-w-0 p-5 border-b border-[rgb(var(--v2-border))]">
+          <Users size={20} className="text-accent-strong dark:text-accent shrink-0" />
+          <h2 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
+            Kullanıcılar
+          </h2>
+          <span className="ml-1 text-sm text-[rgb(var(--v2-muted))]">
+            ({users.length})
+          </span>
         </div>
 
         {/* User List */}
         {loading ? (
-          <div className="p-8 text-center text-[rgb(var(--v2-muted))]">
-            Yükleniyor...
-          </div>
+          <ListSkeleton rows={4} />
         ) : users.length === 0 ? (
-          <div className="p-8 text-center text-[rgb(var(--v2-muted))]">
-            Henüz kullanıcı yok
-          </div>
+          <EmptyState
+            icon={Users}
+            title="Henüz kullanıcı yok"
+            description='"Yeni Kullanıcı" butonu ile ilk kullanıcıyı ekleyebilirsin.'
+            action={
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="v2-btn v2-btn--accent v2-press text-sm"
+              >
+                <Plus size={16} /> Yeni Kullanıcı
+              </button>
+            }
+          />
         ) : (
           <ul className="divide-y divide-[rgb(var(--v2-border))]">
             {users.map((user) => {

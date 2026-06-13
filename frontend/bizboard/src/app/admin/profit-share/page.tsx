@@ -15,7 +15,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ChevronLeft,
   Percent,
   PlusCircle,
   Loader2,
@@ -35,6 +34,8 @@ import {
 import { ProfitShareRuleModal } from "@/components/admin/ProfitShareRuleModal";
 import { PctField, RuleRow } from "@/components/admin/ProfitShareRuleRow";
 import { ruleTypeLabel } from "@/components/admin/profit-share-meta";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 import type {
   BankAccountListItem,
   Business,
@@ -213,33 +214,24 @@ export default function AdminProfitSharePage() {
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <button
-          onClick={() => router.push("/admin")}
-          className="v2-icon-btn"
-          aria-label="Admin paneline dön"
-        >
-          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
-        </button>
-        <div className="flex items-center gap-2.5">
-          <Percent size={24} className="text-accent-strong dark:text-accent" />
-          <h1 className="text-2xl v2-display">Kâr-Payı Yönetimi</h1>
-        </div>
-      </div>
-      <p className="text-sm text-[rgb(var(--v2-muted))] mb-6 ml-12">
-        POS kâr-payı kuralları ve global oran config&apos;i (sahip% / Fatih% /
-        Tuncay%). İşletme-başına yönetilir; sadece admin değiştirebilir.
-      </p>
+      <PageHeader
+        title="Kâr-Payı Yönetimi"
+        subtitle="POS kâr-payı kuralları ve global oran config'i. İşletme-başına yönetilir."
+        icon={Percent}
+        fallbackHref="/admin"
+        className="mb-6"
+      />
 
       {loading ? (
         <div className="py-10 flex justify-center">
           <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : businesses.length === 0 ? (
-        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))]">
-          İşletme bulunamadı.
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="İşletme bulunamadı"
+          description="Kâr-payı kurallarını yönetmek için önce bir işletme oluşturun."
+        />
       ) : (
         <div className="space-y-5">
           {/* İşletme seçimi */}
@@ -341,10 +333,13 @@ export default function AdminProfitSharePage() {
                 </div>
 
                 {rules.length === 0 ? (
-                  <div className="p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
-                    Bu işletmede henüz kâr-payı kuralı yok. &quot;Yeni Kural&quot; ile
-                    ekleyin.
-                  </div>
+                  <EmptyState
+                    icon={Percent}
+                    title="Henüz kâr-payı kuralı yok"
+                    description='"Yeni Kural" ile bu işletmeye kural ekleyebilirsin.'
+                    bare
+                    size="sm"
+                  />
                 ) : (
                   <ul className="divide-y divide-[rgb(var(--v2-border))]">
                     {rules.map((rule) => (
