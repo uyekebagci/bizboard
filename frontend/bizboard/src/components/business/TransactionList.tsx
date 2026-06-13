@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import {
   ArrowDownLeft, ArrowUpRight, Trash2, X, Loader2,
   AlertTriangle, Calendar, Building2, Tag, FileText, Plus,
-  Pencil, Save, Paperclip, CreditCard, Banknote, ArrowLeftRight,
+  Pencil, Save, Paperclip, CreditCard, Banknote, ArrowLeftRight, Link2,
 } from "lucide-react";
 import { formatCurrency, formatRelativeDate, cn, formatMoneyInput, parseMoneyInput } from "@/lib/utils";
 import { api } from "@/lib/api/client";
@@ -36,6 +36,9 @@ export function TransactionList({
 }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
+  // Satırdaki "Para Bağla" kısayolundan açıldıysa: detay açılır açılmaz
+  // bağlama akışı başlar. Detay başka yolla açılınca false kalır.
+  const [bindOnOpen, setBindOnOpen] = useState(false);
   // v1.7.0-beta (Bankalar WP TODO 64eb9a76): tx satırı transfer ise
   // standart TransactionDetailModal yerine TransferDetailModal aç.
   const [transferPairId, setTransferPairId] = useState<string | null>(null);
@@ -53,10 +56,16 @@ export function TransactionList({
     if (tx.kind === "TRANSFER" && tx.transfer_pair_id) {
       setTransferPairId(tx.transfer_pair_id);
     } else {
+      setBindOnOpen(false);
       setDetailTarget(tx);
     }
   }, []);
   const handleDelete = useCallback((tx: Transaction) => setDeleteTarget(tx), []);
+  // Satır kısayolu: detayı aç + bağlama akışını otomatik başlat.
+  const handleBind = useCallback((tx: Transaction) => {
+    setBindOnOpen(true);
+    setDetailTarget(tx);
+  }, []);
 
   // Para İzi drill-down: bağ satırından karşı işleme git. Karşı tx yüklü
   // listede varsa detay modalını onunla yeniden açar; yoksa kullanıcıyı bilgilendirir.
@@ -64,6 +73,7 @@ export function TransactionList({
     (targetId: string) => {
       const next = transactions.find((t) => t.id === targetId);
       if (next) {
+        setBindOnOpen(false);
         setDetailTarget(next);
       } else {
         toast.info("Karşı işlem bu listede görünmüyor (eski/filtreli olabilir).");
@@ -100,6 +110,7 @@ export function TransactionList({
             currency={currency}
             onSelect={handleSelect}
             onDelete={handleDelete}
+            onBind={handleBind}
           />
         ))}
       </div>
@@ -116,10 +127,11 @@ export function TransactionList({
         <TransactionDetailModal
           transaction={detailTarget}
           currency={currency}
-          onClose={() => setDetailTarget(null)}
+          onClose={() => { setDetailTarget(null); setBindOnOpen(false); }}
           onDelete={() => { setDetailTarget(null); setDeleteTarget(detailTarget); }}
           onChange={onChange}
           onNavigate={handleNavigate}
+          openBindOnOpen={bindOnOpen}
         />
       )}
 
@@ -144,11 +156,14 @@ const TransactionRow = memo(function TransactionRow({
   currency,
   onSelect,
   onDelete,
+  onBind,
 }: {
   tx: Transaction;
   currency: string;
   onSelect: (tx: Transaction) => void;
   onDelete: (tx: Transaction) => void;
+  /** Satır kısayolu: "Para Bağla" — detayı bağlama akışıyla aç. */
+  onBind: (tx: Transaction) => void;
 }) {
   const isIncome = tx.direction === "income";
   const isPos = (tx.payment_method || "NAKIT") === "POS";
@@ -222,6 +237,20 @@ const TransactionRow = memo(function TransactionRow({
         {isIncome ? "+" : "-"}{formatCurrency(tx.amount, currency)}
       </span>
 
+      {/* Para Bağla kısayolu (satır içi keşfedilebilir giriş noktası).
+          TRANSFER'de fon-izi yok. Hover'da açılır; satır click'ini engeller. */}
+      {!isTransfer && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onBind(tx); }}
+          className="p-1.5 rounded-lg text-surface-300 hover:text-brand-300 hover:bg-brand-500/10
+                     opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+          title="Para bağla (kaynağını işaretle)"
+          aria-label="Para bağla"
+        >
+          <Link2 size={15} />
+        </button>
+      )}
+
       {/* Delete button */}
       {/* v1.7.0-beta (TODO 3993f396): TRANSFER tek-yönlü silinemez.
           Tx satırına tıklayınca TransferDetailModal açılır; oradan
@@ -255,6 +284,7 @@ export function TransactionDetailModal({
   onDelete,
   onChange,
   onNavigate,
+  openBindOnOpen = false,
 }: {
   transaction: Transaction;
   currency?: string;
@@ -264,10 +294,19 @@ export function TransactionDetailModal({
   onChange?: () => void;
   /** Para İzi drill-down: karşı işleme git (txId). */
   onNavigate?: (txId: string) => void;
+  /** Modal açılırken doğrudan "Para Bağla" akışını başlat (işlem satırı kısayolu). */
+  openBindOnOpen?: boolean;
 }) {
   const { triggerRefresh } = useAppStore();
   const isIncome = transaction.direction === "income";
   const effectiveCurrency = currency || transaction.currency || "TRY";
+
+  // "Para Bağla" tetik sayacı: üst buton veya satır kısayolu artırır →
+  // FundTrailSection bağlama modalını açar + bölüme kaydırır.
+  const [bindSignal, setBindSignal] = useState(0);
+  useEffect(() => {
+    if (openBindOnOpen) setBindSignal((s) => s + 1);
+  }, [openBindOnOpen]);
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -701,6 +740,21 @@ export function TransactionDetailModal({
                 </p>
               </div>
 
+              {/* Para İzi hızlı aksiyon — KEŞFEDİLEBİLİR giriş noktası.
+                  Detayın tepesinde (kaydırmadan görünür): paranın nereden
+                  geldiğini işaretle. Asıl bağlama UI'ı aşağıdaki FundTrailSection.
+                  Saf izlenebilirlik — bakiye/Net Kâr DEĞİŞMEZ. */}
+              {transaction.business_id && transaction.id && transaction.kind !== "TRANSFER" && (
+                <button
+                  type="button"
+                  onClick={() => setBindSignal((s) => s + 1)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                             bg-brand-500/15 hover:bg-brand-500/25 text-brand-200 border border-brand-500/30 transition-colors"
+                >
+                  <Link2 size={15} /> Para Bağla (kaynağını işaretle)
+                </button>
+              )}
+
               {/* Details Grid */}
               <div className="space-y-3">
                 {transaction.description && (
@@ -830,6 +884,7 @@ export function TransactionDetailModal({
                     txAmount={transaction.amount}
                     currency={effectiveCurrency}
                     onNavigate={onNavigate}
+                    openBindSignal={bindSignal}
                   />
                 )}
 

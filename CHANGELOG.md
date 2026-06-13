@@ -30,6 +30,25 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Added
+
+- **Para İzi (FundLink) — "Para Bağla" aksiyonu artık keşfedilebilir.**
+  Backend + çift-yönlü trail görünümü zaten canlıydı ancak bağlama aksiyonu
+  yalnızca uzun işlem-detay modalının en altındaki küçük bir butonla erişilebildiği
+  için kullanıcılar bulamıyordu. Üç keşfedilebilir giriş noktası eklendi:
+  - **İşlem detayı (üst):** Tutar afişinin hemen altında, kaydırmadan görünen
+    belirgin **"Para Bağla (kaynağını işaretle)"** butonu — bölüme kaydırıp
+    bağlama modalını açar (TRANSFER hariç).
+  - **İşlem satırı (liste):** Satır üzerinde hover ile açılan **bağlantı (link)**
+    kısayolu — detayı açıp bağlama akışını otomatik başlatır.
+  - **Para İzi bölümü:** Mevcut bölümdeki buton etiketi "Para bağla" olarak
+    netleştirildi + `id` çapası ve `aria-label` eklendi (a11y + kaydırma hedefi).
+  - Bağlama modalı (hedef seç → kaynak ara/seç → tutar + over-alloc tavanı → not)
+    ve bağ silme (unlink) mevcut akışlarla aynı; `POST/DELETE
+    /businesses/{businessId}/transactions/{txId}/fund-links` uçlarını kullanır.
+  - **STRICT:** saf izlenebilirlik — bakiye/Net Kâr DEĞİŞMEZ. Daxa v2 stili,
+    çift tema, loading/empty/error korundu.
+
 ### Changed
 
 - **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**
