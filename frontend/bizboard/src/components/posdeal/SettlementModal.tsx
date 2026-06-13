@@ -67,26 +67,25 @@ export function SettlementModal({ batch, devices, onClose, finalize }: Props) {
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl
-                      bg-surface-800 border border-surface-700 shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700">
+      <div className="v2-card relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2">
-            <Banknote size={18} className="text-emerald-400" />
-            <h2 className="text-base font-bold text-white">POS Yatış Gir (T+1)</h2>
+            <Banknote size={18} className="text-emerald-700 dark:text-emerald-400" />
+            <h2 className="text-base font-bold text-[rgb(var(--v2-ink))]">POS Yatış Gir (T+1)</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700">
-            <X size={18} className="text-surface-300" />
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
+            <X size={18} />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
-          <div className="rounded-xl p-3 bg-surface-900/40 border border-surface-700/60">
-            <p className="text-sm text-white font-medium">{batch.pos_device_name}</p>
-            <p className="text-[11px] text-surface-400 mt-0.5">
+          <div className="rounded-xl p-3 v2-sunken border border-[rgb(var(--v2-border))]">
+            <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">{batch.pos_device_name}</p>
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
               {new Date(batch.settle_date).toLocaleDateString("tr-TR")} · {batch.deal_count} işlem
             </p>
-            <p className="text-[11px] text-surface-400">
-              POS Brüt: <span className="text-white font-semibold">{formatCurrency(gross, "TRY")}</span>
+            <p className="text-[11px] text-[rgb(var(--v2-muted))]">
+              POS Brüt: <span className="text-[rgb(var(--v2-ink))] font-semibold">{formatCurrency(gross, "TRY")}</span>
             </p>
           </div>
 
@@ -98,20 +97,20 @@ export function SettlementModal({ batch, devices, onClose, finalize }: Props) {
           </div>
 
           {avgCommission != null && (
-            <div className="rounded-xl p-3 bg-brand-500/5 border border-brand-500/20 flex items-center justify-between">
-              <span className="text-sm text-surface-300">Ortalama Komisyon</span>
-              <span className="text-lg font-bold text-brand-300 num">
+            <div className="rounded-xl p-3 bg-[rgb(var(--accent))]/5 border border-[rgb(var(--accent))]/20 flex items-center justify-between">
+              <span className="text-sm text-[rgb(var(--v2-muted))]">Ortalama Komisyon</span>
+              <span className="text-lg font-bold text-accent-strong dark:text-accent num">
                 %{avgCommission.toFixed(2)}
               </span>
             </div>
           )}
-          <p className="text-[11px] text-surface-400">
+          <p className="text-[11px] text-[rgb(var(--v2-muted))]">
             Ort.komisyon = (1 − yatan ÷ brüt). Tuncay payı = (sahip baz% − ort.komisyon) × brüt
             ile kesinleşir.
           </p>
         </div>
 
-        <div className="flex gap-2 px-5 py-4 border-t border-surface-700">
+        <div className="flex gap-2 px-5 py-4 border-t border-[rgb(var(--v2-border))]">
           <button onClick={onClose} className="btn-secondary flex-1 py-2.5">İptal</button>
           <button onClick={handleSubmit} disabled={submitting || depositedNum <= 0}
             className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold

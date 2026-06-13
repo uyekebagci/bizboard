@@ -94,30 +94,32 @@ export function CreateFirmModal({
   return (
     <>
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
           <h3 className="modal-title">Yeni Firma</h3>
-          <button type="button" onClick={onClose} className="modal-close" aria-label="Kapat">
+          <button type="button" onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat">
             <X size={16} />
           </button>
         </div>
 
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Grup</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Grup</label>
             <DarkSelect
               value={form.group_id}
               onChange={(v) => setForm({ ...form, group_id: v })}
@@ -155,7 +157,7 @@ export function CreateFirmModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">Şirket Tipi</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Şirket Tipi</label>
               <DarkSelect
                 value={form.company_type}
                 onChange={(v) => setForm({ ...form, company_type: v as CompanyType })}
@@ -184,8 +186,8 @@ export function CreateFirmModal({
             value={form.address}
             onChange={(v) => setForm({ ...form, address: v })} />
 
-          <div className="border-t border-surface-700 pt-3 space-y-3">
-            <p className="text-[10px] uppercase text-surface-400 tracking-wider">İletişim</p>
+          <div className="border-t border-[rgb(var(--v2-border))] pt-3 space-y-3">
+            <p className="text-[10px] uppercase text-[rgb(var(--v2-muted))] tracking-wider">İletişim</p>
             <Row label="Yetkili"
               value={form.contact_name}
               onChange={(v) => setForm({ ...form, contact_name: v })} />
@@ -206,7 +208,7 @@ export function CreateFirmModal({
             İptal
           </button>
           <button type="submit" disabled={submitting || !form.legal_name.trim() || taxIdInvalid}
-            className="btn-primary ml-auto px-4 py-2.5 text-sm gap-2">
+            className="ml-auto px-4 py-2.5 rounded-xl bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50">
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             Oluştur
           </button>
@@ -243,7 +245,7 @@ function Row({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-surface-200 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">{label}</label>
       {textarea ? (
         <textarea required={required} value={value}
           onChange={(e) => onChange(e.target.value)} rows={2}

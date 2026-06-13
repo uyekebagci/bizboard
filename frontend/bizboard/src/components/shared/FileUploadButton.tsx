@@ -95,19 +95,19 @@ export function FileUploadButton({
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
         className={`flex items-center gap-1.5 rounded-xl border border-dashed transition-all
-          ${uploading ? "opacity-60 cursor-wait" : "hover:border-brand-400 hover:bg-brand-500/10 cursor-pointer"}
-          ${uploaded ? "border-green-400 bg-green-500/10" : "border-surface-600 bg-surface-700"}
+          ${uploading ? "opacity-60 cursor-wait" : "hover:border-[rgb(var(--accent))]/50 hover:bg-[rgb(var(--accent))]/5 cursor-pointer"}
+          ${uploaded ? "border-green-500/50 bg-green-500/10" : "border-[rgb(var(--v2-border))] v2-sunken"}
           ${isSmall ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"}
         `}
       >
         {uploading ? (
-          <Loader2 size={isSmall ? 12 : 14} className="animate-spin text-brand-300" />
+          <Loader2 size={isSmall ? 12 : 14} className="animate-spin text-accent-strong dark:text-accent" />
         ) : uploaded ? (
-          <Check size={isSmall ? 12 : 14} className="text-green-300" />
+          <Check size={isSmall ? 12 : 14} className="text-green-700 dark:text-green-300" />
         ) : (
-          <Upload size={isSmall ? 12 : 14} className="text-surface-500" />
+          <Upload size={isSmall ? 12 : 14} className="text-[rgb(var(--v2-muted))]" />
         )}
-        <span className={`font-medium ${uploaded ? "text-green-300" : "text-surface-600"}`}>
+        <span className={`font-medium ${uploaded ? "text-green-700 dark:text-green-300" : "text-[rgb(var(--v2-muted))]"}`}>
           {uploading ? "Yukleniyor..." : uploaded ? "Yuklendi!" : label}
         </span>
       </button>
@@ -196,17 +196,17 @@ export function InlineFileUpload({
           {uploadedFiles.map((f) => (
             <div
               key={f.id}
-              className="flex items-center gap-2 px-3 py-2 bg-surface-50 border border-surface-200 rounded-xl"
+              className="flex items-center gap-2 px-3 py-2 v2-sunken border border-[rgb(var(--v2-border))] rounded-xl"
             >
               {isImage(f.content_type) ? (
-                <ImageIcon size={14} className="text-brand-500 shrink-0" />
+                <ImageIcon size={14} className="text-accent-strong dark:text-accent shrink-0" />
               ) : (
-                <FileText size={14} className="text-surface-500 shrink-0" />
+                <FileText size={14} className="text-[rgb(var(--v2-muted))] shrink-0" />
               )}
-              <span className="text-xs text-surface-700 truncate flex-1">
+              <span className="text-xs text-[rgb(var(--v2-ink))] truncate flex-1">
                 {f.original_name}
               </span>
-              <span className="text-[10px] text-surface-400 shrink-0">
+              <span className="text-[10px] text-[rgb(var(--v2-muted))] shrink-0">
                 {formatSize(f.size)}
               </span>
               {onRemoveFile && (
@@ -228,15 +228,15 @@ export function InlineFileUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="flex items-center gap-1.5 px-3 py-2 w-full rounded-xl border border-dashed border-surface-600
-                   bg-surface-700 hover:border-brand-400 hover:bg-brand-500/10 transition-all text-xs"
+        className="flex items-center gap-1.5 px-3 py-2 w-full rounded-xl border border-dashed border-[rgb(var(--v2-border))]
+                   v2-sunken hover:border-[rgb(var(--accent))]/50 hover:bg-[rgb(var(--accent))]/5 transition-all text-xs"
       >
         {uploading ? (
-          <Loader2 size={13} className="animate-spin text-brand-300" />
+          <Loader2 size={13} className="animate-spin text-accent-strong dark:text-accent" />
         ) : (
-          <Upload size={13} className="text-surface-500" />
+          <Upload size={13} className="text-[rgb(var(--v2-muted))]" />
         )}
-        <span className="text-surface-600 font-medium">
+        <span className="text-[rgb(var(--v2-muted))] font-medium">
           {uploading ? "Yukleniyor..." : "Dosya / Fotograf Ekle"}
         </span>
       </button>

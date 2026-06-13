@@ -9,6 +9,8 @@
  *  3. Fark canlı hesaplanır + renklendirilir (eksik kırmızı, fazla yeşil, sıfır nötr).
  *  4. Fark != 0 ise kategori (Kayıp / Yanlış Girim / Yuvarlama / Diğer) + açıklama zorunlu.
  *  5. "Kapat" — POST /closings/today.
+ *
+ * v2 Daxa design language: solid/layered, rounded, lime accent, correct light+dark.
  */
 
 import { useMemo, useState } from "react";
@@ -78,29 +80,33 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-md max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
-          <h3 className="text-lg font-bold h-display text-surface-100">Günü Kapat</h3>
-          <button onClick={onClose} className="modal-close">
-            <X size={18} className="text-surface-400" />
+      <div className="v2-card shadow-xl w-full max-w-md max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Günü Kapat</h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
+            <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Computed (büyük, readonly) */}
-          <div className="rounded-2xl p-4 bg-surface-900/40 border border-surface-700/60 text-center">
-            <p className="text-[11px] text-surface-400 uppercase tracking-wider">Hesaplanan Kapanış</p>
-            <p className="num mt-1 text-3xl font-bold text-surface-100">
+          <div className="rounded-2xl p-4 v2-sunken border border-[rgb(var(--v2-border))] text-center">
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] uppercase tracking-wider">Hesaplanan Kapanış</p>
+            <p className="num mt-1 text-3xl font-bold text-[rgb(var(--v2-ink))]">
               {formatCurrency(preview.computed_closing, "TRY")}
             </p>
-            <p className="mt-1 text-[11px] text-surface-400">
+            <p className="mt-1 text-[11px] text-[rgb(var(--v2-muted))]">
               Açılış: {formatCurrency(preview.opening_balance, "TRY")}
               {" · Net akış: "}
               {preview.net_flow >= 0 ? "+" : ""}{formatCurrency(preview.net_flow, "TRY")}
@@ -109,7 +115,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
 
           {/* Actual input */}
           <div>
-            <label className="label">Fiziksel Sayım (Gerçek) <span className="text-red-400">*</span></label>
+            <label className="label">Fiziksel Sayım (Gerçek) <span className="text-red-500 dark:text-red-400">*</span></label>
             <input
               type="text"
               inputMode="numeric"
@@ -125,17 +131,17 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
           {/* Difference (canlı) */}
           {actualInput !== "" && (
             <div className={cn(
-              "rounded-2xl p-3 border border-surface-700/60 flex items-center justify-between transition-colors",
-              difference === 0 && "bg-surface-700/50",
+              "rounded-2xl p-3 border flex items-center justify-between transition-colors",
+              difference === 0 && "v2-sunken border-[rgb(var(--v2-border))]",
               isNegative && "bg-red-500/10 border-red-500/30",
               isPositive && "bg-emerald-500/10 border-emerald-500/30",
             )}>
-              <span className="text-sm text-surface-300">Fark</span>
+              <span className="text-sm text-[rgb(var(--v2-muted))]">Fark</span>
               <span className={cn(
                 "text-lg font-bold",
-                difference === 0 && "text-surface-100",
-                isNegative && "text-red-400",
-                isPositive && "text-emerald-400",
+                difference === 0 && "text-[rgb(var(--v2-ink))]",
+                isNegative && "text-red-700 dark:text-red-400",
+                isPositive && "text-emerald-700 dark:text-emerald-400",
               )}>
                 {difference > 0 ? "+" : ""}{formatCurrency(difference, "TRY")}
               </span>
@@ -146,7 +152,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
           {hasDiff && (
             <>
               <div>
-                <label className="label">Kategori <span className="text-red-400">*</span></label>
+                <label className="label">Kategori <span className="text-red-500 dark:text-red-400">*</span></label>
                 <div className="grid grid-cols-2 gap-2">
                   {REASONS.map((r) => (
                     <button
@@ -154,10 +160,10 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
                       type="button"
                       onClick={() => setReason(r.value)}
                       className={cn(
-                        "px-3 py-2.5 rounded-xl text-sm font-medium border transition-colors",
+                        "v2-press px-3 py-2.5 rounded-xl text-sm font-medium border transition-colors",
                         reason === r.value
-                          ? "bg-brand-500/15 border-brand-500/40 text-brand-300"
-                          : "bg-surface-700 border-surface-600 text-surface-300 hover:border-surface-300",
+                          ? "bg-[rgb(var(--accent))]/12 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                          : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                       )}
                     >
                       {r.label}
@@ -167,7 +173,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
               </div>
 
               <div>
-                <label className="label">Açıklama <span className="text-red-400">*</span></label>
+                <label className="label">Açıklama <span className="text-red-500 dark:text-red-400">*</span></label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
@@ -192,7 +198,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
             <button
               type="submit"
               disabled={submitting || !actualInput}
-              className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 disabled:opacity-50 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <><Loader2 size={16} className="animate-spin" /> Kapatılıyor...</>

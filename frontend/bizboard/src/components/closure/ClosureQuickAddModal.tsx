@@ -6,6 +6,8 @@
  * <p>5 mode: pos / outgoing / incoming / withdrawal / expense.
  * Her mode için kompakt form. Submit body'sine closure_session_id eklenir;
  * tx draft olarak işaretlenir, closure finalize'de strip / rollback'te delete.</p>
+ *
+ * v2 Daxa design language: solid/layered, rounded, lime accent, correct light+dark.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -188,22 +190,22 @@ export function ClosureQuickAddModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={() => !submitting && onClose()}
     >
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "bg-surface-800 rounded-2xl border w-full max-w-md max-h-[92vh] flex flex-col shadow-xl",
+          "v2-card w-full max-w-md max-h-[92vh] flex flex-col shadow-xl border",
           borderClass(meta.color),
         )}
       >
         {/* Header */}
-        <div className="modal-header">
-          <h3 className="text-sm font-semibold text-surface-100">{meta.title}</h3>
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{meta.title}</h3>
           <button type="button" onClick={onClose} disabled={submitting}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 disabled:opacity-50">
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] disabled:opacity-50">
             <X size={16} />
           </button>
         </div>
@@ -212,7 +214,7 @@ export function ClosureQuickAddModal({
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {loading ? (
             <div className="flex items-center justify-center py-6">
-              <Loader2 size={20} className="animate-spin text-surface-500" />
+              <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           ) : (
             <>
@@ -225,7 +227,7 @@ export function ClosureQuickAddModal({
                     placeholder="0"
                     className="field field-sm py-2.5 text-lg font-bold"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">TRY</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] text-sm">TRY</span>
                 </div>
               </Field>
 
@@ -292,17 +294,17 @@ export function ClosureQuickAddModal({
                   type="text" value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Not, referans..."
-                  className="w-full px-3 py-2 rounded-xl border border-surface-600 bg-surface-900 text-surface-100 text-sm"
+                  className="field field-sm py-2.5"
                 />
               </Field>
 
-              <p className="text-[10px] text-amber-300/80 flex items-center gap-1">
+              <p className="text-[10px] text-amber-700 dark:text-amber-300/80 flex items-center gap-1">
                 <AlertTriangle size={10} />
                 Bu işlem closure session'ına etiketlenir; kapanışı kaydet → kalıcı, vazgeç → silinir.
               </p>
 
               {error && (
-                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
                   <AlertTriangle size={12} className="mt-0.5 shrink-0" /> {error}
                 </div>
               )}
@@ -311,7 +313,7 @@ export function ClosureQuickAddModal({
         </div>
 
         {/* Footer */}
-        <div className="modal-footer">
+        <div className="flex gap-2 p-4 border-t border-[rgb(var(--v2-border))] shrink-0">
           <button type="button" onClick={onClose} disabled={submitting}
             className="btn-secondary flex-1 py-2 text-sm">
             İptal
@@ -335,7 +337,7 @@ export function ClosureQuickAddModal({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-surface-200 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">{label}</label>
       {children}
     </div>
   );
@@ -389,7 +391,7 @@ function borderClass(color: string): string {
     emerald: "border-emerald-500/30",
     amber: "border-amber-500/30",
   };
-  return m[color] || "border-surface-600";
+  return m[color] || "border-[rgb(var(--v2-border))]";
 }
 
 function btnClass(color: string): string {
@@ -399,6 +401,5 @@ function btnClass(color: string): string {
     emerald: "bg-emerald-600 hover:bg-emerald-500",
     amber: "bg-amber-600 hover:bg-amber-500",
   };
-  return m[color] || "bg-brand-600 hover:bg-brand-500";
+  return m[color] || "bg-[rgb(var(--v2-ink))] hover:opacity-90";
 }
-

@@ -48,6 +48,19 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
     `.badge` primitivi (accent/ink/success/warning/danger/info varyantları, çift
     tema, a11y kontrast) eklendi. Böylece tüm sayfalar (formlar/listeler) bu base
     sınıfları kullandığında otomatik uyumlanır. İşlevsellik değişmedi.
+- **UI v2 (Daxa) rollout — form sayfaları + modal'lar.** Tüm işlem/form/onay/
+  düzenleme bileşenleri eski koyu-düz temadan v2 "Daxa" diline (solid/katmanlı,
+  yuvarlak, lime accent, doğru light+dark) geçirildi. Öncelik: **İşlem Ekle**
+  akışı (Yeni Gelir/Gider/POS/Transfer formları + `AddTransactionModal`).
+  Kapsam: İşlem Ekle formları ve chooser/sub-page'ler; işlem/karşı-taraf/firma/
+  kategori/banka/borç/ödeme/gün-kapanışı/çek-senet/envanter/POS-anlaşma/OCR/
+  hatırlatıcı/dosya-yükleme modal'ları; paylaşımlı `DarkSelect`/
+  `CounterpartCombobox` form widget'ları; Firmalarım ve Kategoriler form'ları;
+  Şifre Değiştir sayfası. SALT GÖRSEL — form mantığı, validasyon, alanlar ve
+  API çağrıları AYNEN korundu; semantik durum renkleri (gelir=yeşil, gider=
+  kırmızı, uyarı=amber, bilgi=mavi/sky) light+dark kontrast eklenerek korundu.
+  `globals.css` / `tailwind.config` / shell / paylaşılan base primitive'lere
+  dokunulmadı (mevcut v2 utility sınıfları kullanıldı).
 
 ### Security
 

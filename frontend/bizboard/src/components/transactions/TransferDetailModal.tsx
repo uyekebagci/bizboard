@@ -76,21 +76,25 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+        className="v2-card shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
       >
-        <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/40">
               TRANSFER
             </span>
             Transfer Detayı
           </h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
             <X size={16} />
           </button>
         </div>
@@ -98,12 +102,12 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
         <div className="overflow-y-auto flex-1 p-4 space-y-4">
           {loading && (
             <div className="flex items-center justify-center py-8">
-              <Loader2 size={24} className="animate-spin text-surface-400" />
+              <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           )}
 
           {error && !loading && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5" />
               <span>{error}</span>
             </div>
@@ -112,27 +116,27 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
           {data && !loading && (
             <>
               {/* Tutar — büyük */}
-              <div className="text-center py-3 rounded-xl bg-surface-900 border border-surface-700">
-                <p className="text-3xl font-bold text-surface-100">
+              <div className="text-center py-3 rounded-xl v2-sunken">
+                <p className="text-3xl font-bold text-[rgb(var(--v2-ink))]">
                   {formatCurrency(data.amount, data.currency || "TRY")}
                 </p>
-                <p className="text-[11px] text-surface-400 mt-1">{data.date}</p>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1">{data.date}</p>
               </div>
 
               {/* From → To */}
               <div className="flex items-center gap-2">
                 <div className="flex-1 min-w-0 p-3 rounded-xl border border-red-500/30 bg-red-500/[0.04]">
-                  <p className="text-[10px] uppercase text-red-300/80 tracking-wider mb-1">Kaynak</p>
-                  <p className="text-sm font-medium text-surface-100 truncate">{data.from_bank_account_name}</p>
-                  <p className="text-[11px] text-red-300 mt-0.5">
+                  <p className="text-[10px] uppercase text-red-700 dark:text-red-300/80 tracking-wider mb-1">Kaynak</p>
+                  <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{data.from_bank_account_name}</p>
+                  <p className="text-[11px] text-red-700 dark:text-red-300 mt-0.5">
                     −{formatCurrency(data.amount, data.currency || "TRY")}
                   </p>
                 </div>
-                <ArrowRight size={20} className="text-surface-400 shrink-0" />
+                <ArrowRight size={20} className="text-[rgb(var(--v2-muted))] shrink-0" />
                 <div className="flex-1 min-w-0 p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04]">
-                  <p className="text-[10px] uppercase text-emerald-300/80 tracking-wider mb-1">Hedef</p>
-                  <p className="text-sm font-medium text-surface-100 truncate">{data.to_bank_account_name}</p>
-                  <p className="text-[11px] text-emerald-300 mt-0.5">
+                  <p className="text-[10px] uppercase text-emerald-700 dark:text-emerald-300/80 tracking-wider mb-1">Hedef</p>
+                  <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{data.to_bank_account_name}</p>
+                  <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
                     +{formatCurrency(data.amount, data.currency || "TRY")}
                   </p>
                 </div>
@@ -140,20 +144,20 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
 
               {/* Description + meta */}
               {data.description && (
-                <div className="p-3 rounded-xl border border-surface-700">
-                  <p className="text-[10px] uppercase text-surface-400 mb-1">Açıklama</p>
-                  <p className="text-sm text-surface-200">{data.description}</p>
+                <div className="p-3 rounded-xl border border-[rgb(var(--v2-border))]">
+                  <p className="text-[10px] uppercase text-[rgb(var(--v2-muted))] mb-1">Açıklama</p>
+                  <p className="text-sm text-[rgb(var(--v2-ink))]">{data.description}</p>
                 </div>
               )}
 
               {data.low_balance_warning && (
-                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2">
+                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-200 text-xs flex items-start gap-2">
                   <AlertTriangle size={12} className="mt-0.5 shrink-0" />
                   <span>{data.low_balance_warning}</span>
                 </div>
               )}
 
-              <p className="text-[10px] text-surface-500 text-center">
+              <p className="text-[10px] text-[rgb(var(--v2-muted))] text-center">
                 Bu işlem 2 paired tx olarak kaydedildi (kind=TRANSFER).
                 Gelir/gider raporlarında YOK; hesap detay listesinde GÖRÜNÜR.
               </p>
@@ -162,10 +166,10 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
         </div>
 
         {data && !loading && (
-          <div className="p-4 border-t border-surface-700">
+          <div className="p-4 border-t border-[rgb(var(--v2-border))] shrink-0">
             {confirmDelete ? (
               <div className="space-y-2">
-                <p className="text-xs text-amber-200 text-center">
+                <p className="text-xs text-amber-700 dark:text-amber-200 text-center">
                   ⚠ Silersen iki taraftaki tx birden silinir, bakiyeler eski hâline döner.
                 </p>
                 <div className="flex gap-2">
@@ -173,7 +177,7 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
                     type="button"
                     onClick={() => setConfirmDelete(false)}
                     disabled={busy}
-                    className="flex-1 px-3 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm disabled:opacity-50"
+                    className="btn-secondary flex-1 py-2 text-sm disabled:opacity-50"
                   >
                     Vazgeç
                   </button>
@@ -194,11 +198,11 @@ export function TransferDetailModal({ pairId, onClose, onDeleted }: Props) {
                 onClick={() => setConfirmDelete(true)}
                 className={cn(
                   "w-full px-3 py-2 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5",
-                  "bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20",
+                  "bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-500/20",
                 )}
               >
                 <Trash2 size={12} />
-                Transfer'i Sil (pair)
+                Transfer&apos;i Sil (pair)
               </button>
             )}
           </div>

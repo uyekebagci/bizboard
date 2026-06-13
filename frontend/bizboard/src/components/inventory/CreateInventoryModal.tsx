@@ -129,7 +129,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="modal-title">Envanter Ekle</h3>
           <button onClick={onClose} className="modal-close" aria-label="Kapat"><X size={20} /></button>
@@ -138,7 +138,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
         <div className="p-4 space-y-3">
           {/* İşletme */}
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Isletme</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Isletme</label>
             <select value={businessId} onChange={(e) => setBusinessId(e.target.value)} className={inputCls}>
               {businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -147,13 +147,13 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           {/* Kategori + Durum */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Kategori</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Kategori</label>
               <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
                 {bizCategories.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Durum</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Durum</label>
               <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls}>
                 {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
@@ -162,7 +162,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
 
           {/* Ad */}
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Kalem Adi *</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Kalem Adi *</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
               placeholder={category === "CONSUMABLE" ? "Ornek: Cimento, Insaat Demiri" : category === "HEAVY_VEHICLE" ? "Ornek: CAT 320 Ekskavatör" : "Ad girin"}
               className={inputCls} />
@@ -172,12 +172,12 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           {hasField("brand") && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-surface-200 mb-1">Marka</label>
+                <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Marka</label>
                 <input type="text" value={brand} onChange={(e) => setBrand(e.target.value)} className={inputCls} />
               </div>
               {hasField("model") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Model</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Model</label>
                   <input type="text" value={model} onChange={(e) => setModel(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -189,13 +189,13 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <div className="grid grid-cols-2 gap-3">
               {hasField("serial_number") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Seri No</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Seri No</label>
                   <input type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className={inputCls} />
                 </div>
               )}
               {hasField("company_barcode") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Sirket Barkod/QR</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Sirket Barkod/QR</label>
                   <input type="text" value={companyBarcode} onChange={(e) => setCompanyBarcode(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -207,13 +207,13 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <div className="grid grid-cols-2 gap-3">
               {hasField("power_capacity") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Guc Kapasitesi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Guc Kapasitesi</label>
                   <input type="text" value={powerCapacity} onChange={(e) => setPowerCapacity(e.target.value)} placeholder="150 kVA" className={inputCls} />
                 </div>
               )}
               {hasField("energy_source") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Enerji Kaynagi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Enerji Kaynagi</label>
                   <select value={energySource} onChange={(e) => setEnergySource(e.target.value)} className={inputCls}>
                     <option value="">Seciniz</option>
                     {Object.entries(ENERGY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -228,42 +228,42 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Birim</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Birim</label>
                   <select value={unit} onChange={(e) => setUnit(e.target.value)} className={inputCls}>
                     {Object.entries(UNIT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Mevcut Stok</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Mevcut Stok</label>
                   <input type="number" value={currentStock} onChange={(e) => setCurrentStock(e.target.value)} step="0.01" className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Min. Stok</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Min. Stok</label>
                   <input type="number" value={minimumStock} onChange={(e) => setMinimumStock(e.target.value)} step="0.01" className={inputCls} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Reorder Esigi (ops.)</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Reorder Esigi (ops.)</label>
                   <input type="number" value={reorderPoint} onChange={(e) => setReorderPoint(e.target.value)} step="0.01" className={inputCls} placeholder="Bos = otomatik" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Temin Suresi (gun)</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Temin Suresi (gun)</label>
                   <input type="number" value={reorderLeadDays} onChange={(e) => setReorderLeadDays(e.target.value)} step="1" className={inputCls} />
                 </div>
               </div>
-              <p className="text-xs text-surface-400 -mt-1">
+              <p className="text-xs text-[rgb(var(--v2-muted))] -mt-1">
                 Reorder esigi bos birakilirsa min. stok + temin suresi tamponuyla otomatik hesaplanir; stok bu esigin altina dustugunde &quot;Siparis Gerekli&quot; uyarisi cikar.
               </p>
               {hasField("sku") && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-surface-200 mb-1">Stok Kodu (SKU)</label>
+                    <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Stok Kodu (SKU)</label>
                     <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} className={inputCls} />
                   </div>
                   {hasField("stock_category") && (
                     <div>
-                      <label className="block text-sm font-medium text-surface-200 mb-1">Malzeme Kategorisi</label>
+                      <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Malzeme Kategorisi</label>
                       <select value={stockCategory} onChange={(e) => setStockCategory(e.target.value)} className={inputCls}>
                         <option value="">Seciniz</option>
                         {Object.entries(STOCK_CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -275,12 +275,12 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
               {hasField("warehouse_location") && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-surface-200 mb-1">Depo / Raf</label>
+                    <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Depo / Raf</label>
                     <input type="text" value={warehouseLocation} onChange={(e) => setWarehouseLocation(e.target.value)} className={inputCls} />
                   </div>
                   {hasField("batch_number") && (
                     <div>
-                      <label className="block text-sm font-medium text-surface-200 mb-1">Parti No</label>
+                      <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Parti No</label>
                       <input type="text" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} className={inputCls} />
                     </div>
                   )}
@@ -288,7 +288,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
               )}
               {hasField("expiry_date") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Son Kullanma Tarihi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Son Kullanma Tarihi</label>
                   <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -300,25 +300,25 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Ebatlar</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Ebatlar</label>
                   <input type="text" value={dimensions} onChange={(e) => setDimensions(e.target.value)} placeholder="3x7 metre" className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Malzeme Tipi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Malzeme Tipi</label>
                   <input type="text" value={materialType} onChange={(e) => setMaterialType(e.target.value)} className={inputCls} />
                 </div>
               </div>
               {hasField("module_count") && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-surface-200 mb-1">Modul Sayisi</label>
+                    <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Modul Sayisi</label>
                     <input type="number" value={moduleCount} onChange={(e) => setModuleCount(e.target.value)} className={inputCls} />
                   </div>
                 </div>
               )}
               {hasField("interior_details") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Ic Donanim</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Ic Donanim</label>
                   <textarea value={interiorDetails} onChange={(e) => setInteriorDetails(e.target.value)} rows={2}
                     placeholder="4 yatak, 1 klima, 2 masa" className={inputCls + " resize-none"} />
                 </div>
@@ -331,7 +331,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <div className="grid grid-cols-2 gap-3">
               {hasField("assigned_to") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Zimmetli Personel</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Zimmetli Personel</label>
                   <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className={inputCls}>
                     <option value="">Seciniz</option>
                     {employees.filter(e => e.is_active).map((emp) => (
@@ -342,7 +342,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
               )}
               {hasField("location") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Lokasyon</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Lokasyon</label>
                   <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -350,7 +350,7 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           )}
           {hasField("assigned_type") && hasField("assigned_to") && (
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Zimmet Tipi</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Zimmet Tipi</label>
               <select value={assignedType} onChange={(e) => setAssignedType(e.target.value)} className={inputCls}>
                 <option value="">Seciniz</option>
                 <option value="PERSONNEL">Personel</option>
@@ -364,13 +364,13 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
             <div className="grid grid-cols-2 gap-3">
               {hasField("warranty_expiry") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Garanti Bitis</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Garanti Bitis</label>
                   <input type="date" value={warrantyExpiry} onChange={(e) => setWarrantyExpiry(e.target.value)} className={inputCls} />
                 </div>
               )}
               {hasField("last_maintenance_date") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Son Bakim</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Son Bakim</label>
                   <input type="date" value={lastMaintenanceDate} onChange={(e) => setLastMaintenanceDate(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -379,12 +379,12 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
           {hasField("purchase_price") && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-surface-200 mb-1">Satin Alma Fiyati</label>
+                <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Satin Alma Fiyati</label>
                 <input type="text" inputMode="numeric" value={purchasePrice} onChange={(e) => setPurchasePrice(formatMoneyInput(e.target.value))} className={inputCls} />
               </div>
               {hasField("purchase_date") && (
                 <div>
-                  <label className="block text-sm font-medium text-surface-200 mb-1">Satin Alma Tarihi</label>
+                  <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Satin Alma Tarihi</label>
                   <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} className={inputCls} />
                 </div>
               )}
@@ -393,13 +393,13 @@ export function CreateInventoryModal({ businesses, presetBusinessId, onClose, on
 
           {/* Notlar */}
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Notlar</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Notlar</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={inputCls + " resize-none"} />
           </div>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
             </div>
           )}
 

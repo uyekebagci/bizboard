@@ -83,19 +83,19 @@ export default function TransferModePage() {
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => router.push("/dashboard/add-transaction")}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="v2-press p-2 -ml-2 rounded-xl v2-sunken hover:border-[rgb(var(--accent))]/50 transition-colors"
             aria-label="Tip seçimine dön"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <ArrowLeftRight size={20} className="text-purple-300 shrink-0" />
-            <h1 className="text-xl font-bold text-surface-100 truncate">Yeni Transfer</h1>
+            <ArrowLeftRight size={20} className="text-purple-600 dark:text-purple-300 shrink-0" />
+            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">Yeni Transfer</h1>
           </div>
         </div>
         <Link
           href="/dashboard"
-          className="text-xs text-surface-400 hover:text-surface-200 whitespace-nowrap"
+          className="text-xs text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] whitespace-nowrap"
         >
           ← Dashboard
         </Link>
@@ -111,10 +111,10 @@ export default function TransferModePage() {
               type="button"
               onClick={() => { setMode(m.value); setFormKey((k) => k + 1); }}
               className={cn(
-                "flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-medium border-2 transition-all",
+                "v2-press flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-medium border-2 transition-all",
                 active
                   ? colorClass(m.color)
-                  : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500 hover:text-surface-100",
+                  : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50 hover:text-[rgb(var(--v2-ink))]",
               )}
             >
               <Icon size={13} />
@@ -125,7 +125,7 @@ export default function TransferModePage() {
       </div>
 
       {successMsg && (
-        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-sm flex items-center gap-2">
           <CheckCircle2 size={16} />
           {successMsg}
         </div>
@@ -133,10 +133,10 @@ export default function TransferModePage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 size={24} className="animate-spin text-surface-500" />
+          <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : (
-        <div key={formKey}>
+        <div key={formKey} className="v2-card p-5 sm:p-6">
           {mode === "internal" && (
             <InternalTransferForm
               accounts={accounts}
@@ -489,11 +489,11 @@ function BankTransferIO({ direction, accounts, firms, counterparts, onSuccess }:
 // ─────────── Shared mini components ───────────
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <label className="block text-xs font-medium text-surface-200 mb-1.5">{children}</label>;
+  return <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">{children}</label>;
 }
 
 function Hint({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] text-surface-400 -mt-2">{children}</p>;
+  return <p className="text-[10px] text-[rgb(var(--v2-muted))] -mt-2">{children}</p>;
 }
 
 function Info({ icon: Icon, text, color }: { icon: typeof ArrowLeftRight; text: string; color: string }) {
@@ -553,7 +553,7 @@ function AmountDateDesc({ amount, setAmount, date, setDate, description, setDesc
             required
             className="field py-3 text-2xl font-bold"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 font-medium">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] font-medium">
             {currency}
           </span>
         </div>
@@ -586,7 +586,7 @@ function AmountDateDesc({ amount, setAmount, date, setDate, description, setDesc
 
 function BalanceWarn() {
   return (
-    <p className="text-[11px] text-amber-300 flex items-center gap-1">
+    <p className="text-[11px] text-amber-700 dark:text-amber-300 flex items-center gap-1">
       <AlertTriangle size={10} />
       Bakiye yetersiz; transfer yine yapılabilir, kaynak hesap negatife düşer.
     </p>
@@ -595,7 +595,7 @@ function BalanceWarn() {
 
 function ErrorBanner({ msg }: { msg: string }) {
   return (
-    <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+    <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
       <AlertTriangle size={12} className="mt-0.5 shrink-0" />
       {msg}
     </div>
@@ -619,8 +619,8 @@ function SubmitButton({ submitting, disabled, color, label }: {
       type="submit"
       disabled={submitting || disabled}
       className={cn(
-        "w-full py-3 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50 transition-all",
-        colorClasses[color] || "bg-brand-600 hover:bg-brand-500",
+        "v2-press w-full py-3 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50 transition-all",
+        colorClasses[color] || "bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90",
       )}
     >
       {submitting && <Loader2 size={14} className="animate-spin" />}
@@ -631,20 +631,20 @@ function SubmitButton({ submitting, disabled, color, label }: {
 
 function colorClass(color: string): string {
   const active: Record<string, string> = {
-    blue: "bg-blue-500/15 border-blue-500/50 text-blue-300",
-    purple: "bg-purple-500/15 border-purple-500/50 text-purple-300",
-    emerald: "bg-emerald-500/15 border-emerald-500/50 text-emerald-300",
-    rose: "bg-rose-500/15 border-rose-500/50 text-rose-300",
+    blue: "bg-blue-500/15 border-blue-500/50 text-blue-700 dark:text-blue-300",
+    purple: "bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300",
+    emerald: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300",
+    rose: "bg-rose-500/15 border-rose-500/50 text-rose-700 dark:text-rose-300",
   };
-  return active[color] || "bg-surface-600 border-surface-500 text-surface-100";
+  return active[color] || "bg-[rgb(var(--accent))]/12 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent";
 }
 
 function infoBg(color: string): string {
   const map: Record<string, string> = {
-    blue: "bg-blue-500/10 border-blue-500/30 text-blue-200",
-    purple: "bg-purple-500/10 border-purple-500/30 text-purple-200",
-    emerald: "bg-emerald-500/10 border-emerald-500/30 text-emerald-200",
-    rose: "bg-rose-500/10 border-rose-500/30 text-rose-200",
+    blue: "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-200",
+    purple: "bg-purple-500/10 border-purple-500/30 text-purple-700 dark:text-purple-200",
+    emerald: "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-200",
+    rose: "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-200",
   };
-  return map[color] || "bg-surface-700 border-surface-600 text-surface-300";
+  return map[color] || "v2-sunken text-[rgb(var(--v2-muted))]";
 }

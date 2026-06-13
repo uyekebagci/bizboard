@@ -5,7 +5,7 @@
  *
  * Create: POST /reminders · Edit: PUT /reminders/{id}.
  * İşletme bağlamı OPSİYONEL (boş = işletmeden bağımsız hatırlatıcı).
- * Çift tema: surface-* / field / modal-* token'ları globals.css ile dark+light.
+ * v2 Daxa design language: solid/layered, rounded, lime accent, dark+light.
  */
 
 import { useEffect, useState } from "react";
@@ -104,30 +104,37 @@ export function ReminderModal({ reminder, onClose, onSaved }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col"
+        className="v2-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
-        <div className="modal-header">
-          <h3 className="modal-title">{isEdit ? "Hatırlatıcıyı Düzenle" : "Yeni Hatırlatıcı"}</h3>
-          <button type="button" onClick={onClose} className="modal-close" aria-label="Kapat">
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">
+            {isEdit ? "Hatırlatıcıyı Düzenle" : "Yeni Hatırlatıcı"}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
             <X size={16} />
           </button>
         </div>
 
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-status-danger/10 border border-status-danger/30 text-status-danger text-xs">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Başlık *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Başlık *</label>
             <input
               type="text"
               value={title}
@@ -139,7 +146,7 @@ export function ReminderModal({ reminder, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Açıklama (opsiyonel)
             </label>
             <textarea
@@ -153,7 +160,7 @@ export function ReminderModal({ reminder, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Hatırlatma Zamanı *
             </label>
             <input
@@ -165,7 +172,7 @@ export function ReminderModal({ reminder, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Tekrar</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tekrar</label>
             <DarkSelect
               value={recurrence}
               onChange={(v) => setRecurrence(v as ReminderRecurrence)}
@@ -175,7 +182,7 @@ export function ReminderModal({ reminder, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               İşletme (opsiyonel)
             </label>
             <DarkSelect
@@ -194,13 +201,13 @@ export function ReminderModal({ reminder, onClose, onSaved }: Props) {
               type="checkbox"
               checked={enabled}
               onChange={(e) => setEnabled(e.target.checked)}
-              className="w-4 h-4 accent-brand-500"
+              className="checkbox"
             />
-            <span className="text-sm text-surface-200">Aktif</span>
+            <span className="text-sm text-[rgb(var(--v2-ink))]">Aktif</span>
           </label>
         </div>
 
-        <div className="modal-footer">
+        <div className="flex gap-2 p-4 border-t border-[rgb(var(--v2-border))] shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -212,7 +219,7 @@ export function ReminderModal({ reminder, onClose, onSaved }: Props) {
           <button
             type="submit"
             disabled={submitting}
-            className="btn-primary flex-1 py-2.5 text-sm flex items-center justify-center gap-1.5"
+            className="flex-1 py-2.5 rounded-xl bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-1.5 transition-all"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />

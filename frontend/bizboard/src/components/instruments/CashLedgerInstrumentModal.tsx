@@ -8,10 +8,10 @@
  * para hesabı +/−tutar (LOCATION_MOVE) + clearing (account NULL, ters işaret);
  * <b>PNL bacağı YOK</b> → Net Kâr Δ=0 (çift sayım yok). Status → CASHED.</p>
  *
- * <p>{@code prompt()} tabanlı eski seçimin yerine geçer. Çift tema (glass-card +
- * surface-* token'ları; dark default + light otomatik). İki giriş yolundan da
- * kullanılır: (a) çek/senet detayından "Tahsil et", (b) işlem formundaki
- * "çek/senet tahsilatı" önerisinden.</p>
+ * <p>{@code prompt()} tabanlı eski seçimin yerine geçer. v2 Daxa design language:
+ * solid/layered, rounded, lime accent, dark default + light otomatik. İki giriş
+ * yolundan da kullanılır: (a) çek/senet detayından "Tahsil et",
+ * (b) işlem formundaki "çek/senet tahsilatı" önerisinden.</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -84,48 +84,53 @@ export function CashLedgerInstrumentModal({ instrument, onCash, onClose, onSucce
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md shadow-xl">
-        <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <Check size={16} className="text-emerald-300" />
+        className="v2-card w-full max-w-md shadow-xl">
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Check size={16} className="text-emerald-700 dark:text-emerald-300" />
             {isCheck ? "Çek" : "Senet"} {isReceived ? "Tahsil" : "Öde"} (Bağla)
           </h3>
-          <button type="button" onClick={onClose} className="modal-close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
             <X size={16} />
           </button>
         </div>
 
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5" /><span>{error}</span>
             </div>
           )}
 
           {/* Evrak özeti */}
-          <div className="rounded-lg bg-surface-700/40 p-3 text-xs space-y-1">
-            <p className="text-surface-200 flex items-center gap-1.5">
-              <FileText size={12} className="text-surface-400" />
+          <div className="rounded-lg v2-sunken p-3 text-xs space-y-1 border border-[rgb(var(--v2-border))]">
+            <p className="text-[rgb(var(--v2-ink))] flex items-center gap-1.5">
+              <FileText size={12} className="text-[rgb(var(--v2-muted))]" />
               <strong>{instrument.serial_no || (isCheck ? "Çek" : "Senet")}</strong>
               {" · "}
               {formatCurrency(instrument.amount, instrument.currency || "TRY")}
             </p>
-            <p className="text-surface-400">
+            <p className="text-[rgb(var(--v2-muted))]">
               {instrument.issuer_name || "—"} · vade: {instrument.due_date}
               {instrument.bank_name && ` · ${instrument.bank_name}`}
             </p>
-            <p className={cn("text-[11px]", isReceived ? "text-emerald-300" : "text-red-300")}>
+            <p className={cn("text-[11px]", isReceived ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300")}>
               {isReceived
                 ? "Alınan çek/senet → tahsil edilince seçilen hesaba GİRER (alacak kapanır)."
                 : "Verilen çek/senet → ödenince seçilen hesaptan ÇIKAR (borç kapanır)."}
             </p>
-            <p className="text-[10px] text-surface-500">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))]">
               Tahsilat gelir DEĞİL — alacağın nakde dönüşü. Net Kâr etkilenmez (çift sayım yok).
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               {isReceived ? "Girecek Hesap" : "Çıkacak Hesap"} *
             </label>
             <DarkSelect
@@ -147,7 +152,7 @@ export function CashLedgerInstrumentModal({ instrument, onCash, onClose, onSucce
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               {isReceived ? "Tahsil" : "Ödeme"} Tarihi *
             </label>
             <input type="date" required value={cashedDate}
@@ -157,7 +162,7 @@ export function CashLedgerInstrumentModal({ instrument, onCash, onClose, onSucce
           </div>
         </div>
 
-        <div className="modal-footer">
+        <div className="flex gap-2 p-4 border-t border-[rgb(var(--v2-border))] shrink-0">
           <button type="button" onClick={onClose} disabled={submitting}
             className="btn-secondary flex-1 py-2.5 text-sm">
             Vazgeç

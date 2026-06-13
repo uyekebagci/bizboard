@@ -115,17 +115,17 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         {/* Header */}
         <div className="modal-header">
           <div className="flex items-center gap-2 min-w-0">
-            <Zap size={16} className="text-amber-400 shrink-0" />
+            <Zap size={16} className="text-amber-700 dark:text-amber-400 shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-surface-100 truncate">
+              <h3 className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">
                 Hızlı İşlem: {quickAction.name}
               </h3>
-              <p className="text-[10px] text-surface-400">
+              <p className="text-[10px] text-[rgb(var(--v2-muted))]">
                 {tpl.kind === "TRANSFER" ? "Transfer" : tpl.direction === "income" ? "Gelir" : "Gider"}
                 {tpl.payment_method && ` · ${tpl.payment_method}`}
               </p>
@@ -135,7 +135,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 disabled:opacity-50"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] disabled:opacity-50"
           >
             <X size={16} />
           </button>
@@ -151,11 +151,11 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
 
           {/* DÜZENLENEBİLİR */}
           <div className="space-y-3">
-            <p className="text-[10px] uppercase text-surface-400 tracking-wider">
+            <p className="text-[10px] uppercase text-[rgb(var(--v2-muted))] tracking-wider">
               Düzenlenebilir
             </p>
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1">
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1">
                 Tutar
               </label>
               <div className="relative">
@@ -167,13 +167,13 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
                   required
                   className="field field-sm py-2.5 text-xl font-bold"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 font-medium text-sm">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] font-medium text-sm">
                   TRY
                 </span>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1">
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1">
                 Tarih
               </label>
               <input
@@ -185,7 +185,7 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1">
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1">
                 Açıklama
               </label>
               <input
@@ -200,8 +200,8 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
           </div>
 
           {/* SABİT (template) */}
-          <div className="space-y-2 rounded-xl border border-surface-700 bg-surface-900/40 p-3">
-            <p className="text-[10px] uppercase text-surface-400 tracking-wider">
+          <div className="space-y-2 rounded-xl border border-[rgb(var(--v2-border))] v2-sunken p-3">
+            <p className="text-[10px] uppercase text-[rgb(var(--v2-muted))] tracking-wider">
               Sabit Bilgiler (Düzenle modalı kullanın)
             </p>
             <LockedRow label="Ödeme Yöntemi" value={tpl.payment_method ?? "—"} />
@@ -253,14 +253,14 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="flex-1 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium disabled:opacity-50"
+            className="btn-secondary flex-1 py-2.5 disabled:opacity-50"
           >
             İptal
           </button>
           <button
             type="submit"
             disabled={submitting || success || parsedAmount <= 0}
-            className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-xl bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             <Zap size={14} />
@@ -275,8 +275,8 @@ export function QuickActionExecuteModal({ quickAction, onClose, onSuccess }: Pro
 function LockedRow({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="flex items-center justify-between text-xs">
-      <span className="text-surface-400">{label}:</span>
-      <span className="text-surface-300 font-medium" title={hint}>{value}</span>
+      <span className="text-[rgb(var(--v2-muted))]">{label}:</span>
+      <span className="text-[rgb(var(--v2-ink))] font-medium" title={hint}>{value}</span>
     </div>
   );
 }

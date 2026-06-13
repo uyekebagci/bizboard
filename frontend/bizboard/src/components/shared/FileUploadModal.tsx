@@ -138,17 +138,17 @@ export function FileUploadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="v2-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-surface-100">
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             Dosya / Fotograf Yukle
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
           >
-            <X size={18} className="text-surface-400" />
+            <X size={18} />
           </button>
         </div>
 
@@ -156,11 +156,11 @@ export function FileUploadModal({
           {/* Business Selector */}
           {!preselectedBusinessId && (
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1.5">
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                 Isletme *
               </label>
               {loadingBiz ? (
-                <div className="h-11 bg-surface-700 rounded-xl animate-pulse" />
+                <div className="h-11 v2-sunken rounded-xl animate-pulse" />
               ) : (
                 <DarkSelect
                   value={businessId}
@@ -175,11 +175,11 @@ export function FileUploadModal({
 
           {/* File Drop Zone */}
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Dosya *
             </label>
             <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed
-                              border-surface-300 bg-surface-700 cursor-pointer hover:border-brand-400 hover:bg-brand-500/10 transition-all">
+                              border-[rgb(var(--v2-border))] v2-sunken cursor-pointer hover:border-[rgb(var(--accent))]/50 hover:bg-[rgb(var(--accent))]/5 transition-all">
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv"
@@ -191,16 +191,16 @@ export function FileUploadModal({
                   {preview ? (
                     <img src={preview} alt="preview" className="w-20 h-20 object-cover rounded-lg" />
                   ) : (
-                    <FileText size={32} className="text-surface-400" />
+                    <FileText size={32} className="text-[rgb(var(--v2-muted))]" />
                   )}
-                  <p className="text-sm text-surface-200 font-medium truncate max-w-full">{file.name}</p>
-                  <p className="text-xs text-surface-400">{formatSize(file.size)}</p>
+                  <p className="text-sm text-[rgb(var(--v2-ink))] font-medium truncate max-w-full">{file.name}</p>
+                  <p className="text-xs text-[rgb(var(--v2-muted))]">{formatSize(file.size)}</p>
                 </>
               ) : (
                 <>
-                  <Upload size={28} className="text-surface-400" />
-                  <p className="text-sm text-surface-400">Dosya secmek icin tiklayin</p>
-                  <p className="text-[10px] text-surface-400">JPEG, PNG, PDF, DOC, XLS — Maks 10MB</p>
+                  <Upload size={28} className="text-[rgb(var(--v2-muted))]" />
+                  <p className="text-sm text-[rgb(var(--v2-muted))]">Dosya secmek icin tiklayin</p>
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))]">JPEG, PNG, PDF, DOC, XLS — Maks 10MB</p>
                 </>
               )}
             </label>
@@ -210,7 +210,7 @@ export function FileUploadModal({
           <div>
             <label
               htmlFor="file-category"
-              className="block text-sm font-medium text-surface-200 mb-1.5"
+              className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5"
             >
               Kategori *
             </label>
@@ -224,16 +224,14 @@ export function FileUploadModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Aciklama
             </label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-surface-100
-                         placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500
-                         focus:border-transparent transition-all text-sm"
+              className="field field-sm py-2.5"
               placeholder="Dosya hakkinda kisa aciklama..."
             />
           </div>
@@ -242,10 +240,10 @@ export function FileUploadModal({
           {isAdmin && (
             <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
               <div className="flex items-center gap-2">
-                <EyeOff size={14} className="text-amber-300" />
+                <EyeOff size={14} className="text-amber-700 dark:text-amber-300" />
                 <div>
-                  <span className="text-sm text-surface-200">Gizli Belge</span>
-                  <p className="text-[10px] text-surface-400">Sadece admin gorebilir</p>
+                  <span className="text-sm text-[rgb(var(--v2-ink))]">Gizli Belge</span>
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))]">Sadece admin gorebilir</p>
                 </div>
               </div>
               <button
@@ -263,17 +261,17 @@ export function FileUploadModal({
           {/* Success */}
           {uploaded && (
             <div className="flex items-center gap-2 p-3 bg-green-500/15 border border-green-500/30 rounded-xl">
-              <Check size={16} className="text-green-300" />
-              <span className="text-sm text-green-300 font-medium">Dosya basariyla yuklendi!</span>
+              <Check size={16} className="text-green-700 dark:text-green-300" />
+              <span className="text-sm text-green-700 dark:text-green-300 font-medium">Dosya basariyla yuklendi!</span>
             </div>
           )}
 
           {/* Error */}
           {error && (
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-              <p className="text-red-300 text-sm">{error}</p>
+              <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
               {errorRequestId && (
-                <p className="mt-1 text-[10px] font-mono text-red-400/80">
+                <p className="mt-1 text-[10px] font-mono text-red-700/80 dark:text-red-400/80">
                   Destek icin referans: {errorRequestId}
                 </p>
               )}
@@ -292,7 +290,7 @@ export function FileUploadModal({
               <button
                 onClick={handleUpload}
                 disabled={uploading || !file || !businessId}
-                className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-ink))] hover:opacity-90 disabled:opacity-50 text-[rgb(var(--v2-card))] rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {uploading ? (
                   <>

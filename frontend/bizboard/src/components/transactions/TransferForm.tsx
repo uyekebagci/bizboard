@@ -130,19 +130,10 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
     }
   }
 
-  function renderOption(a: BankAccountListItem) {
-    const balLabel = formatCurrency(a.current_balance ?? 0, a.currency || "TRY");
-    return (
-      <option key={a.id} value={a.id}>
-        {a.name} · {a.bank_name || a.type} · {balLabel}
-      </option>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className={cn("space-y-4", compact && "space-y-3")}>
       {/* Info satırı — transfer semantiği (v1.7.x: external-only) */}
-      <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs flex items-start gap-2">
+      <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-200 text-xs flex items-start gap-2">
         <ArrowLeftRight size={12} className="mt-0.5 shrink-0" />
         <span>
           Hesabınızdan <strong>dış hedefe</strong> çıkış. Kaynak hesap bakiyesi düşer;
@@ -152,9 +143,9 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
 
       {/* From */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Kaynak Hesap *</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Kaynak Hesap *</label>
         {loadingAccs ? (
-          <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+          <div className="h-10 v2-sunken rounded-xl animate-pulse" />
         ) : (
           <DarkSelect
             required
@@ -174,10 +165,10 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
           />
         )}
         {fromAcc && (
-          <p className="mt-1 text-[10px] text-surface-400 flex items-center gap-2 flex-wrap">
+          <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))] flex items-center gap-2 flex-wrap">
             <span>Bakiye: {formatCurrency(fromAcc.current_balance ?? 0, fromAcc.currency || "TRY")}</span>
             {fromAcc.owner_my_company_name && (
-              <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
+              <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-300">
                 🏢 {fromAcc.owner_my_company_name}
               </span>
             )}
@@ -187,12 +178,12 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
 
       {/* Hedef göstergesi */}
       <div className="flex justify-center -my-1">
-        <ArrowRight size={16} className="text-surface-500" />
+        <ArrowRight size={16} className="text-[rgb(var(--v2-muted))]" />
       </div>
 
       {/* To — v1.7.x: serbest metin */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
           Hedef (Alıcı) *
         </label>
         <input
@@ -204,14 +195,14 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
           maxLength={200}
           className="field field-sm py-2.5"
         />
-        <p className="mt-1 text-[10px] text-surface-400">
+        <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">
           Sistem dışı hedef — yalnız bakiye hareketi olarak kaydedilir.
         </p>
       </div>
 
       {/* Amount */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Tutar *</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tutar *</label>
         <div className="relative">
           <input
             type="text"
@@ -222,12 +213,12 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
             required
             className="field py-3 text-2xl font-bold pr-16"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 font-medium">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] font-medium">
             {fromAcc?.currency || "TRY"}
           </span>
         </div>
         {balanceWarn && (
-          <p className="mt-1 text-[11px] text-amber-300 flex items-center gap-1">
+          <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300 flex items-center gap-1">
             <AlertTriangle size={10} />
             Bakiye yetersiz; transfer yine yapılır, kaynak hesap negatife düşer.
           </p>
@@ -236,7 +227,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
 
       {/* Date */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Tarih *</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tarih *</label>
         <input
           type="date"
           value={date}
@@ -248,7 +239,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-surface-200 mb-1.5">Açıklama</label>
+        <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">Açıklama</label>
         <input
           type="text"
           value={description}
@@ -259,7 +250,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
       </div>
 
       {/* WP e4dc5271 (Beta v1.4) TODO 8c2d953d: Hızlı işlemlere kaydet */}
-      <div className="rounded-xl border border-surface-600/70 bg-surface-700/40 p-3 space-y-2">
+      <div className="rounded-xl v2-sunken p-3 space-y-2">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -267,7 +258,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
             onChange={(e) => setSaveAsQuickAction(e.target.checked)}
             className="checkbox cursor-pointer"
           />
-          <span className="text-sm font-medium text-surface-200">
+          <span className="text-sm font-medium text-[rgb(var(--v2-ink))]">
             ⚡ Bu transferi hızlı işlemlere kaydet
           </span>
         </label>
@@ -281,7 +272,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
               maxLength={100}
               className="field-sm"
             />
-            <p className="text-[10px] text-surface-400">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))]">
               Sonraki sefer tek tıkla aynı transferi tekrar oluştur.
             </p>
           </div>
@@ -289,12 +280,12 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
       </div>
 
       {warning && (
-        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-200 text-xs">
           {warning}
         </div>
       )}
       {error && (
-        <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+        <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs">
           {error}
         </div>
       )}
@@ -313,7 +304,7 @@ export function TransferForm({ compact = false, onSuccess, onCancel, preselected
         <button
           type="submit"
           disabled={submitting || (saveAsQuickAction && !quickActionName.trim())}
-          className="btn-primary flex-1 py-2.5 text-sm gap-2"
+          className="v2-btn v2-btn--ink flex-1 py-2.5 text-sm gap-2 inline-flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
           <ArrowLeftRight size={14} />

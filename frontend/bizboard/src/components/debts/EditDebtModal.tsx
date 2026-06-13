@@ -94,7 +94,7 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -102,17 +102,17 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
           <h3 className="modal-title flex items-center gap-2">
-            <Pencil size={16} className="text-brand-300" />
+            <Pencil size={16} className="text-accent-strong dark:text-accent" />
             Borç Düzenle
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="modal-close"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             aria-label="Kapat"
           >
             <X size={16} />
@@ -121,7 +121,7 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
 
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -129,7 +129,7 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
 
           {/* Tutar */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Tutar *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tutar *</label>
             <div className="relative">
               <input
                 type="text"
@@ -140,10 +140,10 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
                 placeholder="0"
                 className="field field-sm py-2.5 text-lg font-bold pr-12"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm font-medium">TRY</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] text-sm font-medium">TRY</span>
             </div>
             {debt.remaining_amount < debt.original_amount && (
-              <p className="mt-1 text-[10px] text-amber-300/80">
+              <p className="mt-1 text-[10px] text-amber-700 dark:text-amber-300">
                 Bu borca kısmi ödeme yapılmış. Orijinal tutarı düzenliyorsunuz; kalan
                 tutar yapılan ödemelere göre yeniden hesaplanır.
               </p>
@@ -152,8 +152,8 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
 
           {/* Vade tarihi */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Vade Tarihi <span className="text-surface-400 font-normal">(opsiyonel)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Vade Tarihi <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <input
               type="date"
@@ -162,7 +162,7 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
               disabled={dueDateUnknown}
               className="field field-sm py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <label className="mt-2 flex items-center gap-2 text-xs text-surface-300 cursor-pointer select-none">
+            <label className="mt-2 flex items-center gap-2 text-xs text-[rgb(var(--v2-muted))] cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={dueDateUnknown}
@@ -175,8 +175,8 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
 
           {/* Açıklama */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Açıklama <span className="text-surface-400 font-normal">(opsiyonel)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Açıklama <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <textarea
               value={description}
@@ -200,7 +200,7 @@ export function EditDebtModal({ debt, onClose, onSuccess }: Props) {
           <button
             type="submit"
             disabled={submitting || !amount}
-            className="btn-primary flex-1 py-2.5 text-sm gap-2"
+            className="v2-btn v2-btn--ink flex-1 py-2.5 text-sm gap-2"
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />}
             Kaydet

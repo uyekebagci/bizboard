@@ -69,24 +69,24 @@ export function CounterpartCreateModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md shadow-xl"
+        className="v2-card w-full max-w-md shadow-xl overflow-hidden"
       >
-        <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            {isFirm ? <Building2 size={16} className="text-brand-400" />
-                    : <UserIcon size={16} className="text-brand-400" />}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            {isFirm ? <Building2 size={16} className="text-accent-strong dark:text-accent" />
+                    : <UserIcon size={16} className="text-accent-strong dark:text-accent" />}
             Yeni {isFirm ? "Firma" : "Kişi"} Ekle
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="modal-close"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             aria-label="Kapat"
           >
             <X size={16} />
@@ -95,13 +95,13 @@ export function CounterpartCreateModal({
 
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               {nameLabel} *
             </label>
             <input
@@ -115,7 +115,7 @@ export function CounterpartCreateModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               {taxLabel}
             </label>
             <input
@@ -128,7 +128,7 @@ export function CounterpartCreateModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Telefon
             </label>
             <input
@@ -141,7 +141,7 @@ export function CounterpartCreateModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               E-posta
             </label>
             <input
@@ -155,7 +155,7 @@ export function CounterpartCreateModal({
 
           {isFirm && (
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                 Adres
               </label>
               <textarea
@@ -169,7 +169,7 @@ export function CounterpartCreateModal({
           )}
         </div>
 
-        <div className="modal-footer">
+        <div className="flex items-center gap-3 px-5 py-4 border-t border-[rgb(var(--v2-border))]">
           <button
             type="button"
             onClick={onClose}
@@ -182,8 +182,8 @@ export function CounterpartCreateModal({
             type="submit"
             disabled={submitting || !name.trim()}
             className={cn(
-              "flex-1 py-2.5 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
-              "bg-brand-600 hover:bg-brand-700",
+              "flex-1 py-2.5 rounded-xl text-[rgb(var(--v2-card))] text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
+              "bg-[rgb(var(--v2-ink))] hover:opacity-90",
             )}
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}

@@ -178,7 +178,7 @@ export function CounterpartDebtModal({
   return (
     <>
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -186,17 +186,17 @@ export function CounterpartDebtModal({
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
           <h3 className="modal-title flex items-center gap-2">
-            <HandCoins size={16} className={isReceivable ? "text-amber-300" : "text-red-300"} />
+            <HandCoins size={16} className={isReceivable ? "text-amber-700 dark:text-amber-300" : "text-red-700 dark:text-red-300"} />
             Yeni {label} Ekle
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="modal-close"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             aria-label="Kapat"
           >
             <X size={16} />
@@ -205,7 +205,7 @@ export function CounterpartDebtModal({
 
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -214,9 +214,9 @@ export function CounterpartDebtModal({
           {/* Business (1 değilse göster) */}
           {!preselectedBusinessId && businesses.length > 1 && (
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">İşletme *</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">İşletme *</label>
               {loadingBiz ? (
-                <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+                <div className="h-10 v2-sunken rounded-xl animate-pulse" />
               ) : (
                 <DarkSelect
                   required
@@ -233,16 +233,16 @@ export function CounterpartDebtModal({
           {/* Firma/Kişi radio — counterpart locked ise gizli (zaten belli) */}
           {!counterpartLocked && (
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Karşı Taraf Tipi *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Karşı Taraf Tipi *</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => { setKind("FIRM"); setCounterpartId(""); }}
                 className={cn(
-                  "py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
+                  "v2-press py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
                   kind === "FIRM"
-                    ? "bg-brand-500/15 border-brand-500/50 text-brand-300"
-                    : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+                    ? "border-[rgb(var(--accent))]/60 bg-[rgb(var(--accent))]/12 text-accent-strong dark:text-accent"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                 )}
               >
                 <Building2 size={14} />
@@ -252,10 +252,10 @@ export function CounterpartDebtModal({
                 type="button"
                 onClick={() => { setKind("PERSON"); setCounterpartId(""); }}
                 className={cn(
-                  "py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
+                  "v2-press py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
                   kind === "PERSON"
-                    ? "bg-brand-500/15 border-brand-500/50 text-brand-300"
-                    : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+                    ? "border-[rgb(var(--accent))]/60 bg-[rgb(var(--accent))]/12 text-accent-strong dark:text-accent"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                 )}
               >
                 <UserIcon size={14} />
@@ -267,15 +267,15 @@ export function CounterpartDebtModal({
 
           {/* Karşı Taraf — locked mode: read-only label; aksi takdirde dropdown */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Karşı Taraf{!counterpartLocked && ` (${kind === "FIRM" ? "Firma" : "Kişi"})`} *
             </label>
             {counterpartLocked && preselectedCounterpart ? (
-              <div className="px-3 py-2.5 rounded-xl border border-surface-600/70 bg-surface-700/40 text-sm text-surface-200">
+              <div className="px-3 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] v2-sunken text-sm text-[rgb(var(--v2-ink))]">
                 {preselectedCounterpart.name}
               </div>
             ) : loadingCps ? (
-              <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+              <div className="h-10 v2-sunken rounded-xl animate-pulse" />
             ) : (
               <DarkSelect
                 required
@@ -292,14 +292,14 @@ export function CounterpartDebtModal({
               />
             )}
             {!counterpartLocked && !businessId && (
-              <p className="mt-1 text-[10px] text-surface-400">Önce işletme seçin</p>
+              <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">Önce işletme seçin</p>
             )}
           </div>
 
           {/* Tutar + Para Birimi (WP a9da4e9d: TRY/USD/GOLD) */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Tutar * {currency === "GOLD" && <span className="text-surface-400 font-normal">(gram)</span>}
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Tutar * {currency === "GOLD" && <span className="text-[rgb(var(--v2-muted))] font-normal">(gram)</span>}
             </label>
             <div className="flex gap-2">
               <input
@@ -323,7 +323,7 @@ export function CounterpartDebtModal({
               </select>
             </div>
             {currency !== "TRY" && (
-              <p className="mt-1 text-[10px] text-surface-400">
+              <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">
                 {currency === "USD" ? "Dolar" : "Gram altın"} tutarı girilir; konsolide net
                 güncel kurla TL&apos;ye çevrilir.
               </p>
@@ -332,8 +332,8 @@ export function CounterpartDebtModal({
 
           {/* Vade tarihi */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Vade Tarihi <span className="text-surface-400 font-normal">(opsiyonel)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Vade Tarihi <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <input
               type="date"
@@ -342,7 +342,7 @@ export function CounterpartDebtModal({
               disabled={dueDateUnknown}
               className="field field-sm py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <label className="mt-2 flex items-center gap-2 text-xs text-surface-300 cursor-pointer select-none">
+            <label className="mt-2 flex items-center gap-2 text-xs text-[rgb(var(--v2-muted))] cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={dueDateUnknown}
@@ -358,8 +358,8 @@ export function CounterpartDebtModal({
 
           {/* Açıklama */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Açıklama <span className="text-surface-400 font-normal">(opsiyonel)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Açıklama <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <textarea
               value={description}
@@ -384,7 +384,7 @@ export function CounterpartDebtModal({
             type="submit"
             disabled={submitting || !businessId || !counterpartId || !amount}
             className={cn(
-              "flex-1 py-2.5 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2",
+              "flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2",
               "transition-all duration-150 active:translate-y-0 hover:-translate-y-px",
               "disabled:opacity-50 disabled:pointer-events-none",
               isReceivable
