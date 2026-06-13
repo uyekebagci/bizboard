@@ -21,6 +21,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import type { QuickActionListItem, QuickActionTemplate } from "@/types";
+import { Widget } from "@/components/v2";
 import { QuickActionExecuteModal } from "./QuickActionExecuteModal";
 
 interface Props {
@@ -95,55 +96,54 @@ export function QuickActionsWidget({ businessId }: Props) {
   const visible = items.slice(0, MAX_VISIBLE);
 
   return (
-    <section className="glass-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Zap size={14} className="text-amber-400" />
-          <h2 className="text-sm font-semibold text-surface-100">Hızlı İşlemler</h2>
+    <Widget
+      title="Hızlı İşlemler"
+      icon={Zap}
+      bodyClassName="p-3"
+      actions={
+        <>
           {items.length > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
               {items.length}/12
             </span>
           )}
+          {items.length > MAX_VISIBLE && (
+            <Link
+              href="/dashboard/quick-actions"
+              className="text-xs text-brand-400 hover:text-brand-300 inline-flex items-center gap-1"
+            >
+              Tümünü Yönet <ChevronRight size={12} />
+            </Link>
+          )}
+        </>
+      }
+    >
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 size={20} className="animate-spin text-surface-500" />
         </div>
-        {items.length > MAX_VISIBLE && (
-          <Link
-            href="/dashboard/quick-actions"
-            className="text-xs text-brand-400 hover:text-brand-300 inline-flex items-center gap-1"
-          >
-            Tümünü Yönet <ChevronRight size={12} />
-          </Link>
-        )}
-      </div>
-
-      <div className="p-3">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="animate-spin text-surface-500" />
-          </div>
-        ) : error ? (
-          <p className="text-xs text-red-300 py-2">{error}</p>
-        ) : visible.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {visible.map((qa) => (
-              <QuickActionCard
-                key={qa.id}
-                qa={qa}
-                busy={busyId === qa.id}
-                menuOpen={menuOpenId === qa.id}
-                onMenuToggle={() => setMenuOpenId(menuOpenId === qa.id ? null : qa.id)}
-                onMenuClose={() => setMenuOpenId(null)}
-                onClick={() => setExecuteTarget(qa)}
-                onRename={() => handleRename(qa)}
-                onDelete={() => handleDelete(qa)}
-                onManage={() => { window.location.href = "/dashboard/quick-actions"; }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      ) : error ? (
+        <p className="text-xs text-red-300 py-2">{error}</p>
+      ) : visible.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          {visible.map((qa) => (
+            <QuickActionCard
+              key={qa.id}
+              qa={qa}
+              busy={busyId === qa.id}
+              menuOpen={menuOpenId === qa.id}
+              onMenuToggle={() => setMenuOpenId(menuOpenId === qa.id ? null : qa.id)}
+              onMenuClose={() => setMenuOpenId(null)}
+              onClick={() => setExecuteTarget(qa)}
+              onRename={() => handleRename(qa)}
+              onDelete={() => handleDelete(qa)}
+              onManage={() => { window.location.href = "/dashboard/quick-actions"; }}
+            />
+          ))}
+        </div>
+      )}
 
       {executeTarget && (
         <QuickActionExecuteModal
@@ -156,7 +156,7 @@ export function QuickActionsWidget({ businessId }: Props) {
           }}
         />
       )}
-    </section>
+    </Widget>
   );
 }
 

@@ -156,11 +156,11 @@ export function ModuleTabs({ business }: Props) {
         return <FixedCostsWidget businessId={business.id} currency={business.currency} />;
       default:
         return (
-          <div className="glass-card p-6 text-center">
-            <p className="text-surface-400 text-sm">
+          <div className="v2-card p-6 text-center">
+            <p className="text-[rgb(var(--v2-muted))] text-sm">
               {moduleConfig[activeTab]?.label} modul icerigi burada gorunecek.
             </p>
-            <p className="text-surface-400 text-xs mt-1">
+            <p className="text-[rgb(var(--v2-muted))] text-xs mt-1">
               Module ozel veriler ve islemler burada yer alacak.
             </p>
           </div>
@@ -213,9 +213,9 @@ export function ModuleTabs({ business }: Props) {
       {/* Tab Content */}
       <div className="mt-4">
         {enabledModules.length > 0 ? renderContent() : (
-          <div className="glass-card p-6 text-center">
-            <p className="text-surface-400 text-sm">Henuz aktif modul yok.</p>
-            <p className="text-surface-400 text-xs mt-1">Modul eklemek icin + butonuna tiklayın.</p>
+          <div className="v2-card p-6 text-center">
+            <p className="text-[rgb(var(--v2-muted))] text-sm">Henuz aktif modul yok.</p>
+            <p className="text-[rgb(var(--v2-muted))] text-xs mt-1">Modul eklemek icin + butonuna tiklayın.</p>
           </div>
         )}
       </div>

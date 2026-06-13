@@ -56,8 +56,15 @@ import {
   AssistantPanel,
   AnimatedNumber,
   Reveal,
+  WidgetDetailModal,
   type Insight,
 } from "@/components/v2";
+import {
+  PortfolioMetricDetail,
+  metricDetailTitle,
+  metricDetailSubtitle,
+  type MetricKind,
+} from "@/components/dashboard/PortfolioMetricDetail";
 import { CarryOverBanner } from "@/components/closing/CarryOverBanner";
 import { AlertsWidget } from "@/components/dashboard/AlertsWidget";
 import { GroupedBusinessGrid } from "@/components/dashboard/groups/GroupedBusinessGrid";
@@ -158,6 +165,13 @@ export default function DashboardPage() {
   const businessIds = useMemo(() => businesses.map((b) => b.id), [businesses]);
   const debt = useDebtTotals(businessIds);
 
+  // Metrik kartı detay-modal'ı — hangi metriğin kırılımı açık.
+  const [metricDetail, setMetricDetail] = useState<MetricKind | null>(null);
+  const nameOf = useMemo(() => {
+    const map = new Map(businesses.map((b) => [b.id, b.name]));
+    return (id: string) => map.get(id) ?? "İşletme";
+  }, [businesses]);
+
   const isLoading = bizLoading || portLoading;
 
   if (isLoading) {
@@ -189,7 +203,8 @@ export default function DashboardPage() {
       }))
     : [];
 
-  // "Öne Çıkanlar" — portföyden türetilen gerçek değerler.
+  // "Öne Çıkanlar" — portföyden türetilen gerçek değerler. Satırlar tıklanabilir:
+  // Net kâr → net kırılım modal'ı, Aktif işletme → işletme listesi modal'ı.
   const highlightInsights: Insight[] = [
     {
       icon: TrendingUp,
@@ -197,6 +212,7 @@ export default function DashboardPage() {
       detail: `${periodLabel(period).toLowerCase()} dönemi`,
       value: tl(net),
       tone: net >= 0 ? "accent" : "negative",
+      onClick: () => setMetricDetail("net"),
     },
     {
       icon: Banknote,
@@ -204,6 +220,7 @@ export default function DashboardPage() {
       detail: "Toplam giderin parçası",
       value: tl(fixed),
       tone: "neutral",
+      onClick: () => setMetricDetail("expense"),
     },
     {
       icon: Building2,
@@ -211,10 +228,12 @@ export default function DashboardPage() {
       detail: "Portföy genelinde",
       value: `${bizCount}`,
       tone: "neutral",
+      onClick: () => setMetricDetail("business"),
     },
   ];
 
   // "Dikkat Gerektirenler" — gerçek borç/alacak verisi varsa onu göster.
+  // Satırlar ilgili detay/filtreli sayfaya deep-link.
   const attentionInsights: Insight[] = [];
   if (debt && debt.payable > 0) {
     attentionInsights.push({
@@ -223,6 +242,7 @@ export default function DashboardPage() {
       detail: `${debt.pCount} kayıt`,
       value: tl(debt.payable),
       tone: "negative",
+      href: "/dashboard/verecekler",
     });
   }
   if (debt && debt.receivable > 0) {
@@ -232,6 +252,7 @@ export default function DashboardPage() {
       detail: `${debt.rCount} kayıt`,
       value: tl(debt.receivable),
       tone: "accent",
+      href: "/dashboard/alacaklar",
     });
   }
   if (expense > income && income > 0) {
@@ -241,6 +262,7 @@ export default function DashboardPage() {
       detail: "Dönem net negatif",
       value: tl(expense - income),
       tone: "negative",
+      onClick: () => setMetricDetail("expense"),
     });
   }
   // Veri yoksa nötr boş-durum satırı (kart hep dengeli görünsün).
@@ -303,6 +325,7 @@ export default function DashboardPage() {
             icon={Wallet}
             variant="ink"
             delta={comparison?.net_delta_pct ?? null}
+            onClick={() => setMetricDetail("net")}
             segments={[
               { value: Math.max(1, net), tone: "accent" },
               { value: Math.max(1, expense), tone: "muted" },
@@ -317,6 +340,7 @@ export default function DashboardPage() {
             icon={TrendingUp}
             variant="accent"
             delta={comparison?.income_delta_pct ?? null}
+            onClick={() => setMetricDetail("income")}
             segments={[
               { value: Math.max(1, income), tone: "accent" },
               { value: Math.max(1, expense), tone: "ink" },
@@ -331,6 +355,7 @@ export default function DashboardPage() {
             icon={Receipt}
             delta={comparison?.expense_delta_pct ?? null}
             goodDirection="down"
+            onClick={() => setMetricDetail("expense")}
             segments={[
               { value: Math.max(1, expense - fixed), tone: "muted" },
               { value: Math.max(0, fixed), tone: "negative" },
@@ -343,6 +368,7 @@ export default function DashboardPage() {
             value={bizCount}
             format={(n) => Math.round(n).toString()}
             icon={Building2}
+            onClick={() => setMetricDetail("business")}
             segments={[{ value: bizCount, tone: "accent" }]}
           />
         </Reveal>
@@ -457,6 +483,35 @@ export default function DashboardPage() {
       <p className="text-center text-xs text-[rgb(var(--v2-muted))] pt-2">
         Veriler {periodLabel(period).toLowerCase()} dönemine göre gösterilir.
       </p>
+
+      {/* Metrik kartı detay tablosu — tıklanan metriğin işletme-bazlı kırılımı.
+          Tutarlı v2 modal kabuğu (WidgetDetailModal). */}
+      <WidgetDetailModal
+        open={metricDetail !== null}
+        onClose={() => setMetricDetail(null)}
+        title={metricDetail ? metricDetailTitle(metricDetail) : ""}
+        subtitle={
+          metricDetail
+            ? `${metricDetailSubtitle(metricDetail)} · ${periodLabel(period).toLowerCase()}`
+            : undefined
+        }
+        size="md"
+      >
+        {metricDetail && (
+          <PortfolioMetricDetail
+            kind={metricDetail}
+            rows={portfolio?.businesses ?? []}
+            nameOf={nameOf}
+            total={
+              metricDetail === "income"
+                ? income
+                : metricDetail === "expense"
+                  ? expense
+                  : net
+            }
+          />
+        )}
+      </WidgetDetailModal>
     </div>
   );
 }

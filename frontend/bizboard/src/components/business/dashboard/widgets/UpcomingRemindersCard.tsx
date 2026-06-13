@@ -2,28 +2,26 @@
 
 // ───────────────────────── 10. YAKLAŞAN HATIRLATMALAR ─────────────────────────
 // (R3 god-component bolme: ConsolidatedWidgets.tsx'ten cikarildi)
+// UI v2 (Daxa) geçiş: tek-tip Widget kabuğu.
 
 import { Bell } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
-import { SectionTitle, Footer } from "./shared";
+import { Widget } from "@/components/v2";
+import { Footer } from "./shared";
 
 export function UpcomingRemindersCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.upcoming_reminders;
   if (list.length === 0) {
     return (
-      <section className="glass-card p-4">
-        <SectionTitle icon={Bell} label="Yaklaşan Hatırlatmalar" />
-        <p className="text-xs text-surface-400 py-2">7 gün içinde hatırlatma yok.</p>
-      </section>
+      <Widget title="Yaklaşan Hatırlatmalar" icon={Bell}>
+        <p className="text-xs text-[rgb(var(--v2-muted))] py-1">7 gün içinde hatırlatma yok.</p>
+      </Widget>
     );
   }
   return (
-    <section className="glass-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-surface-700">
-        <SectionTitle icon={Bell} label="Yaklaşan Hatırlatmalar (7 gün)" inline />
-      </div>
-      <div className="divide-y divide-surface-700 max-h-72 overflow-y-auto">
+    <Widget title="Yaklaşan Hatırlatmalar (7 gün)" icon={Bell} flush>
+      <div className="divide-y divide-[rgb(var(--v2-border))] max-h-72 overflow-y-auto">
         {list.slice(0, 8).map((r) => (
           <div key={r.debt_id} className="px-4 py-2">
             <div className="flex items-center justify-between gap-3">
@@ -43,6 +41,6 @@ export function UpcomingRemindersCard({ d }: { d: ConsolidatedDashboard }) {
         ))}
       </div>
       <Footer left={`${list.length} hatırlatma`} right="" />
-    </section>
+    </Widget>
   );
 }

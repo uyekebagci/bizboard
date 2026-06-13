@@ -2,29 +2,27 @@
 
 // ───────────────────────── 9. YAKLAŞAN ÇEKLER ─────────────────────────
 // (R3 god-component bolme: ConsolidatedWidgets.tsx'ten cikarildi)
+// UI v2 (Daxa) geçiş: tek-tip Widget kabuğu.
 
 import { CalendarClock } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { ConsolidatedDashboard } from "@/types";
-import { SectionTitle, Footer } from "./shared";
+import { Widget } from "@/components/v2";
+import { Footer } from "./shared";
 
 export function UpcomingChequesCard({ d }: { d: ConsolidatedDashboard }) {
   const list = d.upcoming_cheques;
   if (list.length === 0) {
     return (
-      <section className="glass-card p-4">
-        <SectionTitle icon={CalendarClock} label="Yaklaşan Çekler" />
-        <p className="text-xs text-surface-400 py-2">30 gün içinde çek yok.</p>
-      </section>
+      <Widget title="Yaklaşan Çekler" icon={CalendarClock}>
+        <p className="text-xs text-[rgb(var(--v2-muted))] py-1">30 gün içinde çek yok.</p>
+      </Widget>
     );
   }
   const total = list.reduce((a, x) => a + x.amount, 0);
   return (
-    <section className="glass-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-surface-700">
-        <SectionTitle icon={CalendarClock} label="Yaklaşan Çekler (30 gün)" inline />
-      </div>
-      <div className="divide-y divide-surface-700 max-h-72 overflow-y-auto">
+    <Widget title="Yaklaşan Çekler (30 gün)" icon={CalendarClock} flush>
+      <div className="divide-y divide-[rgb(var(--v2-border))] max-h-72 overflow-y-auto">
         {list.slice(0, 8).map((c) => (
           <div key={c.debt_id} className="px-4 py-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -42,6 +40,6 @@ export function UpcomingChequesCard({ d }: { d: ConsolidatedDashboard }) {
         ))}
       </div>
       <Footer left={`${list.length} çek / 30 gün`} right={`Toplam ${formatCurrency(total, "TRY")}`} />
-    </section>
+    </Widget>
   );
 }
