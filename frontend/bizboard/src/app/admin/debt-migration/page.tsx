@@ -45,7 +45,7 @@ export default function DebtMigrationPage() {
         {}
       );
       setDryResult(r);
-      toast.info("Dry-run tamamlandı");
+      toast.info("Deneme çalıştırması tamamlandı");
     } catch (e) {
       setError(getErrorMessage(e));
       toast.error(e);
@@ -65,7 +65,7 @@ export default function DebtMigrationPage() {
       );
       setApplyResult(r);
       setDryResult(null);
-      toast.success("Migration uygulandı");
+      toast.success("Taşıma uygulandı");
     } catch (e) {
       setError(getErrorMessage(e));
       toast.error(e);
@@ -85,7 +85,7 @@ export default function DebtMigrationPage() {
         </button>
         <div className="flex items-center gap-2.5">
           <GitMerge size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Borc Counterpart Migration</h1>
+          <h1 className="text-2xl font-bold text-surface-100">Borç Cari Taşıma</h1>
         </div>
       </div>
 
@@ -96,15 +96,15 @@ export default function DebtMigrationPage() {
           <div>
             <p className="font-semibold mb-1">Ne yapar?</p>
             <p className="text-xs text-blue-300/80">
-              v1.5.0 oncesi free-text isim ile olusturulan eski borc kayitlarini,
-              normalize <strong>Counterpart</strong> kayitlarina baglar. Case-insensitive
-              isim eslesmesi yapar. Eslesme yoksa ve <em>Auto-create</em> acikken
-              yeni counterpart kaydi olusturur.
+              v1.5.0 öncesi serbest metin isim ile oluşturulan eski borç kayıtlarını,
+              normalize edilmiş <strong>cari</strong> kayıtlarına bağlar. Büyük/küçük harf
+              duyarsız isim eşleşmesi yapar. Eşleşme yoksa ve <em>Otomatik oluştur</em> açıkken
+              yeni cari kaydı oluşturur.
             </p>
             <p className="text-xs text-blue-300/80 mt-2">
-              Idempotent — bir kez calistirdiktan sonra orphan borc kalmazsa
-              sonraki cagrilar sifir etki dondurur. Etkilenen counterpart'lar icin
-              cari bakiye otomatik recompute olur.
+              Idempotent — bir kez çalıştırdıktan sonra sahipsiz borç kalmazsa
+              sonraki çağrılar sıfır etki döndürür. Etkilenen cariler için
+              cari bakiye otomatik yeniden hesaplanır.
             </p>
           </div>
         </div>
@@ -120,10 +120,10 @@ export default function DebtMigrationPage() {
             className="w-4 h-4 rounded accent-amber-500"
           />
           <div>
-            <span className="text-sm text-surface-100 font-medium">Auto-create</span>
+            <span className="text-sm text-surface-100 font-medium">Otomatik oluştur</span>
             <p className="text-xs text-surface-400">
-              Eslesme bulunamayan isimleri yeni Counterpart olarak yarat (rol=OTHER).
-              Kapaliyken bu kayitlar atlanir (skipped).
+              Eşleşme bulunamayan isimleri yeni cari olarak yarat (rol=OTHER).
+              Kapalıyken bu kayıtlar atlanır.
             </p>
           </div>
         </label>
@@ -137,7 +137,7 @@ export default function DebtMigrationPage() {
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-100 text-sm font-semibold disabled:opacity-50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Info size={16} />}
-          Dry-run (test)
+          Deneme çalıştırması
         </button>
         <button
           onClick={() => setConfirmApply(true)}
@@ -145,7 +145,7 @@ export default function DebtMigrationPage() {
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold disabled:opacity-50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-          Calistir (apply)
+          Uygula
         </button>
       </div>
 
@@ -157,22 +157,22 @@ export default function DebtMigrationPage() {
       )}
 
       {/* Results */}
-      {dryResult && <ResultPanel title="Dry-run sonucu" result={dryResult} variant="info" />}
-      {applyResult && <ResultPanel title="Apply sonucu" result={applyResult} variant="success" />}
+      {dryResult && <ResultPanel title="Deneme sonucu" result={dryResult} variant="info" />}
+      {applyResult && <ResultPanel title="Uygulama sonucu" result={applyResult} variant="success" />}
 
       {confirmApply && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="glass-card p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-surface-100 mb-2">
-              Migration'i Calistir
+              Taşımayı Çalıştır
             </h3>
             <p className="text-sm text-surface-400 mb-2">
-              Bu islem orphan borc kayitlarini Counterpart kayitlarina kalici olarak baglar.
+              Bu işlem sahipsiz borç kayıtlarını cari kayıtlarına kalıcı olarak bağlar.
             </p>
             <p className="text-sm text-surface-400 mb-6">
-              Auto-create:{" "}
+              Otomatik oluştur:{" "}
               <strong className={autoCreate ? "text-amber-400" : "text-surface-400"}>
-                {autoCreate ? "ACIK" : "Kapali"}
+                {autoCreate ? "AÇIK" : "Kapalı"}
               </strong>
               . Devam edilsin mi?
             </p>
@@ -181,13 +181,13 @@ export default function DebtMigrationPage() {
                 onClick={() => setConfirmApply(false)}
                 className="btn-secondary px-4 py-2 text-sm"
               >
-                Iptal
+                İptal
               </button>
               <button
                 onClick={runApply}
                 className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm"
               >
-                Evet, Calistir
+                Evet, Çalıştır
               </button>
             </div>
           </div>
@@ -212,20 +212,20 @@ function ResultPanel({
         {title}
         {result.dry_run && (
           <span className="ml-2 px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-medium">
-            DRY-RUN
+            DENEME
           </span>
         )}
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-        <Stat label="Orphan borc" value={result.orphan_debts} />
-        <Stat label="Eslesen" value={result.matched_existing} positive />
-        <Stat label="Yeni olusturulan" value={result.created_new} positive />
+        <Stat label="Sahipsiz borç" value={result.orphan_debts} />
+        <Stat label="Eşleşen" value={result.matched_existing} positive />
+        <Stat label="Yeni oluşturulan" value={result.created_new} positive />
         <Stat label="Atlanan" value={result.skipped} />
-        <Stat label="Recompute edilen" value={result.recomputed_counterparts} />
+        <Stat label="Yeniden hesaplanan" value={result.recomputed_counterparts} />
       </div>
       {result.dry_run && (
         <p className="text-xs text-surface-400 mt-3">
-          Bu sadece bir simulasyon. Hicbir veri degisiklikten gecmedi.
+          Bu sadece bir simülasyon. Hiçbir veri değişiklikten geçmedi.
         </p>
       )}
     </div>

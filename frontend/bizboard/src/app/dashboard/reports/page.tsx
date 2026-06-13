@@ -184,7 +184,7 @@ export default function ReportsPage() {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-bold text-[rgb(var(--v2-ink))]">13-Haftalık Nakit Tahmini</h3>
-            <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">İleriye projeksiyon + What-If senaryo motoru</p>
+            <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">İleriye projeksiyon + senaryo analiz motoru</p>
           </div>
           <ChevronRight size={18} className="text-[rgb(var(--v2-muted))] group-hover:text-accent-strong dark:group-hover:text-accent transition-colors" />
         </Link>

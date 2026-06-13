@@ -178,7 +178,7 @@ export default function AdminAuditPage() {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!res.ok) {
-          throw new Error(`Export başarısız (HTTP ${res.status})`);
+          throw new Error(`Dışa aktarma başarısız (HTTP ${res.status})`);
         }
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -190,7 +190,7 @@ export default function AdminAuditPage() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Export başarısız");
+        setError(err instanceof Error ? err.message : "Dışa aktarma başarısız");
         logger.error("api", "Audit export failed", undefined, err);
       } finally {
         setExporting(false);
@@ -275,7 +275,7 @@ export default function AdminAuditPage() {
           >
             <ArrowLeft size={18} className="text-surface-300" />
           </button>
-          <h1 className="text-lg font-bold">Audit Log</h1>
+          <h1 className="text-lg font-bold">Denetim Kaydı</h1>
           <span className="ml-2 text-xs text-surface-400">
             {data?.total_elements != null ? `${data.total_elements} kayit` : ""}
           </span>
@@ -285,7 +285,7 @@ export default function AdminAuditPage() {
               type="button"
               onClick={verifyChain}
               disabled={verifying}
-              title="Tamper-proof hash-chain doğrula"
+              title="Değiştirilemez hash-zincirini doğrula"
               className="text-xs px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 disabled:opacity-50 inline-flex items-center gap-1.5"
             >
               {verifying ? (
@@ -346,28 +346,28 @@ export default function AdminAuditPage() {
         >
           <input
             type="text"
-            placeholder="Actor user id"
+            placeholder="Aktör kullanıcı id"
             value={actorId}
             onChange={(e) => setActorId(e.target.value)}
             className="input-sm"
           />
           <input
             type="text"
-            placeholder="Business id"
+            placeholder="İşletme id"
             value={businessId}
             onChange={(e) => setBusinessId(e.target.value)}
             className="input-sm"
           />
           <input
             type="text"
-            placeholder="Action (orn. user.login)"
+            placeholder="Aksiyon (örn. user.login)"
             value={action}
             onChange={(e) => setAction(e.target.value)}
             className="input-sm"
           />
           <input
             type="text"
-            placeholder="Entity type"
+            placeholder="Varlık tipi"
             value={entityType}
             onChange={(e) => setEntityType(e.target.value)}
             className="input-sm"
@@ -633,7 +633,7 @@ const HIGHLIGHT_BADGES: Record<string, { label: string; cls: string }> = {
   BACKDATED: { label: "Geçmiş tarihli", cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
   CORRECTION: { label: "Düzeltme", cls: "bg-sky-500/15 text-sky-300 border-sky-500/30" },
   CLOSING_REOPEN: { label: "Yeniden açma", cls: "bg-violet-500/15 text-violet-300 border-violet-500/30" },
-  POS_RATE_OVERRIDE: { label: "POS oran override", cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
+  POS_RATE_OVERRIDE: { label: "POS oran geçersiz kılma", cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
 };
 
 // A3: göreli zaman ("2 saat önce") — Intl.RelativeTimeFormat tr.

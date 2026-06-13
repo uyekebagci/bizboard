@@ -20,14 +20,14 @@ export type FileCategory = (typeof FILE_CATEGORIES)[number];
 
 export const CATEGORY_LABELS: Record<FileCategory, string> = {
   document: "Belge",
-  image: "Gorsel",
-  receipt: "Fis",
+  image: "Görsel",
+  receipt: "Fiş",
   invoice: "Fatura",
-  avatar: "Profil Gorseli",
+  avatar: "Profil Görseli",
   logo: "Logo",
-  debt_doc: "Borc Belgesi",
+  debt_doc: "Borç Belgesi",
   note_attachment: "Not Eki",
-  other: "Diger",
+  other: "Diğer",
 };
 
 /** Belirli bir File'in MIME tipinden makul bir default kategori önerir. */

@@ -97,7 +97,7 @@ export function DocumentsModule({ businessId }: Props) {
           className="flex items-center gap-1.5 px-3 py-2 bg-brand-600 text-white text-xs font-medium rounded-xl hover:bg-brand-700 transition-colors"
         >
           <Plus size={14} />
-          Belge Yukle
+          Belge Yükle
         </button>
       </div>
 
@@ -105,9 +105,9 @@ export function DocumentsModule({ businessId }: Props) {
       {files.length === 0 ? (
         <div className="glass-card p-8 text-center">
           <FileText size={32} className="text-surface-300 mx-auto mb-2" />
-          <p className="text-surface-400 text-sm">Henuz belge yuklenmemis</p>
+          <p className="text-surface-400 text-sm">Henüz belge yüklenmemiş</p>
           <p className="text-surface-400 text-xs mt-1">
-            Fatura, sozlesme veya fotograf yukleyebilirsiniz.
+            Fatura, sözleşme veya fotoğraf yükleyebilirsiniz.
           </p>
         </div>
       ) : (
@@ -191,14 +191,14 @@ export function DocumentsModule({ businessId }: Props) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="glass-card shadow-xl p-6 max-w-sm w-full">
             <h3 className="text-lg font-semibold text-surface-100 mb-2">Belgeyi Sil</h3>
-            <p className="text-surface-300 text-sm mb-1">Bu belgeyi silmek istediginize emin misiniz?</p>
+            <p className="text-surface-300 text-sm mb-1">Bu belgeyi silmek istediğinize emin misiniz?</p>
             <p className="text-surface-400 text-xs mb-6 truncate">&quot;{deleteConfirm.original_name}&quot;</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="btn-secondary flex-1 px-4 py-2.5 text-sm"
               >
-                Iptal
+                İptal
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
@@ -236,7 +236,7 @@ function FileDetailModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100 truncate pr-4">
-            Belge Detayi
+            Belge Detayı
           </h3>
           <button
             onClick={onClose}
@@ -270,7 +270,7 @@ function FileDetailModal({
             <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
               <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Dosya Adi</p>
+                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Dosya Adı</p>
                 <p className="text-sm text-surface-100 font-medium break-all">{file.original_name}</p>
               </div>
             </div>
@@ -280,7 +280,7 @@ function FileDetailModal({
               <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
                 <FileText size={16} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Aciklama</p>
+                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Açıklama</p>
                   <p className="text-sm text-surface-100">{file.description}</p>
                 </div>
               </div>
@@ -303,7 +303,7 @@ function FileDetailModal({
               <div className="flex items-start gap-3 p-3 bg-surface-700 rounded-xl">
                 <Building2 size={16} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Isletme</p>
+                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">İşletme</p>
                   <p className="text-sm text-surface-100 font-medium">{file.business_name}</p>
                 </div>
               </div>
@@ -314,7 +314,7 @@ function FileDetailModal({
               <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                 <User size={14} className="text-surface-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Yukleyen</p>
+                  <p className="text-[10px] text-surface-400 uppercase tracking-wider">Yükleyen</p>
                   <p className="text-sm text-surface-100">{file.uploaded_by_name || "-"}</p>
                 </div>
               </div>
@@ -331,7 +331,7 @@ function FileDetailModal({
             {file.admin_only && isAdmin && (
               <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
                 <EyeOff size={14} className="text-amber-300" />
-                <span className="text-sm text-amber-400 font-medium">Gizli Belge — Sadece admin gorebilir</span>
+                <span className="text-sm text-amber-400 font-medium">Gizli Belge — Sadece admin görebilir</span>
               </div>
             )}
           </div>
@@ -345,7 +345,7 @@ function FileDetailModal({
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition-colors"
             >
               <Download size={14} />
-              Indir / Ac
+              İndir / Aç
             </a>
             <button
               onClick={onDelete}

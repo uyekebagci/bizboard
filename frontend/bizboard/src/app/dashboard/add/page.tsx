@@ -107,10 +107,10 @@ interface FormData {
 // v1.6.2.1: Tip Secimi adımı kaldırıldı (master BusinessType tablosu yok artık).
 const STEPS = [
   { id: 1, label: "Temel Bilgiler" },
-  { id: 2, label: "Moduller" },
-  { id: 3, label: "Kurulus" },
-  { id: 4, label: "Aylik Gider" },
-  { id: 5, label: "Onizleme" },
+  { id: 2, label: "Modüller" },
+  { id: 3, label: "Kuruluş" },
+  { id: 4, label: "Aylık Gider" },
+  { id: 5, label: "Önizleme" },
 ];
 
 // v1.5.8: yeni wizard akışı için tipler
@@ -356,7 +356,7 @@ export default function AddBusinessPage() {
       toast.success("İşletme oluşturuldu");
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Isletme olusturulamadi"));
+      setError(getErrorMessage(err, "İşletme oluşturulamadı"));
       toast.error(err);
     } finally {
       setIsSubmitting(false);
@@ -388,10 +388,10 @@ export default function AddBusinessPage() {
         </button>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-surface-100">
-            {form.isMockup ? "Mock-up Isletme" : "Yeni Isletme"}
+            {form.isMockup ? "Mock-up İşletme" : "Yeni İşletme"}
           </h1>
           <p className="text-sm text-surface-400">
-            Adim {step}/{STEPS.length} — {STEPS[step - 1].label}
+            Adım {step}/{STEPS.length} — {STEPS[step - 1].label}
           </p>
         </div>
       </div>
@@ -438,7 +438,7 @@ export default function AddBusinessPage() {
               Mock-up / Fizibilite Modu
             </p>
             <p className="text-xs text-surface-400">
-              Yeni bir is fikri analiz et, gercek verilerle karistirma
+              Yeni bir iş fikri analiz et, gerçek verilerle karıştırma
             </p>
           </div>
           <div
@@ -549,10 +549,10 @@ export default function AddBusinessPage() {
             className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isSubmitting ? (
-              "Olusturuluyor..."
+              "Oluşturuluyor..."
             ) : (
               <>
-                {form.isMockup ? "Mock-up Olustur" : "Isletme Olustur"}
+                {form.isMockup ? "Mock-up Oluştur" : "İşletme Oluştur"}
                 <Check size={16} />
               </>
             )}
@@ -583,10 +583,10 @@ function StepBusinessType({
   return (
     <div className="space-y-4">
       <p className="text-sm text-surface-300 font-medium">
-        Isletme tipini gir
+        İşletme tipini gir
       </p>
       <div className="card p-4 space-y-2 relative">
-        <label className="label">Tip Adi *</label>
+        <label className="label">Tip Adı *</label>
         <input
           type="text"
           value={businessTypeName}
@@ -596,13 +596,13 @@ function StepBusinessType({
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder="orn. Kafe, Insaat Sirketi, Servis Atolyesi"
+          placeholder="örn. Kafe, İnşaat Şirketi, Servis Atölyesi"
           className="input"
           autoFocus
         />
         <p className="text-[10px] text-surface-400">
-          Bu ad raporlama ve filtrelemede kullanilir. Daha once yazilan tipler
-          autocomplete olarak gosterilir.
+          Bu ad raporlama ve filtrelemede kullanılır. Daha önce yazılan tipler
+          autocomplete olarak gösterilir.
         </p>
         {open && filtered.length > 0 && (
           <div className="absolute z-20 left-4 right-4 top-[100%] mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface-800 border border-surface-600 shadow-card-hover">
@@ -652,11 +652,11 @@ function StepBasicInfo({
     <div className="space-y-4">
       {/* Name */}
       <div>
-        <label className="label">Isletme Adi *</label>
+        <label className="label">İşletme Adı *</label>
         <input
           type="text"
           className="input"
-          placeholder="Ornek: Yilmaz Insaat A.S."
+          placeholder="Örnek: Yılmaz İnşaat A.Ş."
           value={form.name}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, name: e.target.value }))

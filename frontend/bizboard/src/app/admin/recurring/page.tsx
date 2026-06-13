@@ -36,7 +36,7 @@ export default function RecurringPage() {
     try {
       const r = await api.post<RunResult>("/admin/recurring/run", {});
       setResult(r);
-      toast.info(`Recurring tamamlandı: ${r.created} oluşturuldu, ${r.skipped} atlandı`);
+      toast.info(`Tekrarlayan işlem tamamlandı: ${r.created} oluşturuldu, ${r.skipped} atlandı`);
     } catch (e) {
       setError(getErrorMessage(e));
       toast.error(e);
@@ -56,7 +56,7 @@ export default function RecurringPage() {
         </button>
         <div className="flex items-center gap-2.5">
           <RefreshCw size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Recurring Tx Jeneratoru</h1>
+          <h1 className="text-2xl font-bold text-surface-100">Tekrarlayan İşlem Üreteci</h1>
         </div>
       </div>
 
@@ -66,17 +66,17 @@ export default function RecurringPage() {
           <div>
             <p className="font-semibold mb-1">Ne yapar?</p>
             <p className="text-xs text-blue-300/80">
-              Her ayin 1&apos;inde 02:30 Europe/Istanbul&apos;da otomatik calisir; aktif olan
-              &quot;Aylik tx&quot; bayrakli sabit giderler icin bu ay bir Transaction yaratir.
+              Her ayın 1&apos;inde 02:30 Europe/Istanbul&apos;da otomatik çalışır; aktif olan
+              &quot;Aylık işlem&quot; bayraklı sabit giderler için bu ay bir işlem yaratır.
               MONTHLY her ay, QUARTERLY Ocak/Nisan/Temmuz/Ekim, YEARLY sadece Ocak.
             </p>
             <p className="text-xs text-blue-300/80 mt-2">
-              Idempotent — ayni ay icinde tekrar tetiklenirse o FixedCost atlanir
-              (FixedCost.last_auto_run kontrol edilir). Audit&apos;e
-              TRANSACTION_CREATE source=RECURRING ile dusurulur.
+              Idempotent — aynı ay içinde tekrar tetiklenirse o sabit gider atlanır
+              (FixedCost.last_auto_run kontrol edilir). Denetim kaydına
+              TRANSACTION_CREATE source=RECURRING ile düşürülür.
             </p>
             <p className="text-xs text-blue-300/80 mt-2">
-              Asagidaki buton scheduled task&apos;in yaptigi isi <strong>simdi</strong> calistirir
+              Aşağıdaki buton zamanlanmış görevin yaptığı işi <strong>şimdi</strong> çalıştırır
               (test / acil senaryo).
             </p>
           </div>
@@ -90,7 +90,7 @@ export default function RecurringPage() {
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-sm font-semibold"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />}
-          Simdi Calistir
+          Şimdi Çalıştır
         </button>
       </div>
 
@@ -105,11 +105,11 @@ export default function RecurringPage() {
         <div className="p-5 border rounded-xl bg-green-900/20 border-green-800/40 text-green-200">
           <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
             <CheckCircle2 size={18} />
-            Run sonucu
+            Çalıştırma sonucu
           </h3>
           <div className="grid grid-cols-3 gap-3 text-sm">
             <Stat label="Incelenen" value={result.processed} />
-            <Stat label="Olusturulan" value={result.created} positive />
+            <Stat label="Oluşturulan" value={result.created} positive />
             <Stat label="Atlanan" value={result.skipped} />
           </div>
         </div>
