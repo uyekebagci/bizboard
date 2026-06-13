@@ -53,6 +53,9 @@ export interface Profile {
   /** Backend AdminBootstrapService veya admin-reset sonrasi true.
    *  Frontend bunu gorunce kullaniciyi /dashboard/change-password'a yonlendirir. */
   force_password_change: boolean;
+  /** Erişilebilir sidebar sayfa anahtarları (page key). `["all"]` → tüm sayfalar
+   *  (default; admin her zaman böyle). Sidebar filtreleme + route guard kullanır. */
+  allowed_pages?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -65,6 +68,8 @@ export interface AdminUser {
   is_active: boolean;
   business_ids: string[];
   business_names: string[];
+  /** Erişilebilir sidebar sayfa anahtarları (page key). `["all"]` → tüm sayfalar. */
+  allowed_pages?: string[];
   created_at: string;
 }
 

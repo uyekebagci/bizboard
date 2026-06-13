@@ -29,6 +29,14 @@ public class UserDto {
     @JsonProperty("business_names")
     private List<String> businessNames;
 
+    /**
+     * Kullanıcının erişebildiği sidebar sayfa anahtarları (page key). {@code ["all"]}
+     * → tüm sayfalar (default; admin her zaman böyle). Admin UI bu listeyi
+     * checkbox'ları işaretlemek için kullanır.
+     */
+    @JsonProperty("allowed_pages")
+    private List<String> allowedPages;
+
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 }

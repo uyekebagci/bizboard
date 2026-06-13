@@ -60,6 +60,16 @@ public class User {
     @Column(name = "accessible_businesses", columnDefinition = "TEXT")
     private String accessibleBusinesses;
 
+    /**
+     * Kullanıcının görebileceği sidebar SAYFALARI — navigasyon/görünürlük seviyesi
+     * (sayfa endpoint RBAC'ından AYRI). {@code "all"} (veya null/boş) → tüm sayfalar
+     * (default-permissive; mevcut kullanıcılar etkilenmez). Aksi takdirde virgülle
+     * ayrılmış sayfa anahtarı (page key) listesi (örn. {@code "dashboard,transactions"}).
+     * Admin rolü her zaman tüm sayfaları görür (bu kolon yok sayılır).
+     */
+    @Column(name = "allowed_pages", columnDefinition = "TEXT")
+    private String allowedPages;
+
     @Column(name = "is_active")
     @Builder.Default
     private boolean active = true;

@@ -10,14 +10,37 @@
  * Hamburger butonu TopBar'ın solunda yalnız `<lg` ekranlarda görünür.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { TopBar } from "./TopBar";
 import { BottomNav } from "./BottomNav";
 import { Sidebar } from "./Sidebar";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useAppStore } from "@/lib/store";
+import { canAccessHref } from "@/lib/pages";
+
+/**
+ * Kullanıcı-bazlı sayfa-erişim guard'ı (navigasyon seviyesi). İzinsiz bir KATALOG
+ * sayfasına gidilirse kullanıcıyı Ana Sayfa'ya yönlendirir. Default-permissive:
+ * profil yüklenmeden / "all" / katalog dışı route'larda yönlendirme YOK. Admin
+ * backend'de ["all"] aldığı için hiç etkilenmez. Sayfa endpoint RBAC'ı ayrıdır.
+ */
+function usePageAccessGuard() {
+  const profile = useAppStore((s) => s.profile);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!profile || !pathname) return; // profil yüklenene kadar bekle
+    if (!canAccessHref(pathname, profile.allowed_pages)) {
+      router.replace("/dashboard");
+    }
+  }, [profile, pathname, router]);
+}
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  usePageAccessGuard();
 
   return (
     /* UI v2: Daxa solid app zemini (--v2-app) — ambient gradient yerine

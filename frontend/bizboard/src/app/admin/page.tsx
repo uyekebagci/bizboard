@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import {
   CreateUserModal,
-  EditUserModal,
   getRoleLabel,
 } from "@/components/admin/AdminUserModals";
+import { EditUserModal } from "@/components/admin/AdminEditUserModal";
 import type { AdminUser, Business } from "@/types";
 
 // ── Admin Panel Page ────────────────────────────────────────

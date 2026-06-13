@@ -31,6 +31,7 @@ import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { BETA_LABEL } from "@/lib/version";
+import { canAccessHref } from "@/lib/pages";
 
 /** Gruplu sidebar bölümleri (mockup gibi curated his). */
 type NavGroup = "genel" | "cari" | "kasa" | "operasyon" | "yonetim";
@@ -174,12 +175,23 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
   }, [mobileOpen, onMobileOpenChange]);
 
   const role = profile?.role;
+  // Kullanıcı-bazlı sayfa-erişimi (page key). undefined → store henüz yüklenmedi;
+  // canAccessHref null/boş'u "tüm sayfalar" (default-permissive) olarak ele alır.
+  const allowedPages = profile?.allowed_pages;
   const isSearching = query.trim() !== "";
 
-  // Role'e göre erişilebilir tüm item'lar (route/erişim KORUNUR — adminOnly filtre aynı).
+  // Erişilebilir item'lar:
+  //  1. adminOnly → yalnız admin (rol filtresi, eskisiyle aynı).
+  //  2. Katalog sayfaları → kullanıcının allowed_pages listesine göre filtrelenir
+  //     (default-permissive: "all"/boş → tümü; admin backend'de ["all"] alır).
+  // Katalog dışı route'lar (canAccessHref null döner) HER ZAMAN görünür.
   const accessible = useMemo(
-    () => ALL_LINKS.filter((l) => !l.adminOnly || role === "admin"),
-    [role],
+    () =>
+      ALL_LINKS.filter((l) => {
+        if (l.adminOnly) return role === "admin";
+        return canAccessHref(l.href, allowedPages);
+      }),
+    [role, allowedPages],
   );
 
   // ARAMA modu: düz filtrelenmiş liste (grup başlıkları gürültü yapmasın).

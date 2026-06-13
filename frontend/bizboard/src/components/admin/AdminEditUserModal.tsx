@@ -1,54 +1,50 @@
 "use client";
 
 /**
- * Admin Paneli — Kullanıcı OLUŞTUR modal'ı + paylaşılan rol yardımcıları.
+ * Admin Paneli — Kullanıcı düzenle modal'ı.
  *
- * <p>page.tsx 500-satır sınırını aşmasın diye ayrı dosyaya çıkarıldı. Düzenle
- * modal'ı 500-satır sınırı için {@link ./AdminEditUserModal} dosyasına alındı
- * (salt organizasyon — davranış/RBAC/alan doğrulama aynen korundu). Daxa hizası:
- * accent (lime) rol/işletme/sayfa seçimi + v2 accent submit butonu; yüzeyler
- * tema-duyarlı surface token'larıyla (çift tema). modal kabuğu glass-card /
- * modal-header (mevcut tema-duyarlı primitivler).</p>
+ * <p>{@link AdminUserModals} 500-satır sınırını aşmasın diye ayrı dosyaya çıkarıldı
+ * (salt organizasyon — davranış/RBAC/alan doğrulama aynen korundu). Daxa hizası;
+ * çift tema. İşletme-erişimi + sidebar SAYFA-erişimi (kullanıcı-bazlı) seçimleri
+ * burada. Admin için her ikisi de yok sayılır (admin tüm işletme + tüm sayfalar).</p>
  */
 
 import { useState } from "react";
 import { X, Check, Eye, EyeOff, Building2 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
-import type { Business } from "@/types";
+import type { AdminUser, Business } from "@/types";
+import { ROLE_OPTIONS } from "./AdminUserModals";
 import {
   AdminPageAccess,
   buildAllowedPagesPayload,
+  deriveInitialPageAccess,
 } from "./AdminPageAccess";
 
-// ── Role Labels ─────────────────────────────────────────────
-export const ROLE_OPTIONS = [
-  { value: "admin", label: "Admin" },
-  { value: "viewer", label: "Görüntüleyen" },
-];
-
-export function getRoleLabel(role: string) {
-  return ROLE_OPTIONS.find((r) => r.value === role)?.label || role;
-}
-
-// ── Create User Modal ───────────────────────────────────────
-export function CreateUserModal({
+export function EditUserModal({
+  user,
   businesses,
   onClose,
   onSuccess,
 }: {
+  user: AdminUser;
   businesses: Business[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState(user.full_name || "");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("viewer");
-  const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-  // Sayfa-erişimi — yeni kullanıcı default'u TÜM sayfalar (default-permissive).
-  const [allPages, setAllPages] = useState(true);
-  const [selectedPageKeys, setSelectedPageKeys] = useState<string[]>([]);
+  const [role, setRole] = useState(user.role);
+  const [isActive, setIsActive] = useState(user.is_active);
+  const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>(
+    user.business_ids || []
+  );
+  // Sayfa-erişimi — mevcut kullanıcının allowed_pages'inden türetilir.
+  const initialPageAccess = deriveInitialPageAccess(user.allowed_pages);
+  const [allPages, setAllPages] = useState(initialPageAccess.allPages);
+  const [selectedPageKeys, setSelectedPageKeys] = useState<string[]>(
+    initialPageAccess.selectedKeys
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,32 +65,27 @@ export function CreateUserModal({
     e.preventDefault();
     setError(null);
 
-    if (!username || !password || !fullName) {
-      setError("Tüm alanları doldurun");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Şifre en az 6 karakter olmalı");
-      return;
-    }
-
     if (role !== "admin" && selectedBusinessIds.length === 0) {
       setError("En az bir işletme seçmelisiniz");
       return;
     }
 
+    if (password && password.length < 6) {
+      setError("Şifre en az 6 karakter olmalı");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await api.post("/admin/users", {
-        username,
-        password,
-        full_name: fullName,
+      await api.put(`/admin/users/${user.id}`, {
+        full_name: fullName || undefined,
+        password: password || undefined,
         role,
         business_ids:
           role === "admin"
             ? [businesses[0]?.id || ""]
             : selectedBusinessIds,
+        is_active: isActive,
         // Admin için sayfa-erişimi yok sayılır (backend tüm sayfalara açar).
         allowed_pages:
           role === "admin"
@@ -115,7 +106,7 @@ export function CreateUserModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">
-            Yeni Kullanıcı Oluştur
+            Kullanıcıyı Düzenle
           </h3>
           <button
             onClick={onClose}
@@ -137,6 +128,19 @@ export function CreateUserModal({
             </div>
           )}
 
+          {/* Username (read only) */}
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+              Kullanıcı Adı
+            </label>
+            <input
+              type="text"
+              value={user.username}
+              disabled
+              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-400 text-sm cursor-not-allowed"
+            />
+          </div>
+
           {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
@@ -147,28 +151,14 @@ export function CreateUserModal({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
-              placeholder="Örnek: Ahmet Yılmaz"
             />
           </div>
 
-          {/* Username */}
+          {/* Password (optional) */}
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Kullanıcı Adı
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
-              placeholder="örnek: ahmet"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Şifre
+              Yeni Şifre{" "}
+              <span className="text-surface-300">(boş bırakılabilir)</span>
             </label>
             <div className="relative">
               <input
@@ -176,7 +166,7 @@ export function CreateUserModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
-                placeholder="En az 6 karakter"
+                placeholder="Değiştirmek için girin"
               />
               <button
                 type="button"
@@ -212,15 +202,33 @@ export function CreateUserModal({
             </div>
           </div>
 
+          {/* Active toggle */}
+          <div className="flex items-center justify-between p-4 bg-surface-900 border border-surface-600 rounded-xl">
+            <span className="text-sm text-surface-300">Aktif Durum</span>
+            <button
+              type="button"
+              onClick={() => setIsActive(!isActive)}
+              role="switch"
+              aria-checked={isActive}
+              aria-label="Aktif durum"
+              className={`relative w-12 h-6 rounded-full transition-colors ${
+                isActive ? "bg-accent" : "bg-surface-600"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                  isActive ? "left-[26px]" : "left-0.5"
+                }`}
+              />
+            </button>
+          </div>
+
           {/* Business Selection (hide for admin) */}
           {role !== "admin" && (
             <div>
               <label className="block text-sm font-medium text-surface-300 mb-1.5">
                 Erişebileceği İşletmeler
               </label>
-              <p className="text-xs text-surface-400 mb-3">
-                En az bir işletme seçmelisiniz
-              </p>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {businesses.map((biz) => (
                   <button
@@ -270,7 +278,7 @@ export function CreateUserModal({
             disabled={submitting}
             className="v2-btn v2-btn--accent v2-press w-full py-3 disabled:opacity-50"
           >
-            {submitting ? "Oluşturuluyor..." : "Kullanıcı Oluştur"}
+            {submitting ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
           </button>
         </form>
       </div>

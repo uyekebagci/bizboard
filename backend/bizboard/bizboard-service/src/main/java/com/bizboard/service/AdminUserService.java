@@ -34,6 +34,8 @@ public class AdminUserService {
     private final com.bizboard.repository.ReminderRepository reminderRepository;
     // Tier 3 (EVT-3): firma erişimi verilince FIRM_ACCESS_GRANTED dispatch için.
     private final com.bizboard.service.notification.NotificationDispatchService dispatchService;
+    // Kullanıcı-bazlı sidebar sayfa-erişimi normalize/resolve.
+    private final PageAccessService pageAccessService;
 
     @Transactional(readOnly = true)
     public List<UserDto> getAllUsers() {
@@ -53,6 +55,8 @@ public class AdminUserService {
         // Y3: accessibleBusinesses strict — "all" sadece admin için; non-admin için
         // her id geçerli bir UUID olmalı. Geçersiz girişte create reddedilir.
         String businessIdsStr = normalizeAccessibleBusinesses(request.getBusinessIds(), role);
+        // Sidebar sayfa-erişimi — default-permissive (boş/yok → "all").
+        String allowedPagesStr = pageAccessService.normalize(request.getAllowedPages(), role);
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -60,6 +64,7 @@ public class AdminUserService {
                 .fullName(request.getFullName())
                 .role(role)
                 .accessibleBusinesses(businessIdsStr)
+                .allowedPages(allowedPagesStr)
                 .onboardingCompleted(true)
                 .active(true)
                 // v1.7.x: zorunlu şifre değişikliği kaldırıldı (kullanıcı talebi).
@@ -142,6 +147,25 @@ public class AdminUserService {
                 for (UUID id : newAccessIds) {
                     if (!oldAccessIds.contains(id)) newlyGranted.add(id);
                 }
+            }
+        }
+
+        // Sidebar sayfa-erişimi — null gelirse DEĞIŞTIRME (mevcut korunur). Boş
+        // liste → default-permissive ("all"). Efektif rol businessIds ile aynı mantık.
+        if (request.getAllowedPages() != null) {
+            String effectiveRole = newRole != null ? newRole : user.getRole();
+            String oldPages = user.getAllowedPages();
+            String newPages = pageAccessService.normalize(request.getAllowedPages(), effectiveRole);
+            if (!Objects.equals(newPages, oldPages)) {
+                changes.put("allowedPages", Map.of(
+                        "from", oldPages != null ? oldPages : "",
+                        "to", newPages));
+                user.setAllowedPages(newPages);
+            }
+        } else if (newRole != null && "admin".equalsIgnoreCase(newRole)) {
+            // Rol admin'e yükseltildiyse sayfa kısıtını temizle (admin tüm sayfalar).
+            if (!Objects.equals("all", user.getAllowedPages())) {
+                user.setAllowedPages(PageAccessService.ALL);
             }
         }
 
@@ -342,6 +366,12 @@ public class AdminUserService {
             }
         }
 
+        // Sidebar sayfa-erişimi: "all"/admin → ["all"] sentinel'i; aksi takdirde
+        // açık anahtar listesi (admin UI checkbox'ları için).
+        List<String> allowedPages = pageAccessService.isAll(user.getAllowedPages(), user.getRole())
+                ? List.of(PageAccessService.ALL)
+                : List.copyOf(pageAccessService.resolveAllowed(user.getAllowedPages(), user.getRole()));
+
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -350,6 +380,7 @@ public class AdminUserService {
                 .active(user.isActive())
                 .businessIds(businessIds)
                 .businessNames(businessNames)
+                .allowedPages(allowedPages)
                 .createdAt(user.getCreatedAt())
                 .build();
     }
