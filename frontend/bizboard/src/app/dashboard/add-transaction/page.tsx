@@ -36,7 +36,7 @@ const CARDS: CardSpec[] = [
     description: "Müşteriden tahsilat, satış, kira geliri",
     icon: ArrowDownLeft,
     iconBg: "bg-emerald-500/15",
-    iconColor: "text-emerald-300",
+    iconColor: "text-emerald-600 dark:text-emerald-300",
     borderHover: "hover:border-emerald-500/50",
   },
   {
@@ -45,7 +45,7 @@ const CARDS: CardSpec[] = [
     description: "Tedarikçi ödemesi, fatura, masraf",
     icon: ArrowUpRight,
     iconBg: "bg-rose-500/15",
-    iconColor: "text-rose-300",
+    iconColor: "text-rose-600 dark:text-rose-300",
     borderHover: "hover:border-rose-500/50",
   },
   {
@@ -54,7 +54,7 @@ const CARDS: CardSpec[] = [
     description: "Kartla çekim, POS cihazından tahsilat",
     icon: CreditCard,
     iconBg: "bg-blue-500/15",
-    iconColor: "text-blue-300",
+    iconColor: "text-blue-600 dark:text-blue-300",
     borderHover: "hover:border-blue-500/50",
   },
   {
@@ -63,7 +63,7 @@ const CARDS: CardSpec[] = [
     description: "Hesaplar arası para hareketi (havale/EFT/nakit)",
     icon: ArrowLeftRight,
     iconBg: "bg-purple-500/15",
-    iconColor: "text-purple-300",
+    iconColor: "text-purple-600 dark:text-purple-300",
     borderHover: "hover:border-purple-500/50",
   },
 ];
@@ -76,19 +76,19 @@ export default function AddTransactionChooserPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-press p-2 -ml-2 rounded-xl v2-sunken hover:border-[rgb(var(--accent))]/50 transition-colors"
           aria-label="Geri"
         >
-          <ArrowLeft size={20} className="text-surface-300" />
+          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
         </button>
-        <h1 className="text-xl font-bold text-surface-100">Yeni İşlem</h1>
+        <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Yeni İşlem</h1>
       </div>
 
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold text-surface-100">
+        <h2 className="v2-display text-2xl">
           Hangi İşlemi Yapmak İstiyorsunuz?
         </h2>
-        <p className="text-sm text-surface-400">
+        <p className="text-sm text-[rgb(var(--v2-muted))]">
           İşlem tipini seçin — sonraki adımda detayları girersiniz
         </p>
       </div>
@@ -101,7 +101,7 @@ export default function AddTransactionChooserPage() {
               key={card.href}
               href={card.href}
               className={cn(
-                "group relative card p-5 sm:p-6 border-2 border-surface-700 transition-all",
+                "group relative v2-card p-5 sm:p-6 border-2 transition-all",
                 "hover:scale-[1.02] cursor-pointer",
                 card.borderHover,
               )}
@@ -117,13 +117,13 @@ export default function AddTransactionChooserPage() {
                   <h3 className={cn("text-lg sm:text-xl font-bold mb-1", card.iconColor)}>
                     {card.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-surface-400 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[rgb(var(--v2-muted))] leading-relaxed">
                     {card.description}
                   </p>
                 </div>
                 <ChevronRight
                   size={18}
-                  className="text-surface-500 group-hover:text-surface-200 transition-colors shrink-0 mt-1"
+                  className="text-[rgb(var(--v2-muted))] group-hover:text-[rgb(var(--v2-ink))] transition-colors shrink-0 mt-1"
                 />
               </div>
             </Link>
@@ -131,7 +131,7 @@ export default function AddTransactionChooserPage() {
         })}
       </div>
 
-      <p className="text-center text-[11px] text-surface-500">
+      <p className="text-center text-[11px] text-[rgb(var(--v2-muted))]">
         💡 Hızlı erişim için ana sayfa &quot;Son İşlemler&quot; widget&apos;ındaki
         kısayolları da kullanabilirsiniz.
       </p>
