@@ -5,7 +5,7 @@
  *
  * <p>Rapor seçimi + dönem/işletme filtre + "PDF İndir" / "Excel İndir".
  * Endpoint: GET /reports/{type}?format=pdf|xlsx&... → dosya iner.
- * Glass tasarım dili (.glass-card / .seg-active).</p>
+ * UI v2 (Daxa) tasarım dili (v2-card / v2-sunken segment).</p>
  */
 
 import { useState } from "react";
@@ -168,9 +168,9 @@ export default function ReportsPage() {
   return (
     <div className="space-y-5">
       <section className="rise">
-        <p className="text-[13px] text-brand-300 font-semibold tracking-wide">Rapor Merkezi</p>
-        <h1 className="text-2xl font-extrabold h-display text-surface-100 mt-1">Finansal Raporlar</h1>
-        <p className="text-surface-400 mt-1 text-sm">
+        <p className="v2-eyebrow">Rapor Merkezi</p>
+        <h1 className="v2-display text-2xl mt-1">Finansal Raporlar</h1>
+        <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
           Rapor seçin, dönem/işletme filtreleyin, PDF veya Excel indirin.
         </p>
       </section>
@@ -178,41 +178,44 @@ export default function ReportsPage() {
       {/* v1.1 Analitik — interaktif tahmin + bütçe (yeni) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Link href="/dashboard/reports/forecast"
-          className="glass-card glass-hover p-4 flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-brand-500/15">
-            <TrendingUp size={22} className="text-brand-300" />
+          className="v2-card v2-lift p-4 flex items-center gap-3 group">
+          <div className="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-accent/15">
+            <TrendingUp size={22} className="text-accent-strong dark:text-accent" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-surface-100 h-display">13-Haftalık Nakit Tahmini</h3>
-            <p className="text-xs text-surface-400 mt-0.5">İleriye projeksiyon + What-If senaryo motoru</p>
+            <h3 className="font-bold text-[rgb(var(--v2-ink))]">13-Haftalık Nakit Tahmini</h3>
+            <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">İleriye projeksiyon + What-If senaryo motoru</p>
           </div>
-          <ChevronRight size={18} className="text-surface-500 group-hover:text-brand-300 transition-colors" />
+          <ChevronRight size={18} className="text-[rgb(var(--v2-muted))] group-hover:text-accent-strong dark:group-hover:text-accent transition-colors" />
         </Link>
         <Link href="/dashboard/reports/butce"
-          className="glass-card glass-hover p-4 flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-amber-500/15">
-            <Wallet size={22} className="text-amber-400" />
+          className="v2-card v2-lift p-4 flex items-center gap-3 group">
+          <div className="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-status-warning/15">
+            <Wallet size={22} className="text-status-warning" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-surface-100 h-display">Bütçe-Eşik Ayarları</h3>
-            <p className="text-xs text-surface-400 mt-0.5">Kategori aylık bütçe + aşım uyarısı (opt-in)</p>
+            <h3 className="font-bold text-[rgb(var(--v2-ink))]">Bütçe-Eşik Ayarları</h3>
+            <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">Kategori aylık bütçe + aşım uyarısı (opt-in)</p>
           </div>
-          <ChevronRight size={18} className="text-surface-500 group-hover:text-brand-300 transition-colors" />
+          <ChevronRight size={18} className="text-[rgb(var(--v2-muted))] group-hover:text-accent-strong dark:group-hover:text-accent transition-colors" />
         </Link>
       </div>
 
       {/* Filtreler */}
-      <section className="glass-card p-3 flex flex-wrap items-center gap-3">
+      <section className="v2-card p-3 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1 text-sm">
-          <span className="text-xs text-surface-400 mr-1">Dönem (P&amp;L):</span>
-          <div className="flex items-center gap-1 bg-surface-800/40 rounded-lg p-0.5">
+          <span className="text-xs text-[rgb(var(--v2-muted))] mr-1">Dönem (P&amp;L):</span>
+          <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
             {MONTH_OPTS.map((o) => (
               <button
                 key={o.v}
                 onClick={() => setMonths(o.v)}
+                aria-pressed={months === o.v}
                 className={cn(
-                  "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
-                  months === o.v ? "seg-active font-semibold" : "text-surface-400 hover:text-white",
+                  "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors",
+                  months === o.v
+                    ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                    : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
                 )}
               >
                 {o.label}
@@ -221,11 +224,11 @@ export default function ReportsPage() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <Building2 size={14} className="text-surface-400" />
+          <Building2 size={14} className="text-[rgb(var(--v2-muted))]" />
           <select
             value={businessId}
             onChange={(e) => setBusinessId(e.target.value)}
-            className="field-sm py-1.5 w-auto"
+            className="py-1.5 px-3 w-auto text-sm rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
           >
             <option value="">Tüm İşletmeler</option>
             {businesses.map((b) => (
@@ -241,18 +244,18 @@ export default function ReportsPage() {
           const Icon = r.icon;
           const disabled = r.needsBusiness && !businessId;
           return (
-            <div key={r.type} className="glass-card glass-hover p-5 flex flex-col">
+            <div key={r.type} className="v2-card p-5 flex flex-col">
               <div className="flex items-start gap-3 mb-3">
                 <div className={cn("w-11 h-11 rounded-xl grid place-items-center shrink-0", r.iconWrap)}>
                   <Icon size={22} className={r.iconColor} />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-surface-100 h-display">{r.title}</h3>
-                  <p className="text-xs text-surface-400 mt-0.5">{r.desc}</p>
+                  <h3 className="font-bold text-[rgb(var(--v2-ink))]">{r.title}</h3>
+                  <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">{r.desc}</p>
                 </div>
               </div>
               {disabled && (
-                <p className="text-[11px] text-amber-300/80 mb-2">
+                <p className="text-[11px] text-status-warning mb-2">
                   Bu rapor için yukarıdan bir işletme seçin.
                 </p>
               )}
@@ -260,7 +263,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => download(r.type, "pdf")}
                   disabled={disabled || busy !== null}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-200 border border-rose-500/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-status-danger/15 hover:bg-status-danger/25 text-status-danger border border-status-danger/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed v2-press"
                 >
                   {busy === `${r.type}-pdf` ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
                   PDF İndir
@@ -268,7 +271,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => download(r.type, "xlsx")}
                   disabled={disabled || busy !== null}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-200 border border-emerald-500/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-accent/15 hover:bg-accent/25 text-accent-strong dark:text-accent border border-accent/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed v2-press"
                 >
                   {busy === `${r.type}-xlsx` ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />}
                   Excel İndir
@@ -279,16 +282,16 @@ export default function ReportsPage() {
         })}
       </div>
 
-      <p className="text-[11px] text-surface-500">
+      <p className="text-[11px] text-[rgb(var(--v2-muted))]">
         Tutarlar güncel kurla TL&apos;ye çevrilir (USD/Altın). Nakit akışı fiziksel kasa
         semantiğindedir (NAKIT + POS; HESAPDAN/TRANSFER hariç).
       </p>
 
       {/* ── Ledger v2 (Faz D) — Patron raporları (posting-tabanlı) ── */}
       <section className="rise pt-2">
-        <p className="text-[13px] text-brand-300 font-semibold tracking-wide">Ledger Raporları (Faz D)</p>
-        <h2 className="text-lg font-extrabold h-display text-surface-100 mt-1">Patron Raporları</h2>
-        <p className="text-surface-400 mt-1 text-sm">
+        <p className="v2-eyebrow">Ledger Raporları (Faz D)</p>
+        <h2 className="v2-display text-lg mt-1">Patron Raporları</h2>
+        <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
           Posting-tabanlı, firma-bazlı. İKİ ayrı eksen: <b>Kategori P&amp;L</b> (NE tür) ⊥{" "}
           <b>Operatör Kâr</b> (KİM). Bu raporlar <b>işletme seçimi</b> gerektirir.
         </p>
@@ -299,18 +302,18 @@ export default function ReportsPage() {
           const Icon = r.icon;
           const disabled = !businessId;
           return (
-            <div key={r.type} className="glass-card glass-hover p-5 flex flex-col">
+            <div key={r.type} className="v2-card p-5 flex flex-col">
               <div className="flex items-start gap-3 mb-3">
                 <div className={cn("w-11 h-11 rounded-xl grid place-items-center shrink-0", r.iconWrap)}>
                   <Icon size={22} className={r.iconColor} />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-surface-100 h-display">{r.title}</h3>
-                  <p className="text-xs text-surface-400 mt-0.5">{r.desc}</p>
+                  <h3 className="font-bold text-[rgb(var(--v2-ink))]">{r.title}</h3>
+                  <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">{r.desc}</p>
                 </div>
               </div>
               {disabled && (
-                <p className="text-[11px] text-amber-300/80 mb-2">
+                <p className="text-[11px] text-status-warning mb-2">
                   Bu rapor için yukarıdan bir işletme seçin.
                 </p>
               )}
@@ -318,7 +321,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => downloadLedger(r, "pdf")}
                   disabled={disabled || busy !== null}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-200 border border-rose-500/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-status-danger/15 hover:bg-status-danger/25 text-status-danger border border-status-danger/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed v2-press"
                 >
                   {busy === `ledger-${r.type}-pdf` ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
                   PDF İndir
@@ -326,7 +329,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => downloadLedger(r, "xlsx")}
                   disabled={disabled || busy !== null}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-200 border border-emerald-500/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-accent/15 hover:bg-accent/25 text-accent-strong dark:text-accent border border-accent/30 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed v2-press"
                 >
                   {busy === `ledger-${r.type}-xlsx` ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />}
                   Excel İndir

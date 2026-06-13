@@ -90,24 +90,24 @@ export default function BudgetSettingsPage() {
     <div className="space-y-5">
       {/* Başlık */}
       <section className="rise">
-        <p className="text-[13px] text-brand-300 font-semibold tracking-wide">Raporlar</p>
-        <h1 className="text-2xl font-extrabold h-display text-surface-100 mt-1">
+        <p className="v2-eyebrow">Raporlar</p>
+        <h1 className="v2-display text-2xl mt-1">
           Bütçe-Eşik Ayarları
         </h1>
-        <p className="text-surface-400 mt-1 text-sm">
+        <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
           Kategori başına aylık bütçe tanımlayın; aşıldığında uyarı alın.
           {!isAdmin && " (Bütçe değiştirme yetkisi yalnız yöneticidedir.)"}
         </p>
       </section>
 
       {/* İşletme seçici */}
-      <section className="glass-card p-3 flex flex-wrap items-center gap-3">
+      <section className="v2-card p-3 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1.5">
-          <Building2 size={14} className="text-surface-400" />
+          <Building2 size={14} className="text-[rgb(var(--v2-muted))]" />
           <select
             value={businessId}
             onChange={(e) => setBusinessId(e.target.value)}
-            className="field-sm py-1.5 w-auto"
+            className="py-1.5 px-3 w-auto text-sm rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
           >
             <option value="" disabled>İşletme seçin…</option>
             {businesses.map((b) => (
@@ -116,23 +116,23 @@ export default function BudgetSettingsPage() {
           </select>
         </div>
         {data && (
-          <span className="text-xs text-surface-400">
-            Dönem: <b className="text-surface-200">{data.period_label}</b> (aylık)
+          <span className="text-xs text-[rgb(var(--v2-muted))]">
+            Dönem: <b className="text-[rgb(var(--v2-ink))]">{data.period_label}</b> (aylık)
           </span>
         )}
         {loading && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-surface-400">
+          <span className="inline-flex items-center gap-1.5 text-xs text-[rgb(var(--v2-muted))]">
             <Loader2 size={13} className="animate-spin" /> Yükleniyor…
           </span>
         )}
       </section>
 
       {/* Kategori bütçe listesi */}
-      <section className="glass-card p-0 overflow-hidden">
+      <section className="v2-card p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-surface-400 border-b border-surface-700/40">
+              <tr className="text-left text-xs uppercase text-[rgb(var(--v2-muted))] border-b border-[rgb(var(--v2-border))]">
                 <th className="px-4 py-2.5 font-medium">Kategori</th>
                 <th className="px-4 py-2.5 font-medium text-right">Bu Ay Harcama</th>
                 <th className="px-4 py-2.5 font-medium text-right">Aylık Bütçe</th>
@@ -145,17 +145,17 @@ export default function BudgetSettingsPage() {
                 const isEditing = editing === row.category_id;
                 const pct = row.usage_pct ?? 0;
                 return (
-                  <tr key={row.category_id} className="border-b border-surface-800/40 row-hover">
+                  <tr key={row.category_id} className="border-b border-[rgb(var(--v2-border))] hover:bg-[rgb(var(--v2-sunken))] transition-colors">
                     <td className="px-4 py-2.5">
                       <span className="inline-flex items-center gap-2">
                         {row.color && (
                           <span className="w-2.5 h-2.5 rounded-full shrink-0"
                             style={{ backgroundColor: row.color }} />
                         )}
-                        <span className="text-surface-200">{row.category_name}</span>
+                        <span className="text-[rgb(var(--v2-ink))]">{row.category_name}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right num text-surface-300">
+                    <td className="px-4 py-2.5 text-right num text-[rgb(var(--v2-muted))]">
                       {formatCurrency(row.spent, "TRY")}
                     </td>
                     <td className="px-4 py-2.5 text-right">
@@ -168,50 +168,51 @@ export default function BudgetSettingsPage() {
                           onChange={(e) => setEditValue(e.target.value)}
                           autoFocus
                           placeholder="Kapalı"
-                          className="field-sm w-28 text-right py-1"
+                          className="w-28 text-right py-1 px-2 text-sm rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
                         />
                       ) : row.budget != null ? (
-                        <span className="num text-surface-100 font-medium">
+                        <span className="num text-[rgb(var(--v2-ink))] font-medium">
                           {formatCurrency(row.budget, "TRY")}
                         </span>
                       ) : (
-                        <span className="text-xs text-surface-500">Kapalı</span>
+                        <span className="text-xs text-[rgb(var(--v2-muted))]">Kapalı</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5">
                       {row.budget != null ? (
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 rounded-full bg-surface-700/50 overflow-hidden">
+                          <div className="flex-1 h-1.5 rounded-full v2-sunken overflow-hidden">
                             <div
                               className={cn(
                                 "h-full rounded-full",
-                                row.exceeded ? "bg-rose-500" : pct >= 80 ? "bg-amber-500" : "bg-emerald-500"
+                                row.exceeded ? "bg-status-danger" : pct >= 80 ? "bg-status-warning" : "bg-accent"
                               )}
                               style={{ width: `${Math.min(100, pct)}%` }}
                             />
                           </div>
                           <span className={cn(
                             "num text-xs font-semibold w-10 text-right",
-                            row.exceeded ? "text-rose-300" : pct >= 80 ? "text-amber-300" : "text-surface-300"
+                            row.exceeded ? "text-status-danger" : pct >= 80 ? "text-status-warning" : "text-[rgb(var(--v2-muted))]"
                           )}>
                             {pct}%
                           </span>
-                          {row.exceeded && <AlertTriangle size={13} className="text-rose-400 shrink-0" />}
+                          {row.exceeded && <AlertTriangle size={13} className="text-status-danger shrink-0" />}
                         </div>
                       ) : (
-                        <span className="text-xs text-surface-500">—</span>
+                        <span className="text-xs text-[rgb(var(--v2-muted))]">—</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-right">
                       {!isAdmin ? (
-                        <span className="text-xs text-surface-600">—</span>
+                        <span className="text-xs text-[rgb(var(--v2-muted))]">—</span>
                       ) : isEditing ? (
                         <div className="inline-flex gap-1">
                           <button
                             onClick={() => save(row.category_id)}
                             disabled={savingId === row.category_id}
-                            className="p-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 disabled:opacity-50"
+                            className="p-1.5 rounded-lg bg-accent/15 hover:bg-accent/25 text-accent-strong dark:text-accent disabled:opacity-50 v2-press"
                             title="Kaydet"
+                            aria-label="Kaydet"
                           >
                             {savingId === row.category_id
                               ? <Loader2 size={14} className="animate-spin" />
@@ -219,8 +220,9 @@ export default function BudgetSettingsPage() {
                           </button>
                           <button
                             onClick={cancelEdit}
-                            className="p-1.5 rounded-lg bg-surface-700/50 hover:bg-surface-700 text-surface-300"
+                            className="p-1.5 rounded-lg v2-sunken hover:border-accent/50 text-[rgb(var(--v2-muted))] v2-press"
                             title="İptal"
+                            aria-label="İptal"
                           >
                             <X size={14} />
                           </button>
@@ -228,8 +230,9 @@ export default function BudgetSettingsPage() {
                       ) : (
                         <button
                           onClick={() => startEdit(row)}
-                          className="p-1.5 rounded-lg bg-surface-700/40 hover:bg-surface-700 text-surface-300"
+                          className="p-1.5 rounded-lg v2-sunken hover:border-accent/50 text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] v2-press"
                           title="Bütçe düzenle"
+                          aria-label="Bütçe düzenle"
                         >
                           <Pencil size={14} />
                         </button>
@@ -240,7 +243,7 @@ export default function BudgetSettingsPage() {
               })}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-surface-400 text-sm">
+                  <td colSpan={5} className="px-4 py-8 text-center text-[rgb(var(--v2-muted))] text-sm">
                     {businessId
                       ? "Bu işletmede gider kategorisi bulunamadı."
                       : "Önce bir işletme seçin."}
@@ -252,7 +255,7 @@ export default function BudgetSettingsPage() {
         </div>
       </section>
 
-      <p className="text-[11px] text-surface-500 inline-flex items-start gap-1.5">
+      <p className="text-[11px] text-[rgb(var(--v2-muted))] inline-flex items-start gap-1.5">
         <Wallet size={13} className="shrink-0 mt-px" />
         Bütçe alarmı varsayılan KAPALIDIR — yalnız değer girilen kategorilerde,
         ay içinde bütçe ilk kez aşıldığında bir kez uyarı gönderilir (spam yapmaz).

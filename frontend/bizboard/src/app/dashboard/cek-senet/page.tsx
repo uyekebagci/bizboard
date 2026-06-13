@@ -32,11 +32,11 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  PENDING_OCR: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  CONFIRMED: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-  CASHED: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  BOUNCED: "bg-red-500/15 text-red-300 border-red-500/30",
-  ENDORSED: "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  PENDING_OCR: "bg-status-warning/15 text-status-warning border-status-warning/30",
+  CONFIRMED: "bg-accent/15 text-accent-strong dark:text-accent border-accent/30",
+  CASHED: "bg-accent/15 text-accent-strong dark:text-accent border-accent/30",
+  BOUNCED: "bg-status-danger/15 text-status-danger border-status-danger/30",
+  ENDORSED: "bg-status-warning/15 text-status-warning border-status-warning/30",
 };
 
 export default function InstrumentsPage() {
@@ -99,78 +99,78 @@ export default function InstrumentsPage() {
   return (
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
-          <FileText size={20} className="text-purple-300" />
+        <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+          <FileText size={20} className="text-accent-strong dark:text-accent" />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-surface-100">Çek / Senet (Ledger)</h1>
-          <p className="text-xs text-surface-400">Portföy · tahsil/ödeme → kasa posting · ciro</p>
+          <h1 className="v2-display text-xl">Çek / Senet (Ledger)</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">Portföy · tahsil/ödeme → kasa posting · ciro</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold"
+          className="v2-btn v2-btn--ink v2-press flex items-center gap-1.5"
         >
           <Plus size={16} /> Ekle
         </button>
       </div>
 
       <section className="grid grid-cols-3 gap-3">
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Alacak (Portföy)</p>
-          <p className="mt-1 text-lg font-bold text-emerald-300">{formatCurrency(totalReceivable, "TRY")}</p>
+        <div className="v2-card p-3">
+          <p className="v2-eyebrow text-[10px]">Alacak (Portföy)</p>
+          <p className="mt-1 text-lg font-bold num text-accent-strong dark:text-accent">{formatCurrency(totalReceivable, "TRY")}</p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Borç (Portföy)</p>
-          <p className="mt-1 text-lg font-bold text-red-300">{formatCurrency(totalPayable, "TRY")}</p>
+        <div className="v2-card p-3">
+          <p className="v2-eyebrow text-[10px]">Borç (Portföy)</p>
+          <p className="mt-1 text-lg font-bold num text-status-danger">{formatCurrency(totalPayable, "TRY")}</p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Toplam Kayıt</p>
-          <p className="mt-1 text-lg font-bold text-surface-100">{list.length}</p>
+        <div className="v2-card p-3">
+          <p className="v2-eyebrow text-[10px]">Toplam Kayıt</p>
+          <p className="mt-1 text-lg font-bold text-[rgb(var(--v2-ink))]">{list.length}</p>
         </div>
       </section>
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+        <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm flex items-start gap-2">
           <AlertTriangle size={14} className="mt-0.5" /> <span>{error}</span>
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-purple-400" />
+          <Loader2 size={28} className="animate-spin text-accent-strong dark:text-accent" />
         </div>
       ) : list.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <FileText size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henüz çek/senet yok</p>
+        <div className="v2-card p-8 text-center">
+          <FileText size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz çek/senet yok</p>
         </div>
       ) : (
-        <section className="glass-card divide-y divide-surface-700">
+        <section className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
           {list.map((i) => {
             const overdue = i.due_date < today && (i.status === "CONFIRMED" || i.status === "PENDING_OCR");
             const canAct = i.status === "CONFIRMED";
             return (
-              <div key={i.id} className={cn("p-4 flex items-start justify-between gap-3", overdue && "bg-red-500/5")}>
+              <div key={i.id} className={cn("p-4 flex items-start justify-between gap-3", overdue && "bg-status-danger/5")}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={cn(
                       "text-[9px] uppercase px-1.5 py-0.5 rounded-full border",
-                      i.direction === "RECEIVED" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : "bg-red-500/15 text-red-300 border-red-500/30",
+                      i.direction === "RECEIVED" ? "bg-accent/15 text-accent-strong dark:text-accent border-accent/30" : "bg-status-danger/15 text-status-danger border-status-danger/30",
                     )}>
                       {i.direction === "RECEIVED" ? "Alacak" : "Borç"}
                     </span>
-                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-surface-700 text-surface-300 border border-surface-600">
+                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full v2-sunken text-[rgb(var(--v2-muted))] border border-[rgb(var(--v2-border))]">
                       {i.type === "CHECK" ? "Çek" : "Senet"}
                     </span>
                     <span className={cn("text-[9px] uppercase px-1.5 py-0.5 rounded-full border", STATUS_STYLE[i.status])}>
                       {STATUS_LABEL[i.status] ?? i.status}
                     </span>
                     {overdue && (
-                      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">Vade Geçti</span>
+                      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-status-danger/15 text-status-danger border border-status-danger/30">Vade Geçti</span>
                     )}
                   </div>
-                  <p className="text-sm font-medium text-surface-100 mt-1 truncate">{i.issuer_name ?? "—"}</p>
-                  <p className="text-[11px] text-surface-400 mt-0.5">
+                  <p className="text-sm font-medium text-[rgb(var(--v2-ink))] mt-1 truncate">{i.issuer_name ?? "—"}</p>
+                  <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
                     Vade {new Date(i.due_date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
                     {i.bank_name && <> · {i.bank_name}</>}
                     {i.serial_no && <> · #{i.serial_no}</>}
@@ -179,43 +179,43 @@ export default function InstrumentsPage() {
                   </p>
                 </div>
                 <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
-                  <p className={cn("text-sm font-semibold", i.direction === "RECEIVED" ? "text-emerald-300" : "text-red-300")}>
+                  <p className={cn("text-sm font-semibold num", i.direction === "RECEIVED" ? "text-accent-strong dark:text-accent" : "text-status-danger")}>
                     {formatCurrency(i.amount, i.currency || "TRY")}
                   </p>
                   {canAct && (
                     <div className="flex gap-1">
                       <button onClick={() => handleCash(i)} disabled={busyId === i.id}
-                        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 disabled:opacity-50">
+                        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-accent/15 text-accent-strong dark:text-accent hover:bg-accent/25 border border-accent/30 disabled:opacity-50 v2-press">
                         {busyId === i.id ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
                         {i.direction === "RECEIVED" ? "Tahsil" : "Öde"}
                       </button>
                       {i.direction === "RECEIVED" && (
                         <button onClick={() => handleEndorse(i)} disabled={busyId === i.id}
-                          className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-violet-500/15 text-violet-300 hover:bg-violet-500/25 border border-violet-500/30 disabled:opacity-50">
+                          className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-status-warning/15 text-status-warning hover:bg-status-warning/25 border border-status-warning/30 disabled:opacity-50 v2-press">
                           <ArrowRightLeft size={10} /> Ciro
                         </button>
                       )}
                       <button onClick={() => handleBounce(i)} disabled={busyId === i.id}
-                        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-red-500/15 text-red-300 hover:bg-red-500/25 border border-red-500/30 disabled:opacity-50">
+                        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-status-danger/15 text-status-danger hover:bg-status-danger/25 border border-status-danger/30 disabled:opacity-50 v2-press">
                         <XCircle size={10} /> K.sız
                       </button>
                     </div>
                   )}
                   {i.status === "CASHED" && (
                     <div className="flex flex-col items-end gap-1">
-                      <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                      <span className="flex items-center gap-1 text-[10px] text-accent-strong dark:text-accent">
                         <BadgeCheck size={11} /> {i.direction === "RECEIVED" ? "Tahsil edildi" : "Ödendi"}
                       </span>
                       {/* Cross-link: hangi hesaba bağlandı (tahsilat işlemi) */}
                       {i.cashed_account_name && (
-                        <span className="text-[9px] text-surface-400">
+                        <span className="text-[9px] text-[rgb(var(--v2-muted))]">
                           → {i.cashed_account_name}
                           {i.cashed_at && ` · ${new Date(i.cashed_at).toLocaleDateString("tr-TR")}`}
                         </span>
                       )}
                       {/* Reverse: bağı kopar (yanlış bağladıysa) — P&L-nötr geri al */}
                       <button onClick={() => handleUncash(i)} disabled={busyId === i.id}
-                        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 disabled:opacity-50">
+                        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-status-warning/15 text-status-warning hover:bg-status-warning/25 border border-status-warning/30 disabled:opacity-50 v2-press">
                         {busyId === i.id ? <Loader2 size={10} className="animate-spin" /> : <Undo2 size={10} />}
                         Bağı Kopar
                       </button>
@@ -280,36 +280,37 @@ function AddInstrumentModal({
     } catch (e) { toast.error(e); } finally { setBusy(false); }
   }
 
+  const fieldCls = "w-full px-3 py-2 text-sm rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all";
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4" onClick={onClose}>
-      <div className="glass-card w-full sm:max-w-md p-5 space-y-3 rounded-t-2xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-surface-100">Çek / Senet Ekle</h2>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
+      <div className="v2-card shadow-v2-hover w-full sm:max-w-md p-5 space-y-3 rounded-t-2xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Çek / Senet Ekle</h2>
         <div className="grid grid-cols-2 gap-2">
-          <select value={type} onChange={(e) => setType(e.target.value)} className="field">
+          <select value={type} onChange={(e) => setType(e.target.value)} className={fieldCls}>
             <option value="CHECK">Çek</option>
             <option value="PROMISSORY_NOTE">Senet</option>
           </select>
-          <select value={direction} onChange={(e) => setDirection(e.target.value)} className="field">
+          <select value={direction} onChange={(e) => setDirection(e.target.value)} className={fieldCls}>
             <option value="RECEIVED">Alacak (alınan)</option>
             <option value="GIVEN">Borç (verilen)</option>
           </select>
         </div>
-        <input type="number" inputMode="decimal" placeholder="Tutar" value={amount} onChange={(e) => setAmount(e.target.value)} className="field w-full" />
-        <select value={issuerId} onChange={(e) => setIssuerId(e.target.value)} className="field w-full">
+        <input type="number" inputMode="decimal" placeholder="Tutar" value={amount} onChange={(e) => setAmount(e.target.value)} className={fieldCls} />
+        <select value={issuerId} onChange={(e) => setIssuerId(e.target.value)} className={fieldCls}>
           <option value="">Keşideci / Karşı taraf (opsiyonel)</option>
           {counterparts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <div className="grid grid-cols-2 gap-2">
-          <input placeholder="Banka" value={bankName} onChange={(e) => setBankName(e.target.value)} className="field" />
-          <input placeholder="Çek/Seri No" value={serialNo} onChange={(e) => setSerialNo(e.target.value)} className="field" />
+          <input placeholder="Banka" value={bankName} onChange={(e) => setBankName(e.target.value)} className={fieldCls} />
+          <input placeholder="Çek/Seri No" value={serialNo} onChange={(e) => setSerialNo(e.target.value)} className={fieldCls} />
         </div>
         <div>
-          <label className="text-xs text-surface-400">Vade</label>
-          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="field w-full" />
+          <label className="text-xs text-[rgb(var(--v2-muted))]">Vade</label>
+          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={fieldCls} />
         </div>
         <div className="flex gap-2 pt-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-xl bg-surface-700 text-surface-300 text-sm font-medium">İptal</button>
-          <button onClick={submit} disabled={busy} className="flex-1 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold disabled:opacity-50">
+          <button onClick={onClose} className="flex-1 py-2 rounded-xl v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] text-sm font-medium v2-press">İptal</button>
+          <button onClick={submit} disabled={busy} className="flex-1 py-2 v2-btn v2-btn--ink v2-press text-sm font-semibold disabled:opacity-50">
             {busy ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Kaydet"}
           </button>
         </div>
