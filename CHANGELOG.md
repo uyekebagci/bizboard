@@ -48,6 +48,20 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Changed
 
+- **UI v2 (Daxa) — yeni "Genel Bakış" tasarımı GERÇEK `/dashboard` landing'ine taşındı (promote).**
+  Showcase'teki (`/dashboard/ui-v2`) Daxa "Overview Panel" artık login sonrası
+  gerçek ana sayfa. Görsel hero katmanı (metrik kartları + net-kâr marjı gauge'ı +
+  haftalık hareket bar-chart + asistan motifi + insight stack'leri) yeni tasarımdan
+  geldi. **Eski dashboard'ın kritik işlevsel widget'ları korundu:** `CarryOverBanner`
+  ("Dünden Kalan Eksik/Fazla" — gün-kapanışı taşıma, `/kapanislar` aksiyonu),
+  `AlertsWidget` (envanter/personel uyarıları), `GroupedBusinessGrid` (işletme
+  kartları + gruplama + drag-drop + "İşletme Ekle"), `RecentActivity` (son işlemler,
+  tıklanabilir). "Dikkat Gerektirenler" insight'ı artık SENTETİK değil — gerçek
+  borç/alacak özeti (`/businesses/{id}/debts/summary`) + dönem net negatifliği ile
+  besleniyor; "Öne Çıkanlar" portföyden türetiliyor (haftalık-bar ve delta yüzdeleri
+  görsel motif olarak kaldı). Veri bağlama (usePortfolio/useBusinesses/dönem seçici)
+  korundu; çift tema + a11y + reduced-motion saygılı. Eski `/dashboard/ui-v2` route'u
+  duplike kalmasın diye `/dashboard`'a redirect'e indirildi (eski bookmark'lar kırılmaz).
 - **UI v2 (Daxa) — uygulama kabuğu yeni tasarım diline geçirildi + tam Türkçe + canlı varsayılan.**
   Önizlemede içerik alanı yeni Daxa dilinde, kabuk (Sidebar + TopBar) ise eski
   indigo/glass yüzeylerdeydi → "Frankenstein" görünüm. Düzeltildi:
