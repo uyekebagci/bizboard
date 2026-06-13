@@ -7,12 +7,13 @@
  * ilgili debt allocation'ları reverse edilir (counterpart yine borçlu olur).</p>
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Loader2, AlertTriangle } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { PaymentInstrumentDto } from "@/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   instrument: PaymentInstrumentDto;
@@ -28,6 +29,16 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
 
   const isCheque = instrument.instrument_type === "CHEQUE";
   const isIncoming = instrument.direction === "INCOMING";
+
+  const dialogRef = useRef<HTMLFormElement>(null);
+  useFocusTrap(true, dialogRef);
+
+  // ESC → close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,12 +60,19 @@ export function BounceInstrumentModal({ instrument, onClose, onSuccess }: Props)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bounce-instrument-modal-title"
       onClick={onClose}>
-      <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}
+      <form
+        ref={dialogRef}
+        onSubmit={handleSubmit}
+        onClick={(e) => e.stopPropagation()}
         className="v2-card w-full max-w-md shadow-xl">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+          <h3 id="bounce-instrument-modal-title" className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
             <AlertTriangle size={16} className="text-red-700 dark:text-red-300" />
             {isCheque ? "Çek" : "Senet"} Karşılıksız İşaretle
           </h3>

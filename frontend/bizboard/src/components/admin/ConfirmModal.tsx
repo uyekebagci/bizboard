@@ -9,10 +9,11 @@
  * süresince butonlar disable + spinner.</p>
  */
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 export interface ConfirmModalProps {
   open: boolean;
@@ -42,6 +43,8 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
 
   // ESC ile kapat (loading değilken).
   useEffect(() => {
@@ -66,6 +69,7 @@ export function ConfirmModal({
       }}
     >
       <div
+        ref={dialogRef}
         className="v2-card w-full max-w-sm p-6"
         onClick={(e) => e.stopPropagation()}
       >

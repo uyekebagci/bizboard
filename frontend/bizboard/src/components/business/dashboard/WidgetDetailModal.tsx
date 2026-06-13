@@ -7,9 +7,10 @@
  * Modal close: backdrop click + Esc + X butonu.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   open: boolean;
@@ -42,6 +43,9 @@ export function WidgetDetailModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
+
   if (!open) return null;
 
   const maxW = {
@@ -56,8 +60,10 @@ export function WidgetDetailModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
+      aria-labelledby="widget-detail-modal-title"
     >
       <div
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
         className={cn(
           "v2-card shadow-xl w-full max-h-[90vh] overflow-hidden flex flex-col",
@@ -66,7 +72,7 @@ export function WidgetDetailModal({
       >
         <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
           <div className="min-w-0">
-            <h3 className="text-base font-bold h-display text-[rgb(var(--v2-ink))] truncate">{title}</h3>
+            <h3 id="widget-detail-modal-title" className="text-base font-bold h-display text-[rgb(var(--v2-ink))] truncate">{title}</h3>
             {subtitle && <p className="text-xs text-[rgb(var(--v2-muted))] truncate mt-0.5">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-2 shrink-0">

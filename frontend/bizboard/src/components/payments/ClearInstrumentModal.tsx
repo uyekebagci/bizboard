@@ -7,13 +7,14 @@
  * incoming için artar, outgoing için düşer. Eş zamanlı bir tx açılır.</p>
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Loader2, Check, AlertTriangle } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { BankAccountListItem, PaymentInstrumentDto } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { toast } from "@/lib/toast";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   instrument: PaymentInstrumentDto;
@@ -30,6 +31,16 @@ export function ClearInstrumentModal({ instrument, onClose, onSuccess }: Props) 
 
   const isIncoming = instrument.direction === "INCOMING";
   const isCheque = instrument.instrument_type === "CHEQUE";
+
+  const dialogRef = useRef<HTMLFormElement>(null);
+  useFocusTrap(true, dialogRef);
+
+  // ESC → close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   useEffect(() => {
     api.get<BankAccountListItem[]>("/bank-accounts")
@@ -69,13 +80,17 @@ export function ClearInstrumentModal({ instrument, onClose, onSuccess }: Props) 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="clear-instrument-modal-title"
       onClick={onClose}>
       <form
+        ref={dialogRef}
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
         className="v2-card w-full max-w-md shadow-xl">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+          <h3 id="clear-instrument-modal-title" className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
             <Check size={16} className="text-emerald-700 dark:text-emerald-300" />
             {isCheque ? "Çek" : "Senet"} Tahsil
           </h3>

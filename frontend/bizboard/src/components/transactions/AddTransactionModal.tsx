@@ -9,11 +9,12 @@
  * sonrası modal kapanır + parent callback ile cache invalidate edilir.</p>
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Receipt, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, HandCoins } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { cn } from "@/lib/utils";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { AddTransactionForm } from "./AddTransactionForm";
 import { TransferForm } from "./TransferForm";
 import { LoanForm } from "./LoanForm";
@@ -64,6 +65,9 @@ export function AddTransactionModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
+
   if (!open || !mounted) return null;
 
   const isTransfer = tab === "transfer";
@@ -84,13 +88,15 @@ export function AddTransactionModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
+      aria-labelledby="add-tx-modal-title"
     >
       <div
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
         className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
-          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+          <h3 id="add-tx-modal-title" className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
             <Receipt size={16} className="text-accent-strong dark:text-accent" />
             Yeni İşlem
           </h3>

@@ -14,7 +14,7 @@
  * (b) işlem formundaki "çek/senet tahsilatı" önerisinden.</p>
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Loader2, Check, AlertTriangle, FileText } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -22,6 +22,7 @@ import type { BankAccountListItem } from "@/types";
 import type { Instrument } from "@/hooks/useInstruments";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { toast } from "@/lib/toast";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   instrument: Instrument;
@@ -43,6 +44,16 @@ export function CashLedgerInstrumentModal({ instrument, onCash, onClose, onSucce
 
   const isReceived = instrument.direction === "RECEIVED";
   const isCheck = instrument.type === "CHECK";
+
+  const dialogRef = useRef<HTMLFormElement>(null);
+  useFocusTrap(true, dialogRef);
+
+  // ESC → close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   useEffect(() => {
     api.get<BankAccountListItem[]>("/bank-accounts")
@@ -80,13 +91,17 @@ export function CashLedgerInstrumentModal({ instrument, onCash, onClose, onSucce
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cash-instrument-modal-title"
       onClick={onClose}>
       <form
+        ref={dialogRef}
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
         className="v2-card w-full max-w-md shadow-xl">
         <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
-          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+          <h3 id="cash-instrument-modal-title" className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
             <Check size={16} className="text-emerald-700 dark:text-emerald-300" />
             {isCheck ? "Çek" : "Senet"} {isReceived ? "Tahsil" : "Öde"} (Bağla)
           </h3>

@@ -11,7 +11,7 @@
  * modal-header (mevcut tema-duyarlı primitivler).</p>
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Check, Eye, EyeOff, Building2 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { getErrorMessage } from "@/lib/errors";
@@ -20,6 +20,7 @@ import {
   AdminPageAccess,
   buildAllowedPagesPayload,
 } from "./AdminPageAccess";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 // ── Role Labels ─────────────────────────────────────────────
 export const ROLE_OPTIONS = [
@@ -52,6 +53,16 @@ export function CreateUserModal({
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, dialogRef);
+
+  // ESC → close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   function toggleBusiness(id: string) {
     setSelectedBusinessIds((prev) =>
@@ -110,11 +121,16 @@ export function CreateUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="v2-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-user-modal-title"
+    >
+      <div ref={dialogRef} className="v2-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
+          <h3 id="create-user-modal-title" className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             Yeni Kullanıcı Oluştur
           </h3>
           <button
