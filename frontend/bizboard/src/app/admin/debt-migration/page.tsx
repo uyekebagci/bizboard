@@ -79,13 +79,14 @@ export default function DebtMigrationPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn"
+          aria-label="Admin paneline dön"
         >
-          <ChevronLeft size={20} className="text-amber-400" />
+          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
         </button>
         <div className="flex items-center gap-2.5">
-          <GitMerge size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Borç Cari Taşıma</h1>
+          <GitMerge size={24} className="text-accent-strong dark:text-accent" />
+          <h1 className="text-2xl v2-display">Borç Cari Taşıma</h1>
         </div>
       </div>
 
@@ -111,17 +112,17 @@ export default function DebtMigrationPage() {
       </div>
 
       {/* Options */}
-      <div className="mb-6 p-4 bg-surface-900 border border-surface-700 rounded-xl">
+      <div className="mb-6 v2-card p-4">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={autoCreate}
             onChange={(e) => setAutoCreate(e.target.checked)}
-            className="w-4 h-4 rounded accent-amber-500"
+            className="w-4 h-4 rounded accent-accent"
           />
           <div>
-            <span className="text-sm text-surface-100 font-medium">Otomatik oluştur</span>
-            <p className="text-xs text-surface-400">
+            <span className="text-sm text-[rgb(var(--v2-ink))] font-medium">Otomatik oluştur</span>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">
               Eşleşme bulunamayan isimleri yeni cari olarak yarat (rol=OTHER).
               Kapalıyken bu kayıtlar atlanır.
             </p>
@@ -134,7 +135,7 @@ export default function DebtMigrationPage() {
         <button
           onClick={runDry}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-100 text-sm font-semibold disabled:opacity-50"
+          className="v2-btn v2-press !py-2.5 !px-4 text-sm border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] hover:border-accent/50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Info size={16} />}
           Deneme çalıştırması
@@ -142,7 +143,7 @@ export default function DebtMigrationPage() {
         <button
           onClick={() => setConfirmApply(true)}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold disabled:opacity-50"
+          className="v2-btn v2-btn--accent v2-press !py-2.5 !px-4 text-sm"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
           Uygula
@@ -150,7 +151,7 @@ export default function DebtMigrationPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-900/30 border border-red-800 rounded-xl text-red-300 text-sm flex items-start gap-3">
+        <div className="mb-6 p-4 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm flex items-start gap-3">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <div>{error}</div>
         </div>
@@ -161,17 +162,17 @@ export default function DebtMigrationPage() {
       {applyResult && <ResultPanel title="Uygulama sonucu" result={applyResult} variant="success" />}
 
       {confirmApply && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="glass-card p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-surface-100 mb-2">
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="modal-surface rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">
               Taşımayı Çalıştır
             </h3>
-            <p className="text-sm text-surface-400 mb-2">
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-2">
               Bu işlem sahipsiz borç kayıtlarını cari kayıtlarına kalıcı olarak bağlar.
             </p>
-            <p className="text-sm text-surface-400 mb-6">
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-6">
               Otomatik oluştur:{" "}
-              <strong className={autoCreate ? "text-amber-400" : "text-surface-400"}>
+              <strong className={autoCreate ? "text-accent-strong dark:text-accent" : "text-[rgb(var(--v2-muted))]"}>
                 {autoCreate ? "AÇIK" : "Kapalı"}
               </strong>
               . Devam edilsin mi?
@@ -185,7 +186,7 @@ export default function DebtMigrationPage() {
               </button>
               <button
                 onClick={runApply}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm"
+                className="v2-btn v2-btn--accent v2-press !py-2 !px-4 text-sm"
               >
                 Evet, Çalıştır
               </button>
@@ -202,16 +203,16 @@ function ResultPanel({
 }: { title: string; result: MigrationResult; variant: "info" | "success" }) {
   const baseClass =
     variant === "success"
-      ? "bg-green-900/20 border-green-800/40 text-green-200"
-      : "bg-surface-900 border-surface-700 text-surface-100";
+      ? "bg-status-success/10 border-status-success/30 text-[rgb(var(--v2-ink))]"
+      : "v2-card";
 
   return (
-    <div className={`p-5 border rounded-xl ${baseClass}`}>
-      <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-        {variant === "success" && <CheckCircle2 size={18} />}
+    <div className={`p-5 ${variant === "success" ? "border rounded-xl" : ""} ${baseClass}`}>
+      <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-[rgb(var(--v2-ink))]">
+        {variant === "success" && <CheckCircle2 size={18} className="text-status-success" />}
         {title}
         {result.dry_run && (
-          <span className="ml-2 px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-medium">
+          <span className="v2-chip-accent ml-2 text-[10px] font-medium">
             DENEME
           </span>
         )}
@@ -224,7 +225,7 @@ function ResultPanel({
         <Stat label="Yeniden hesaplanan" value={result.recomputed_counterparts} />
       </div>
       {result.dry_run && (
-        <p className="text-xs text-surface-400 mt-3">
+        <p className="text-xs text-[rgb(var(--v2-muted))] mt-3">
           Bu sadece bir simülasyon. Hiçbir veri değişiklikten geçmedi.
         </p>
       )}
@@ -235,8 +236,8 @@ function ResultPanel({
 function Stat({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] text-surface-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-green-400" : "text-surface-100"}`}>
+      <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wide">{label}</p>
+      <p className={`text-xl font-bold mt-0.5 ${positive ? "text-status-success" : "text-[rgb(var(--v2-ink))]"}`}>
         {value}
       </p>
     </div>

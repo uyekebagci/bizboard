@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, ShieldCheck, Radio, Download } from "lucide-react";
+import { Loader2, ShieldCheck, Radio, Download, UserX } from "lucide-react";
 
 interface AuditToolbarProps {
   verifying: boolean;
@@ -10,6 +10,9 @@ interface AuditToolbarProps {
   onToggleLive: () => void;
   exporting: boolean;
   onExport: (format: "csv" | "json") => void;
+  // mod-audit: KVKK retention anonimleştirme (POST /admin/audit/anonymize)
+  anonymizing: boolean;
+  onAnonymize: () => void;
 }
 
 const BTN =
@@ -26,6 +29,8 @@ export function AuditToolbar({
   onToggleLive,
   exporting,
   onExport,
+  anonymizing,
+  onAnonymize,
 }: AuditToolbarProps) {
   return (
     <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -75,6 +80,18 @@ export function AuditToolbar({
         className={BTN}
       >
         JSON
+      </button>
+
+      {/* mod-audit: KVKK retention anonimleştirme (POST /admin/audit/anonymize) */}
+      <button
+        type="button"
+        onClick={onAnonymize}
+        disabled={anonymizing}
+        title="KVKK saklama süresi dolan eski kayıtların kişisel verilerini anonimleştir"
+        className={BTN}
+      >
+        {anonymizing ? <Loader2 size={13} className="animate-spin" /> : <UserX size={13} />}
+        KVKK Anonimleştir
       </button>
     </div>
   );

@@ -7,7 +7,7 @@
  *
  * Görünüm: yaklaşan vergi son tarihleri kart listesi (vade ASC). Her kart vergi
  * türü + dönem + kalan gün gösterir; yaklaşan (≤7 gün) vurgulanır, geçmiş soluk.
- * Aralık chip'leri (30/60/90 gün). Glass tasarım dili (.glass-card).
+ * Aralık chip'leri (30/60/90 gün). Daxa v2 tasarım dili (.v2-card / v2-token).
  *
  * Bildirim: backend cron (TaxDeadlineReminderScheduler) 7/3/1 gün önce admin'lere
  * uyarı atar; bu sayfa o uyarıların {actionUrl} hedefidir.
@@ -36,7 +36,10 @@ const TYPE_THEME: Record<string, { wrap: string; text: string }> = {
 };
 
 function themeFor(type: string) {
-  return TYPE_THEME[type] ?? { wrap: "bg-surface-600/40 border-surface-500/40", text: "text-surface-200" };
+  return TYPE_THEME[type] ?? {
+    wrap: "bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))]",
+    text: "text-[rgb(var(--v2-ink))]",
+  };
 }
 
 function formatTrDate(iso: string): string {
@@ -51,11 +54,11 @@ function formatTrDate(iso: string): string {
 
 /** Kalan gün → TR rozet metni + renk. */
 function countdown(days: number): { label: string; tone: string } {
-  if (days < 0) return { label: `${Math.abs(days)} gün geçti`, tone: "text-surface-400 bg-surface-700 border-surface-600" };
-  if (days === 0) return { label: "BUGÜN", tone: "text-red-200 bg-red-500/20 border-red-500/40" };
-  if (days === 1) return { label: "YARIN", tone: "text-orange-200 bg-orange-500/20 border-orange-500/40" };
-  if (days <= 7) return { label: `${days} gün`, tone: "text-amber-200 bg-amber-500/15 border-amber-500/30" };
-  return { label: `${days} gün`, tone: "text-surface-200 bg-surface-700 border-surface-600" };
+  if (days < 0) return { label: `${Math.abs(days)} gün geçti`, tone: "text-[rgb(var(--v2-muted))] bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))]" };
+  if (days === 0) return { label: "BUGÜN", tone: "text-status-danger bg-status-danger/15 border-status-danger/40" };
+  if (days === 1) return { label: "YARIN", tone: "text-status-warning bg-status-warning/15 border-status-warning/40" };
+  if (days <= 7) return { label: `${days} gün`, tone: "text-status-warning bg-status-warning/10 border-status-warning/30" };
+  return { label: `${days} gün`, tone: "text-[rgb(var(--v2-ink))] bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))]" };
 }
 
 export default function VergiTakvimiPage() {
@@ -101,37 +104,37 @@ export default function VergiTakvimiPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn -ml-2"
           aria-label="Geri"
         >
-          <ArrowLeft size={20} className="text-surface-300" />
+          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
         </button>
         <div className="flex items-center gap-2 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center">
-            <Landmark size={20} className="text-brand-300" />
+          <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
+            <Landmark size={20} className="text-accent-strong dark:text-accent" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-surface-100 h-display">Vergi Takvimi</h1>
-            <p className="text-xs text-surface-400">TR vergi son tarihleri (GİB takvimi)</p>
+            <h1 className="text-xl v2-display">Vergi Takvimi</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">TR vergi son tarihleri (GİB takvimi)</p>
           </div>
         </div>
       </div>
 
       {/* Özet kartlar */}
       <section className="grid grid-cols-3 gap-3">
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Kayıt</p>
-          <p className="mt-1 text-lg font-bold text-surface-100">{list.length}</p>
+        <div className="v2-card p-3">
+          <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase">Kayıt</p>
+          <p className="mt-1 text-lg font-bold text-[rgb(var(--v2-ink))]">{list.length}</p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Yaklaşan (≤7g)</p>
-          <p className={cn("mt-1 text-lg font-bold", upcoming > 0 ? "text-amber-300" : "text-surface-400")}>
+        <div className="v2-card p-3">
+          <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase">Yaklaşan (≤7g)</p>
+          <p className={cn("mt-1 text-lg font-bold", upcoming > 0 ? "text-status-warning" : "text-[rgb(var(--v2-muted))]")}>
             {upcoming}
           </p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">İlk Son Tarih</p>
-          <p className="mt-1 text-sm font-semibold text-surface-100 truncate">
+        <div className="v2-card p-3">
+          <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase">İlk Son Tarih</p>
+          <p className="mt-1 text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">
             {nextDeadline ? formatTrDate(nextDeadline.due_date) : "—"}
           </p>
         </div>
@@ -146,8 +149,8 @@ export default function VergiTakvimiPage() {
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
               days === d
-                ? "bg-brand-500/20 border-brand-400 text-brand-200"
-                : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
+                ? "bg-accent/16 border-accent/40 text-accent-strong dark:text-accent"
+                : "bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
             )}
           >
             {d} gün
@@ -156,7 +159,7 @@ export default function VergiTakvimiPage() {
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+        <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm flex items-start gap-2">
           <AlertTriangle size={14} className="mt-0.5" />
           <span>{error}</span>
         </div>
@@ -164,15 +167,15 @@ export default function VergiTakvimiPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-brand-400" />
+          <Loader2 size={28} className="animate-spin text-accent-strong dark:text-accent" />
         </div>
       ) : list.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <CalendarClock size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">{days} gün içinde vergi son tarihi yok</p>
+        <div className="v2-card p-8 text-center">
+          <CalendarClock size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">{days} gün içinde vergi son tarihi yok</p>
         </div>
       ) : (
-        <section className="glass-card divide-y divide-surface-700">
+        <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {list.map((d, i) => {
             const theme = themeFor(d.obligation_type);
             const cd = countdown(d.days_until);
@@ -182,7 +185,7 @@ export default function VergiTakvimiPage() {
                 key={`${d.obligation_type}-${d.due_date}-${i}`}
                 className={cn(
                   "p-4 flex items-start justify-between gap-3",
-                  d.days_until >= 0 && d.days_until <= 7 && "bg-amber-500/5",
+                  d.days_until >= 0 && d.days_until <= 7 && "bg-status-warning/5",
                   d.days_until < 0 && "opacity-60",
                 )}
               >
@@ -191,12 +194,12 @@ export default function VergiTakvimiPage() {
                     <ReceiptText size={16} className={theme.text} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-surface-100 truncate">{d.label}</p>
-                    <p className="text-xs text-surface-400 truncate">{d.description}</p>
-                    <p className="mt-1 text-xs text-surface-300">
+                    <p className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">{d.label}</p>
+                    <p className="text-xs text-[rgb(var(--v2-muted))] truncate">{d.description}</p>
+                    <p className="mt-1 text-xs text-[rgb(var(--v2-ink))]">
                       <span className="num">{formatTrDate(d.due_date)}</span>
-                      <span className="mx-1.5 text-surface-600">·</span>
-                      <span className="text-surface-400">{d.period} dönemi</span>
+                      <span className="mx-1.5 text-[rgb(var(--v2-muted))]">·</span>
+                      <span className="text-[rgb(var(--v2-muted))]">{d.period} dönemi</span>
                     </p>
                     {isVat && d.days_until >= 0 && (
                       <p className="mt-1.5 text-[11px] text-emerald-300/90">

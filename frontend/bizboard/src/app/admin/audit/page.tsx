@@ -8,9 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  ShieldCheck,
-  ShieldAlert,
-  Radio,
 } from "lucide-react";
 import {
   api,
@@ -21,20 +18,28 @@ import {
 } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
+import { toast } from "@/lib/toast";
 import { getErrorMessage } from "@/lib/errors";
 import type { AuditLog, PagedResponse } from "@/types";
-import { actionLabel, localizeDetail, relativeTime } from "./audit-i18n";
+import { actionLabel } from "./audit-i18n";
 import { AuditRow } from "./AuditRow";
 import { AuditToolbar } from "./AuditToolbar";
+import { AuditAnonymizeModal } from "./AuditAnonymizeModal";
+import { AuditChainBanner, type ChainVerification } from "./AuditChainBanner";
+import { AuditLivePanel } from "./AuditLivePanel";
 
-/** mod-audit: tamper-proof zincir doğrulama cevabı (backend record alanları). */
-interface ChainVerification {
-  valid: boolean;
-  verifiedCount: number;
-  unchainedCount: number;
-  brokenAtSeq: number | null;
-  brokenRecordId: string | null;
-  brokenPosition: number | null;
+/** mod-audit: zincir-onar (backfill-chain) cevabı (backend record alanları). */
+interface BackfillResult {
+  initialUnchained: number;
+  processed: number;
+  remainingUnchained: number;
+  tipSeq: number;
+}
+
+/** mod-audit: KVKK anonimleştirme cevabı (backend record alanları). */
+interface AnonymizeResult {
+  anonymizedCount: number;
+  rechainedFromSeq: number | null;
   message: string;
 }
 
@@ -67,6 +72,14 @@ export default function AdminAuditPage() {
   // mod-audit: tamper-proof zincir doğrulama
   const [verifying, setVerifying] = useState(false);
   const [chain, setChain] = useState<ChainVerification | null>(null);
+
+  // mod-audit: zincir-onar (verify "kırık" dönünce görünür)
+  const [repairing, setRepairing] = useState(false);
+
+  // mod-audit: KVKK anonimleştirme (onay modalı + gün-sayısı)
+  const [anonymizing, setAnonymizing] = useState(false);
+  const [showAnonymize, setShowAnonymize] = useState(false);
+  const [anonymizeDays, setAnonymizeDays] = useState("365");
 
   // mod-audit: canlı SSE akışı
   const [live, setLive] = useState(false);
@@ -155,6 +168,55 @@ export default function AdminAuditPage() {
       logger.error("api", "Audit chain verify failed", undefined, err);
     } finally {
       setVerifying(false);
+    }
+  }
+
+  // mod-audit: zincir-onar. verify "kırık" dönünce görünen aksiyon; geçmiş
+  // zincirsiz (chainSeq=null) kayıtları zincirin ucuna ekler (idempotent),
+  // ardından verify-chain'i tekrar koşar ki sonuç güncellensin.
+  // Backend: POST /admin/audit/backfill-chain (gövde yok).
+  async function repairChain() {
+    setRepairing(true);
+    try {
+      const res = await api.post<BackfillResult>("/admin/audit/backfill-chain", null);
+      toast.success(
+        `Zincir onarıldı — ${res.processed} kayıt zincirlendi` +
+          (res.remainingUnchained > 0
+            ? ` (${res.remainingUnchained} zincirsiz kaldı)`
+            : "")
+      );
+      await verifyChain();
+    } catch (err) {
+      toast.error(err);
+      logger.error("api", "Audit chain backfill failed", undefined, err);
+    } finally {
+      setRepairing(false);
+    }
+  }
+
+  // mod-audit: KVKK retention anonimleştirme. days>0 günden eski kayıtların PII
+  // alanları anonimleştirilir (kayıt silinmez; zincir yeniden imzalanır).
+  // Backend: POST /admin/audit/anonymize?days= (gövde yok).
+  async function anonymize() {
+    const days = Number(anonymizeDays);
+    if (!Number.isFinite(days) || days < 1) {
+      toast.error("Geçerli bir gün sayısı girin (en az 1).");
+      return;
+    }
+    setAnonymizing(true);
+    try {
+      const res = await api.post<AnonymizeResult>(
+        `/admin/audit/anonymize?days=${encodeURIComponent(String(Math.floor(days)))}`,
+        null
+      );
+      // i18n AUDIT_ANONYMIZED label'ı + sonuç sayısı.
+      toast.success(`${actionLabel("AUDIT_ANONYMIZED")} — ${res.anonymizedCount} kayıt`);
+      setShowAnonymize(false);
+    } catch (err) {
+      toast.error(err);
+      logger.error("api", "Audit anonymize failed", undefined, err);
+    } finally {
+      setAnonymizing(false);
     }
   }
 
@@ -301,6 +363,8 @@ export default function AdminAuditPage() {
           onToggleLive={toggleLive}
           exporting={exporting}
           onExport={serverExport}
+          anonymizing={anonymizing}
+          onAnonymize={() => setShowAnonymize(true)}
         />
       </section>
 
@@ -370,62 +434,16 @@ export default function AdminAuditPage() {
 
       {/* mod-audit: zincir doğrulama sonucu */}
       {chain && (
-        <div
-          className={`p-3 rounded-xl border text-sm flex items-start gap-2 ${
-            chain.valid
-              ? "bg-accent/10 border-accent/30 text-accent-strong dark:text-accent"
-              : "bg-status-danger/10 border-status-danger/30 text-status-danger"
-          }`}
-        >
-          {chain.valid ? (
-            <ShieldCheck size={16} className="mt-0.5 shrink-0" />
-          ) : (
-            <ShieldAlert size={16} className="mt-0.5 shrink-0" />
-          )}
-          <div className="min-w-0">
-            <p className="font-semibold">
-              {chain.valid ? "Zincir bütünlüğü doğrulandı" : "ZİNCİR KIRIK — olası tahrifat"}
-            </p>
-            <p className="text-xs opacity-90 mt-0.5 break-words">{chain.message}</p>
-            <p className="text-[11px] opacity-70 mt-1">
-              Doğrulanan: {chain.verifiedCount}
-              {chain.unchainedCount > 0 && ` · Zincirsiz: ${chain.unchainedCount}`}
-              {chain.brokenAtSeq != null && ` · Kırılma seq: ${chain.brokenAtSeq}`}
-            </p>
-          </div>
-        </div>
+        <AuditChainBanner
+          chain={chain}
+          repairing={repairing}
+          verifying={verifying}
+          onRepair={repairChain}
+        />
       )}
 
       {/* mod-audit: canlı akış paneli */}
-      {live && (
-        <div className="v2-card border-accent/30 overflow-hidden">
-          <div className="flex items-center gap-2 px-3 py-2 text-xs text-accent-strong dark:text-accent border-b border-[rgb(var(--v2-border))]">
-            <Radio size={12} className={liveConnected ? "animate-pulse" : ""} />
-            <span className="font-semibold">Canlı akış</span>
-            <span className="text-[rgb(var(--v2-muted))]">
-              {liveConnected ? "bağlı" : "bağlanıyor…"} · {liveItems.length} yeni kayıt
-            </span>
-          </div>
-          <div className="max-h-60 overflow-y-auto divide-y divide-[rgb(var(--v2-border))]">
-            {liveItems.length === 0 && (
-              <p className="text-center text-[rgb(var(--v2-muted))] py-4 text-xs">
-                Yeni denetim kaydı bekleniyor…
-              </p>
-            )}
-            {liveItems.map((r) => (
-              <div key={`live-${r.id}`} className="flex items-center gap-2 px-3 py-2 text-[12px]">
-                <span className="font-medium text-[rgb(var(--v2-ink))]">{actionLabel(r.action)}</span>
-                {r.detail && (
-                  <span className="text-[rgb(var(--v2-muted))] truncate">— {localizeDetail(r.detail)}</span>
-                )}
-                <span className="ml-auto text-[11px] text-[rgb(var(--v2-muted))] shrink-0">
-                  {r.actor_username ?? "Sistem"} · {relativeTime(r.occurred_at)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {live && <AuditLivePanel liveConnected={liveConnected} liveItems={liveItems} />}
 
       <div className="v2-card overflow-hidden divide-y divide-[rgb(var(--v2-border))]">
         {loading && (
@@ -475,6 +493,17 @@ export default function AdminAuditPage() {
             <ChevronRight size={14} />
           </button>
         </div>
+      )}
+
+      {/* mod-audit: KVKK anonimleştirme onay modalı (gün-sayısı input) */}
+      {showAnonymize && (
+        <AuditAnonymizeModal
+          days={anonymizeDays}
+          onDaysChange={setAnonymizeDays}
+          anonymizing={anonymizing}
+          onConfirm={anonymize}
+          onCancel={() => setShowAnonymize(false)}
+        />
       )}
     </div>
   );

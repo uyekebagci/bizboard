@@ -9,7 +9,7 @@
  * yeni backend yok. İşletme-başına scope ({@code business_id} query-param).</p>
  *
  * <p>ADMIN-only (sayfa-içi guard + backend SecurityConfig + servis admin doğrular).
- * Çift tema (glass-card / surface-* / .input), loading/empty/error, a11y.</p>
+ * Çift tema (Daxa v2: v2-card / v2-token / .input), loading/empty/error, a11y.</p>
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -217,36 +217,36 @@ export default function AdminProfitSharePage() {
       <div className="flex items-center gap-3 mb-2">
         <button
           onClick={() => router.push("/admin")}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn"
           aria-label="Admin paneline dön"
         >
-          <ChevronLeft size={20} className="text-amber-400" />
+          <ChevronLeft size={20} className="text-accent-strong dark:text-accent" />
         </button>
         <div className="flex items-center gap-2.5">
-          <Percent size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Kâr-Payı Yönetimi</h1>
+          <Percent size={24} className="text-accent-strong dark:text-accent" />
+          <h1 className="text-2xl v2-display">Kâr-Payı Yönetimi</h1>
         </div>
       </div>
-      <p className="text-sm text-surface-400 mb-6 ml-12">
+      <p className="text-sm text-[rgb(var(--v2-muted))] mb-6 ml-12">
         POS kâr-payı kuralları ve global oran config&apos;i (sahip% / Fatih% /
         Tuncay%). İşletme-başına yönetilir; sadece admin değiştirebilir.
       </p>
 
       {loading ? (
         <div className="py-10 flex justify-center">
-          <Loader2 size={20} className="animate-spin text-surface-400" />
+          <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : businesses.length === 0 ? (
-        <div className="glass-card p-8 text-center text-surface-400">
+        <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))]">
           İşletme bulunamadı.
         </div>
       ) : (
         <div className="space-y-5">
           {/* İşletme seçimi */}
-          <div className="glass-card p-5">
-            <label className="block text-sm font-medium text-surface-300 mb-2" htmlFor="ps-business">
+          <div className="v2-card p-5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-2" htmlFor="ps-business">
               <span className="inline-flex items-center gap-2">
-                <Building2 size={15} className="text-surface-400" /> İşletme
+                <Building2 size={15} className="text-[rgb(var(--v2-muted))]" /> İşletme
               </span>
             </label>
             <select
@@ -264,23 +264,26 @@ export default function AdminProfitSharePage() {
           </div>
 
           {dataError && (
-            <div className="glass-card p-4 text-red-300 text-sm border border-red-800/60" role="alert">
+            <div
+              className="p-4 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm"
+              role="alert"
+            >
               {dataError}
             </div>
           )}
 
           {loadingData ? (
             <div className="py-8 flex justify-center">
-              <Loader2 size={18} className="animate-spin text-surface-400" />
+              <Loader2 size={18} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           ) : (
             <>
               {/* ── Global config ──────────────────────────── */}
-              <div className="glass-card p-5">
-                <h2 className="text-sm font-bold text-surface-100 mb-1 inline-flex items-center gap-2">
-                  <Sliders size={16} className="text-amber-400" /> Global Oran Config
+              <div className="v2-card p-5">
+                <h2 className="text-sm font-bold text-[rgb(var(--v2-ink))] mb-1 inline-flex items-center gap-2">
+                  <Sliders size={16} className="text-accent-strong dark:text-accent" /> Global Oran Config
                 </h2>
-                <p className="text-[11px] text-surface-400 mb-4 leading-relaxed">
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] mb-4 leading-relaxed">
                   Kuralda override girilmezse bu oranlar kullanılır. Tümü yüzde
                   (0–100).
                 </p>
@@ -312,7 +315,7 @@ export default function AdminProfitSharePage() {
                 <button
                   onClick={handleSaveConfig}
                   disabled={savingConfig || !configDirty}
-                  className="mt-4 w-full py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="mt-4 w-full v2-btn v2-btn--accent v2-press !py-2.5"
                 >
                   {savingConfig && <Loader2 size={16} className="animate-spin" />}
                   {savingConfig ? "Kaydediliyor..." : "Config Kaydet"}
@@ -320,30 +323,30 @@ export default function AdminProfitSharePage() {
               </div>
 
               {/* ── Kurallar ──────────────────────────────── */}
-              <div className="glass-card overflow-hidden">
-                <div className="flex items-center justify-between p-5 border-b border-surface-700/60">
+              <div className="v2-card overflow-hidden">
+                <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
                   <div className="flex items-center gap-2.5">
-                    <Percent size={18} className="text-amber-400" />
-                    <h2 className="text-sm font-bold text-surface-100">
+                    <Percent size={18} className="text-accent-strong dark:text-accent" />
+                    <h2 className="text-sm font-bold text-[rgb(var(--v2-ink))]">
                       Kâr-Payı Kuralları
                     </h2>
-                    <span className="text-xs text-surface-400">({rules.length})</span>
+                    <span className="text-xs text-[rgb(var(--v2-muted))]">({rules.length})</span>
                   </div>
                   <button
                     onClick={openCreate}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-colors"
+                    className="v2-btn v2-btn--accent v2-press !py-2 !px-3 text-sm"
                   >
                     <PlusCircle size={16} /> Yeni Kural
                   </button>
                 </div>
 
                 {rules.length === 0 ? (
-                  <div className="p-8 text-center text-surface-400 text-sm">
+                  <div className="p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
                     Bu işletmede henüz kâr-payı kuralı yok. &quot;Yeni Kural&quot; ile
                     ekleyin.
                   </div>
                 ) : (
-                  <ul className="divide-y divide-surface-700">
+                  <ul className="divide-y divide-[rgb(var(--v2-border))]">
                     {rules.map((rule) => (
                       <RuleRow
                         key={rule.id}
@@ -377,15 +380,15 @@ export default function AdminProfitSharePage() {
       {/* Silme onayı */}
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Kuralı sil onayı"
         >
-          <div className="glass-card p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-surface-100 mb-2">Kuralı Sil</h3>
-            <p className="text-surface-400 text-sm mb-6">
-              <span className="text-surface-100 font-medium">
+          <div className="modal-surface rounded-2xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">Kuralı Sil</h3>
+            <p className="text-[rgb(var(--v2-muted))] text-sm mb-6">
+              <span className="text-[rgb(var(--v2-ink))] font-medium">
                 {ruleTypeLabel(String(deleteTarget.rule_type))}
               </span>
               {deleteTarget.operator_name ? ` · ${deleteTarget.operator_name}` : ""} kuralını
@@ -395,14 +398,14 @@ export default function AdminProfitSharePage() {
               <button
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleting}
-                className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-100 rounded-xl text-sm font-medium transition-colors"
+                className="flex-1 v2-btn v2-press !py-2.5 border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))] hover:border-accent/50"
               >
                 İptal
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors inline-flex items-center justify-center gap-2"
+                className="flex-1 v2-btn v2-press !py-2.5 bg-status-danger hover:bg-status-danger/90 text-white"
               >
                 {deleting && <Loader2 size={15} className="animate-spin" />}
                 Sil
