@@ -11,7 +11,7 @@
  *
  * <p>Sadece <b>admin</b> kullanıcıya gösterilir (parent buton da admin-gated).
  * Modal {@code createPortal(document.body)} ile render edilir — AddTransactionModal
- * deseni: ata {@code .glass-card} backdrop-filter'ı fixed konumu bozar, portal
+ * deseni: ata {@code .v2-card} backdrop-filter'ı fixed konumu bozar, portal
  * ile overlay her zaman viewport'a göre tam-ekran ortalı kalır.</p>
  *
  * <p>Aggregate tipler (MAIN_CASH/SUB_CASH) kendi bakiyesini tutmaz — değeri üye
@@ -120,23 +120,25 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-surface w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col"
+        className="v2-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col"
       >
         <div className="modal-header">
           <h3 className="modal-title flex items-center gap-2">
-            <Scale size={16} className="text-brand-400" />
+            <Scale size={16} className="text-accent-strong dark:text-accent" />
             Bakiyeyi Düzelt
           </h3>
-          <button type="button" onClick={onClose} className="modal-close" aria-label="Kapat">
+          <button type="button" onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat">
             <X size={16} />
           </button>
         </div>
 
         <div className="overflow-y-auto flex-1 p-5 space-y-4">
           {/* Hesap özeti */}
-          <div className="rounded-xl bg-surface-900 border border-surface-700 p-3">
-            <p className="text-sm font-semibold text-white truncate">{account.name}</p>
-            <p className="text-[11px] text-surface-400 mt-0.5">
+          <div className="rounded-xl v2-sunken p-3">
+            <p className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">{account.name}</p>
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
               {account.type}
               {account.business_name ? ` · ${account.business_name}` : ""}
               {account.type === "CASH_HOLDER" && account.holder_person_name
@@ -147,18 +149,18 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
 
           {/* Mevcut bakiye (salt-okunur) */}
           <div>
-            <label className="block text-xs font-medium text-surface-300 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Mevcut Bakiye
             </label>
-            <div className="field bg-surface-900/60 cursor-not-allowed select-none text-surface-200 font-mono">
+            <div className="field cursor-not-allowed select-none text-[rgb(var(--v2-ink))] font-mono">
               {formatCurrency(oldBalance, currency)}
             </div>
           </div>
 
           {/* Yeni bakiye */}
           <div>
-            <label htmlFor="adjust-new-balance" className="block text-xs font-medium text-surface-300 mb-1.5">
-              Yeni Bakiye <span className="text-red-400">*</span>
+            <label htmlFor="adjust-new-balance" className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1.5">
+              Yeni Bakiye <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <div className="relative">
               <input
@@ -172,7 +174,7 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
                 placeholder="0.00"
                 autoFocus
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-surface-400 pointer-events-none">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[rgb(var(--v2-muted))] pointer-events-none">
                 {currency}
               </span>
             </div>
@@ -184,10 +186,10 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
               className={cn(
                 "rounded-xl border p-3 flex items-center justify-between gap-2",
                 diff === 0
-                  ? "bg-surface-800 border-surface-700 text-surface-400"
+                  ? "v2-sunken text-[rgb(var(--v2-muted))]"
                   : diff > 0
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                  : "bg-red-500/10 border-red-500/30 text-red-300",
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+                  : "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-300",
               )}
             >
               <span className="text-xs font-medium">Fark</span>
@@ -200,8 +202,8 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
 
           {/* Açıklama (zorunlu) */}
           <div>
-            <label htmlFor="adjust-desc" className="block text-xs font-medium text-surface-300 mb-1.5">
-              Açıklama / Gerekçe <span className="text-red-400">*</span>
+            <label htmlFor="adjust-desc" className="block text-xs font-medium text-[rgb(var(--v2-muted))] mb-1.5">
+              Açıklama / Gerekçe <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <textarea
               id="adjust-desc"
@@ -212,7 +214,7 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
               className="field resize-none"
               placeholder="Örn. Banka ekstresiyle mutabakat — sisteme girilmemiş faiz işlemi."
             />
-            <p className="text-[10px] text-surface-500 mt-1">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-1">
               Gerekçesiz bakiye değişikliği yapılamaz. Bu düzeltme audit kaydına yazılır.
             </p>
           </div>
@@ -228,7 +230,7 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm p-3 flex items-start gap-2">
+            <div className="rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-sm p-3 flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -243,7 +245,7 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
             type="button"
             onClick={submit}
             disabled={!valid || submitting}
-            className="btn-primary !px-4 !py-2 text-sm gap-2"
+            className="v2-btn v2-btn--ink !px-4 !py-2 text-sm gap-2"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             Bakiyeyi Düzelt

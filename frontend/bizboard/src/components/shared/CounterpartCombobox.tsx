@@ -123,19 +123,19 @@ export function CounterpartCombobox({
       <div
         className={cn(
           "input flex items-center gap-2 cursor-text",
-          selectedName && "border-brand-500"
+          selectedName && "border-[rgb(var(--accent))]/60"
         )}
         onClick={() => setOpen(true)}
       >
         {selectedName ? (
           <>
-            <span className="px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 text-xs font-medium">
+            <span className="px-2 py-0.5 rounded bg-[rgb(var(--accent))]/18 text-accent-strong dark:text-accent text-xs font-medium">
               {selectedName}
             </span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); handleClear(); }}
-              className="ml-auto p-0.5 rounded hover:bg-white/10 text-surface-400 hover:text-white"
+              className="ml-auto p-0.5 rounded hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
               title="Secimi kaldir"
             >
               <X size={14} />
@@ -149,26 +149,26 @@ export function CounterpartCombobox({
               onFocus={() => setOpen(true)}
               onChange={(e) => onChange(null, e.target.value)}
               placeholder={placeholder}
-              className="flex-1 bg-transparent border-0 outline-none text-sm placeholder-surface-400 text-surface-100"
+              className="flex-1 bg-transparent border-0 outline-none text-sm placeholder-[rgb(var(--v2-muted))] text-[rgb(var(--v2-ink))]"
             />
-            <ChevronDown size={16} className="text-surface-400 shrink-0" />
+            <ChevronDown size={16} className="text-[rgb(var(--v2-muted))] shrink-0" />
           </>
         )}
       </div>
 
       {open && !selectedName && (
-        <div className="absolute z-30 mt-1 left-0 right-0 max-h-64 overflow-y-auto rounded-xl bg-surface-800 border border-surface-600 shadow-2xl ring-1 ring-brand-500/20">
+        <div className="absolute z-30 mt-1 left-0 right-0 max-h-64 overflow-y-auto rounded-xl bg-[rgb(var(--v2-card))] border border-[rgb(var(--v2-border))] shadow-2xl ring-1 ring-[rgb(var(--accent))]/20">
           {loading ? (
-            <div className="flex items-center gap-2 px-3 py-3 text-xs text-surface-400">
+            <div className="flex items-center gap-2 px-3 py-3 text-xs text-[rgb(var(--v2-muted))]">
               <Loader2 size={14} className="animate-spin" />
               Yukleniyor...
             </div>
           ) : error ? (
-            <div className="px-3 py-3 text-xs text-red-400">{error}</div>
+            <div className="px-3 py-3 text-xs text-red-700 dark:text-red-400">{error}</div>
           ) : (
             <>
               {filtered.length === 0 && !showCreateCta && (
-                <div className="px-3 py-3 text-xs text-surface-400">
+                <div className="px-3 py-3 text-xs text-[rgb(var(--v2-muted))]">
                   Esleson kayit yok. Yazmaya devam et.
                 </div>
               )}
@@ -177,10 +177,10 @@ export function CounterpartCombobox({
                   key={c.id}
                   type="button"
                   onClick={() => handleSelect(c)}
-                  className="w-full text-left px-3 py-2 hover:bg-surface-700 transition-colors"
+                  className="w-full text-left px-3 py-2 hover:bg-[rgb(var(--v2-sunken))] transition-colors"
                 >
-                  <div className="text-sm text-surface-100 truncate">{c.name}</div>
-                  <div className="text-[10px] text-surface-400 flex gap-2">
+                  <div className="text-sm text-[rgb(var(--v2-ink))] truncate">{c.name}</div>
+                  <div className="text-[10px] text-[rgb(var(--v2-muted))] flex gap-2">
                     <span>{roleLabel(c.role)}</span>
                     {c.tax_id && <span>{c.tax_id}</span>}
                   </div>
@@ -190,7 +190,7 @@ export function CounterpartCombobox({
                 <button
                   type="button"
                   onClick={() => setCreatePrompt(true)}
-                  className="w-full flex items-center gap-2 px-3 py-2 border-t border-surface-700 hover:bg-surface-700/50 transition-colors text-brand-400 text-sm"
+                  className="w-full flex items-center gap-2 px-3 py-2 border-t border-[rgb(var(--v2-border))] hover:bg-[rgb(var(--v2-sunken))] transition-colors text-accent-strong dark:text-accent text-sm"
                 >
                   <Plus size={14} />
                   &quot;{textValue.trim()}&quot; karsi firma olarak olustur
@@ -261,23 +261,24 @@ function InlineCreateModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
       <form
         onSubmit={handleSubmit}
-        className="glass-card w-full max-w-md p-5"
+        className="v2-card w-full max-w-md p-5 shadow-xl"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-surface-100">Yeni Karsi Firma</h3>
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">Yeni Karsi Firma</h3>
           <button
             type="button"
             onClick={onClose}
-            className="modal-close"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
           >
             <X size={16} />
           </button>
         </div>
         {error && (
-          <div className="mb-3 p-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs">
+          <div className="mb-3 p-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-red-700 dark:text-red-400 text-xs">
             {error}
           </div>
         )}
@@ -304,23 +305,23 @@ function InlineCreateModal({
                 { value: "OTHER", label: "Diger" },
               ]}
             />
-            <p className="text-[10px] text-surface-400 mt-1">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-1">
               Vergi no, iletisim gibi ek detaylar Cari Hesap sayfasindan eklenebilir.
             </p>
           </div>
         </div>
-        <div className="flex justify-end gap-2 mt-5">
+        <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-[rgb(var(--v2-border))]">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs"
+            className="btn-secondary px-3 py-1.5 text-xs"
           >
             Iptal
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-semibold"
+            className="px-3 py-1.5 rounded-lg bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] text-xs font-semibold disabled:opacity-50"
           >
             {submitting ? "Olusturuluyor..." : "Olustur ve Sec"}
           </button>

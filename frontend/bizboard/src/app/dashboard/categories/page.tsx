@@ -110,16 +110,16 @@ export default function CategoriesPage() {
           <div className="flex items-start gap-3">
             <button
               onClick={() => router.back()}
-              className="p-2 -ml-2 mt-0.5 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+              className="p-2 -ml-2 mt-0.5 rounded-xl v2-sunken hover:border-[rgb(var(--accent))]/50 transition-colors"
               aria-label="Geri dön"
             >
-              <ArrowLeft size={20} className="text-surface-300" />
+              <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Tags size={22} className="text-brand-400" /> Kategoriler
+              <h1 className="text-2xl font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+                <Tags size={22} className="text-accent-strong dark:text-accent" /> Kategoriler
               </h1>
-              <p className="text-surface-400 mt-1 text-sm">
+              <p className="text-[rgb(var(--v2-muted))] mt-1 text-sm">
                 Kategorileriniz hem gelir hem gider işlemlerinde kullanılır.
                 İşlemlerde kategori zorunludur.
               </p>
@@ -128,7 +128,7 @@ export default function CategoriesPage() {
           <button
             onClick={openCreate}
             disabled={!businessId}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm rounded-xl transition-colors shrink-0 disabled:opacity-50"
+            className="v2-btn v2-btn--ink flex items-center gap-2 px-4 py-2 text-sm rounded-xl shrink-0 disabled:opacity-50"
           >
             <Plus size={16} />
             Yeni Kategori
@@ -143,16 +143,16 @@ export default function CategoriesPage() {
       )}
 
       {/* İşletme seçici */}
-      <section className="glass-card p-3">
+      <section className="v2-card p-3">
         {loadingBiz ? (
-          <div className="h-11 bg-surface-700 rounded-xl animate-pulse" />
+          <div className="h-11 v2-sunken rounded-xl animate-pulse" />
         ) : businesses.length === 0 ? (
-          <p className="text-sm text-surface-400 px-1 py-2">
+          <p className="text-sm text-[rgb(var(--v2-muted))] px-1 py-2">
             Önce bir işletme oluşturun.
           </p>
         ) : businesses.length === 1 ? (
-          <p className="text-sm text-surface-300 px-1 py-1">
-            <span className="text-surface-400">İşletme:</span> {businesses[0].name}
+          <p className="text-sm text-[rgb(var(--v2-ink))] px-1 py-1">
+            <span className="text-[rgb(var(--v2-muted))]">İşletme:</span> {businesses[0].name}
           </p>
         ) : (
           <DarkSelect
@@ -170,7 +170,7 @@ export default function CategoriesPage() {
         {loadingCat ? (
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-14 bg-surface-700/60 rounded-xl animate-pulse" />
+              <div key={i} className="h-14 v2-sunken rounded-xl animate-pulse" />
             ))}
           </div>
         ) : !businessId ? null : visible.length === 0 ? (
@@ -210,7 +210,7 @@ function CategoryRow({
 }) {
   const color = category.color || "#868e96";
   return (
-    <div className="glass-card flex items-center gap-3 p-3">
+    <div className="v2-card flex items-center gap-3 p-3">
       <span
         className="flex items-center justify-center w-10 h-10 rounded-xl text-lg shrink-0"
         style={{ backgroundColor: `${color}22`, border: `1px solid ${color}55` }}
@@ -218,12 +218,12 @@ function CategoryRow({
         {category.icon || "🏷️"}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-surface-100 truncate">{category.name}</p>
-        <p className="text-[11px] text-surface-400">Sıra: {category.sort_order}</p>
+        <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{category.name}</p>
+        <p className="text-[11px] text-[rgb(var(--v2-muted))]">Sıra: {category.sort_order}</p>
       </div>
       <button
         onClick={onEdit}
-        className="p-2 rounded-lg text-surface-300 hover:text-white hover:bg-surface-700 transition-colors"
+        className="p-2 rounded-lg text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))] transition-colors"
         aria-label="Düzenle"
       >
         <Pencil size={16} />
@@ -231,7 +231,7 @@ function CategoryRow({
       <button
         onClick={onDelete}
         disabled={deleting}
-        className="p-2 rounded-lg text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+        className="p-2 rounded-lg text-red-700 dark:text-red-300 hover:text-red-700 dark:hover:text-red-200 hover:bg-red-500/10 transition-colors disabled:opacity-50"
         aria-label="Sil"
       >
         {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
@@ -242,19 +242,19 @@ function CategoryRow({
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="glass-card p-8 text-center">
-      <div className="mx-auto mb-3 flex items-center justify-center w-14 h-14 rounded-2xl bg-surface-700">
-        <Tags size={26} className="text-brand-400" />
+    <div className="v2-card p-8 text-center">
+      <div className="mx-auto mb-3 flex items-center justify-center w-14 h-14 rounded-2xl v2-sunken">
+        <Tags size={26} className="text-accent-strong dark:text-accent" />
       </div>
-      <h3 className="text-base font-semibold text-surface-100">
+      <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">
         Henüz kategori yok
       </h3>
-      <p className="text-sm text-surface-400 mt-1 mb-4">
+      <p className="text-sm text-[rgb(var(--v2-muted))] mt-1 mb-4">
         İlk kategoriyi oluşturun; işlem eklerken seçilebilir olsun.
       </p>
       <button
         onClick={onCreate}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm rounded-xl transition-colors"
+        className="v2-btn v2-btn--ink inline-flex items-center gap-2 px-4 py-2 text-sm rounded-xl"
       >
         <Plus size={16} /> Kategori Oluştur
       </button>

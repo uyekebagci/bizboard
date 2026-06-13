@@ -204,22 +204,22 @@ export function DarkSelect({
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={onTriggerKey}
         className={cn(
-          "w-full px-3 py-2.5 rounded-xl border bg-surface-800 text-sm text-left",
+          "w-full px-3 py-2.5 rounded-xl border text-sm text-left",
           "flex items-center justify-between gap-2 transition-colors",
-          "focus:outline-none focus:ring-1 focus:ring-brand-500",
+          "focus:outline-none focus:ring-1 focus:ring-[rgb(var(--accent))]",
           disabled
-            ? "border-surface-700 text-surface-500 cursor-not-allowed opacity-60"
+            ? "border-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))] cursor-not-allowed opacity-60 bg-[rgb(var(--v2-sunken))]"
             : open
-              ? "border-brand-500/60 text-surface-100"
-              : "border-surface-600 text-surface-100 hover:border-surface-500",
+              ? "border-[rgb(var(--accent))]/60 text-[rgb(var(--v2-ink))] bg-[rgb(var(--v2-card))]"
+              : "border-[rgb(var(--v2-border))] text-[rgb(var(--v2-ink))] bg-[rgb(var(--v2-card))] hover:border-[rgb(var(--accent))]/40",
         )}
       >
-        <span className={cn("truncate flex-1", !selected && "text-surface-400")}>
+        <span className={cn("truncate flex-1", !selected && "text-[rgb(var(--v2-muted))]")}>
           {selected ? (
             <span className="inline-flex items-center gap-2">
               <span className="truncate">{selected.label}</span>
               {selected.meta && (
-                <span className="text-[11px] text-surface-400 truncate">· {selected.meta}</span>
+                <span className="text-[11px] text-[rgb(var(--v2-muted))] truncate">· {selected.meta}</span>
               )}
             </span>
           ) : placeholder}
@@ -227,8 +227,8 @@ export function DarkSelect({
         <ChevronDown
           size={16}
           className={cn(
-            "shrink-0 text-surface-400 transition-transform duration-200",
-            open && "rotate-180 text-brand-400",
+            "shrink-0 text-[rgb(var(--v2-muted))] transition-transform duration-200",
+            open && "rotate-180 text-accent-strong dark:text-accent",
           )}
         />
       </button>
@@ -239,8 +239,8 @@ export function DarkSelect({
           onKeyDown={onListKey}
           className={cn(
             "absolute z-50 left-0 right-0 mt-1 origin-top",
-            "rounded-xl border border-surface-600 bg-surface-800 shadow-2xl",
-            "ring-1 ring-brand-500/20",
+            "rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-card))] shadow-2xl",
+            "ring-1 ring-[rgb(var(--accent))]/20",
             "ds-popover-enter",
           )}
           // Inline animation
@@ -249,15 +249,15 @@ export function DarkSelect({
           }}
         >
           {searchable && (
-            <div className="p-2 border-b border-surface-700 sticky top-0 bg-surface-800 rounded-t-xl">
+            <div className="p-2 border-b border-[rgb(var(--v2-border))] sticky top-0 bg-[rgb(var(--v2-card))] rounded-t-xl">
               <div className="relative">
-                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] pointer-events-none" />
                 <input
                   ref={searchRef}
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setHighlight(addOption ? 0 : 0); }}
                   placeholder="Ara…"
-                  className="w-full pl-7 pr-2 py-1.5 rounded-lg bg-surface-700/50 border border-surface-600 text-xs text-surface-100 placeholder:text-surface-400 focus:outline-none focus:border-brand-500"
+                  className="w-full pl-7 pr-2 py-1.5 rounded-lg bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))] text-xs text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:border-[rgb(var(--accent))]"
                 />
               </div>
             </div>
@@ -274,16 +274,16 @@ export function DarkSelect({
               }}
               className={cn(
                 "w-full text-left px-3 py-2.5 text-sm font-medium inline-flex items-center gap-2",
-                "border-b border-surface-700",
+                "border-b border-[rgb(var(--v2-border))]",
                 "transition-colors",
-                "bg-gradient-to-r from-emerald-500/10 to-brand-500/10",
+                "bg-gradient-to-r from-emerald-500/10 to-[rgb(var(--accent))]/10",
                 highlight === 0
-                  ? "bg-emerald-500/20 text-emerald-200"
-                  : "text-emerald-300 hover:bg-emerald-500/15",
+                  ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-200"
+                  : "text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15",
               )}
             >
               <span className="w-5 h-5 rounded-full bg-emerald-500/30 inline-flex items-center justify-center shrink-0">
-                {addOption.icon ?? <Plus size={12} className="text-emerald-200" />}
+                {addOption.icon ?? <Plus size={12} className="text-emerald-700 dark:text-emerald-200" />}
               </span>
               <span className="truncate">{addOption.label}</span>
             </button>
@@ -301,7 +301,7 @@ export function DarkSelect({
             className="max-h-64 overflow-y-auto py-1"
           >
             {filtered.length === 0 && (
-              <li className="px-3 py-3 text-xs text-surface-400 text-center">
+              <li className="px-3 py-3 text-xs text-[rgb(var(--v2-muted))] text-center">
                 {query ? "Eşleşen sonuç yok" : "Liste boş"}
               </li>
             )}
@@ -326,19 +326,19 @@ export function DarkSelect({
                       "w-full text-left px-3 py-2 text-sm inline-flex items-center justify-between gap-2 transition-colors",
                       o.disabled && "opacity-50 cursor-not-allowed",
                       isHigh && !o.disabled
-                        ? "bg-brand-500/15 text-brand-200"
+                        ? "bg-[rgb(var(--accent))]/15 text-accent-strong dark:text-accent"
                         : isSelected
-                          ? "text-surface-100 bg-surface-700/40"
-                          : "text-surface-200 hover:bg-surface-700/40",
+                          ? "text-[rgb(var(--v2-ink))] bg-[rgb(var(--v2-sunken))]"
+                          : "text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))]",
                     )}
                   >
                     <span className="min-w-0 flex-1 truncate">
                       {o.label}
                       {o.meta && (
-                        <span className="ml-2 text-[11px] text-surface-400">· {o.meta}</span>
+                        <span className="ml-2 text-[11px] text-[rgb(var(--v2-muted))]">· {o.meta}</span>
                       )}
                     </span>
-                    {isSelected && <Check size={14} className="shrink-0 text-brand-300" />}
+                    {isSelected && <Check size={14} className="shrink-0 text-accent-strong dark:text-accent" />}
                   </button>
                 </li>
               );

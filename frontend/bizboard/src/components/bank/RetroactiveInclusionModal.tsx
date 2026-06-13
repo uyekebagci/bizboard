@@ -135,64 +135,64 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-2xl max-h-[92vh] flex flex-col shadow-xl"
+        className="v2-card w-full max-w-2xl max-h-[92vh] flex flex-col shadow-xl"
       >
         {/* Header */}
         <div className="modal-header">
           <div className="min-w-0 flex items-center gap-2">
-            <Rewind size={16} className="text-blue-400 shrink-0" />
+            <Rewind size={16} className="text-blue-500 dark:text-blue-400 shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-surface-100 truncate">
+              <h3 className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">
                 Geri Dönük İşlem Ekle — {subCashName}
               </h3>
-              <p className="text-[10px] text-surface-400">
+              <p className="text-[10px] text-[rgb(var(--v2-muted))]">
                 Bağlı entity&apos;lere ait, henüz bu kasada olmayan işlemler
               </p>
             </div>
           </div>
           <button onClick={onClose} disabled={submitting}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 disabled:opacity-50">
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] disabled:opacity-50">
             <X size={16} />
           </button>
         </div>
 
         {/* Filters */}
-        <div className="p-3 border-b border-surface-700 space-y-2.5">
+        <div className="p-3 border-b border-[rgb(var(--v2-border))] space-y-2.5">
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="text-[10px] uppercase text-surface-400 mb-1 block">Başlangıç</label>
+              <label className="text-[10px] uppercase text-[rgb(var(--v2-muted))] mb-1 block">Başlangıç</label>
               <input
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="w-full px-2 py-1.5 rounded-lg bg-surface-900 border border-surface-600 text-surface-100 text-xs"
+                className="field-sm py-1.5"
               />
             </div>
             <div className="flex-1">
-              <label className="text-[10px] uppercase text-surface-400 mb-1 block">Bitiş</label>
+              <label className="text-[10px] uppercase text-[rgb(var(--v2-muted))] mb-1 block">Bitiş</label>
               <input
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="w-full px-2 py-1.5 rounded-lg bg-surface-900 border border-surface-600 text-surface-100 text-xs"
+                className="field-sm py-1.5"
               />
             </div>
           </div>
           <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" />
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Açıklama, karşı taraf, POS cihazı..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-900 border border-surface-600 rounded-lg text-surface-100 placeholder:text-surface-500"
+              className="field-sm py-1.5 pl-8"
             />
           </div>
         </div>
 
         {/* Bulk toolbar */}
-        <div className="px-3 py-2 border-b border-surface-700 flex items-center justify-between text-[11px]">
-          <label className="flex items-center gap-2 cursor-pointer text-surface-300">
+        <div className="px-3 py-2 border-b border-[rgb(var(--v2-border))] flex items-center justify-between text-[11px]">
+          <label className="flex items-center gap-2 cursor-pointer text-[rgb(var(--v2-muted))]">
             <input
               type="checkbox"
               checked={allVisibleSelected}
@@ -204,7 +204,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
             </span>
           </label>
           {selected.size > 0 && (
-            <span className="text-blue-300 font-medium">
+            <span className="text-blue-700 dark:text-blue-300 font-medium">
               Seçili: {selected.size}
             </span>
           )}
@@ -214,21 +214,21 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
         <div className="overflow-y-auto flex-1">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 size={20} className="animate-spin text-surface-500" />
+              <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="px-3 py-10 text-center">
-              <CheckCircle2 size={28} className="mx-auto text-surface-500 mb-2" />
-              <p className="text-sm text-surface-300 font-medium">
+              <CheckCircle2 size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+              <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">
                 Eklenebilecek işlem yok
               </p>
-              <p className="text-[11px] text-surface-400 mt-1 leading-relaxed">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1 leading-relaxed">
                 Bu tarih aralığında bağlı entity&apos;lere ait olup dahil edilmemiş
                 bir işlem bulunamadı.
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-surface-700">
+            <ul className="divide-y divide-[rgb(var(--v2-border))]">
               {filtered.map((t) => {
                 const checked = selected.has(t.id);
                 const isIncome = t.direction === "income";
@@ -244,7 +244,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
                     key={t.id}
                     onClick={() => toggleSelect(t.id)}
                     className={cn(
-                      "px-3 py-2.5 cursor-pointer hover:bg-surface-700/40",
+                      "px-3 py-2.5 cursor-pointer hover:bg-[rgb(var(--v2-sunken))]/60",
                       checked && "bg-blue-500/10",
                     )}
                   >
@@ -257,24 +257,24 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
                         className="cursor-pointer"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-surface-100 truncate">
+                        <p className="text-sm text-[rgb(var(--v2-ink))] truncate">
                           {t.description || (isIncome ? "Gelir" : "Gider")}
-                          <span className="ml-2 text-[10px] text-surface-400">
+                          <span className="ml-2 text-[10px] text-[rgb(var(--v2-muted))]">
                             · {new Date(t.date).toLocaleDateString("tr-TR")}
                           </span>
                           {t.payment_method && (
-                            <span className="ml-1 text-[10px] text-surface-500">
+                            <span className="ml-1 text-[10px] text-[rgb(var(--v2-muted))]">
                               · {t.payment_method}
                             </span>
                           )}
                         </p>
-                        <p className="text-[10px] text-surface-400 truncate mt-0.5">
+                        <p className="text-[10px] text-[rgb(var(--v2-muted))] truncate mt-0.5">
                           {matchVia}
                         </p>
                       </div>
                       <p className={cn(
                         "text-sm font-semibold shrink-0",
-                        isIncome ? "text-emerald-300" : "text-rose-300",
+                        isIncome ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300",
                       )}>
                         {isIncome ? "+" : "−"}{formatCurrency(t.amount, t.currency || "TRY")}
                       </p>
@@ -288,7 +288,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
 
         {/* Pagination */}
         {!loading && total > PAGE_SIZE && (
-          <div className="px-3 py-2 border-t border-surface-700 flex items-center justify-between text-[11px] text-surface-400">
+          <div className="px-3 py-2 border-t border-[rgb(var(--v2-border))] flex items-center justify-between text-[11px] text-[rgb(var(--v2-muted))]">
             <span>
               {offset + 1} - {Math.min(offset + items.length, total)} / {total}
             </span>
@@ -296,14 +296,14 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
               <button
                 disabled={offset === 0 || loading}
                 onClick={() => fetchPage(Math.max(0, offset - PAGE_SIZE))}
-                className="px-2 py-1 rounded bg-surface-700 hover:bg-surface-600 disabled:opacity-50"
+                className="px-2 py-1 rounded v2-sunken hover:opacity-80 disabled:opacity-50 text-[rgb(var(--v2-ink))]"
               >
                 ← Önceki
               </button>
               <button
                 disabled={offset + PAGE_SIZE >= total || loading}
                 onClick={() => fetchPage(offset + PAGE_SIZE)}
-                className="px-2 py-1 rounded bg-surface-700 hover:bg-surface-600 disabled:opacity-50"
+                className="px-2 py-1 rounded v2-sunken hover:opacity-80 disabled:opacity-50 text-[rgb(var(--v2-ink))]"
               >
                 Sonraki →
               </button>
@@ -312,7 +312,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
         )}
 
         {error && (
-          <div className="mx-3 my-2 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+          <div className="mx-3 my-2 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
             <AlertTriangle size={12} className="mt-0.5 shrink-0" /> {error}
           </div>
         )}
@@ -329,7 +329,7 @@ export function RetroactiveInclusionModal({ subCashId, subCashName, onClose, onA
           <button
             onClick={handleSubmit}
             disabled={submitting || selected.size === 0}
-            className="flex-1 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2 rounded-xl v2-btn v2-btn--ink text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             Seçilenleri Ekle ({selected.size})

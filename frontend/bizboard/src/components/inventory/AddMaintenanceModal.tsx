@@ -35,44 +35,44 @@ export function AddMaintenanceModal({ itemId, onClose, onAdded }: {
     } catch (err) { toast.error(err); setSaving(false); }
   }
 
-  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-surface-600 bg-surface-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
+  const inputCls = "field field-sm py-2.5";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
+      <div className="v2-card shadow-xl w-full max-w-md">
         <div className="modal-header">
-          <h3 className="text-lg font-bold text-surface-100">Bakim Kaydi Ekle</h3>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600"><X size={20} className="text-surface-400" /></button>
+          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Bakim Kaydi Ekle</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"><X size={20} /></button>
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Bakim Tipi</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Bakim Tipi</label>
             <select value={type} onChange={(e) => setType(e.target.value)} className={inputCls}>
               {Object.entries(MAINTENANCE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Tarih</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Tarih</label>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-1">Aciklama</label>
+            <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Aciklama</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className={inputCls + " resize-none"} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Maliyet (TRY)</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Maliyet (TRY)</label>
               <input type="text" inputMode="numeric" value={cost} onChange={(e) => setCost(formatMoneyInput(e.target.value))} className={inputCls} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-200 mb-1">Yapan</label>
+              <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1">Yapan</label>
               <input type="text" value={performedBy} onChange={(e) => setPerformedBy(e.target.value)} className={inputCls} />
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl font-medium text-surface-200 bg-surface-700 hover:bg-surface-600 transition-colors">Vazgec</button>
+            <button onClick={onClose} className="btn-secondary flex-1 py-2.5">Vazgec</button>
             <button onClick={handleSave} disabled={saving}
-              className="flex-1 py-2.5 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 transition-colors flex items-center justify-center gap-2">
+              className="flex-1 py-2.5 rounded-xl font-semibold bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Kaydet
             </button>
           </div>

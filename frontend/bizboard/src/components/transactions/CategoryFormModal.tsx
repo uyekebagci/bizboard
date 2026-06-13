@@ -97,26 +97,31 @@ export function CategoryFormModal({
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-sm shadow-xl"
+        className="v2-card w-full max-w-sm shadow-xl overflow-hidden"
       >
-        <div className="modal-header">
-          <h3 className="text-base font-semibold text-white">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">
             {isEdit ? "Kategoriyi Düzenle" : "Yeni Kategori"}
           </h3>
-          <button type="button" onClick={onClose} className="modal-close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+            aria-label="Kapat"
+          >
             <X size={16} />
           </button>
         </div>
 
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs">
               {error}
             </div>
           )}
@@ -124,7 +129,7 @@ export function CategoryFormModal({
           {/* Ledger v2 (§3.9): uygulanabilirlik — BOTH (paylaşımlı) ya da
               tek tarafa kilit. İşlem formu o anki yöne göre süzer. */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Kullanım
             </label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -138,17 +143,17 @@ export function CategoryFormModal({
                   type="button"
                   onClick={() => setApplicability(opt.v)}
                   className={cn(
-                    "py-2 px-2 rounded-lg text-[11px] font-medium border transition-all text-center",
+                    "v2-press py-2 px-2 rounded-lg text-[11px] font-medium border transition-all text-center",
                     applicability === opt.v
-                      ? "bg-brand-500/20 border-brand-500/60 text-brand-200"
-                      : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-300",
+                      ? "bg-[rgb(var(--accent))]/18 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                      : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--v2-ink))]/30",
                   )}
                 >
                   {opt.label}
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-[10px] text-surface-500">
+            <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">
               {applicability === "BOTH"
                 ? "Hem gelir hem gider işlemlerinde görünür (paylaşımlı)."
                 : applicability === "INCOME_ONLY"
@@ -158,21 +163,21 @@ export function CategoryFormModal({
           </div>
 
           {/* Önizleme */}
-          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-700/50 border border-surface-600">
+          <div className="flex items-center gap-2.5 p-2.5 rounded-xl v2-sunken">
             <span
               className="flex items-center justify-center w-9 h-9 rounded-xl text-lg shrink-0"
               style={{ backgroundColor: `${color}22`, border: `1px solid ${color}55` }}
             >
               {icon}
             </span>
-            <span className="text-sm font-medium text-surface-100 truncate">
+            <span className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">
               {name.trim() || "Kategori adı"}
             </span>
           </div>
 
           {/* Ad */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Kategori Adı *
             </label>
             <input
@@ -188,8 +193,8 @@ export function CategoryFormModal({
 
           {/* Sıra */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Sıra <span className="text-surface-400 font-normal">(küçük = üstte)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Sıra <span className="text-[rgb(var(--v2-muted))] font-normal">(küçük = üstte)</span>
             </label>
             <input
               type="number"
@@ -203,7 +208,7 @@ export function CategoryFormModal({
 
           {/* İkon */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">İkon</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">İkon</label>
             <div className="grid grid-cols-8 gap-1">
               {CATEGORY_ICONS.map((emo) => (
                 <button
@@ -213,8 +218,8 @@ export function CategoryFormModal({
                   className={cn(
                     "aspect-square rounded-lg text-base flex items-center justify-center transition-all border",
                     icon === emo
-                      ? "bg-brand-500/20 border-brand-500/60"
-                      : "bg-surface-700 border-transparent hover:border-surface-500",
+                      ? "bg-[rgb(var(--accent))]/18 border-[rgb(var(--accent))]/60"
+                      : "v2-sunken border-transparent hover:border-[rgb(var(--v2-ink))]/20",
                   )}
                   aria-label={`İkon ${emo}`}
                 >
@@ -226,7 +231,7 @@ export function CategoryFormModal({
 
           {/* Renk */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Renk</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Renk</label>
             <div className="flex flex-wrap gap-1.5">
               {CATEGORY_COLORS.map((c) => (
                 <button
@@ -235,7 +240,7 @@ export function CategoryFormModal({
                   onClick={() => setColor(c)}
                   className={cn(
                     "w-7 h-7 rounded-full transition-all border-2",
-                    color === c ? "border-white scale-110" : "border-transparent hover:scale-105",
+                    color === c ? "border-[rgb(var(--v2-ink))] scale-110" : "border-transparent hover:scale-105",
                   )}
                   style={{ backgroundColor: c }}
                   aria-label={`Renk ${c}`}
@@ -245,7 +250,7 @@ export function CategoryFormModal({
           </div>
         </div>
 
-        <div className="modal-footer">
+        <div className="flex items-center gap-3 px-5 py-4 border-t border-[rgb(var(--v2-border))]">
           <button
             type="button"
             onClick={onClose}
@@ -257,7 +262,7 @@ export function CategoryFormModal({
           <button
             type="submit"
             disabled={submitting || !name.trim()}
-            className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-xl bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             {isEdit ? "Kaydet" : "Oluştur"}

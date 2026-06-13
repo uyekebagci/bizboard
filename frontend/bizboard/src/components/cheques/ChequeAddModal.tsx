@@ -10,6 +10,8 @@
  * <p>Submit: POST /businesses/{businessId}/debts. Counterpart picker
  * CounterpartDebtModal ile aynı pattern: business seç + firma/kişi toggle +
  * "+ Yeni Firma/Kişi" → nested CounterpartCreateModal.</p>
+ *
+ * v2 Daxa design language: solid/layered, rounded, lime accent, correct light+dark.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -159,17 +161,17 @@ export function ChequeAddModal({
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
-        <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <FileText size={16} className="text-purple-300" />
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))] shrink-0">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <FileText size={16} className="text-purple-700 dark:text-purple-300" />
             Yeni Çek Ekle
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="modal-close"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             aria-label="Kapat"
           >
             <X size={16} />
@@ -178,7 +180,7 @@ export function ChequeAddModal({
 
         <div className="overflow-y-auto flex-1 p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -186,16 +188,16 @@ export function ChequeAddModal({
 
           {/* Yön: Alacak / Verecek */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Çek Tipi *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Çek Tipi *</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setDirection("RECEIVABLE")}
                 className={cn(
-                  "py-2 rounded-xl text-sm font-medium border-2",
+                  "v2-press py-2 rounded-xl text-sm font-medium border-2",
                   isReceivable
-                    ? "bg-amber-500/15 border-amber-500/50 text-amber-300"
-                    : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+                    ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                 )}
               >
                 Alacak Çeki
@@ -204,10 +206,10 @@ export function ChequeAddModal({
                 type="button"
                 onClick={() => setDirection("PAYABLE")}
                 className={cn(
-                  "py-2 rounded-xl text-sm font-medium border-2",
+                  "v2-press py-2 rounded-xl text-sm font-medium border-2",
                   !isReceivable
-                    ? "bg-red-500/15 border-red-500/50 text-red-300"
-                    : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+                    ? "bg-red-500/15 border-red-500/50 text-red-700 dark:text-red-300"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                 )}
               >
                 Verecek Çek
@@ -218,9 +220,9 @@ export function ChequeAddModal({
           {/* İşletme (sadece >1 ise) */}
           {!preselectedBusinessId && businesses.length > 1 && (
             <div>
-              <label className="block text-xs font-medium text-surface-200 mb-1.5">İşletme *</label>
+              <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">İşletme *</label>
               {loadingBiz ? (
-                <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+                <div className="h-10 v2-sunken rounded-xl animate-pulse" />
               ) : (
                 <DarkSelect
                   required
@@ -236,16 +238,16 @@ export function ChequeAddModal({
 
           {/* Firma/Kişi */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Karşı Taraf Tipi *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Karşı Taraf Tipi *</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => { setKind("FIRM"); setCounterpartId(""); }}
                 className={cn(
-                  "py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
+                  "v2-press py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
                   kind === "FIRM"
-                    ? "bg-brand-500/15 border-brand-500/50 text-brand-300"
-                    : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+                    ? "bg-[rgb(var(--accent))]/12 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                 )}
               >
                 <Building2 size={14} /> Firma
@@ -254,10 +256,10 @@ export function ChequeAddModal({
                 type="button"
                 onClick={() => { setKind("PERSON"); setCounterpartId(""); }}
                 className={cn(
-                  "py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
+                  "v2-press py-2 rounded-xl text-sm font-medium border-2 inline-flex items-center justify-center gap-1.5",
                   kind === "PERSON"
-                    ? "bg-brand-500/15 border-brand-500/50 text-brand-300"
-                    : "bg-surface-700 border-surface-600 text-surface-400 hover:border-surface-500",
+                    ? "bg-[rgb(var(--accent))]/12 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--accent))]/50",
                 )}
               >
                 <UserIcon size={14} /> Kişi
@@ -267,11 +269,11 @@ export function ChequeAddModal({
 
           {/* Karşı Taraf dropdown */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               {isReceivable ? "Çeki Veren" : "Çeki Alan"} ({kind === "FIRM" ? "Firma" : "Kişi"}) *
             </label>
             {loadingCps ? (
-              <div className="h-10 bg-surface-700 rounded-xl animate-pulse" />
+              <div className="h-10 v2-sunken rounded-xl animate-pulse" />
             ) : (
               <DarkSelect
                 required
@@ -288,13 +290,13 @@ export function ChequeAddModal({
               />
             )}
             {!businessId && (
-              <p className="mt-1 text-[10px] text-surface-400">Önce işletme seçin</p>
+              <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">Önce işletme seçin</p>
             )}
           </div>
 
           {/* Tutar */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Tutar *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tutar *</label>
             <div className="relative">
               <input
                 type="text"
@@ -305,13 +307,13 @@ export function ChequeAddModal({
                 placeholder="0"
                 className="field field-sm py-2.5 text-lg font-bold"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm font-medium">TRY</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] text-sm font-medium">TRY</span>
             </div>
           </div>
 
           {/* Vade Tarihi */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               <CalendarClock size={12} className="inline mr-1" />
               Vade Tarihi *
             </label>
@@ -326,7 +328,7 @@ export function ChequeAddModal({
 
           {/* Çek No */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Çek No *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Çek No *</label>
             <input
               type="text"
               required
@@ -340,9 +342,9 @@ export function ChequeAddModal({
 
           {/* Banka */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               {isReceivable ? "Tahsil Bankası" : "Düzenleyen Banka"}{" "}
-              <span className="text-surface-400 font-normal">(opsiyonel)</span>
+              <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <input
               type="text"
@@ -356,8 +358,8 @@ export function ChequeAddModal({
 
           {/* Açıklama */}
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
-              Açıklama <span className="text-surface-400 font-normal">(opsiyonel)</span>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
+              Açıklama <span className="text-[rgb(var(--v2-muted))] font-normal">(opsiyonel)</span>
             </label>
             <textarea
               value={description}
@@ -369,7 +371,7 @@ export function ChequeAddModal({
           </div>
         </div>
 
-        <div className="modal-footer">
+        <div className="flex gap-2 p-4 border-t border-[rgb(var(--v2-border))] shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -382,7 +384,7 @@ export function ChequeAddModal({
             type="submit"
             disabled={submitting || !businessId || !counterpartId || !amount || !chequeDueDate || !chequeNo.trim()}
             className={cn(
-              "flex-1 py-2.5 rounded-xl text-surface-100 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
+              "flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
               "bg-purple-600 hover:bg-purple-700",
             )}
           >

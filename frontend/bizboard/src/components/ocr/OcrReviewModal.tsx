@@ -161,11 +161,11 @@ export function OcrReviewModal({
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
+        className="v2-card w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col shadow-xl"
       >
         <div className="modal-header">
           <h3 className="modal-title flex items-center gap-2">
-            <ScanLine size={16} className="text-brand-300" />
+            <ScanLine size={16} className="text-accent-strong dark:text-accent" />
             OCR Sonucu — Onayla
           </h3>
           <button type="button" onClick={onClose} className="modal-close" aria-label="Kapat">
@@ -177,23 +177,23 @@ export function OcrReviewModal({
           {/* Sol: belge önizleme + OCR meta */}
           <div className="space-y-3">
             {scan.file_url ? (
-              <div className="rounded-xl overflow-hidden border border-surface-600 bg-surface-900/40">
+              <div className="rounded-xl overflow-hidden border border-[rgb(var(--v2-border))] v2-sunken">
                 {/* image/pdf — image inline, pdf link */}
                 <DocPreview url={scan.file_url} />
               </div>
             ) : (
-              <div className="rounded-xl border border-surface-600 p-6 text-center text-surface-400 text-sm">
+              <div className="rounded-xl border border-[rgb(var(--v2-border))] p-6 text-center text-[rgb(var(--v2-muted))] text-sm">
                 Önizleme yok
               </div>
             )}
-            <div className="text-xs text-surface-400 space-y-1">
+            <div className="text-xs text-[rgb(var(--v2-muted))] space-y-1">
               <p>
                 Sağlayıcı:{" "}
-                <span className="text-surface-200 font-medium">{scan.ocr_provider ?? "—"}</span>
+                <span className="text-[rgb(var(--v2-ink))] font-medium">{scan.ocr_provider ?? "—"}</span>
               </p>
               <p>
                 Genel güven:{" "}
-                <span className="text-surface-200 font-medium">
+                <span className="text-[rgb(var(--v2-ink))] font-medium">
                   {scan.overall_confidence != null
                     ? `%${Math.round(scan.overall_confidence * 100)}`
                     : "—"}
@@ -205,8 +205,8 @@ export function OcrReviewModal({
                 className={cn(
                   "p-2.5 rounded-lg text-xs flex items-start gap-2",
                   scan.has_low_confidence
-                    ? "bg-amber-500/10 border border-amber-500/30 text-amber-300"
-                    : "bg-surface-700/40 text-surface-300"
+                    ? "bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300"
+                    : "v2-sunken text-[rgb(var(--v2-muted))]"
                 )}
               >
                 {scan.has_low_confidence && <AlertTriangle size={13} className="shrink-0 mt-0.5" />}
@@ -217,15 +217,15 @@ export function OcrReviewModal({
             <div className="space-y-1.5">
               <p className="label text-[11px]">Çıkarılan alanlar</p>
               {scan.fields.length === 0 && (
-                <p className="text-xs text-surface-400">Alan çıkarılamadı — manuel girin.</p>
+                <p className="text-xs text-[rgb(var(--v2-muted))]">Alan çıkarılamadı — manuel girin.</p>
               )}
               {scan.fields.map((f) => (
                 <div
                   key={f.key}
-                  className="flex items-center justify-between gap-2 text-xs px-2 py-1 rounded-md bg-surface-700/30"
+                  className="flex items-center justify-between gap-2 text-xs px-2 py-1 rounded-md v2-sunken"
                 >
-                  <span className="text-surface-400">{f.key}</span>
-                  <span className="text-surface-200 truncate max-w-[55%]">{f.value || "—"}</span>
+                  <span className="text-[rgb(var(--v2-muted))]">{f.key}</span>
+                  <span className="text-[rgb(var(--v2-ink))] truncate max-w-[55%]">{f.value || "—"}</span>
                   <ConfidenceBadge confidence={f.confidence} low={f.low_confidence} />
                 </div>
               ))}
@@ -235,7 +235,7 @@ export function OcrReviewModal({
           {/* Sağ: düzenlenebilir onay formu */}
           <div className="space-y-3">
             {error && (
-              <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
+              <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
                 <AlertTriangle size={13} className="shrink-0" />
                 <span>{error}</span>
               </div>
@@ -244,15 +244,15 @@ export function OcrReviewModal({
             {/* Hedef seçici */}
             <div>
               <label className="label text-[11px]">Hedef kayıt tipi</label>
-              <div className="flex rounded-xl overflow-hidden border border-surface-600 mt-1">
+              <div className="flex rounded-xl overflow-hidden border border-[rgb(var(--v2-border))] mt-1">
                 <button
                   type="button"
                   onClick={() => setTarget("TRANSACTION")}
                   className={cn(
                     "flex-1 text-xs font-semibold py-2 flex items-center justify-center gap-1.5 transition-colors",
                     target === "TRANSACTION"
-                      ? "bg-brand-600/25 text-brand-200"
-                      : "bg-surface-700 text-surface-400"
+                      ? "bg-[rgb(var(--accent))]/18 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                      : "v2-sunken text-[rgb(var(--v2-muted))]"
                   )}
                 >
                   <Receipt size={13} /> Fiş / İşlem
@@ -263,8 +263,8 @@ export function OcrReviewModal({
                   className={cn(
                     "flex-1 text-xs font-semibold py-2 flex items-center justify-center gap-1.5 transition-colors",
                     target === "INSTRUMENT"
-                      ? "bg-brand-600/25 text-brand-200"
-                      : "bg-surface-700 text-surface-400"
+                      ? "bg-[rgb(var(--accent))]/18 border-[rgb(var(--accent))]/60 text-accent-strong dark:text-accent"
+                      : "v2-sunken text-[rgb(var(--v2-muted))]"
                   )}
                 >
                   <FileText size={13} /> Çek / Senet
@@ -288,15 +288,15 @@ export function OcrReviewModal({
               <>
                 <div>
                   <label className="label text-[11px]">Yön</label>
-                  <div className="flex rounded-xl overflow-hidden border border-surface-600 mt-1">
+                  <div className="flex rounded-xl overflow-hidden border border-[rgb(var(--v2-border))] mt-1">
                     <button type="button" onClick={() => setDirection("EXPENSE")}
                       className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-                        direction === "EXPENSE" ? "bg-red-600/25 text-red-300" : "bg-surface-700 text-surface-400")}>
+                        direction === "EXPENSE" ? "bg-red-500/15 text-red-700 dark:text-red-300" : "v2-sunken text-[rgb(var(--v2-muted))]")}>
                       Gider
                     </button>
                     <button type="button" onClick={() => setDirection("INCOME")}
                       className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-                        direction === "INCOME" ? "bg-emerald-600/25 text-emerald-300" : "bg-surface-700 text-surface-400")}>
+                        direction === "INCOME" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "v2-sunken text-[rgb(var(--v2-muted))]")}>
                       Gelir
                     </button>
                   </div>
@@ -315,15 +315,15 @@ export function OcrReviewModal({
                 </div>
                 <div>
                   <label className="label text-[11px]">Ödeme yöntemi</label>
-                  <div className="flex rounded-xl overflow-hidden border border-surface-600 mt-1">
+                  <div className="flex rounded-xl overflow-hidden border border-[rgb(var(--v2-border))] mt-1">
                     <button type="button" onClick={() => setPaymentMethod("NAKIT")}
                       className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-                        paymentMethod === "NAKIT" ? "bg-brand-600/25 text-brand-200" : "bg-surface-700 text-surface-400")}>
+                        paymentMethod === "NAKIT" ? "bg-[rgb(var(--accent))]/18 text-accent-strong dark:text-accent" : "v2-sunken text-[rgb(var(--v2-muted))]")}>
                       Nakit
                     </button>
                     <button type="button" onClick={() => setPaymentMethod("HESAPDAN")}
                       className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-                        paymentMethod === "HESAPDAN" ? "bg-brand-600/25 text-brand-200" : "bg-surface-700 text-surface-400")}>
+                        paymentMethod === "HESAPDAN" ? "bg-[rgb(var(--accent))]/18 text-accent-strong dark:text-accent" : "v2-sunken text-[rgb(var(--v2-muted))]")}>
                       Hesaptan
                     </button>
                   </div>
@@ -351,15 +351,15 @@ export function OcrReviewModal({
                 </div>
                 <div>
                   <label className="label text-[11px]">Yön</label>
-                  <div className="flex rounded-xl overflow-hidden border border-surface-600 mt-1">
+                  <div className="flex rounded-xl overflow-hidden border border-[rgb(var(--v2-border))] mt-1">
                     <button type="button" onClick={() => setInstrumentDirection("RECEIVED")}
                       className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-                        instrumentDirection === "RECEIVED" ? "bg-emerald-600/25 text-emerald-300" : "bg-surface-700 text-surface-400")}>
+                        instrumentDirection === "RECEIVED" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "v2-sunken text-[rgb(var(--v2-muted))]")}>
                       Alınan (alacak)
                     </button>
                     <button type="button" onClick={() => setInstrumentDirection("GIVEN")}
                       className={cn("flex-1 text-xs font-semibold py-2 transition-colors",
-                        instrumentDirection === "GIVEN" ? "bg-red-600/25 text-red-300" : "bg-surface-700 text-surface-400")}>
+                        instrumentDirection === "GIVEN" ? "bg-red-500/15 text-red-700 dark:text-red-300" : "v2-sunken text-[rgb(var(--v2-muted))]")}>
                       Verilen (borç)
                     </button>
                   </div>
@@ -431,7 +431,7 @@ function Field({
 function ConfidenceBadge({ confidence, low }: { confidence: number | null; low: boolean }) {
   if (confidence == null) {
     return (
-      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-surface-700/60 text-surface-400">
+      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full v2-sunken text-[rgb(var(--v2-muted))]">
         ? güven
       </span>
     );
@@ -461,7 +461,7 @@ function DocPreview({ url }: { url: string }) {
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="block p-6 text-center text-brand-300 text-sm hover:underline"
+        className="block p-6 text-center text-accent-strong dark:text-accent text-sm hover:underline"
       >
         Belgeyi yeni sekmede aç
       </a>
@@ -472,7 +472,7 @@ function DocPreview({ url }: { url: string }) {
     <img
       src={url}
       alt="Taranan belge"
-      className="w-full max-h-[280px] object-contain bg-surface-900/40"
+      className="w-full max-h-[280px] object-contain v2-sunken"
       onError={() => setImgError(true)}
     />
   );

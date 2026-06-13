@@ -94,28 +94,28 @@ export function WriteoffModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
       onClick={() => !submitting && onClose()}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-card !border-rose-500/30 w-full max-w-lg max-h-[92vh] flex flex-col shadow-xl"
+        className="v2-card !border-rose-500/30 w-full max-w-lg max-h-[92vh] flex flex-col shadow-xl"
       >
         {/* Header */}
         <div className="modal-header">
           <div className="min-w-0 flex items-center gap-2">
-            <Scissors size={18} className="text-rose-400 shrink-0" />
+            <Scissors size={18} className="text-rose-600 dark:text-rose-400 shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-surface-100 truncate">
+              <h3 className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">
                 Borç Sil — {counterpartName}
               </h3>
-              <p className="text-[10px] text-rose-300/80">
+              <p className="text-[10px] text-rose-700 dark:text-rose-300/80">
                 ⚠ Bu işlem geri alınamaz (admin only).
               </p>
             </div>
           </div>
           <button onClick={onClose} disabled={submitting}
-            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 disabled:opacity-50">
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] disabled:opacity-50">
             <X size={16} />
           </button>
         </div>
@@ -124,11 +124,11 @@ export function WriteoffModal({
         <div className="overflow-y-auto flex-1 p-4 space-y-4">
           {eligibleDebts.length === 0 ? (
             <div className="py-8 text-center">
-              <CheckCircle2 size={28} className="mx-auto text-surface-500 mb-2" />
-              <p className="text-sm text-surface-300 font-medium">
+              <CheckCircle2 size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+              <p className="text-sm text-[rgb(var(--v2-ink))] font-medium">
                 Silinebilecek açık alacak yok.
               </p>
-              <p className="text-[11px] text-surface-400 mt-1">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-1">
                 Sadece RECEIVABLE statüsündeki borçlar manuel silinebilir.
               </p>
             </div>
@@ -136,7 +136,7 @@ export function WriteoffModal({
             <>
               {/* Debt selector */}
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                   Hangi borçtan silinsin? *
                 </label>
                 <div className="space-y-2">
@@ -147,7 +147,7 @@ export function WriteoffModal({
                         "flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors",
                         debtId === d.id
                           ? "border-rose-500/50 bg-rose-500/5"
-                          : "border-surface-600 bg-surface-700/40 hover:bg-surface-700/60",
+                          : "v2-sunken hover:opacity-80",
                       )}
                     >
                       <input
@@ -157,15 +157,15 @@ export function WriteoffModal({
                         className="mt-0.5"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-surface-100">
+                        <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                           {formatCurrency(d.remaining_amount, "TRY")}
                           {d.remaining_amount !== d.original_amount && (
-                            <span className="ml-2 text-[10px] text-surface-400">
+                            <span className="ml-2 text-[10px] text-[rgb(var(--v2-muted))]">
                               (asıl: {formatCurrency(d.original_amount, "TRY")})
                             </span>
                           )}
                         </p>
-                        <p className="text-[11px] text-surface-400 truncate">
+                        <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
                           {d.description || "—"}
                           {d.due_date && <> · vade {new Date(d.due_date).toLocaleDateString("tr-TR")}</>}
                           {d.status && <> · {d.status}</>}
@@ -178,7 +178,7 @@ export function WriteoffModal({
 
               {/* Amount */}
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                   Silinecek Tutar *
                 </label>
                 <div className="relative">
@@ -191,13 +191,13 @@ export function WriteoffModal({
                     disabled={!selectedDebt}
                     className="field field-error py-3 text-xl font-bold disabled:opacity-50"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] text-sm">
                     TRY
                   </span>
                 </div>
                 {selectedDebt && (
-                  <p className="mt-1 text-[10px] text-surface-400">
-                    Maksimum: <strong className="text-surface-300">
+                  <p className="mt-1 text-[10px] text-[rgb(var(--v2-muted))]">
+                    Maksimum: <strong className="text-[rgb(var(--v2-ink))]">
                       {formatCurrency(selectedDebt.remaining_amount, "TRY")}
                     </strong>
                   </p>
@@ -206,7 +206,7 @@ export function WriteoffModal({
 
               {/* Reason */}
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                   Sebep (opsiyonel)
                 </label>
                 <input
@@ -222,14 +222,14 @@ export function WriteoffModal({
               {/* Live calc */}
               {selectedDebt && parsedAmount > 0 && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30">
-                  <p className="text-[10px] uppercase text-rose-300/70 tracking-wider mb-1">
+                  <p className="text-[10px] uppercase text-rose-700 dark:text-rose-300/70 tracking-wider mb-1">
                     İşlem sonrası kalan
                   </p>
-                  <p className="text-lg font-bold text-rose-300">
+                  <p className="text-lg font-bold text-rose-700 dark:text-rose-300">
                     {formatCurrency(remainingAfter, "TRY")}
                   </p>
                   {remainingAfter === 0 && (
-                    <p className="text-[11px] text-rose-200/80 mt-1">
+                    <p className="text-[11px] text-rose-700 dark:text-rose-200/80 mt-1">
                       Borç tamamen silinecek (status → PAID)
                     </p>
                   )}
@@ -237,7 +237,7 @@ export function WriteoffModal({
               )}
 
               {error && (
-                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
                   <AlertTriangle size={12} className="mt-0.5 shrink-0" /> {error}
                 </div>
               )}
@@ -251,7 +251,7 @@ export function WriteoffModal({
             <button
               onClick={onClose}
               disabled={submitting}
-              className="flex-1 py-2.5 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-medium disabled:opacity-50"
+              className="btn-secondary flex-1 py-2.5 text-sm"
             >
               İptal
             </button>
@@ -275,18 +275,18 @@ export function WriteoffModal({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="glass-card !border-rose-500/40 max-w-sm w-full p-5"
+            className="v2-card !border-rose-500/40 max-w-sm w-full p-5"
           >
-            <h4 className="text-base font-semibold text-surface-100 mb-2 flex items-center gap-2">
-              <AlertTriangle size={18} className="text-rose-400" />
+            <h4 className="text-base font-semibold text-[rgb(var(--v2-ink))] mb-2 flex items-center gap-2">
+              <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400" />
               Onayla: Borç Silme
             </h4>
-            <p className="text-sm text-surface-300 mb-3">
-              <strong className="text-rose-300">{formatCurrency(parsedAmount, "TRY")}</strong>
-              {" "}tutarındaki borç <strong className="text-surface-100">{counterpartName}</strong>{" "}
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-3">
+              <strong className="text-rose-700 dark:text-rose-300">{formatCurrency(parsedAmount, "TRY")}</strong>
+              {" "}tutarındaki borç <strong className="text-[rgb(var(--v2-ink))]">{counterpartName}</strong>{" "}
               alacağından silinecek.
             </p>
-            <p className="text-[11px] text-surface-400 mb-4">
+            <p className="text-[11px] text-[rgb(var(--v2-muted))] mb-4">
               Bu bir ödeme değildir — bank balance, transaction listesi ve konsolide net
               etkilenmez. Yalnız cari hesap bakiyesi düşer.
             </p>

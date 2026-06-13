@@ -8,7 +8,7 @@
  * olanlar; tahsis tutarı kalandan büyük olamaz (BE over-allocation guard).</p>
  *
  * <p><b>STRICT:</b> bu yalnız izlenebilirlik — bakiye/Net Kâr DEĞİŞMEZ.
- * Çift tema (glass-card + surface-* token; dark default + light otomatik).</p>
+ * Çift tema (v2-card + v2 token; dark default + light otomatik).</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -133,47 +133,48 @@ export function FundLinkModal({
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md shadow-xl"
+        className="v2-card w-full max-w-md shadow-xl"
       >
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <Link2 size={16} className="text-brand-300" />
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Link2 size={16} className="text-accent-strong dark:text-accent" />
             Kaynağa Bağla (Para İzi)
           </h3>
-          <button type="button" onClick={onClose} className="modal-close">
+          <button type="button" onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
             <X size={16} />
           </button>
         </div>
 
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          <div className="rounded-lg bg-surface-700/40 p-3 text-xs space-y-1">
-            <p className="text-surface-200 flex items-center gap-1.5">
-              <ArrowDownLeft size={12} className="text-surface-400" />
+          <div className="rounded-lg v2-sunken p-3 text-xs space-y-1">
+            <p className="text-[rgb(var(--v2-ink))] flex items-center gap-1.5">
+              <ArrowDownLeft size={12} className="text-[rgb(var(--v2-muted))]" />
               Bu işlemin parası <strong>{formatCurrency(targetAmount, currency)}</strong> bir
               kaynağa bağlanacak.
             </p>
-            <p className="text-[10px] text-surface-500">
+            <p className="text-[10px] text-[rgb(var(--v2-muted))]">
               Saf izlenebilirlik — bakiye ve Net Kâr DEĞİŞMEZ (çift sayım yok).
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               Kaynak İşlem (kalanı &gt; 0) *
             </label>
             {loadingList ? (
-              <div className="flex items-center gap-2 text-surface-400 text-xs py-2">
+              <div className="flex items-center gap-2 text-[rgb(var(--v2-muted))] text-xs py-2">
                 <Loader2 size={14} className="animate-spin" /> Kaynaklar yükleniyor…
               </div>
             ) : candidates.length === 0 ? (
-              <p className="text-xs text-surface-400 py-2">
+              <p className="text-xs text-[rgb(var(--v2-muted))] py-2">
                 Bağlanabilir (kalanı olan) kaynak işlem bulunamadı.
               </p>
             ) : (
@@ -194,19 +195,19 @@ export function FundLinkModal({
 
           {selected && (
             <>
-              <div className="rounded-lg bg-surface-700/40 p-2.5 text-[11px] text-surface-300 space-y-0.5">
+              <div className="rounded-lg v2-sunken p-2.5 text-[11px] text-[rgb(var(--v2-muted))] space-y-0.5">
                 <p>
                   Kaynak tutarı: {formatCurrency(selected.amount, currency)} · Tahsisli:{" "}
                   {formatCurrency(selected.allocated, currency)}
                 </p>
-                <p className="text-emerald-300">
+                <p className="text-emerald-700 dark:text-emerald-300">
                   Kalan: {formatCurrency(selected.remaining, currency)} · Bu bağ için tavan:{" "}
                   {formatCurrency(maxBindable, currency)}
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                   Tahsis Tutarı * (kısmi olabilir)
                 </label>
                 <input
@@ -220,7 +221,7 @@ export function FundLinkModal({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-surface-200 mb-1.5">
+                <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
                   Not (opsiyonel)
                 </label>
                 <input
@@ -248,10 +249,7 @@ export function FundLinkModal({
           <button
             type="submit"
             disabled={submitting || !sourceId}
-            className={cn(
-              "flex-1 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50",
-              "bg-brand-600 hover:bg-brand-700",
-            )}
+            className="flex-1 py-2.5 rounded-xl bg-[rgb(var(--v2-ink))] text-[rgb(var(--v2-card))] hover:opacity-90 text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
             Bağla

@@ -73,43 +73,43 @@ export function ClearInstrumentModal({ instrument, onClose, onSuccess }: Props) 
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-md shadow-xl">
+        className="v2-card w-full max-w-md shadow-xl">
         <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <Check size={16} className="text-emerald-300" />
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Check size={16} className="text-emerald-700 dark:text-emerald-300" />
             {isCheque ? "Çek" : "Senet"} Tahsil
           </h3>
           <button type="button" onClick={onClose}
-            className="modal-close">
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]">
             <X size={16} />
           </button>
         </div>
 
         <div className="p-4 space-y-3">
           {error && (
-            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle size={12} className="mt-0.5" /><span>{error}</span>
             </div>
           )}
 
-          <div className="rounded-lg bg-surface-700/40 p-3 text-xs space-y-1">
-            <p className="text-surface-200">
+          <div className="rounded-lg v2-sunken p-3 text-xs space-y-1">
+            <p className="text-[rgb(var(--v2-ink))]">
               <strong>{isCheque ? instrument.cheque_number : instrument.note_serial}</strong>
               {" · "}
               {formatCurrency(instrument.amount, instrument.currency || "TRY")}
             </p>
-            <p className="text-surface-400">
+            <p className="text-[rgb(var(--v2-muted))]">
               {instrument.counterpart_name} · vade: {instrument.due_date}
               {isCheque && instrument.drawer_bank && ` · ${instrument.drawer_bank}`}
             </p>
-            <p className={cn("text-[11px]", isIncoming ? "text-emerald-300" : "text-red-300")}>
+            <p className={cn("text-[11px]", isIncoming ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300")}>
               {isIncoming ? "Bizim portföyümüzdeki çek/senet → tahsil hesaba yatacak"
                           : "Bizim verdiğimiz çek/senet → tahsil hesaptan çıkacak"}
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">
               {isIncoming ? "Yatacak Hesap" : "Çıkacak Hesap"} *
             </label>
             <DarkSelect
@@ -131,7 +131,7 @@ export function ClearInstrumentModal({ instrument, onClose, onSuccess }: Props) 
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-surface-200 mb-1.5">Tahsil Tarihi *</label>
+            <label className="block text-xs font-medium text-[rgb(var(--v2-ink))] mb-1.5">Tahsil Tarihi *</label>
             <input type="date" required value={clearedDate}
               onChange={(e) => setClearedDate(e.target.value)}
               className="field field-sm py-2.5" />
