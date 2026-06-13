@@ -92,16 +92,16 @@ export default function GunKapanisiPage() {
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
-          <ArrowLeft size={20} className="text-surface-300" />
+          className="v2-icon-btn v2-press" aria-label="Geri">
+          <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-white">Gün Kapanışı — Mutabakat</h1>
-          <p className="text-xs text-surface-400">SAĞLAMA HESAP · kaçak tespiti · devir zinciri</p>
+          <h1 className="v2-display text-xl">Gün Kapanışı — Mutabakat</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">SAĞLAMA HESAP · kaçak tespiti · devir zinciri</p>
         </div>
         {isAdmin && (
           <button onClick={handleRecompute}
-            className="btn-secondary px-3 py-2 text-xs flex items-center gap-1.5"
+            className="v2-sunken hover:border-accent/50 v2-press rounded-xl px-3 py-2 text-xs flex items-center gap-1.5 text-[rgb(var(--v2-ink))] transition-colors"
             title="Devir zincirini yeniden hesapla">
             <RefreshCw size={13} /> Zincir
           </button>
@@ -111,48 +111,48 @@ export default function GunKapanisiPage() {
       {/* Gün Açılışı durumu — state machine: AÇILMAMIŞ → AÇIK → KAPALI */}
       {dayStatus && !todayClosed && (
         <section className={cn(
-          "card p-4 border",
-          isUnopened && "border-sky-500/30 bg-sky-500/5",
-          isOpen && "border-emerald-500/20 bg-emerald-500/5",
+          "v2-card p-4",
+          isUnopened && "border-accent/30 bg-accent/5",
+          isOpen && "border-accent/20 bg-accent/5",
         )}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 {isOpen
-                  ? <Unlock size={14} className="text-emerald-400" />
-                  : <Sunrise size={14} className="text-sky-400" />}
-                <h2 className="text-sm font-semibold text-white">
+                  ? <Unlock size={14} className="text-accent-strong dark:text-accent" />
+                  : <Sunrise size={14} className="text-accent-strong dark:text-accent" />}
+                <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                   {isOpen ? "Bugün Açık" : "Bugün Henüz Açılmadı"}
                 </h2>
                 <LifecycleBadge status={lifecycle} />
                 {enforcement && (
-                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-surface-700 text-surface-300 border border-surface-600">
+                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full v2-sunken text-[rgb(var(--v2-muted))]">
                     Kilit Aktif
                   </span>
                 )}
               </div>
               {isUnopened ? (
-                <p className="text-[11px] text-surface-400 mt-0.5">
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
                   {enforcement
                     ? "İşlem girebilmek için önce günü açın (devir + yuvarlama)."
                     : "Devir + yuvarlama ile günü açabilirsiniz. (İşlem kilidi kapalı.)"}
                 </p>
               ) : (
-                <p className="text-2xl font-bold text-white num">
+                <p className="text-2xl font-bold text-[rgb(var(--v2-ink))] num">
                   {formatCurrency(openPreview?.rounded_total ?? 0, "TRY")}
-                  <span className="text-[11px] font-normal text-surface-400 ml-2">açılış</span>
+                  <span className="text-[11px] font-normal text-[rgb(var(--v2-muted))] ml-2">açılış</span>
                 </p>
               )}
             </div>
             {isUnopened && (
               <button onClick={() => setShowOpen(true)}
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold transition-colors shrink-0 flex items-center gap-1.5">
+                className="v2-btn v2-btn--accent v2-press text-sm shrink-0 flex items-center gap-1.5">
                 <Sunrise size={15} /> Günü Aç
               </button>
             )}
             {isOpen && (
               <button onClick={() => setShowOpen(true)}
-                className="btn-secondary px-3 py-2 text-xs shrink-0">
+                className="v2-sunken hover:border-accent/50 v2-press rounded-xl px-3 py-2 text-xs shrink-0 text-[rgb(var(--v2-ink))] transition-colors">
                 Açılışı Düzenle
               </button>
             )}
@@ -163,46 +163,46 @@ export default function GunKapanisiPage() {
       {/* Bugünün durumu */}
       {today && (
         <section className={cn(
-          "card p-4 border",
-          !todayClosed && "border-amber-500/30 bg-amber-500/5",
-          todayClosed && today.alarm_fired && "border-red-500/30 bg-red-500/5",
-          todayClosed && !today.alarm_fired && "border-emerald-500/20 bg-emerald-500/5",
+          "v2-card p-4",
+          !todayClosed && "border-status-warning/30 bg-status-warning/5",
+          todayClosed && today.alarm_fired && "border-status-danger/30 bg-status-danger/5",
+          todayClosed && !today.alarm_fired && "border-accent/20 bg-accent/5",
         )}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 {todayClosed
-                  ? <Lock size={14} className="text-emerald-400" />
-                  : <CalendarCheck size={14} className="text-amber-400" />}
-                <h2 className="text-sm font-semibold text-white">
+                  ? <Lock size={14} className="text-accent-strong dark:text-accent" />
+                  : <CalendarCheck size={14} className="text-status-warning" />}
+                <h2 className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                   {todayClosed ? "Bugün Kapatıldı" : "Bugün Henüz Kapatılmadı"}
                 </h2>
                 {todayClosed && today.alarm_fired && (
-                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 flex items-center gap-1">
+                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-status-danger/15 text-status-danger border border-status-danger/30 flex items-center gap-1">
                     <ShieldAlert size={9} /> Kaçak
                   </span>
                 )}
               </div>
-              <p className="text-2xl font-bold text-white num">
+              <p className="text-2xl font-bold text-[rgb(var(--v2-ink))] num">
                 {formatCurrency(today.computed_closing, "TRY")}
               </p>
-              <p className="text-[11px] text-surface-400 mt-0.5">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
                 Önceki Kasa {formatCurrency(today.opening_balance, "TRY")}
                 {" · Gelen +"}{formatCurrency(today.total_in, "TRY")}
                 {" · Giden -"}{formatCurrency(today.total_out, "TRY")}
               </p>
               {todayClosed && today.variance != null && Math.abs(today.variance) > 0.005 && (
                 <p className={cn("mt-2 text-xs font-medium",
-                  today.variance > 0 ? "text-red-400" : "text-emerald-400")}>
+                  today.variance > 0 ? "text-status-danger" : "text-accent-strong dark:text-accent")}>
                   {today.variance > 0 ? "Eksik" : "Fazla"}: {today.variance > 0 ? "+" : ""}
                   {formatCurrency(today.variance, "TRY")}
-                  {today.reason_category && <span className="text-surface-400"> ({today.reason_category})</span>}
+                  {today.reason_category && <span className="text-[rgb(var(--v2-muted))]"> ({today.reason_category})</span>}
                 </p>
               )}
             </div>
             {!todayClosed && (
               <button onClick={() => setShowClose(true)}
-                className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors shrink-0">
+                className="v2-btn v2-btn--accent v2-press text-sm shrink-0">
                 Günü Kapat
               </button>
             )}
@@ -211,31 +211,31 @@ export default function GunKapanisiPage() {
       )}
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
+        <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">{error}</div>
       )}
 
       {/* Bekleyen düzenleme istekleri (admin) */}
       {isAdmin && pendingEdits.length > 0 && (
         <section className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-            <History size={14} className="text-amber-300" /> Bekleyen Düzenleme Onayları
+          <div className="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--v2-ink))]">
+            <History size={14} className="text-status-warning" /> Bekleyen Düzenleme Onayları
           </div>
-          <div className="glass-card divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {pendingEdits.map((r) => (
               <div key={r.id} className="p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm text-white">{r.close_date}</p>
-                  <p className="text-[11px] text-surface-400 truncate">
+                  <p className="text-sm text-[rgb(var(--v2-ink))]">{r.close_date}</p>
+                  <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
                     {r.reason_category} — {r.reason_note}
                   </p>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
                   <button onClick={() => handleApprove(r.id)}
-                    className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-600/30 text-xs flex items-center gap-1 hover:bg-emerald-600/30">
+                    className="px-2.5 py-1.5 rounded-lg bg-accent/15 text-accent-strong dark:text-accent border border-accent/30 text-xs flex items-center gap-1 hover:bg-accent/25 v2-press transition-colors">
                     <CheckCircle2 size={12} /> Onayla
                   </button>
                   <button onClick={() => handleReject(r.id)}
-                    className="px-2.5 py-1.5 rounded-lg bg-red-600/15 text-red-300 border border-red-600/30 text-xs flex items-center gap-1 hover:bg-red-600/25">
+                    className="px-2.5 py-1.5 rounded-lg bg-status-danger/15 text-status-danger border border-status-danger/30 text-xs flex items-center gap-1 hover:bg-status-danger/25 v2-press transition-colors">
                     <XCircle size={12} /> Reddet
                   </button>
                 </div>
@@ -248,16 +248,16 @@ export default function GunKapanisiPage() {
       {/* Kapanış geçmişi */}
       {loading && closings.length === 0 ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-surface-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : closings.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <CalendarCheck size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Geçmiş kapanış kaydı yok</p>
+        <div className="v2-card p-8 text-center">
+          <CalendarCheck size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Geçmiş kapanış kaydı yok</p>
         </div>
       ) : (
         <section className="space-y-2">
-          <div className="glass-card divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {closings.map((c) => (
               <DayCloseRow key={c.id ?? c.close_date} dc={c} isAdmin={isAdmin}
                 onDrill={() => setDrillDate(c.close_date)}
@@ -289,48 +289,48 @@ function DayCloseRow({ dc, isAdmin, onDrill, onEdit }: {
     <div className="p-4 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium text-white">
+          <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">
             {new Date(dc.close_date).toLocaleDateString("tr-TR", {
               day: "numeric", month: "long", year: "numeric", weekday: "short",
             })}
           </p>
           <StatusBadge dc={dc} />
           {dc.is_backdated && (
-            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/25">
+            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-status-warning/15 text-status-warning border border-status-warning/25">
               Geri Dönük
             </span>
           )}
           {dc.alarm_fired && (
-            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 flex items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-status-danger/15 text-status-danger border border-status-danger/30 flex items-center gap-1">
               <ShieldAlert size={9} /> Kaçak
             </span>
           )}
         </div>
-        <p className="text-[11px] text-surface-400 mt-0.5">
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
           Olması Gereken {formatCurrency(dc.computed_closing, "TRY")}
           {dc.actual_total != null && <> · Son Kasa {formatCurrency(dc.actual_total, "TRY")}</>}
         </p>
         {dc.reason_category && (
-          <p className="text-[11px] text-amber-300 mt-0.5">
+          <p className="text-[11px] text-status-warning mt-0.5">
             {dc.reason_category}
-            {dc.reason_note && <span className="text-surface-400"> — {dc.reason_note.slice(0, 60)}</span>}
+            {dc.reason_note && <span className="text-[rgb(var(--v2-muted))]"> — {dc.reason_note.slice(0, 60)}</span>}
           </p>
         )}
       </div>
       <div className="flex flex-col items-end gap-1.5 shrink-0">
         {v != null && Math.abs(v) > 0.005 && (
-          <span className={cn("text-sm font-semibold", v > 0 ? "text-red-400" : "text-emerald-400")}>
+          <span className={cn("text-sm font-semibold", v > 0 ? "text-status-danger" : "text-accent-strong dark:text-accent")}>
             {v > 0 ? "+" : ""}{formatCurrency(v, "TRY")}
           </span>
         )}
         <div className="flex gap-1.5">
           <button onClick={onDrill}
-            className="p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300" title="Kaçak detayı">
+            className="v2-icon-btn v2-press w-8 h-8" title="Kaçak detayı" aria-label="Kaçak detayı">
             <Search size={13} />
           </button>
           {isAdmin && closed && dc.id && (
             <button onClick={onEdit}
-              className="p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300" title="Düzenle (onaylı)">
+              className="v2-icon-btn v2-press w-8 h-8" title="Düzenle (onaylı)" aria-label="Düzenle (onaylı)">
               <FileEdit size={13} />
             </button>
           )}
@@ -342,10 +342,10 @@ function DayCloseRow({ dc, isAdmin, onDrill, onEdit }: {
 
 function LifecycleBadge({ status }: { status: string }) {
   const cls = status === "OPEN"
-    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+    ? "bg-accent/15 text-accent-strong dark:text-accent border-accent/30"
     : status === "CLOSED"
-      ? "bg-surface-700 text-surface-300 border-surface-600"
-      : "bg-sky-500/20 text-sky-300 border-sky-500/30";
+      ? "v2-sunken text-[rgb(var(--v2-muted))]"
+      : "bg-accent/15 text-accent-strong dark:text-accent border-accent/30";
   const label = status === "OPEN" ? "AÇIK" : status === "CLOSED" ? "KAPALI" : "AÇILMAMIŞ";
   return (
     <span className={cn("text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border", cls)}>
@@ -357,10 +357,10 @@ function LifecycleBadge({ status }: { status: string }) {
 function StatusBadge({ dc }: { dc: DayClose }) {
   const status = dc.status;
   const cls = status === "CLOSED"
-    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+    ? "bg-accent/15 text-accent-strong dark:text-accent border-accent/30"
     : status === "REOPENED"
-      ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-      : "bg-surface-700 text-surface-300 border-surface-600";
+      ? "bg-status-warning/15 text-status-warning border-status-warning/30"
+      : "v2-sunken text-[rgb(var(--v2-muted))]";
   const isAuto = dc.created_via === "AUTO_CRON";
   const label = status === "CLOSED"
     ? (isAuto ? "OTO KAPALI" : "KAPALI")

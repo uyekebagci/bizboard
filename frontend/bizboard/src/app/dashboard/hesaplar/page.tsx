@@ -176,20 +176,21 @@ export default function HesaplarPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="v2-icon-btn v2-press"
+            aria-label="Geri"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Banka Hesapları</h1>
-            <p className="text-xs text-surface-400">
+            <h1 className="v2-display text-xl">Banka Hesapları</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">
               Banka + kasa + kişide tutulan — tüm hesaplarınız tek panelde
             </p>
           </div>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold shadow-sm"
+          className="v2-btn v2-btn--ink v2-press inline-flex items-center gap-1.5 text-sm"
         >
           <Plus size={14} />
           Yeni Hesap
@@ -198,17 +199,17 @@ export default function HesaplarPage() {
 
       {/* Stats */}
       <section className="grid grid-cols-3 gap-3">
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Aktif Hesap</p>
-          <p className="mt-1 text-lg font-bold text-surface-100">{physicalActive.length}</p>
+        <div className="v2-card p-3">
+          <p className="v2-eyebrow text-[10px]">Aktif Hesap</p>
+          <p className="mt-1 text-lg font-bold text-[rgb(var(--v2-ink))]">{physicalActive.length}</p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Pasif Hesap</p>
-          <p className="mt-1 text-lg font-bold text-surface-400">{physicalInactive.length}</p>
+        <div className="v2-card p-3">
+          <p className="v2-eyebrow text-[10px]">Pasif Hesap</p>
+          <p className="mt-1 text-lg font-bold text-[rgb(var(--v2-muted))]">{physicalInactive.length}</p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-[10px] text-surface-400 uppercase">Toplam Bakiye</p>
-          <p className="mt-1 text-lg font-bold text-emerald-300">
+        <div className="v2-card p-3">
+          <p className="v2-eyebrow text-[10px]">Toplam Bakiye</p>
+          <p className="mt-1 text-lg font-bold text-accent-strong dark:text-accent">
             {formatCurrency(totalActive, "TRY")}
           </p>
         </div>
@@ -217,21 +218,21 @@ export default function HesaplarPage() {
       {/* Search + filter row */}
       <section className="space-y-2.5">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Hesap adı, banka, IBAN, kişi veya işletme ara…"
-            className="field field-sm py-2 pl-9 pr-3"
+            className="w-full py-2 pl-9 pr-3 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
           />
           {query && (
             <button
               onClick={() => setQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-surface-700"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-[rgb(var(--v2-sunken))]"
               aria-label="Aramayı temizle"
             >
-              <X size={12} className="text-surface-400" />
+              <X size={12} className="text-[rgb(var(--v2-muted))]" />
             </button>
           )}
         </div>
@@ -241,11 +242,12 @@ export default function HesaplarPage() {
             <button
               key={f.key}
               onClick={() => setTypeFilter(f.key)}
+              aria-pressed={typeFilter === f.key}
               className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
                 typeFilter === f.key
-                  ? "bg-brand-600 border-brand-500 text-white"
-                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
+                  ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                  : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
               )}
             >
               {f.label}
@@ -257,11 +259,12 @@ export default function HesaplarPage() {
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setBusinessFilter(null)}
+              aria-pressed={businessFilter === null}
               className={cn(
-                "px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors",
+                "px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors",
                 businessFilter === null
-                  ? "bg-surface-500 border-surface-400 text-surface-100"
-                  : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
+                  ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                  : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
               )}
             >
               Tüm İşletmeler
@@ -270,11 +273,12 @@ export default function HesaplarPage() {
               <button
                 key={b.id}
                 onClick={() => setBusinessFilter(b.id)}
+                aria-pressed={businessFilter === b.id}
                 className={cn(
-                  "px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors",
+                  "px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors",
                   businessFilter === b.id
-                    ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
-                    : "bg-surface-700 border-surface-600 text-surface-300 hover:text-surface-100",
+                    ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
                 )}
               >
                 {b.name}
@@ -283,21 +287,22 @@ export default function HesaplarPage() {
           </div>
         )}
 
-        <label className="flex items-center gap-1.5 text-xs text-surface-300">
+        <label className="flex items-center gap-1.5 text-xs text-[rgb(var(--v2-muted))]">
           <input
             type="checkbox"
             checked={showInactive}
             onChange={(e) => setShowInactive(e.target.checked)}
+            className="accent-accent"
           />
           Pasif hesapları göster
         </label>
       </section>
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+        <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm flex items-start gap-2">
           <AlertTriangle size={14} className="mt-0.5" />
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto -mr-1 p-0.5 hover:bg-red-500/20 rounded">
+          <button onClick={() => setError(null)} className="ml-auto -mr-1 p-0.5 hover:bg-status-danger/20 rounded">
             <X size={12} />
           </button>
         </div>
@@ -305,12 +310,12 @@ export default function HesaplarPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-surface-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : sortedFiltered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Wallet size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">
+        <div className="v2-card p-8 text-center">
+          <Wallet size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">
             {list.length === 0
               ? "Henüz hesap eklenmemiş"
               : "Filtreyle eşleşen hesap yok"}
@@ -318,14 +323,14 @@ export default function HesaplarPage() {
           {list.length > 0 && (query || typeFilter !== "ALL" || businessFilter) && (
             <button
               onClick={() => { setQuery(""); setTypeFilter("ALL"); setBusinessFilter(null); }}
-              className="mt-3 text-xs text-brand-400 hover:text-brand-300"
+              className="mt-3 text-xs text-accent-strong dark:text-accent hover:opacity-80"
             >
               Filtreleri temizle
             </button>
           )}
         </div>
       ) : (
-        <section className="glass-card divide-y divide-surface-700">
+        <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {sortedFiltered.map((a) => {
             const isMain = a.is_main_cash || a.type === "MAIN_CASH";
             const isSystem = a.is_system === true;
@@ -345,25 +350,25 @@ export default function HesaplarPage() {
                   }
                 }}
                 className={cn(
-                  "p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-surface-700/40 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-500/50",
+                  "p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-[rgb(var(--v2-sunken))] transition-colors focus:outline-none focus:ring-1 focus:ring-accent/50",
                   !a.is_active && "opacity-50",
-                  isMain && "bg-amber-500/[0.04]",
+                  isMain && "bg-status-warning/[0.04]",
                   isSystem && !isMain && "bg-purple-500/[0.04]",
                 )}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <AccountTypeBadge type={a.type} />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
+                    <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate flex items-center gap-1.5">
                       {a.name}
                       {isLocked && (
                         <Lock size={11} className={cn(
                           "shrink-0",
-                          isMain ? "text-amber-300/70" : "text-purple-300/70",
+                          isMain ? "text-status-warning/70" : "text-purple-300/70",
                         )} />
                       )}
                     </p>
-                    <p className="text-[11px] text-surface-400 truncate">
+                    <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
                       {isSystem
                         ? "Sistem hesabı (otomatik yaratılır, silinemez)"
                         : a.type === "CASH_HOLDER" && a.holder_person_name
@@ -378,7 +383,7 @@ export default function HesaplarPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <p className="text-sm font-semibold text-surface-100">
+                  <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">
                     {formatCurrency(a.current_balance, a.currency || "TRY")}
                   </p>
                   {/* Bankalar WP: bakiye düzelt — yalnız admin + bakiyesi tutulan tipler. */}
@@ -389,8 +394,9 @@ export default function HesaplarPage() {
                         setAdjustTarget(a);
                       }}
                       disabled={busyId === a.id}
-                      className="p-1 rounded-md text-surface-400 hover:bg-brand-500/10 hover:text-brand-300 transition-colors"
+                      className="p-1 rounded-md text-[rgb(var(--v2-muted))] hover:bg-accent/10 hover:text-accent-strong dark:hover:text-accent transition-colors"
                       title="Bakiyeyi düzelt (mutabakat)"
+                      aria-label="Bakiyeyi düzelt"
                     >
                       <Scale size={16} />
                     </button>
@@ -407,9 +413,10 @@ export default function HesaplarPage() {
                     disabled={busyId === a.id}
                     className={cn(
                       "p-1 rounded-md transition-colors",
-                      a.is_active ? "text-emerald-400 hover:bg-emerald-500/10" : "text-surface-400 hover:bg-surface-700",
+                      a.is_active ? "text-accent-strong dark:text-accent hover:bg-accent/10" : "text-[rgb(var(--v2-muted))] hover:bg-[rgb(var(--v2-sunken))]",
                     )}
                     title={a.is_active ? "Pasif yap" : "Aktif yap"}
+                    aria-label={a.is_active ? "Pasif yap" : "Aktif yap"}
                   >
                     {busyId === a.id ? (
                       <Loader2 size={20} className="animate-spin" />
@@ -426,14 +433,15 @@ export default function HesaplarPage() {
                         setDeleteTarget(a);
                       }}
                       disabled={busyId === a.id}
-                      className="p-1 rounded-md text-surface-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                      className="p-1 rounded-md text-[rgb(var(--v2-muted))] hover:bg-status-danger/10 hover:text-status-danger transition-colors"
                       title="Sil"
+                      aria-label="Sil"
                     >
                       <Trash2 size={16} />
                     </button>
                   ) : (
                     <span
-                      className="p-1 rounded-md text-surface-600 cursor-not-allowed"
+                      className="p-1 rounded-md text-[rgb(var(--v2-muted))]/60 cursor-not-allowed"
                       title={isSystem ? "Sistem hesabı silinemez (Genel Nakit)" : "Ana Kasa silinemez"}
                     >
                       <Lock size={16} />
@@ -495,11 +503,11 @@ function AccountTypeBadge({ type }: { type: BankAccountType }) {
   const map: Record<BankAccountType, { label: string; cls: string; icon: typeof Wallet }> = {
     CHECKING:    { label: "Banka",     cls: "bg-blue-500/15 text-blue-300 border-blue-500/30",         icon: Building2 },
     SAVINGS:     { label: "Vadeli",    cls: "bg-purple-500/15 text-purple-300 border-purple-500/30",   icon: Building2 },
-    MAIN_CASH:   { label: "Ana Kasa",  cls: "bg-amber-500/15 text-amber-300 border-amber-500/40",      icon: Banknote },
-    SUB_CASH:    { label: "Alt Kasa",  cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", icon: Banknote },
+    MAIN_CASH:   { label: "Ana Kasa",  cls: "bg-status-warning/15 text-status-warning border-status-warning/40", icon: Banknote },
+    SUB_CASH:    { label: "Alt Kasa",  cls: "bg-accent/15 text-accent-strong dark:text-accent border-accent/30", icon: Banknote },
     CASH_HOLDER: { label: "Kişide",    cls: "bg-orange-500/15 text-orange-300 border-orange-500/30",   icon: HandCoins },
   };
-  const m = map[type] ?? { label: type, cls: "bg-surface-700 text-surface-300 border-surface-600", icon: Wallet };
+  const m = map[type] ?? { label: type, cls: "v2-sunken text-[rgb(var(--v2-muted))]", icon: Wallet };
   const Icon = m.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] border ${m.cls}`}>
@@ -519,20 +527,20 @@ function ConfirmToggleModal({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card w-full max-w-sm p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="v2-card shadow-v2-hover w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-surface-100">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">
             {deactivate ? "Hesabı pasif yap" : "Hesabı aktif yap"}
           </h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-surface-700">
-            <X size={16} className="text-surface-400" />
+          <button onClick={onClose} className="v2-icon-btn v2-press w-8 h-8" aria-label="Kapat">
+            <X size={16} />
           </button>
         </div>
-        <p className="text-sm text-surface-300">
-          <strong className="text-surface-100">{account.name}</strong>
+        <p className="text-sm text-[rgb(var(--v2-muted))]">
+          <strong className="text-[rgb(var(--v2-ink))]">{account.name}</strong>
           {force && (account.current_balance ?? 0) !== 0 && (
-            <> hesabının bakiyesi <strong className="text-red-300">
+            <> hesabının bakiyesi <strong className="text-status-danger">
               {formatCurrency(account.current_balance, account.currency || "TRY")}
             </strong> — 0 değil. Yine de devam etmek istediğinden emin misin?</>
           )}
@@ -544,15 +552,16 @@ function ConfirmToggleModal({
         <div className="flex gap-2 mt-4">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
+            className="flex-1 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm transition-colors"
           >
             Vazgec
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2 rounded-xl text-surface-100 text-sm font-semibold ${
-              deactivate ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
-            }`}
+            className={cn(
+              "flex-1 px-4 py-2 rounded-xl text-sm font-semibold v2-press transition-all",
+              deactivate ? "bg-status-danger text-white hover:opacity-90" : "bg-accent text-accent-ink hover:opacity-90",
+            )}
           >
             {deactivate ? "Pasif Yap" : "Aktif Yap"}
           </button>
@@ -581,23 +590,23 @@ function ConfirmDeleteModal({
   }, [account]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card !border-red-500/30 w-full max-w-sm p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="v2-card shadow-v2-hover !border-status-danger/30 w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <Trash2 size={16} className="text-red-400" />
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Trash2 size={16} className="text-status-danger" />
             {account.type === "SUB_CASH" ? "Alt Kasayı sil" : "Hesabı sil"}
           </h3>
-          <button onClick={onClose} disabled={busy} className="p-1 rounded-lg hover:bg-surface-700">
-            <X size={16} className="text-surface-400" />
+          <button onClick={onClose} disabled={busy} className="v2-icon-btn v2-press w-8 h-8" aria-label="Kapat">
+            <X size={16} />
           </button>
         </div>
-        <p className="text-sm text-surface-300">
-          <strong className="text-surface-100">{account.name}</strong> hesabını kalıcı olarak silmek
+        <p className="text-sm text-[rgb(var(--v2-muted))]">
+          <strong className="text-[rgb(var(--v2-ink))]">{account.name}</strong> hesabını kalıcı olarak silmek
           istediğine emin misin? Bağlı işlem varsa silinemez; önce pasif yapmanı öneririz.
         </p>
         {account.type === "SUB_CASH" && assignmentCount !== null && assignmentCount > 0 && (
-          <p className="mt-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+          <p className="mt-3 p-2.5 rounded-lg bg-status-warning/10 border border-status-warning/30 text-status-warning text-xs">
             ⚠ Bu alt kasada <strong>{assignmentCount}</strong> entity atalı.
             Silersen tüm atamalar kaldırılır ve entity'ler Ana Kasa'ya iade olur
             (entity verisi silinmez).
@@ -607,14 +616,14 @@ function ConfirmDeleteModal({
           <button
             onClick={onClose}
             disabled={busy}
-            className="flex-1 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm disabled:opacity-50"
+            className="flex-1 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm transition-colors disabled:opacity-50"
           >
             Vazgeç
           </button>
           <button
             onClick={onConfirm}
             disabled={busy}
-            className="flex-1 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-sm flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 rounded-xl bg-status-danger hover:opacity-90 v2-press disabled:opacity-50 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all"
           >
             {busy && <Loader2 size={14} className="animate-spin" />}
             Sil
@@ -639,15 +648,15 @@ function CreateBankAccountModal({
   onCreated: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="modal-header">
-          <h3 className="text-base font-semibold text-surface-100 flex items-center gap-2">
-            <Plus size={16} className="text-brand-400" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="v2-card shadow-v2-hover w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-[rgb(var(--v2-border))]">
+          <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+            <Plus size={16} className="text-accent-strong dark:text-accent" />
             Yeni Hesap
           </h3>
-          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-surface-700">
-            <X size={16} className="text-surface-400" />
+          <button type="button" onClick={onClose} className="v2-icon-btn v2-press w-8 h-8" aria-label="Kapat">
+            <X size={16} />
           </button>
         </div>
         <div className="p-4">

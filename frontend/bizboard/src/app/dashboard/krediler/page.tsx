@@ -56,10 +56,10 @@ function dueBadge(dueIso: string | null | undefined, settled: boolean): {
   today.setHours(0, 0, 0, 0);
   const diffDays = Math.round((due.getTime() - today.getTime()) / 86_400_000);
   if (diffDays < 0) {
-    return { label: `${Math.abs(diffDays)} gün gecikti`, cls: "bg-red-500/15 text-red-300 border-red-500/30" };
+    return { label: `${Math.abs(diffDays)} gün gecikti`, cls: "bg-status-danger/15 text-status-danger border-status-danger/30" };
   }
   if (diffDays <= 7) {
-    return { label: `${diffDays} gün kaldı`, cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" };
+    return { label: `${diffDays} gün kaldı`, cls: "bg-status-warning/15 text-status-warning border-status-warning/30" };
   }
   return null;
 }
@@ -148,25 +148,25 @@ export default function KredilerPage() {
       {/* ── Header ───────────────────────────────────────────── */}
       <section className="flex items-center gap-3">
         <button onClick={() => router.back()}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600"
+          className="v2-icon-btn v2-press"
           title="Geri" aria-label="Geri">
-          <ArrowLeft size={18} className="text-surface-100" />
+          <ArrowLeft size={18} />
         </button>
         <div className="flex-1 min-w-0 flex items-center gap-2">
-          <Landmark size={20} className="text-brand-400 shrink-0" />
-          <h1 className="text-xl font-bold text-surface-100 truncate">Krediler</h1>
+          <Landmark size={20} className="text-accent-strong dark:text-accent shrink-0" />
+          <h1 className="v2-display text-xl truncate">Krediler</h1>
         </div>
         <button onClick={toggleCensor}
-          className="p-2 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300"
+          className="v2-icon-btn v2-press"
           title={censored ? "Tutarları göster" : "Tutarları gizle"}
           aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}>
           {censored ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </section>
 
-      <p className="text-xs text-surface-400 -mt-2">
-        Verilen/Alınan Borç kayıtları. <span className="text-emerald-300">Verilen</span> = bize geri ödenecek (alacak),{" "}
-        <span className="text-red-300">Alınan</span> = biz geri ödeyeceğiz (verecek). Salt görüntü.
+      <p className="text-xs text-[rgb(var(--v2-muted))] -mt-2">
+        Verilen/Alınan Borç kayıtları. <span className="text-accent-strong dark:text-accent">Verilen</span> = bize geri ödenecek (alacak),{" "}
+        <span className="text-status-danger">Alınan</span> = biz geri ödeyeceğiz (verecek). Salt görüntü.
       </p>
 
       {/* ── Özet kartlar ─────────────────────────────────────── */}
@@ -230,17 +230,17 @@ export default function KredilerPage() {
       {/* ── Liste ────────────────────────────────────────────── */}
       <section>
         {loading ? (
-          <div className="glass-card p-8 text-center text-surface-400 text-sm flex items-center justify-center gap-2">
+          <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm flex items-center justify-center gap-2">
             <Loader2 size={16} className="animate-spin" /> Yükleniyor...
           </div>
         ) : error ? (
-          <div className="glass-card p-8 text-center text-red-300 text-sm">{error}</div>
+          <div className="v2-card p-8 text-center text-status-danger text-sm">{error}</div>
         ) : filtered.length === 0 ? (
-          <div className="glass-card p-8 text-center text-surface-400 text-sm">
+          <div className="v2-card p-8 text-center text-[rgb(var(--v2-muted))] text-sm">
             Bu filtrede kredi kaydı yok.
           </div>
         ) : (
-          <div className="glass-card divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
             {filtered.map((d) => (
               <LoanRow key={d.id} loan={d} censored={censored}
                 onOpenCounterpart={(cpId) => router.push(`/dashboard/counterparts/${cpId}`)} />
@@ -259,19 +259,19 @@ function SummaryCard({
   tone: "positive" | "negative" | "neutral"; icon: React.ReactNode;
   censored: boolean; primary?: boolean; signed?: boolean;
 }) {
-  const color = tone === "positive" ? "text-emerald-300"
-    : tone === "negative" ? "text-red-300" : "text-surface-100";
+  const color = tone === "positive" ? "text-accent-strong dark:text-accent"
+    : tone === "negative" ? "text-status-danger" : "text-[rgb(var(--v2-ink))]";
   const display = signed
     ? (value < 0 ? "−" : value > 0 ? "+" : "") + maskAmount(Math.abs(value), censored, "TRY")
     : maskAmount(Math.abs(value), censored, "TRY");
   return (
-    <div className={cn("card p-3", primary && "ring-1 ring-brand-500/40 bg-brand-900/20")}>
-      <div className="flex items-center gap-1.5 text-[10px] text-surface-400 uppercase mb-1">
+    <div className={cn("v2-card p-3", primary && "ring-1 ring-accent/40")}>
+      <div className="flex items-center gap-1.5 v2-eyebrow text-[10px] mb-1">
         {icon} {label}
       </div>
       <p className={cn("text-lg font-bold num", color)}>{display}</p>
       {count !== undefined && (
-        <p className="text-[10px] text-surface-500 mt-0.5">{count} açık kayıt</p>
+        <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-0.5">{count} açık kayıt</p>
       )}
     </div>
   );
@@ -293,7 +293,7 @@ function LoanRow({
     <div
       className={cn(
         "p-3 flex items-center gap-3",
-        clickable && "cursor-pointer hover:bg-surface-800/40",
+        clickable && "cursor-pointer hover:bg-[rgb(var(--v2-sunken))] transition-colors",
       )}
       onClick={clickable ? () => onOpenCounterpart(loan.counterpart_id!) : undefined}
       role={clickable ? "button" : undefined}
@@ -303,22 +303,22 @@ function LoanRow({
       } : undefined}
     >
       <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-        tone === "positive" ? "bg-emerald-500/15" : "bg-red-500/15")}>
+        tone === "positive" ? "bg-accent/15" : "bg-status-danger/15")}>
         {isGiven
-          ? <ArrowUpRight size={16} className="text-emerald-300" />
-          : <ArrowDownLeft size={16} className="text-red-300" />}
+          ? <ArrowUpRight size={16} className="text-accent-strong dark:text-accent" />
+          : <ArrowDownLeft size={16} className="text-status-danger" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-surface-100 truncate">
+        <p className="text-sm text-[rgb(var(--v2-ink))] truncate">
           {name}
           <span className={cn("ml-2 text-[10px] px-1.5 py-0.5 rounded border",
             isGiven
-              ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-              : "bg-red-500/15 text-red-300 border-red-500/30")}>
+              ? "bg-accent/15 text-accent-strong dark:text-accent border-accent/30"
+              : "bg-status-danger/15 text-status-danger border-status-danger/30")}>
             {isGiven ? "Verilen" : "Alınan"}
           </span>
           {loan.is_settled && (
-            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-surface-700 text-surface-300">
+            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded v2-sunken text-[rgb(var(--v2-muted))]">
               Kapandı
             </span>
           )}
@@ -328,7 +328,7 @@ function LoanRow({
             </span>
           )}
         </p>
-        <p className="text-[11px] text-surface-400 truncate">
+        <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
           {loan.business_name}
           {` · Vade: ${formatDate(loan.due_date)}`}
           {` · Kayıt: ${formatDate(loan.created_at)}`}
@@ -336,7 +336,7 @@ function LoanRow({
       </div>
       <div className="text-right shrink-0">
         <span className={cn("text-sm font-semibold num whitespace-nowrap",
-          tone === "positive" ? "text-emerald-300" : "text-red-300")}>
+          tone === "positive" ? "text-accent-strong dark:text-accent" : "text-status-danger")}>
           {isGiven ? "+" : "−"}{maskAmount(loan.amount, censored, loan.currency || "TRY")}
         </span>
       </div>

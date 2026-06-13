@@ -189,24 +189,25 @@ export default function AlacaklarPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+          className="v2-icon-btn v2-press"
+          aria-label="Geri"
         >
-          <ArrowLeft size={20} className="text-surface-300" />
+          <ArrowLeft size={20} />
         </button>
         <div className="flex items-center gap-2 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-            <HandCoins size={20} className="text-amber-300" />
+          <div className="w-10 h-10 rounded-xl bg-status-warning/15 border border-status-warning/30 flex items-center justify-center">
+            <HandCoins size={20} className="text-status-warning" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Alacaklar</h1>
-            <p className="text-xs text-surface-400">
+            <h1 className="v2-display text-xl">Alacaklar</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">
               Acik (tahsil edilmemis) alacaklarin kisi bazli ozeti
             </p>
           </div>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+          className="v2-btn v2-btn--ink v2-press flex items-center gap-1.5 text-sm"
         >
           <Plus size={16} />
           Alacak Ekle
@@ -220,7 +221,7 @@ export default function AlacaklarPage() {
           Counterparts sayfasıyla aynı desen: DarkSelect + "Tüm İşletmeler". */}
       {!loading && businesses.length > 1 && (
         <section className="flex items-center gap-2">
-          <label className="text-xs text-surface-400 shrink-0">İşletme:</label>
+          <label className="text-xs text-[rgb(var(--v2-muted))] shrink-0">İşletme:</label>
           <div className="min-w-[200px]">
             <DarkSelect
               value={businessFilter}
@@ -249,18 +250,18 @@ export default function AlacaklarPage() {
               onClick={() => g.key !== "_none" && setBusinessFilter(g.key)}
               disabled={g.key === "_none"}
               className={cn(
-                "glass-card p-3 text-left transition-colors",
+                "v2-card p-3 text-left transition-colors",
                 g.key === "_none"
                   ? "cursor-default opacity-80"
-                  : "hover:border-amber-500/40 cursor-pointer",
+                  : "v2-lift hover:border-status-warning/40 cursor-pointer",
               )}
               title={g.key === "_none" ? undefined : `${g.name} alacaklarını göster`}
             >
-              <p className="text-[11px] text-surface-400 truncate" title={g.name}>{g.name}</p>
-              <p className={cn("mt-0.5 text-sm font-semibold text-amber-300", censorCls)}>
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate" title={g.name}>{g.name}</p>
+              <p className={cn("mt-0.5 text-sm font-semibold text-status-warning", censorCls)}>
                 {maskAmount(g.total, censored, "TRY")}
               </p>
-              <p className="text-[10px] text-surface-400">{g.count} kişi/firma</p>
+              <p className="text-[10px] text-[rgb(var(--v2-muted))]">{g.count} kişi/firma</p>
             </button>
           ))}
         </section>
@@ -268,18 +269,18 @@ export default function AlacaklarPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-amber-400" />
+          <Loader2 size={28} className="animate-spin text-status-warning" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Acik alacaginiz yok</p>
-          <p className="text-surface-400 text-sm mt-1">
+        <div className="v2-card p-8 text-center">
+          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Acik alacaginiz yok</p>
+          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
             Yukaridaki &quot;+ Alacak Ekle&quot; butonu ile yeni bir alacak kaydi olusturabilirsiniz.
           </p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+            className="v2-btn v2-btn--ink v2-press mt-3 inline-flex items-center gap-1.5 text-sm"
           >
             <Plus size={16} />
             Alacak Ekle
@@ -288,12 +289,12 @@ export default function AlacaklarPage() {
       ) : visibleRows.length === 0 ? (
         // İşletme filtresi aktif ama seçilen işletmede açık alacak yok.
         // Selector yukarıda görünür kalır; kullanıcı başka işletme seçebilir.
-        <div className="glass-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Bu işletmede açık alacak yok</p>
+        <div className="v2-card p-8 text-center">
+          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Bu işletmede açık alacak yok</p>
           <button
             onClick={() => setBusinessFilter(ALL_BUSINESSES)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm font-semibold"
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
           >
             Tüm İşletmeleri Göster
           </button>
@@ -306,16 +307,16 @@ export default function AlacaklarPage() {
           <div className="space-y-5 min-w-0">
             {/* Totals */}
             <section className="grid grid-cols-2 gap-3">
-              <div className="glass-card p-4">
-                <p className="text-[11px] text-surface-400 uppercase tracking-wider">Toplam Alacak</p>
+              <div className="v2-card p-4">
+                <p className="v2-eyebrow text-[11px]">Toplam Alacak</p>
                 <div className="mt-1 flex items-center gap-2">
-                  {/* Ek istek: alacaklı (pozitif) → yeşil; 0 → nötr; negatif → uyarı (kırmızı).
-                      İşaret-bazlı renk, çift tema uyumlu (emerald/red-300 hem dark hem light okunaklı). */}
+                  {/* Ek istek: alacaklı (pozitif) → accent; 0 → nötr; negatif → danger.
+                      İşaret-bazlı renk, çift tema uyumlu (accent/danger hem dark hem light okunaklı). */}
                   <p className={cn(
                     "text-2xl font-bold",
-                    total > 0 ? "text-emerald-400"
-                      : total < 0 ? "text-red-400"
-                      : "text-surface-200",
+                    total > 0 ? "text-accent-strong dark:text-accent"
+                      : total < 0 ? "text-status-danger"
+                      : "text-[rgb(var(--v2-ink))]",
                     censorCls,
                   )}>
                     {maskAmount(total, censored, "TRY")}
@@ -326,7 +327,7 @@ export default function AlacaklarPage() {
                     aria-pressed={censored}
                     title={censored ? "Tutarları göster" : "Tutarları gizle"}
                     aria-label={censored ? "Tutarları göster" : "Tutarları gizle"}
-                    className="shrink-0 p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300 hover:text-surface-100 transition-colors"
+                    className="v2-icon-btn v2-press shrink-0 w-8 h-8"
                   >
                     {censored ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -339,12 +340,12 @@ export default function AlacaklarPage() {
                   censored={censored}
                 />
               </div>
-              <div className="glass-card p-4">
-                <p className="text-[11px] text-surface-400 uppercase tracking-wider">Acik Kayit</p>
-                <p className="mt-1 text-2xl font-bold text-surface-100">
+              <div className="v2-card p-4">
+                <p className="v2-eyebrow text-[11px]">Acik Kayit</p>
+                <p className="mt-1 text-2xl font-bold text-[rgb(var(--v2-ink))]">
                   {totalCount}
                 </p>
-                <p className="text-[11px] text-surface-400 mt-0.5">
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
                   {visibleRows.length} farkli kisi/firma
                 </p>
               </div>
@@ -352,7 +353,7 @@ export default function AlacaklarPage() {
 
             {/* Sort chips */}
             <section className="flex items-center justify-between gap-2">
-              <span className="text-xs text-surface-400">Sirala:</span>
+              <span className="text-xs text-[rgb(var(--v2-muted))]">Sirala:</span>
               <div className="flex gap-2">
                 {([
                   { v: "amount_desc", label: "Tutar (cok→az)" },
@@ -362,11 +363,13 @@ export default function AlacaklarPage() {
                   <button
                     key={opt.v}
                     onClick={() => setSortMode(opt.v)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    aria-pressed={sortMode === opt.v}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-medium transition-colors",
                       sortMode === opt.v
-                        ? "bg-amber-500/20 border-amber-400 text-amber-200"
-                        : "bg-surface-700 border-surface-600 text-surface-300"
-                    }`}
+                        ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                        : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+                    )}
                   >
                     {opt.label}
                   </button>
@@ -375,14 +378,14 @@ export default function AlacaklarPage() {
             </section>
 
             {/* List */}
-            <section className="glass-card divide-y divide-surface-700">
+            <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
               {sorted.map((r) => {
                 const key = r.counterpart_id || `name:${r.counterpart_name}`;
                 const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
                 const Inner = (
                   <div className="p-4 flex items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-surface-100 truncate">
+                      <p className="font-medium text-[rgb(var(--v2-ink))] truncate">
                         {r.counterpart_name || "Bilinmiyor"}
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -391,7 +394,7 @@ export default function AlacaklarPage() {
                         ))}
                       </div>
                       {r.last_due_date && (
-                        <p className="mt-1.5 text-[11px] text-surface-400 flex items-center gap-1">
+                        <p className="mt-1.5 text-[11px] text-[rgb(var(--v2-muted))] flex items-center gap-1">
                           <CalendarClock size={11} />
                           Son vade: {new Date(r.last_due_date).toLocaleDateString("tr-TR", {
                             day: "numeric", month: "short", year: "numeric",
@@ -401,17 +404,17 @@ export default function AlacaklarPage() {
                     </div>
                     <div className="text-right shrink-0">
                       {/* total_amount güncel TL net toplam → her zaman ₺ (USD sembolü bug fix). */}
-                      <p className={cn("text-base font-semibold text-amber-300", censorCls)}>
+                      <p className={cn("text-base font-semibold text-status-warning", censorCls)}>
                         {maskAmount(r.total_amount, censored, "TRY")}
                       </p>
-                      <p className="text-[11px] text-surface-400">
+                      <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                         {r.count} kayit
                       </p>
                     </div>
                   </div>
                 );
                 return href ? (
-                  <Link key={key} href={href} className="row-hover block transition-colors">
+                  <Link key={key} href={href} className="block transition-colors hover:bg-[rgb(var(--v2-sunken))]">
                     {Inner}
                   </Link>
                 ) : (
@@ -428,11 +431,11 @@ export default function AlacaklarPage() {
             <section className="space-y-2 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto no-scrollbar">
               {businesses.length > 1 && (
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-surface-400">Notlar — İşletme:</label>
+                  <label className="text-xs text-[rgb(var(--v2-muted))]">Notlar — İşletme:</label>
                   <select
                     value={notesBusinessId}
                     onChange={(e) => setNotesBusinessId(e.target.value)}
-                    className="field-sm py-1.5 w-auto"
+                    className="w-auto py-1.5 px-3 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
                   >
                     {businesses.map((b) => (
                       <option key={b.id} value={b.id}>{b.name}</option>
@@ -478,9 +481,9 @@ function TypeBadge({
     SENET: "bg-purple-500/15 text-purple-300 border-purple-500/30",
     CEK: "bg-blue-500/15 text-blue-300 border-blue-500/30",
     ALTIN: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
-    NAKIT: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+    NAKIT: "bg-accent/15 text-accent-strong dark:text-accent border-accent/30",
     DIGER: "bg-pink-500/15 text-pink-300 border-pink-500/30",
-    UNSPECIFIED: "bg-surface-600 text-surface-300 border-surface-500",
+    UNSPECIFIED: "v2-sunken text-[rgb(var(--v2-muted))]",
   };
   const cls = colorMap[breakdown.type] || colorMap.UNSPECIFIED;
   const label = labelMap[breakdown.type] || breakdown.type;

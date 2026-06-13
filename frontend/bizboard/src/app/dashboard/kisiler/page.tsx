@@ -46,18 +46,19 @@ export default function KisilerPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+            className="v2-icon-btn v2-press"
+            aria-label="Geri don"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-surface-100">Kişiler</h1>
-            <p className="text-xs text-surface-400">Gerçek kişi karşı tarafları (TCKN bazlı)</p>
+            <h1 className="v2-display text-xl">Kişiler</h1>
+            <p className="text-xs text-[rgb(var(--v2-muted))]">Gerçek kişi karşı tarafları (TCKN bazlı)</p>
           </div>
         </div>
         <Link
           href="/dashboard/counterparts"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold"
+          className="v2-btn v2-btn--ink v2-press text-xs"
         >
           <UserPlus size={14} />
           Yeni
@@ -65,42 +66,42 @@ export default function KisilerPage() {
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
+        <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">{error}</div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-surface-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : list.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <CircleUserRound size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henüz kişi yok</p>
-          <p className="text-surface-400 text-sm mt-1">
+        <div className="v2-card p-8 text-center">
+          <CircleUserRound size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz kişi yok</p>
+          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
             Karşı Firmalar sayfasından "Tür: Kişi" seçerek ekleyebilirsiniz.
           </p>
         </div>
       ) : (
-        <section className="glass-card divide-y divide-surface-700">
+        <section className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
           {list.map((p) => (
             <Link
               key={p.id}
               href={`/dashboard/counterparts/${p.id}`}
-              className="block p-4 hover:bg-surface-700 transition-colors"
+              className="block p-4 hover:bg-[rgb(var(--v2-sunken))] transition-colors"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  <CircleUserRound size={18} className="text-surface-400 shrink-0" />
+                  <CircleUserRound size={18} className="text-[rgb(var(--v2-muted))] shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-surface-100 truncate">{p.name}</p>
-                    <p className="text-[11px] text-surface-400 truncate">
+                    <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">{p.name}</p>
+                    <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
                       {p.contact_phone || p.tax_id || "—"}
                     </p>
                   </div>
                 </div>
-                <p className={`text-sm font-semibold shrink-0 ${
-                  (p.current_balance ?? 0) > 0 ? "text-emerald-300" :
-                  (p.current_balance ?? 0) < 0 ? "text-red-300" : "text-surface-400"
+                <p className={`num text-sm font-semibold shrink-0 ${
+                  (p.current_balance ?? 0) > 0 ? "text-accent-strong dark:text-accent" :
+                  (p.current_balance ?? 0) < 0 ? "text-status-danger" : "text-[rgb(var(--v2-muted))]"
                 }`}>
                   {formatCurrency(p.current_balance ?? 0, "TRY")}
                 </p>
