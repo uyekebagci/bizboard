@@ -79,20 +79,20 @@ export function PwaUpdatePrompt() {
       aria-live="polite"
       className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] max-w-sm w-[calc(100vw-2rem)] mx-auto"
     >
-      <div className="bg-surface-800 border border-surface-600 shadow-card-hover rounded-2xl px-4 py-3 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0">
-          <RefreshCw size={18} className="text-surface-100" />
+      <div className="v2-card shadow-card-hover rounded-2xl px-4 py-3 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
+          <RefreshCw size={18} className="text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-surface-100">Yeni sürüm hazır</p>
-          <p className="text-xs text-surface-300">
+          <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Yeni sürüm hazır</p>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">
             Yenilemek için sayfayı tekrar yükleyin.
           </p>
         </div>
         <button
           type="button"
           onClick={handleReload}
-          className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium"
+          className="v2-btn v2-btn--accent v2-press text-xs px-3 py-1.5"
         >
           Yenile
         </button>
@@ -100,7 +100,7 @@ export function PwaUpdatePrompt() {
           type="button"
           onClick={handleDismiss}
           aria-label="Kapat"
-          className="p-1.5 rounded-lg text-surface-400 hover:bg-surface-700"
+          className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:bg-[rgb(var(--v2-sunken))]"
         >
           <X size={14} />
         </button>

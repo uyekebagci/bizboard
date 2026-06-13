@@ -273,12 +273,12 @@ export default function AdminPage() {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="glass-card p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-surface-100 mb-2">
+          <div className="v2-card p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">
               Kullanıcıyı Sil
             </h3>
-            <p className="text-surface-400 text-sm mb-6">
-              <span className="text-surface-100 font-medium">
+            <p className="text-[rgb(var(--v2-muted))] text-sm mb-6">
+              <span className="text-[rgb(var(--v2-ink))] font-medium">
                 {deleteConfirm.full_name}
               </span>{" "}
               adlı kullanıcıyı silmek istediğinize emin misiniz? Bu işlem geri
@@ -287,7 +287,7 @@ export default function AdminPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-100 rounded-xl text-sm font-medium transition-colors"
+                className="flex-1 px-4 py-2.5 v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] rounded-xl text-sm font-medium transition-colors"
               >
                 İptal
               </button>

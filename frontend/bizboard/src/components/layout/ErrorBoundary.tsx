@@ -103,25 +103,25 @@ function DefaultErrorFallback({
           </svg>
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-surface-100">
+          <h2 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             Bir hata olustu
           </h2>
-          <p className="text-sm text-surface-400 mt-1">
+          <p className="text-sm text-[rgb(var(--v2-muted))] mt-1">
             Bu ekranda beklenmeyen bir sorun yasandi. Tekrar deneyebilir veya
             ana sayfaya donebilirsin. Hata otomatik olarak kaydedildi.
           </p>
         </div>
 
         {isDev && (
-          <details className="text-left bg-surface-800 border border-surface-700 rounded-xl p-3 text-xs">
-            <summary className="cursor-pointer text-surface-300 font-medium">
+          <details className="text-left v2-card rounded-xl p-3 text-xs">
+            <summary className="cursor-pointer text-[rgb(var(--v2-muted))] font-medium">
               Geliştirici detayı
             </summary>
-            <pre className="mt-2 whitespace-pre-wrap text-red-300">
+            <pre className="mt-2 whitespace-pre-wrap text-status-danger">
               {error.name}: {error.message}
             </pre>
             {error.stack && (
-              <pre className="mt-2 whitespace-pre-wrap text-surface-400 overflow-x-auto">
+              <pre className="mt-2 whitespace-pre-wrap text-[rgb(var(--v2-muted))] overflow-x-auto">
                 {error.stack.slice(0, 2000)}
               </pre>
             )}
@@ -131,13 +131,13 @@ function DefaultErrorFallback({
         <div className="flex items-center justify-center gap-2 pt-2">
           <button
             onClick={onRetry}
-            className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors"
+            className="v2-btn v2-btn--accent v2-press px-4 py-2 text-sm font-medium"
           >
             Tekrar dene
           </button>
           <a
             href="/dashboard"
-            className="px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-100 text-sm font-medium transition-colors"
+            className="px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] text-sm font-medium transition-colors"
           >
             Ana sayfa
           </a>

@@ -221,22 +221,22 @@ export default function ForecastPage() {
         <div className="p-4 border-b border-[rgb(var(--v2-border))]">
           <h3 className="font-bold text-[rgb(var(--v2-ink))]">Haftalık Detay</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="v2-table-wrap">
+          <table className="v2-table">
             <thead>
-              <tr className="text-left text-xs uppercase text-[rgb(var(--v2-muted))] border-b border-[rgb(var(--v2-border))]">
-                <th className="px-4 py-2 font-medium">Hafta</th>
-                <th className="px-4 py-2 font-medium text-right">Açılış</th>
-                <th className="px-4 py-2 font-medium text-right">Gelen</th>
-                <th className="px-4 py-2 font-medium text-right">Giden</th>
-                <th className="px-4 py-2 font-medium text-right">Net</th>
-                <th className="px-4 py-2 font-medium text-right">Kapanış</th>
+              <tr>
+                <th>Hafta</th>
+                <th className="v2-td-num">Açılış</th>
+                <th className="v2-td-num">Gelen</th>
+                <th className="v2-td-num">Giden</th>
+                <th className="v2-td-num">Net</th>
+                <th className="v2-td-num">Kapanış</th>
               </tr>
             </thead>
             <tbody>
               {(data?.weeksData ?? []).map((w) => (
-                <tr key={w.index} className="border-b border-[rgb(var(--v2-border))] hover:bg-[rgb(var(--v2-sunken))] transition-colors">
-                  <td className="px-4 py-2">
+                <tr key={w.index}>
+                  <td>
                     <span className="text-[rgb(var(--v2-ink))]">{w.index}. </span>
                     <span className="text-xs text-[rgb(var(--v2-muted))]">{w.label}</span>
                     {w.scheduled_items.length > 0 && (
@@ -245,13 +245,13 @@ export default function ForecastPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-2 text-right num text-[rgb(var(--v2-muted))]">{formatCurrency(w.opening_balance, "TRY")}</td>
-                  <td className="px-4 py-2 text-right num text-accent-strong dark:text-accent">{formatCurrency(w.inflow, "TRY")}</td>
-                  <td className="px-4 py-2 text-right num text-status-danger">{formatCurrency(-w.outflow, "TRY")}</td>
-                  <td className={cn("px-4 py-2 text-right num font-medium", w.net >= 0 ? "text-accent-strong dark:text-accent" : "text-status-danger")}>
+                  <td className="v2-td-num num text-[rgb(var(--v2-muted))]">{formatCurrency(w.opening_balance, "TRY")}</td>
+                  <td className="v2-td-num num text-accent-strong dark:text-accent">{formatCurrency(w.inflow, "TRY")}</td>
+                  <td className="v2-td-num num text-status-danger">{formatCurrency(-w.outflow, "TRY")}</td>
+                  <td className={cn("v2-td-num num font-medium", w.net >= 0 ? "text-accent-strong dark:text-accent" : "text-status-danger")}>
                     {formatCurrency(w.net, "TRY")}
                   </td>
-                  <td className={cn("px-4 py-2 text-right num font-semibold", w.closing_balance >= 0 ? "text-[rgb(var(--v2-ink))]" : "text-status-danger")}>
+                  <td className={cn("v2-td-num num font-semibold", w.closing_balance >= 0 ? "text-[rgb(var(--v2-ink))]" : "text-status-danger")}>
                     {formatCurrency(w.closing_balance, "TRY")}
                   </td>
                 </tr>

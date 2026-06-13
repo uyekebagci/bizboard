@@ -129,15 +129,15 @@ export default function BudgetSettingsPage() {
 
       {/* Kategori bütçe listesi */}
       <section className="v2-card p-0 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="v2-table-wrap">
+          <table className="v2-table">
             <thead>
-              <tr className="text-left text-xs uppercase text-[rgb(var(--v2-muted))] border-b border-[rgb(var(--v2-border))]">
-                <th className="px-4 py-2.5 font-medium">Kategori</th>
-                <th className="px-4 py-2.5 font-medium text-right">Bu Ay Harcama</th>
-                <th className="px-4 py-2.5 font-medium text-right">Aylık Bütçe</th>
-                <th className="px-4 py-2.5 font-medium w-40">Kullanım</th>
-                <th className="px-4 py-2.5 font-medium text-right">İşlem</th>
+              <tr>
+                <th>Kategori</th>
+                <th className="v2-td-num">Bu Ay Harcama</th>
+                <th className="v2-td-num">Aylık Bütçe</th>
+                <th className="w-40">Kullanım</th>
+                <th className="v2-td-num">İşlem</th>
               </tr>
             </thead>
             <tbody>
@@ -145,8 +145,8 @@ export default function BudgetSettingsPage() {
                 const isEditing = editing === row.category_id;
                 const pct = row.usage_pct ?? 0;
                 return (
-                  <tr key={row.category_id} className="border-b border-[rgb(var(--v2-border))] hover:bg-[rgb(var(--v2-sunken))] transition-colors">
-                    <td className="px-4 py-2.5">
+                  <tr key={row.category_id}>
+                    <td>
                       <span className="inline-flex items-center gap-2">
                         {row.color && (
                           <span className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -155,10 +155,10 @@ export default function BudgetSettingsPage() {
                         <span className="text-[rgb(var(--v2-ink))]">{row.category_name}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right num text-[rgb(var(--v2-muted))]">
+                    <td className="v2-td-num num text-[rgb(var(--v2-muted))]">
                       {formatCurrency(row.spent, "TRY")}
                     </td>
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="v2-td-num">
                       {isEditing ? (
                         <input
                           type="number"
@@ -178,7 +178,7 @@ export default function BudgetSettingsPage() {
                         <span className="text-xs text-[rgb(var(--v2-muted))]">Kapalı</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td>
                       {row.budget != null ? (
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 rounded-full v2-sunken overflow-hidden">
@@ -202,7 +202,7 @@ export default function BudgetSettingsPage() {
                         <span className="text-xs text-[rgb(var(--v2-muted))]">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="v2-td-num">
                       {!isAdmin ? (
                         <span className="text-xs text-[rgb(var(--v2-muted))]">—</span>
                       ) : isEditing ? (
