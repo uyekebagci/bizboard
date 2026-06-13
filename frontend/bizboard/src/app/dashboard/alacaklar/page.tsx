@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, HandCoins, Plus, CalendarClock, Eye, EyeOff,
+  HandCoins, Plus, CalendarClock, Eye, EyeOff,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { formatCurrency, maskAmount, cn } from "@/lib/utils";
@@ -25,6 +25,12 @@ import { NotesModule } from "@/components/business/NotesModule";
 import { ExchangeRateBar } from "@/components/debts/ExchangeRateBar";
 import { CurrencyEquivalentLine } from "@/components/debts/CurrencyEquivalentLine";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
+import { ViewModeToggle } from "@/components/shared/ViewModeToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
@@ -49,7 +55,11 @@ export default function AlacaklarPage() {
   const { refreshKey, triggerRefresh } = useAppStore();
   const [rows, setRows] = useState<ScopedReceivable[]>([]);
   const [loading, setLoading] = useState(true);
+  // UX-08: ağ hatasını sessiz yutma yerine kullanıcıya göster + tekrar dene.
+  const [loadError, setLoadError] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
+  // UX-10: Kart/Tablo görünüm tercihi (localStorage'da kalıcı).
+  const { mode: viewMode, setMode: setViewMode } = useViewMode("alacaklar", "card");
   // İşletme filtresi (salt-görüntü). "ALL" → konsolide; aksi → tek işletme.
   const [businessFilter, setBusinessFilter] = useState<string>(ALL_BUSINESSES);
   // v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal
@@ -75,6 +85,7 @@ export default function AlacaklarPage() {
 
   useEffect(() => {
     async function load() {
+      setLoadError(false);
       try {
         // v1.7.x net-balance fix:
         // /receivables gross RECEIVABLE breakdown verir; ama counterpart'ta
@@ -82,10 +93,19 @@ export default function AlacaklarPage() {
         // current_balance'ı zaten net (R − P) tutuyor; onu otoritatif kabul edip
         // total_amount'u override ediyoruz. Net <= 0 olan counterpart'lar burada
         // gözükmez (artık Verecekler tarafında).
-        const [recv, allCps] = await Promise.all([
-          api.get<ReceivableAggregate[]>("/receivables").catch(() => [] as ReceivableAggregate[]),
-          api.get<Counterpart[]>("/counterparts").catch(() => [] as Counterpart[]),
-        ]);
+        // UX-08: ana veri (/receivables) başarısız olursa hata-state; counterparts
+        // yalnız net'leme/işletme eşlemesi için yardımcı (boş düşse de liste çalışır).
+        const recvRes = await api.get<ReceivableAggregate[]>("/receivables")
+          .then((r) => ({ ok: true as const, data: r || [] }))
+          .catch((e) => ({ ok: false as const, error: e }));
+        if (!recvRes.ok) {
+          logger.error("api", "Receivables fetch failed", undefined, recvRes.error);
+          setRows([]);
+          setLoadError(true);
+          return;
+        }
+        const recv = recvRes.data;
+        const allCps = await api.get<Counterpart[]>("/counterparts").catch(() => [] as Counterpart[]);
         const balanceById = new Map<string, number>();
         // counterpart_id → business_id eşlemesi (işletme filtresi için, salt-görüntü).
         const businessById = new Map<string, string | null>();
@@ -108,6 +128,7 @@ export default function AlacaklarPage() {
         setRows(netted);
       } catch (err) {
         logger.error("api", "Receivables fetch failed", undefined, err);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -185,34 +206,22 @@ export default function AlacaklarPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="v2-icon-btn v2-press"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex items-center gap-2 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-status-warning/15 border border-status-warning/30 flex items-center justify-center">
-            <HandCoins size={20} className="text-status-warning" />
-          </div>
-          <div>
-            <h1 className="v2-display text-xl">Alacaklar</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">
-              Acik (tahsil edilmemis) alacaklarin kisi bazli ozeti
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="v2-btn v2-btn--ink v2-press flex items-center gap-1.5 text-sm"
-        >
-          <Plus size={16} />
-          Alacak Ekle
-        </button>
-      </div>
+      {/* Header — UX-07 paylaşılan PageHeader. */}
+      <PageHeader
+        title="Alacaklar"
+        subtitle="Acik (tahsil edilmemis) alacaklarin kisi bazli ozeti"
+        icon={HandCoins}
+        iconClassName="bg-status-warning/15 border-status-warning/30 text-status-warning"
+        actions={
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="v2-btn v2-btn--ink v2-press flex items-center gap-1.5 text-sm"
+          >
+            <Plus size={16} aria-hidden="true" />
+            Alacak Ekle
+          </button>
+        }
+      />
 
       {/* WP a9da4e9d (USD+Altın): güncel kur + "Anlık Güncelle". */}
       <ExchangeRateBar onRefreshed={triggerRefresh} />
@@ -268,37 +277,44 @@ export default function AlacaklarPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-status-warning" />
-        </div>
+        // UX-08: ilk yükleme = skeleton (spinner yerine).
+        <ListSkeleton rows={6} />
+      ) : loadError ? (
+        // UX-08: ağ hatasını boş-durumdan ayır + tekrar dene.
+        <ErrorState
+          description="Alacaklar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin."
+          onRetry={triggerRefresh}
+        />
       ) : rows.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Acik alacaginiz yok</p>
-          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
-            Yukaridaki &quot;+ Alacak Ekle&quot; butonu ile yeni bir alacak kaydi olusturabilirsiniz.
-          </p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="v2-btn v2-btn--ink v2-press mt-3 inline-flex items-center gap-1.5 text-sm"
-          >
-            <Plus size={16} />
-            Alacak Ekle
-          </button>
-        </div>
+        <EmptyState
+          icon={HandCoins}
+          title="Acik alacaginiz yok"
+          description={'Yukaridaki "+ Alacak Ekle" butonu ile yeni bir alacak kaydi olusturabilirsiniz.'}
+          action={
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="v2-btn v2-btn--ink v2-press inline-flex items-center gap-1.5 text-sm"
+            >
+              <Plus size={16} aria-hidden="true" />
+              Alacak Ekle
+            </button>
+          }
+        />
       ) : visibleRows.length === 0 ? (
         // İşletme filtresi aktif ama seçilen işletmede açık alacak yok.
         // Selector yukarıda görünür kalır; kullanıcı başka işletme seçebilir.
-        <div className="v2-card p-8 text-center">
-          <HandCoins size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Bu işletmede açık alacak yok</p>
-          <button
-            onClick={() => setBusinessFilter(ALL_BUSINESSES)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
-          >
-            Tüm İşletmeleri Göster
-          </button>
-        </div>
+        <EmptyState
+          icon={HandCoins}
+          title="Bu işletmede açık alacak yok"
+          action={
+            <button
+              onClick={() => setBusinessFilter(ALL_BUSINESSES)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
+            >
+              Tüm İşletmeleri Göster
+            </button>
+          }
+        />
       ) : (
         // UI: lg+ iki kolon — SOL toplam+liste, SAĞ notlar (sticky, kendi içinde scroll).
         // <lg tek kolon: notlar listenin altına iner (DOM sırası: sol → sağ).
@@ -351,33 +367,83 @@ export default function AlacaklarPage() {
               </div>
             </section>
 
-            {/* Sort chips */}
-            <section className="flex items-center justify-between gap-2">
-              <span className="text-xs text-[rgb(var(--v2-muted))]">Sirala:</span>
-              <div className="flex gap-2">
-                {([
-                  { v: "amount_desc", label: "Tutar (cok→az)" },
-                  { v: "due_asc", label: "Vade (yakin→uzak)" },
-                  { v: "name_asc", label: "Isim (A-Z)" },
-                ] as { v: SortMode; label: string }[]).map((opt) => (
-                  <button
-                    key={opt.v}
-                    onClick={() => setSortMode(opt.v)}
-                    aria-pressed={sortMode === opt.v}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-xs font-medium transition-colors",
-                      sortMode === opt.v
-                        ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
-                        : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+            {/* Sort chips + UX-10 Kart/Tablo toggle */}
+            <section className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-[rgb(var(--v2-muted))]">Sirala:</span>
+                <div className="flex gap-2">
+                  {([
+                    { v: "amount_desc", label: "Tutar (cok→az)" },
+                    { v: "due_asc", label: "Vade (yakin→uzak)" },
+                    { v: "name_asc", label: "Isim (A-Z)" },
+                  ] as { v: SortMode; label: string }[]).map((opt) => (
+                    <button
+                      key={opt.v}
+                      onClick={() => setSortMode(opt.v)}
+                      aria-pressed={sortMode === opt.v}
+                      className={cn(
+                        "px-3 py-1 rounded-full text-xs font-medium transition-colors",
+                        sortMode === opt.v
+                          ? "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                          : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <ViewModeToggle mode={viewMode} onChange={setViewMode} />
             </section>
 
-            {/* List */}
+            {/* List — UX-10: viewMode'a göre kart-satır veya yoğun tablo. */}
+            {viewMode === "table" ? (
+              <section className="v2-card v2-table-wrap">
+                <table className="v2-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Kisi / Firma</th>
+                      <th scope="col">Tip</th>
+                      <th scope="col">Son Vade</th>
+                      <th scope="col" className="v2-td-num">Tutar</th>
+                      <th scope="col" className="v2-td-num">Kayit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sorted.map((r) => {
+                      const key = r.counterpart_id || `name:${r.counterpart_name}`;
+                      const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
+                      const rowCls = href ? "cursor-pointer" : "";
+                      return (
+                        <tr
+                          key={key}
+                          className={rowCls}
+                          onClick={href ? () => router.push(href) : undefined}
+                        >
+                          <td className="font-medium text-[rgb(var(--v2-ink))] max-w-[200px] truncate">
+                            {r.counterpart_name || "Bilinmiyor"}
+                          </td>
+                          <td className="text-xs text-[rgb(var(--v2-muted))] max-w-[160px] truncate">
+                            {r.receivable_types.map((b) => b.label || b.type).join(", ") || "—"}
+                          </td>
+                          <td className="text-xs text-[rgb(var(--v2-muted))] whitespace-nowrap">
+                            {r.last_due_date
+                              ? new Date(r.last_due_date).toLocaleDateString("tr-TR", {
+                                  day: "2-digit", month: "2-digit", year: "numeric",
+                                })
+                              : "—"}
+                          </td>
+                          <td className={cn("num v2-td-num font-semibold text-status-warning whitespace-nowrap", censorCls)}>
+                            {maskAmount(r.total_amount, censored, "TRY")}
+                          </td>
+                          <td className="num v2-td-num text-[rgb(var(--v2-muted))]">{r.count}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </section>
+            ) : (
             <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
               {sorted.map((r) => {
                 const key = r.counterpart_id || `name:${r.counterpart_name}`;
@@ -422,6 +488,7 @@ export default function AlacaklarPage() {
                 );
               })}
             </section>
+            )}
           </div>
 
           {/* SAĞ kolon: Alacaklara ÖZEL notlar (scope=RECEIVABLES). lg+ sticky +
