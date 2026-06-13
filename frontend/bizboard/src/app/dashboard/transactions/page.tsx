@@ -166,8 +166,8 @@ export default function AllTransactionsPage() {
     <div className="max-w-2xl mx-auto space-y-5 pb-24">
       {/* Header — UX-07 paylaşılan PageHeader. */}
       <PageHeader
-        title="Tum Islemler"
-        subtitle={`${headerCount} islem`}
+        title="Tüm İşlemler"
+        subtitle={`${headerCount} işlem`}
         icon={Receipt}
       />
 
@@ -175,7 +175,7 @@ export default function AllTransactionsPage() {
       <div className="grid grid-cols-3 gap-2">
         <div className="v2-card p-3 text-center">
           <p className="v2-eyebrow text-[10px]">
-            Gelir{partialTotals && <span className="text-[rgb(var(--v2-muted))]/70"> (yuklenen)</span>}
+            Gelir{partialTotals && <span className="text-[rgb(var(--v2-muted))]/70"> (yüklenen)</span>}
           </p>
           <p className="num text-sm font-bold text-accent-strong dark:text-accent mt-0.5">
             {formatCurrency(totalIncome)}
@@ -183,14 +183,14 @@ export default function AllTransactionsPage() {
         </div>
         <div className="v2-card p-3 text-center">
           <p className="v2-eyebrow text-[10px]">
-            Gider{partialTotals && <span className="text-[rgb(var(--v2-muted))]/70"> (yuklenen)</span>}
+            Gider{partialTotals && <span className="text-[rgb(var(--v2-muted))]/70"> (yüklenen)</span>}
           </p>
           <p className="num text-sm font-bold text-status-danger mt-0.5">
             {formatCurrency(totalWithFixed)}
           </p>
           {totalFixedCostMonthly > 0 && (
             <p className="text-[9px] text-status-danger/80 mt-0.5">
-              Islem: {formatCurrency(totalExpense)}
+              İşlem: {formatCurrency(totalExpense)}
             </p>
           )}
         </div>
@@ -210,7 +210,7 @@ export default function AllTransactionsPage() {
         <div className="v2-card p-3 border-status-warning/40">
           <div className="flex items-center gap-2 mb-2">
             <Pin size={14} className="text-status-warning" />
-            <p className="text-xs font-bold text-status-warning">Aylik Sabit Giderler</p>
+            <p className="text-xs font-bold text-status-warning">Aylık Sabit Giderler</p>
             <span className="ml-auto text-sm font-bold text-status-warning">
               {formatCurrency(totalFixedCostMonthly)}/ay
             </span>
@@ -243,7 +243,7 @@ export default function AllTransactionsPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Islem ara... (aciklama, kategori)"
+          placeholder="İşlem ara... (açıklama, kategori)"
           className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))]
                      placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
         />
@@ -256,11 +256,11 @@ export default function AllTransactionsPage() {
           <DarkSelect
             value={filterBusiness}
             onChange={setFilterBusiness}
-            placeholder="Tum Isletmeler"
+            placeholder="Tüm İşletmeler"
             searchable={businesses.length > 6}
             aria-label="İşletme filtresi"
             options={[
-              { value: "", label: "Tum Isletmeler" },
+              { value: "", label: "Tüm İşletmeler" },
               ...businesses.map((b) => ({ value: b.id, label: b.name })),
             ]}
           />
@@ -269,7 +269,7 @@ export default function AllTransactionsPage() {
         {/* Direction filter — UI v2: sunken segment + accent aktif. */}
         <div className="flex items-center gap-1 v2-sunken p-1 rounded-xl">
           {([
-            { key: "", label: "Tumu" },
+            { key: "", label: "Tümü" },
             { key: "income", label: "Gelir" },
             { key: "expense", label: "Gider" },
           ] as const).map((opt) => (
@@ -312,8 +312,8 @@ export default function AllTransactionsPage() {
       <div className="flex items-center justify-between gap-2 -mt-1">
         {hasClientFilter && hasNext ? (
           <p className="text-[11px] text-[rgb(var(--v2-muted))] flex-1 min-w-0">
-            Arama/ay filtresi yuklenmis kayitlar uzerinde calisir — devamini gormek
-            icin asagi kaydirin.
+            Arama/ay filtresi yüklenmiş kayıtlar üzerinde çalışır — devamını görmek
+            için aşağı kaydırın.
           </p>
         ) : (
           <span className="flex-1" />
@@ -325,11 +325,11 @@ export default function AllTransactionsPage() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={Receipt}
-          title={transactions.length === 0 ? "Henuz islem yok" : "Filtreye uygun islem bulunamadi"}
+          title={transactions.length === 0 ? "Henüz işlem yok" : "Filtreye uygun işlem bulunamadı"}
           description={
             transactions.length === 0
-              ? "Yeni bir gelir/gider eklediginizde burada listelenir."
-              : "Arama veya filtre kriterlerini degistirmeyi deneyin."
+              ? "Yeni bir gelir/gider eklediğinizde burada listelenir."
+              : "Arama veya filtre kriterlerini değiştirmeyi deneyin."
           }
         />
       ) : viewMode === "table" ? (
@@ -339,11 +339,11 @@ export default function AllTransactionsPage() {
             <table className="v2-table">
               <thead>
                 <tr>
-                  <th scope="col">Aciklama</th>
-                  <th scope="col">Isletme / Kategori</th>
+                  <th scope="col">Açıklama</th>
+                  <th scope="col">İşletme / Kategori</th>
                   <th scope="col">Tarih</th>
                   <th scope="col" className="v2-td-num">Tutar</th>
-                  <th scope="col" className="v2-td-num w-10"><span className="sr-only">Islem</span></th>
+                  <th scope="col" className="v2-td-num w-10"><span className="sr-only">İşlem</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -358,7 +358,7 @@ export default function AllTransactionsPage() {
                       className="cursor-pointer"
                     >
                       <td className="font-medium text-[rgb(var(--v2-ink))] max-w-[220px] truncate">
-                        {tx.description || tx.category?.name || "Islem"}
+                        {tx.description || tx.category?.name || "İşlem"}
                       </td>
                       <td className="text-[rgb(var(--v2-muted))] text-xs max-w-[200px] truncate">
                         {tx.business_name && (
@@ -429,7 +429,7 @@ export default function AllTransactionsPage() {
 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[rgb(var(--v2-ink))] truncate">
-                      {tx.description || tx.category?.name || "Islem"}
+                      {tx.description || tx.category?.name || "İşlem"}
                     </p>
                     <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">
                       {tx.business_name && (
@@ -550,7 +550,7 @@ function DeleteModal({
             <div className="w-8 h-8 rounded-lg bg-status-danger/15 flex items-center justify-center">
               <AlertTriangle size={16} className="text-status-danger" />
             </div>
-            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Islemi Sil</h3>
+            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">İşlemi Sil</h3>
           </div>
           <button onClick={onClose} aria-label="Kapat" className="v2-icon-btn v2-press">
             <X size={20} />
@@ -562,7 +562,7 @@ function DeleteModal({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">
-                  {transaction.description || transaction.category?.name || "Islem"}
+                  {transaction.description || transaction.category?.name || "İşlem"}
                 </p>
                 <p className="text-xs text-[rgb(var(--v2-muted))] mt-0.5">
                   {new Date(transaction.date).toLocaleDateString("tr-TR", {
@@ -595,7 +595,7 @@ function DeleteModal({
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Bu islemi neden siliyorsunuz? (zorunlu)"
+            placeholder="Bu işlemi neden siliyorsunuz? (zorunlu)"
             rows={3}
             autoFocus
             className="w-full px-4 py-3 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))]
@@ -614,7 +614,7 @@ function DeleteModal({
               onClick={onClose}
               className="flex-1 py-3 rounded-xl font-semibold text-[rgb(var(--v2-ink))] v2-sunken hover:border-accent/50 transition-colors v2-press"
             >
-              Vazgec
+              Vazgeç
             </button>
             <button
               onClick={handleDelete}

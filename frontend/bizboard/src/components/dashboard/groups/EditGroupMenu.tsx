@@ -62,7 +62,7 @@ export function EditGroupMenu({
         type="button"
         onClick={() => { setOpen((v) => !v); setSubmenu(null); }}
         className="p-1.5 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-700 transition-colors"
-        aria-label="Grup aksiyonlari"
+        aria-label="Grup aksiyonları"
       >
         <MoreVertical size={16} />
       </button>
@@ -71,9 +71,9 @@ export function EditGroupMenu({
         <div className="absolute right-0 top-full mt-1 z-30 w-56 bg-surface-800 border border-surface-600 rounded-xl shadow-card-hover py-1 animate-fade-in">
           {!submenu && !pendingDelete && (
             <>
-              <MenuItem icon={Pencil} label="Yeniden adlandir" onClick={() => { setRenameDraft(group.name); setSubmenu("rename"); }} />
-              <MenuItem icon={Palette} label="Renk degistir" onClick={() => setSubmenu("color")} />
-              <MenuItem icon={Star} label="Onceligi degistir" onClick={() => setSubmenu("priority")} />
+              <MenuItem icon={Pencil} label="Yeniden adlandır" onClick={() => { setRenameDraft(group.name); setSubmenu("rename"); }} />
+              <MenuItem icon={Palette} label="Renk değiştir" onClick={() => setSubmenu("color")} />
+              <MenuItem icon={Star} label="Önceliği değiştir" onClick={() => setSubmenu("priority")} />
               <div className="my-1 h-px bg-surface-700" />
               <MenuItem icon={Trash2} label="Grubu sil" onClick={() => setPendingDelete(true)} danger />
             </>
@@ -95,7 +95,7 @@ export function EditGroupMenu({
                   onClick={() => { setSubmenu(null); }}
                   className="flex-1 px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-sm text-surface-200"
                 >
-                  Vazgec
+                  Vazgeç
                 </button>
                 <button
                   onClick={() => void handleRename()}
@@ -151,14 +151,14 @@ export function EditGroupMenu({
             <div className="p-3 space-y-2">
               <p className="text-xs text-surface-300">
                 <strong className="text-surface-100">&quot;{group.name}&quot;</strong> grubunu sil?
-                Uye isletmeler grupsuz konuma duser.
+                Üye işletmeler grupsuz konuma düşer.
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPendingDelete(false)}
                   className="flex-1 px-3 py-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-sm text-surface-200"
                 >
-                  Vazgec
+                  Vazgeç
                 </button>
                 <button
                   onClick={() => void handleDeleteConfirm()}

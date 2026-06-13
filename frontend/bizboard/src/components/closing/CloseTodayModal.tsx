@@ -193,7 +193,7 @@ export function CloseTodayModal({ preview, businessId, onClose, onClosed }: Prop
               disabled={submitting}
               className="btn-secondary flex-1 px-4 py-2.5 text-sm"
             >
-              Vazgec
+              Vazgeç
             </button>
             <button
               type="submit"

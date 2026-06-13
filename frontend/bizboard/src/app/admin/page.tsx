@@ -275,21 +275,21 @@ export default function AdminPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="glass-card p-6 max-w-sm w-full">
             <h3 className="text-lg font-semibold text-surface-100 mb-2">
-              Kullaniciyi Sil
+              Kullanıcıyı Sil
             </h3>
             <p className="text-surface-400 text-sm mb-6">
               <span className="text-surface-100 font-medium">
                 {deleteConfirm.full_name}
               </span>{" "}
-              adli kullaniciyi silmek istediginize emin misiniz? Bu islem geri
-              alinamaz.
+              adlı kullanıcıyı silmek istediğinize emin misiniz? Bu işlem geri
+              alınamaz.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-100 rounded-xl text-sm font-medium transition-colors"
               >
-                Iptal
+                İptal
               </button>
               <button
                 onClick={() => handleDeleteUser(deleteConfirm.id)}

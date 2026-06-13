@@ -50,9 +50,9 @@ export function RecentActivity() {
   if (transactions.length === 0) {
     return (
       <div className="card p-8 text-center">
-        <p className="text-surface-400">Henuz islem yok</p>
+        <p className="text-surface-400">Henüz işlem yok</p>
         <p className="text-surface-400 text-sm mt-1">
-          Burada aktivite gormek icin ilk gelir veya giderinizi ekleyin
+          Burada aktivite görmek için ilk gelir veya giderinizi ekleyin
         </p>
       </div>
     );
@@ -75,7 +75,7 @@ export function RecentActivity() {
             className="p-3 text-center w-full hover:bg-surface-700 transition-colors"
           >
             <span className="text-sm text-brand-300 font-medium flex items-center justify-center gap-1">
-              Tumunu Gor ({transactions.length} islem)
+              Tümünü Gör ({transactions.length} işlem)
               <ExternalLink size={14} />
             </span>
           </button>
@@ -99,7 +99,7 @@ export function RecentActivity() {
           />
           <div className="relative bg-surface-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up z-10">
             <div className="modal-header">
-              <h3 className="text-lg font-bold text-surface-100">Son Islemler</h3>
+              <h3 className="text-lg font-bold text-surface-100">Son İşlemler</h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="p-2 rounded-xl hover:bg-surface-600 transition-colors"
@@ -161,7 +161,7 @@ function TransactionRow({
         <p className="text-sm font-medium text-surface-100 truncate">
           {/* Beta v1.1: POS komisyon UI kaldırıldı — POS satırı da normal
               description/kategori formatı kullanır. */}
-          {tx.description || tx.category?.name || (isPos ? "POS İşlemi" : "Islem")}
+          {tx.description || tx.category?.name || (isPos ? "POS İşlemi" : "İşlem")}
         </p>
         <p className="text-xs text-surface-400 mt-0.5">
           {tx.business_name && <span>{tx.business_name} · </span>}

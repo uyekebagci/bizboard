@@ -84,9 +84,9 @@ export function PwaUpdatePrompt() {
           <RefreshCw size={18} className="text-surface-100" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-surface-100">Yeni surum hazir</p>
+          <p className="text-sm font-semibold text-surface-100">Yeni sürüm hazır</p>
           <p className="text-xs text-surface-300">
-            Yenilemek icin sayfayi tekrar yukleyin.
+            Yenilemek için sayfayı tekrar yükleyin.
           </p>
         </div>
         <button

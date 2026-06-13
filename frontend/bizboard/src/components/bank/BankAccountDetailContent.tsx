@@ -50,9 +50,9 @@ export function BankAccountDetailContent({
       .catch((err) => {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 404) {
-          setError("Hesap bulunamadi veya erişim yok");
+          setError("Hesap bulunamadı veya erişim yok");
         } else {
-          setError("Detay yuklenemedi");
+          setError("Detay yüklenemedi");
         }
         logger.error("api", "bank-account detail fetch failed", { id: accountId }, err);
       })

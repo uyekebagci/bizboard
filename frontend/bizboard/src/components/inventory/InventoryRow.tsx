@@ -45,7 +45,7 @@ function InventoryRowBase({
             {statusCfg.label}
           </span>
           {isLowStock && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 border border-red-500/30 text-red-300">Siparis Gerekli</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 border border-red-500/30 text-red-300">Sipariş Gerekli</span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-surface-400 flex-wrap">
@@ -65,7 +65,7 @@ function InventoryRowBase({
               <span className="text-[10px] text-surface-400">· reorder: {item.effective_reorder_point}</span>
             )}
             {isLowStock && item.suggested_order_quantity != null && item.suggested_order_quantity > 0 && (
-              <span className="text-[10px] text-amber-500 font-medium">· oneri: +{item.suggested_order_quantity} siparis</span>
+              <span className="text-[10px] text-amber-500 font-medium">· öneri: +{item.suggested_order_quantity} sipariş</span>
             )}
           </div>
         )}

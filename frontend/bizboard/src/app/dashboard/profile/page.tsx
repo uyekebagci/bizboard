@@ -65,7 +65,7 @@ export default function ProfilePage() {
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-700 text-surface-300 text-[10px] font-medium">
-                  Goruntuleyen
+                  Görüntüleyen
                 </span>
               )}
             </div>
@@ -92,7 +92,7 @@ export default function ProfilePage() {
       <section className="glass-card divide-y divide-surface-700 overflow-hidden">
         <ActionRow
           icon={Lock}
-          label="Parola Degistir"
+          label="Parola Değiştir"
           onClick={() => router.push("/dashboard/change-password")}
         />
         {isAdmin && (
@@ -104,7 +104,7 @@ export default function ProfilePage() {
         )}
         <ActionRow
           icon={Building2}
-          label="Isletmelerim"
+          label="İşletmelerim"
           onClick={() => router.push("/dashboard/businesses")}
         />
       </section>
@@ -122,7 +122,7 @@ export default function ProfilePage() {
             <LogOut size={16} />
           )}
           <span className="text-sm font-medium">
-            {loggingOut ? "Cikis yapiliyor..." : "Cikis Yap"}
+            {loggingOut ? "Çıkış yapılıyor..." : "Çıkış Yap"}
           </span>
         </button>
       </section>

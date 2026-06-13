@@ -21,12 +21,12 @@ import type { MyCompany, CompanyType } from "@/types";
 
 // ── company_type label ────────────────────────────────────────
 const COMPANY_TYPES: { value: CompanyType; label: string }[] = [
-  { value: "AS", label: "Anonim Sirket" },
-  { value: "LTD", label: "Limited Sirket" },
-  { value: "SAHIS", label: "Sahis Isletmesi" },
+  { value: "AS", label: "Anonim Şirket" },
+  { value: "LTD", label: "Limited Şirket" },
+  { value: "SAHIS", label: "Şahıs İşletmesi" },
   { value: "KOOP", label: "Kooperatif" },
   { value: "DERNEK", label: "Dernek" },
-  { value: "OTHER", label: "Diger" },
+  { value: "OTHER", label: "Diğer" },
 ];
 
 function typeLabel(t: CompanyType): string {
@@ -144,7 +144,7 @@ export default function AdminMyCompaniesPage() {
         </button>
         <div className="flex items-center gap-2.5">
           <Building2 size={24} className="text-amber-400" />
-          <h1 className="text-2xl font-bold text-surface-100">Benim Firmalarim</h1>
+          <h1 className="text-2xl font-bold text-surface-100">Benim Firmalarım</h1>
         </div>
       </div>
 
@@ -172,9 +172,9 @@ export default function AdminMyCompaniesPage() {
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-surface-400">Yukleniyor...</div>
+          <div className="p-8 text-center text-surface-400">Yükleniyor...</div>
         ) : companies.length === 0 ? (
-          <div className="p-8 text-center text-surface-400">Henuz firma yok</div>
+          <div className="p-8 text-center text-surface-400">Henüz firma yok</div>
         ) : (
           <div className="divide-y divide-surface-700">
             {companies.map((c) => (
@@ -207,7 +207,7 @@ export default function AdminMyCompaniesPage() {
                   <button
                     onClick={() => setEditing(c)}
                     className="p-2 rounded-lg hover:bg-surface-600 text-surface-400 hover:text-surface-100 transition-colors"
-                    title="Duzenle"
+                    title="Düzenle"
                   >
                     <Pencil size={16} />
                   </button>
@@ -221,7 +221,7 @@ export default function AdminMyCompaniesPage() {
                     }`}
                     title={
                       c.is_default
-                        ? "Varsayilan firma silinemez"
+                        ? "Varsayılan firma silinemez"
                         : "Sil"
                     }
                   >
@@ -252,7 +252,7 @@ export default function AdminMyCompaniesPage() {
       {/* Edit modal */}
       {editing && (
         <CompanyFormModal
-          title="Firmayi Duzenle"
+          title="Firmayı Düzenle"
           initial={formFromCompany(editing)}
           onClose={() => setEditing(null)}
           onSubmit={async (form) => {
@@ -269,18 +269,18 @@ export default function AdminMyCompaniesPage() {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="glass-card p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-surface-100 mb-2">
-              Firmayi Sil
+              Firmayı Sil
             </h3>
             <p className="text-sm text-surface-400 mb-6">
               <strong className="text-surface-100">{deleteConfirm.legal_name}</strong>{" "}
-              kaydini silmek istediginizden emin misiniz? Bu islem geri alinamaz.
+              kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="btn-secondary px-4 py-2 text-sm"
               >
-                Iptal
+                İptal
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
@@ -337,11 +337,11 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.legal_name.trim()) {
-      setError("Tuzel kisi adi zorunlu");
+      setError("Tüzel kişi adı zorunlu");
       return;
     }
     if (taxIdInvalid) {
-      setError("Gecersiz VKN (10 hane) veya TCKN (11 hane). Kontrol edip tekrar deneyin.");
+      setError("Geçersiz VKN (10 hane) veya TCKN (11 hane). Kontrol edip tekrar deneyin.");
       return;
     }
     setSubmitting(true);
@@ -349,7 +349,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
     try {
       await onSubmit(form);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "Kaydetme basarisiz";
+      const msg = e instanceof ApiError ? e.message : "Kaydetme başarısız";
       setError(msg);
     } finally {
       setSubmitting(false);
@@ -380,7 +380,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Tuzel kisi adi *" colSpan="md:col-span-2">
+          <Field label="Tüzel kişi adı *" colSpan="md:col-span-2">
             <input
               required
               value={form.legal_name}
@@ -389,7 +389,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
             />
           </Field>
 
-          <Field label="Sirket tipi">
+          <Field label="Şirket tipi">
             <DarkSelect
               value={form.company_type}
               onChange={(v) => setForm({ ...form, company_type: v as CompanyType })}
@@ -408,7 +408,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
             />
             {taxIdInvalid && (
               <p className="mt-1 text-xs text-red-400">
-                Gecersiz format / checksum
+                Geçersiz format / checksum
               </p>
             )}
           </Field>
@@ -470,7 +470,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
             />
           </Field>
 
-          <Field label="Iletisim ad-soyad">
+          <Field label="İletişim ad-soyad">
             <input
               value={form.contact_name}
               onChange={(e) =>
@@ -508,7 +508,7 @@ function CompanyFormModal({ title, initial, onClose, onSubmit }: FormModalProps)
             onClick={onClose}
             className="btn-secondary px-4 py-2 text-sm"
           >
-            Iptal
+            İptal
           </button>
           <button
             type="submit"

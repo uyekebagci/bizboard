@@ -49,7 +49,7 @@ export default function PosDeviceManagementPage() {
       setError(null);
     } catch (err) {
       logger.error("api", "POS devices fetch failed", undefined, err);
-      setError("Cihaz listesi yuklenemedi");
+      setError("Cihaz listesi yüklenemedi");
     } finally {
       setLoading(false);
     }
@@ -85,8 +85,8 @@ export default function PosDeviceManagementPage() {
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-surface-100">POS Cihazi Yonetimi</h1>
-          <p className="text-xs text-surface-400">Cihaz ekle, duzenle, pasif yap</p>
+          <h1 className="text-xl font-bold text-surface-100">POS Cihazı Yönetimi</h1>
+          <p className="text-xs text-surface-400">Cihaz ekle, düzenle, pasif yap</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -104,7 +104,7 @@ export default function PosDeviceManagementPage() {
             checked={includeInactive}
             onChange={(e) => setIncludeInactive(e.target.checked)}
           />
-          Pasif cihazlari goster
+          Pasif cihazları göster
         </label>
       </div>
 
@@ -121,13 +121,13 @@ export default function PosDeviceManagementPage() {
       ) : devices.length === 0 ? (
         <div className="card p-8 text-center">
           <CreditCard size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henüz POS cihazi yok</p>
+          <p className="text-surface-300 font-medium">Henüz POS cihazı yok</p>
           <button
             onClick={() => setShowCreate(true)}
             className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-medium"
           >
             <Plus size={16} />
-            İlk cihazi ekle
+            İlk cihazı ekle
           </button>
         </div>
       ) : (
@@ -164,7 +164,7 @@ export default function PosDeviceManagementPage() {
                 <button
                   onClick={() => setEditing(d)}
                   className="p-2 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-700"
-                  title="Duzenle"
+                  title="Düzenle"
                 >
                   <Pencil size={14} />
                 </button>
@@ -276,7 +276,7 @@ function PosDeviceFormModal({
       <div className="glass-card shadow-xl w-full max-w-md">
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">
-            {isEdit ? "POS Cihazini Duzenle" : "Yeni POS Cihazi"}
+            {isEdit ? "POS Cihazını Düzenle" : "Yeni POS Cihazı"}
           </h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700">
             <X size={18} className="text-surface-400" />
@@ -298,7 +298,7 @@ function PosDeviceFormModal({
               onChange={(e) => setName(e.target.value)}
               className="input"
               maxLength={120}
-              placeholder="orn. Akbank POS-1"
+              placeholder="örn. Akbank POS-1"
               required
               autoFocus
             />
@@ -330,7 +330,7 @@ function PosDeviceFormModal({
               onChange={(e) => setBankName(e.target.value)}
               className="input"
               maxLength={120}
-              placeholder="orn. Akbank"
+              placeholder="örn. Akbank"
             />
           </div>
 
@@ -344,7 +344,7 @@ function PosDeviceFormModal({
                 value={defaultRate}
                 onChange={(e) => setDefaultRate(e.target.value.replace(/[^0-9.,]/g, ""))}
                 className="input"
-                placeholder="orn. 1.95"
+                placeholder="örn. 1.95"
               />
             </div>
             <div>
@@ -355,7 +355,7 @@ function PosDeviceFormModal({
                 value={ourCommissionRate}
                 onChange={(e) => setOurCommissionRate(e.target.value.replace(/[^0-9.,]/g, ""))}
                 className="input"
-                placeholder="orn. 5.50"
+                placeholder="örn. 5.50"
               />
             </div>
           </div>
@@ -407,14 +407,14 @@ function PosDeviceFormModal({
               disabled={saving}
               className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium"
             >
-              Vazgec
+              Vazgeç
             </button>
             <button
               type="submit"
               disabled={saving || !name.trim()}
               className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
             >
-              {saving ? <><Loader2 size={16} className="animate-spin" /> Kaydediliyor...</> : (isEdit ? "Guncelle" : "Olustur")}
+              {saving ? <><Loader2 size={16} className="animate-spin" /> Kaydediliyor...</> : (isEdit ? "Güncelle" : "Oluştur")}
             </button>
           </div>
         </form>
@@ -433,7 +433,7 @@ function DeleteConfirmModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="glass-card w-full max-w-sm p-5">
-        <h3 className="text-base font-semibold text-surface-100 mb-1">Cihazi pasif yap</h3>
+        <h3 className="text-base font-semibold text-surface-100 mb-1">Cihazı pasif yap</h3>
         <p className="text-sm text-surface-300">
           <strong>{device.name}</strong> cihazı <strong>pasif</strong> yapılacak (fiziksel
           silinmez; tx referansları korunur). Tekrar aktif edilebilir.
@@ -443,7 +443,7 @@ function DeleteConfirmModal({
             onClick={onClose}
             className="flex-1 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
           >
-            Vazgec
+            Vazgeç
           </button>
           <button
             onClick={onConfirm}

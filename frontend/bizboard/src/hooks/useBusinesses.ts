@@ -19,7 +19,7 @@ export function useBusinesses() {
         setBusinesses(data || []);
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : "Isletmeler yuklenemedi";
+          err instanceof Error ? err.message : "İşletmeler yüklenemedi";
         logger.error("api", "Failed to fetch businesses", undefined, err);
         setError(message);
       } finally {

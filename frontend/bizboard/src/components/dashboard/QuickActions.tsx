@@ -10,7 +10,7 @@ import { FileUploadModal } from "@/components/shared/FileUploadModal";
 
 const actions = [
   {
-    label: "Islem Ekle",
+    label: "İşlem Ekle",
     icon: Receipt,
     color: "text-brand-300",
     bg: "bg-brand-500/15",
@@ -45,7 +45,7 @@ const actions = [
     href: "/dashboard/inventory",
   },
   {
-    label: "Dosya Yukle",
+    label: "Dosya Yükle",
     icon: Camera,
     color: "text-amber-300",
     bg: "bg-amber-500/15",
@@ -73,7 +73,7 @@ const actions = [
     href: "/dashboard/counterparts",
   },
   {
-    label: "Isletme Ekle",
+    label: "İşletme Ekle",
     icon: Plus,
     color: "text-surface-300",
     bg: "bg-surface-700",

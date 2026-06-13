@@ -132,9 +132,9 @@ export default function PosCihazlariPage() {
               <CreditCard size={20} className="text-indigo-300" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-surface-100">POS Cihazlari</h1>
+              <h1 className="text-xl font-bold text-surface-100">POS Cihazları</h1>
               <p className="text-xs text-surface-400">
-                Tum POS cihaz islemleri + komisyon + trend
+                Tüm POS cihaz işlemleri + komisyon + trend
               </p>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function PosCihazlariPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium"
           >
             <Settings size={14} />
-            Cihaz Yonetimi
+            Cihaz Yönetimi
           </Link>
         )}
       </div>
@@ -175,16 +175,16 @@ export default function PosCihazlariPage() {
       ) : summaries.length === 0 ? (
         <div className="glass-card p-8 text-center">
           <CreditCard size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henuz POS islemi yok</p>
+          <p className="text-surface-300 font-medium">Henüz POS işlemi yok</p>
           <p className="text-surface-400 text-sm mt-1">
-            Islem eklerken &quot;Odeme Yontemi&quot; olarak POS seciniz.
+            İşlem eklerken &quot;Ödeme Yöntemi&quot; olarak POS seçiniz.
           </p>
           <Link
             href="/dashboard/add-transaction?payment_method=POS&type=income"
             className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors"
           >
             <Plus size={16} />
-            POS Islemi Ekle
+            POS İşlemi Ekle
           </Link>
         </div>
       ) : (
@@ -223,7 +223,7 @@ export default function PosCihazlariPage() {
 
           {/* Business filter chips */}
           <section>
-            <h2 className="text-sm font-semibold text-surface-200 mb-2">Isletme</h2>
+            <h2 className="text-sm font-semibold text-surface-200 mb-2">İşletme</h2>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedBiz("all")}
@@ -233,7 +233,7 @@ export default function PosCihazlariPage() {
                     : "bg-surface-700 border-surface-600 text-surface-300"
                 }`}
               >
-                Tumu ({summaries.length})
+                Tümü ({summaries.length})
               </button>
               {summaries.map((s) => (
                 <button
@@ -254,7 +254,7 @@ export default function PosCihazlariPage() {
 
           {/* Per-business cards */}
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-surface-200">Isletme Bazli Ozet</h2>
+            <h2 className="text-sm font-semibold text-surface-200">İşletme Bazlı Özet</h2>
             <div className="glass-card divide-y divide-surface-700">
               {summaries.map((s) => (
                 <Link
@@ -266,7 +266,7 @@ export default function PosCihazlariPage() {
                     <div>
                       <p className="font-medium text-surface-100">{s.business_name}</p>
                       <p className="text-xs text-surface-400 mt-0.5">
-                        {s.transaction_count} islem · ort. %{s.weighted_avg_rate.toFixed(2)}
+                        {s.transaction_count} işlem · ort. %{s.weighted_avg_rate.toFixed(2)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -286,12 +286,12 @@ export default function PosCihazlariPage() {
           {/* Daily transactions */}
           <section className="space-y-2">
             <h2 className="text-sm font-semibold text-surface-200">
-              Gunluk POS Islemleri
-              <span className="ml-2 text-xs font-normal text-surface-400">son 30 gun</span>
+              Günlük POS İşlemleri
+              <span className="ml-2 text-xs font-normal text-surface-400">son 30 gün</span>
             </h2>
             {sortedDates.length === 0 ? (
               <div className="glass-card p-6 text-center">
-                <p className="text-surface-400 text-sm">Bu filtre icin islem yok</p>
+                <p className="text-surface-400 text-sm">Bu filtre için işlem yok</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -514,7 +514,7 @@ function PosTrendChart({
                 <div
                   className="flex-1 bg-indigo-500/50 rounded-t-sm transition-all min-h-[1px]"
                   style={{ height: `${Math.max(grossH, 1)}%` }}
-                  title="Brut"
+                  title="Brüt"
                 />
                 <div
                   className="flex-1 bg-emerald-500 rounded-t-sm transition-all min-h-[1px]"
@@ -530,7 +530,7 @@ function PosTrendChart({
       <div className="flex items-center justify-between text-[10px] text-surface-400">
         <span>{series.length > 0 ? new Date(series[0].date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : ""}</span>
         <span className="flex items-center gap-3">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-indigo-500/50" /> Brut</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-indigo-500/50" /> Brüt</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> Net</span>
         </span>
         <span>{series.length > 0 ? new Date(series[series.length - 1].date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : ""}</span>

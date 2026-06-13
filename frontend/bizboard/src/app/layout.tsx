@@ -30,14 +30,14 @@ const jetbrainsMono = JetBrains_Mono({
 
 // v1.6.8: marka adı ÇATI (eskiden BizBoard).
 export const metadata: Metadata = {
-  title: "CATI - Tum Isletmeleriniz, Tek Ekran",
+  title: "ÇATI - Tüm İşletmeleriniz, Tek Ekran",
   description:
-    "Birden fazla isletmenizi tek bir panelden yonetin. Finanslari takip edin, performansi izleyin, kontrolu elinizde tutun.",
+    "Birden fazla işletmenizi tek bir panelden yönetin. Finansları takip edin, performansı izleyin, kontrolü elinizde tutun.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CATI",
+    title: "ÇATI",
   },
 };
 

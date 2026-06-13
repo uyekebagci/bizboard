@@ -140,7 +140,7 @@ export function NotificationDropdown() {
               className="text-xs text-brand-400 hover:text-brand-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               {busyAll ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={12} />}
-              Tumunu okundu isaretle
+              Tümünü okundu işaretle
             </button>
           </div>
 
@@ -151,7 +151,7 @@ export function NotificationDropdown() {
               </div>
             ) : items.length === 0 ? (
               <p className="text-sm text-surface-400 text-center py-10 px-4">
-                Henuz bildiriminiz yok
+                Henüz bildiriminiz yok
               </p>
             ) : (
               items.map((n) => (
@@ -223,7 +223,7 @@ function NotificationItem({ notification, busy, onMarkRead, onClose }: ItemProps
           type="button"
           onClick={onMarkRead}
           disabled={busy}
-          aria-label="Okundu isaretle"
+          aria-label="Okundu işaretle"
           className="opacity-0 group-hover:opacity-100 p-1 rounded text-surface-400 hover:text-brand-400 transition"
         >
           {busy ? <Loader2 size={12} className="animate-spin" /> : <Check size={14} />}

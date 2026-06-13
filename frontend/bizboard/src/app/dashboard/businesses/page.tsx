@@ -18,9 +18,9 @@ export default function BusinessesPage() {
   return (
     <div className="space-y-5">
       <section>
-        <h1 className="text-2xl font-bold text-surface-100">Isletmelerim</h1>
+        <h1 className="text-2xl font-bold text-surface-100">İşletmelerim</h1>
         <p className="text-surface-400 mt-1">
-          Erisebildigin tum isletmeler
+          Erişebildiğin tüm işletmeler
         </p>
       </section>
 
@@ -39,14 +39,14 @@ export default function BusinessesPage() {
       ) : businesses.length === 0 ? (
         <div className="card p-8 text-center">
           <p className="text-surface-400">
-            Henuz erisebileceginiz bir isletme yok.
+            Henüz erişebileceğiniz bir işletme yok.
           </p>
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between">
             <span className="text-sm text-surface-400">
-              {businesses.length} isletme
+              {businesses.length} işletme
             </span>
           </div>
           <BusinessGrid businesses={businesses} portfolio={portfolio} />

@@ -21,12 +21,12 @@ export interface CategoryDef {
   bg: string;
 }
 
-export const ALL_TAB: CategoryDef = { key: "ALL", label: "Tumu", icon: Boxes, color: "text-surface-300", bg: "bg-surface-700" };
+export const ALL_TAB: CategoryDef = { key: "ALL", label: "Tümü", icon: Boxes, color: "text-surface-300", bg: "bg-surface-700" };
 
 export const CONSTRUCTION_CATEGORIES: CategoryDef[] = [
-  { key: "HEAVY_VEHICLE",   label: "Agir Arac / Makine", icon: Truck,          color: "text-orange-400", bg: "bg-orange-500/15" },
+  { key: "HEAVY_VEHICLE",   label: "Ağır Araç / Makine", icon: Truck,          color: "text-orange-400", bg: "bg-orange-500/15" },
   { key: "LIGHT_EQUIPMENT", label: "Hafif Ekipman",       icon: Wrench,         color: "text-blue-400",   bg: "bg-blue-500/15" },
-  { key: "SITE_SETUP",      label: "Santiye Kurulum",     icon: Building,       color: "text-teal-400",   bg: "bg-teal-500/15" },
+  { key: "SITE_SETUP",      label: "Şantiye Kurulum",     icon: Building,       color: "text-teal-400",   bg: "bg-teal-500/15" },
   { key: "CONSUMABLE",      label: "Sarf Malzeme",        icon: Package,        color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
@@ -37,13 +37,13 @@ export const RESTAURANT_CATEGORIES: CategoryDef[] = [
 ];
 
 export const TECHNOLOGY_CATEGORIES: CategoryDef[] = [
-  { key: "IT_EQUIPMENT", label: "Bilisim Ekipman", icon: Monitor, color: "text-blue-400",   bg: "bg-blue-500/15" },
+  { key: "IT_EQUIPMENT", label: "Bilişim Ekipman", icon: Monitor, color: "text-blue-400",   bg: "bg-blue-500/15" },
   { key: "FURNITURE",    label: "Ofis Mobilya",    icon: Sofa,    color: "text-teal-400",   bg: "bg-teal-500/15" },
   { key: "CONSUMABLE",   label: "Sarf Malzeme",    icon: Package, color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
 export const RETAIL_CATEGORIES: CategoryDef[] = [
-  { key: "STORE_EQUIPMENT", label: "Magaza Ekipman", icon: ShoppingCart, color: "text-orange-400", bg: "bg-orange-500/15" },
+  { key: "STORE_EQUIPMENT", label: "Mağaza Ekipman", icon: ShoppingCart, color: "text-orange-400", bg: "bg-orange-500/15" },
   { key: "CONSUMABLE",      label: "Sarf Malzeme",   icon: Package,      color: "text-purple-400", bg: "bg-purple-500/15" },
 ];
 
@@ -84,13 +84,13 @@ export const FUEL_CATEGORIES = new Set(["HEAVY_VEHICLE", "LIGHT_EQUIPMENT"]);
 export const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   ACTIVE:   { label: "Aktif",    color: "text-green-400",  bg: "bg-green-500/10 border-green-500/30" },
   IN_STOCK: { label: "Stokta",   color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/30" },
-  BROKEN:   { label: "Arizali",  color: "text-red-400",    bg: "bg-red-500/10 border-red-500/30" },
+  BROKEN:   { label: "Arızalı",  color: "text-red-400",    bg: "bg-red-500/10 border-red-500/30" },
   IN_REPAIR:{ label: "Tamirde",  color: "text-amber-400",  bg: "bg-amber-500/10 border-amber-500/30" },
   SCRAPPED: { label: "Hurda",    color: "text-surface-400", bg: "bg-surface-700 border-surface-600" },
 };
 
 export const ENERGY_LABELS: Record<string, string> = {
-  BATTERY: "Akulu", GASOLINE: "Benzinli", DIESEL: "Dizel",
+  BATTERY: "Akülu", GASOLINE: "Benzinli", DIESEL: "Dizel",
   ELECTRIC_220V: "220V", ELECTRIC_380V: "380V",
 };
 
@@ -100,18 +100,18 @@ export const UNIT_LABELS: Record<string, string> = {
 };
 
 export const STOCK_CAT_LABELS: Record<string, string> = {
-  ROUGH_CONSTRUCTION: "Kaba Yapi", FINE_CONSTRUCTION: "Ince Yapi",
-  SAFETY_EQUIPMENT: "ISG Malzemesi", CHEMICAL: "Kimyasal", OTHER: "Diger",
+  ROUGH_CONSTRUCTION: "Kaba Yapı", FINE_CONSTRUCTION: "İnce Yapı",
+  SAFETY_EQUIPMENT: "İSG Malzemesi", CHEMICAL: "Kimyasal", OTHER: "Diğer",
 };
 
 export const MAINTENANCE_LABELS: Record<string, string> = {
-  OIL_CHANGE: "Yag Degisimi", FILTER_CHANGE: "Filtre Degisimi",
-  REPAIR: "Onarim", PART_REPLACEMENT: "Parca Degisimi",
-  INSPECTION: "Periyodik Kontrol", OTHER: "Diger",
+  OIL_CHANGE: "Yağ Değişimi", FILTER_CHANGE: "Filtre Değişimi",
+  REPAIR: "Onarım", PART_REPLACEMENT: "Parça Değişimi",
+  INSPECTION: "Periyodik Kontrol", OTHER: "Diğer",
 };
 
 export const FUEL_TYPE_LABELS: Record<string, string> = {
-  DIESEL: "Dizel", GASOLINE: "Benzin", LPG: "LPG", ELECTRIC: "Elektrik", OTHER: "Diger",
+  DIESEL: "Dizel", GASOLINE: "Benzin", LPG: "LPG", ELECTRIC: "Elektrik", OTHER: "Diğer",
 };
 
 // Hangi kategoride hangi alanlar gösterilecek

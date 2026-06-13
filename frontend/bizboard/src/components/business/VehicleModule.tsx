@@ -37,13 +37,13 @@ const OWNERSHIP_COLORS: Record<string, string> = {
   OWNED: "text-green-300 bg-green-500/10", RENTED: "text-orange-300 bg-orange-500/10", LEASED: "text-purple-300 bg-purple-500/10",
 };
 const VEHICLE_TYPE_LABELS: Record<string, string> = {
-  BINEK: "Binek", HAFIF_TICARI: "Hafif Ticari", AGIR_TICARI: "Agir Ticari", MOTOSIKLET: "Motosiklet", DIGER: "Diger",
+  BINEK: "Binek", HAFIF_TICARI: "Hafif Ticari", AGIR_TICARI: "Ağır Ticari", MOTOSIKLET: "Motosiklet", DIGER: "Diğer",
 };
 const TRANSMISSION_LABELS: Record<string, string> = {
   MANUAL: "Manuel", OTOMATIK: "Otomatik",
 };
 const RENTAL_PERIOD_LABELS: Record<string, string> = {
-  DAILY: "Gunluk", WEEKLY: "Haftalik", MONTHLY: "Aylik", YEARLY: "Yillik",
+  DAILY: "Günlük", WEEKLY: "Haftalık", MONTHLY: "Aylık", YEARLY: "Yıllık",
 };
 
 interface Props {
@@ -99,7 +99,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
       {summary && (
         <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="p-3 bg-teal-500/15 border border-teal-500/30 rounded-xl text-center">
-            <p className="text-[10px] text-teal-300 uppercase tracking-wider font-medium">Arac</p>
+            <p className="text-[10px] text-teal-300 uppercase tracking-wider font-medium">Araç</p>
             <p className="text-lg font-bold text-teal-300 mt-0.5">
               {summary.active_vehicles}
               {summary.total_vehicles !== summary.active_vehicles && (
@@ -133,13 +133,13 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
             showInactive ? "bg-surface-600 text-surface-200" : "bg-surface-700 text-surface-400"
           }`}
         >
-          {showInactive ? "Tumunu Goster" : "Sadece Aktif"}
+          {showInactive ? "Tümünü Göster" : "Sadece Aktif"}
         </button>
         <button
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700 transition-colors"
         >
-          <Plus size={16} /> Arac Ekle
+          <Plus size={16} /> Araç Ekle
         </button>
       </div>
 
@@ -147,8 +147,8 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
       {filtered.length === 0 ? (
         <div className="glass-card p-8 text-center">
           <Car size={32} className="mx-auto text-surface-300 mb-2" />
-          <p className="text-surface-400 text-sm">Henuz arac eklenmemis</p>
-          <p className="text-surface-400 text-xs mt-1">Ilk araci eklemek icin yukaridaki butonu kullanin</p>
+          <p className="text-surface-400 text-sm">Henüz araç eklenmemiş</p>
+          <p className="text-surface-400 text-xs mt-1">İlk aracı eklemek için yukarıdaki butonu kullanın</p>
         </div>
       ) : (
         <div className="glass-card divide-y divide-surface-700">
@@ -181,7 +181,7 @@ export function VehicleModule({ businessId, currency = "TRY" }: Props) {
                   )}
                 </div>
                 <p className="text-xs text-surface-400 mt-0.5">
-                  {[v.brand, v.model, v.model_year].filter(Boolean).join(" ") || "Detay girilmemis"}
+                  {[v.brand, v.model, v.model_year].filter(Boolean).join(" ") || "Detay girilmemiş"}
                   {v.fuel_type && ` · ${FUEL_LABELS[v.fuel_type] || v.fuel_type}`}
                 </p>
               </div>
@@ -262,8 +262,8 @@ function VehicleDetailModal({
           <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
           <p className={`text-sm font-medium ${isExpired ? "text-red-400" : isWarn ? "text-amber-400" : "text-surface-100"}`}>
             {formatDate(date)}
-            {isExpired && <span className="ml-1 text-[10px] text-red-300 font-normal">SURESI DOLDU</span>}
-            {isWarn && !isExpired && <span className="ml-1 text-[10px] text-amber-300 font-normal">YAKLASAN</span>}
+            {isExpired && <span className="ml-1 text-[10px] text-red-300 font-normal">SÜRESİ DOLDU</span>}
+            {isWarn && !isExpired && <span className="ml-1 text-[10px] text-amber-300 font-normal">YAKLAŞAN</span>}
           </p>
         </div>
       </div>
@@ -275,7 +275,7 @@ function VehicleDetailModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-surface-100">Arac Detayi</h3>
+          <h3 className="text-lg font-semibold text-surface-100">Araç Detayı</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors">
             <X size={18} className="text-surface-400" />
           </button>
@@ -315,7 +315,7 @@ function VehicleDetailModal({
                   <p className="font-bold text-orange-300">{formatMoney(v.rental_cost)} {currency}/{RENTAL_PERIOD_LABELS[v.rental_period || "MONTHLY"]?.toLowerCase() || "ay"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-orange-300">Aylik Maliyet</p>
+                  <p className="text-[10px] text-orange-300">Aylık Maliyet</p>
                   <p className="font-bold text-orange-300">{formatMoney(v.monthly_rental_cost)} {currency}/ay</p>
                 </div>
                 {v.rental_company && (
@@ -326,8 +326,8 @@ function VehicleDetailModal({
                 )}
                 {(v.rental_start_date || v.rental_end_date) && (
                   <div className="col-span-2 flex gap-2 text-xs text-orange-300">
-                    {v.rental_start_date && <span>Baslangic: {formatDate(v.rental_start_date)}</span>}
-                    {v.rental_end_date && <span>· Bitis: {formatDate(v.rental_end_date)}</span>}
+                    {v.rental_start_date && <span>Başlangıç: {formatDate(v.rental_start_date)}</span>}
+                    {v.rental_end_date && <span>· Bitiş: {formatDate(v.rental_end_date)}</span>}
                   </div>
                 )}
               </div>
@@ -342,7 +342,7 @@ function VehicleDetailModal({
                 <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                   <Fuel size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Yakit Tipi</p>
+                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Yakıt Tipi</p>
                     <p className="text-sm text-surface-100 font-medium">{FUEL_LABELS[v.fuel_type] || v.fuel_type}</p>
                   </div>
                 </div>
@@ -369,7 +369,7 @@ function VehicleDetailModal({
                 <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                   <Gauge size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Motor Gucu</p>
+                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Motor Gücü</p>
                     <p className="text-sm text-surface-100 font-medium">{v.horse_power} HP</p>
                   </div>
                 </div>
@@ -385,7 +385,7 @@ function VehicleDetailModal({
                 <div className="flex items-start gap-2 p-3 bg-surface-700 rounded-xl">
                   <Fuel size={14} className="text-surface-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ort. Tuketim</p>
+                    <p className="text-[10px] text-surface-400 uppercase tracking-wider">Ort. Tüketim</p>
                     <p className="text-sm text-surface-100 font-medium">{v.avg_fuel_consumption} lt/100km</p>
                   </div>
                 </div>
@@ -452,7 +452,7 @@ function VehicleDetailModal({
             <div className="space-y-3">
               <p className="text-xs font-bold text-surface-400 uppercase tracking-wider">Sigorta & Muayene</p>
               <div className="grid grid-cols-1 gap-2">
-                <DateBadge date={v.traffic_insurance_expiry} label="Trafik Sigortasi" />
+                <DateBadge date={v.traffic_insurance_expiry} label="Trafik Sigortası" />
                 <DateBadge date={v.kasko_expiry} label="Kasko" />
                 <DateBadge date={v.inspection_expiry} label="Muayene" />
               </div>
@@ -476,7 +476,7 @@ function VehicleDetailModal({
               Kapat
             </button>
             <button onClick={onEdit} className="px-4 py-2.5 bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5">
-              <Edit3 size={14} /> Duzenle
+              <Edit3 size={14} /> Düzenle
             </button>
             <button onClick={onToggleActive} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5 ${
               v.is_active ? "bg-orange-500/10 hover:bg-orange-500/20 text-orange-300" : "bg-green-500/10 hover:bg-green-500/20 text-green-300"
@@ -590,7 +590,7 @@ function CreateVehicleModal({
       }
       onCreated();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Bir hata olustu"));
+      setError(getErrorMessage(err, "Bir hata oluştu"));
       toast.error(err);
     } finally {
       setSaving(false);
@@ -612,7 +612,7 @@ function CreateVehicleModal({
       <div className="glass-card shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="text-lg font-bold text-surface-100">
-            {isEdit ? "Arac Duzenle" : "Yeni Arac"}
+            {isEdit ? "Araç Düzenle" : "Yeni Araç"}
           </h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
             <X size={20} className="text-surface-400" />
@@ -651,7 +651,7 @@ function CreateVehicleModal({
                   <input type="number" value={modelYear} onChange={(e) => setModelYear(e.target.value)} placeholder="2024" className={inputCls} /></div>
                 <div><label className={labelCls}>Renk</label>
                   <input type="text" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Beyaz" className={inputCls} /></div>
-                <div><label className={labelCls}>Arac Tipi</label>
+                <div><label className={labelCls}>Araç Tipi</label>
                   <DarkSelect value={vehicleType} onChange={setVehicleType}
                     options={Object.entries(VEHICLE_TYPE_LABELS).map(([k, l]) => ({ value: k, label: l }))} /></div>
               </div>
@@ -664,7 +664,7 @@ function CreateVehicleModal({
           {activeSection === "tech" && (
             <>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className={labelCls}>Yakit Tipi</label>
+                <div><label className={labelCls}>Yakıt Tipi</label>
                   <DarkSelect value={fuelType} onChange={setFuelType}
                     options={Object.entries(FUEL_LABELS).map(([k, l]) => ({ value: k, label: l }))} /></div>
                 <div><label className={labelCls}>Vites</label>
@@ -674,13 +674,13 @@ function CreateVehicleModal({
               <div className="grid grid-cols-2 gap-3">
                 <div><label className={labelCls}>Motor Hacmi (cc)</label>
                   <input type="number" value={engineDisplacement} onChange={(e) => setEngineDisplacement(e.target.value)} placeholder="1600" className={inputCls} /></div>
-                <div><label className={labelCls}>Motor Gucu (HP)</label>
+                <div><label className={labelCls}>Motor Gücü (HP)</label>
                   <input type="number" value={horsePower} onChange={(e) => setHorsePower(e.target.value)} placeholder="120" className={inputCls} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className={labelCls}>Kilometre</label>
                   <input type="number" value={currentKm} onChange={(e) => setCurrentKm(e.target.value)} placeholder="0" className={inputCls} /></div>
-                <div><label className={labelCls}>Ort. Tuketim (lt/100km)</label>
+                <div><label className={labelCls}>Ort. Tüketim (lt/100km)</label>
                   <input type="number" value={avgFuelConsumption} onChange={(e) => setAvgFuelConsumption(e.target.value)} placeholder="7.5" step="0.1" className={inputCls} /></div>
               </div>
             </>
@@ -702,11 +702,11 @@ function CreateVehicleModal({
                   <input type="text" value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} className={inputCls} /></div>
               </div>
               <p className="text-xs font-bold text-surface-400 uppercase tracking-wider pt-2">Tarihler</p>
-              <div><label className={labelCls}>Trafik Sigortasi Bitis</label>
+              <div><label className={labelCls}>Trafik Sigortası Bitiş</label>
                 <input type="date" value={trafficInsuranceExpiry} onChange={(e) => setTrafficInsuranceExpiry(e.target.value)} className={inputCls} /></div>
-              <div><label className={labelCls}>Kasko Bitis</label>
+              <div><label className={labelCls}>Kasko Bitiş</label>
                 <input type="date" value={kaskoExpiry} onChange={(e) => setKaskoExpiry(e.target.value)} className={inputCls} /></div>
-              <div><label className={labelCls}>Muayene Bitis</label>
+              <div><label className={labelCls}>Muayene Bitiş</label>
                 <input type="date" value={inspectionExpiry} onChange={(e) => setInspectionExpiry(e.target.value)} className={inputCls} /></div>
             </>
           )}
@@ -729,11 +729,11 @@ function CreateVehicleModal({
                   </div>
                   <div><label className={labelCls}>Kiralayan Firma / Kisi</label>
                     <input type="text" value={rentalCompany} onChange={(e) => setRentalCompany(e.target.value)}
-                      placeholder="Kiralama sirketi adi" className={inputCls} /></div>
+                      placeholder="Kiralama şirketi adı" className={inputCls} /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><label className={labelCls}>Kiralama Baslangic</label>
+                    <div><label className={labelCls}>Kiralama Başlangıç</label>
                       <input type="date" value={rentalStartDate} onChange={(e) => setRentalStartDate(e.target.value)} className={inputCls} /></div>
-                    <div><label className={labelCls}>Kiralama Bitis</label>
+                    <div><label className={labelCls}>Kiralama Bitiş</label>
                       <input type="date" value={rentalEndDate} onChange={(e) => setRentalEndDate(e.target.value)} className={inputCls} /></div>
                   </div>
                 </>
@@ -749,11 +749,11 @@ function CreateVehicleModal({
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary flex-1 py-3">
-              Vazgec
+              Vazgeç
             </button>
             <button type="submit" disabled={saving || !plateNumber.trim()}
               className="flex-1 py-3 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 transition-colors flex items-center justify-center gap-2">
-              {saving ? <><Loader2 size={18} className="animate-spin" /> Kaydediliyor...</> : isEdit ? "Guncelle" : <><Plus size={18} /> Ekle</>}
+              {saving ? <><Loader2 size={18} className="animate-spin" /> Kaydediliyor...</> : isEdit ? "Güncelle" : <><Plus size={18} /> Ekle</>}
             </button>
           </div>
         </form>
@@ -777,7 +777,7 @@ function DeleteVehicleModal({
       toast.info("Araç silindi");
       onDeleted();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Arac silinirken bir hata olustu"));
+      setError(getErrorMessage(err, "Araç silinirken bir hata oluştu"));
       toast.error(err);
     } finally {
       setIsDeleting(false);
@@ -792,7 +792,7 @@ function DeleteVehicleModal({
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-red-300" />
             </div>
-            <h3 className="text-lg font-bold text-surface-100">Araci Sil</h3>
+            <h3 className="text-lg font-bold text-surface-100">Aracı Sil</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-600">
             <X size={20} className="text-surface-400" />
@@ -806,7 +806,7 @@ function DeleteVehicleModal({
             </p>
           </div>
           <p className="text-sm text-surface-300 mb-4">
-            Bu araci silmek istediginize emin misiniz? Pasif yapmak daha guvenli bir secenektir.
+            Bu aracı silmek istediğinize emin misiniz? Pasif yapmak daha güvenli bir seçenektir.
           </p>
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3">
@@ -815,7 +815,7 @@ function DeleteVehicleModal({
           )}
           <div className="flex gap-3">
             <button onClick={onClose} className="btn-secondary flex-1 py-3">
-              Vazgec
+              Vazgeç
             </button>
             <button onClick={handleDelete} disabled={isDeleting}
               className="flex-1 py-3 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 transition-colors flex items-center justify-center gap-2">

@@ -32,7 +32,7 @@ export function FileUploadButton({
   entityId,
   onUploaded,
   size = "md",
-  label = "Dosya Yukle",
+  label = "Dosya Yükle",
   imageOnly = false,
   className = "",
 }: FileUploadButtonProps) {
@@ -71,7 +71,7 @@ export function FileUploadButton({
       onUploaded?.(result);
       setTimeout(() => setUploaded(false), 2000);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Yukleme hatasi"));
+      setError(getErrorMessage(err, "Yükleme hatası"));
       toast.error(err);
     } finally {
       setUploading(false);
@@ -108,7 +108,7 @@ export function FileUploadButton({
           <Upload size={isSmall ? 12 : 14} className="text-[rgb(var(--v2-muted))]" />
         )}
         <span className={`font-medium ${uploaded ? "text-green-700 dark:text-green-300" : "text-[rgb(var(--v2-muted))]"}`}>
-          {uploading ? "Yukleniyor..." : uploaded ? "Yuklendi!" : label}
+          {uploading ? "Yükleniyor..." : uploaded ? "Yüklendi!" : label}
         </span>
       </button>
       {error && (
@@ -162,7 +162,7 @@ export function InlineFileUpload({
       toast.success("Dosya yüklendi");
       onUploaded?.(result);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Yukleme hatasi"));
+      setError(getErrorMessage(err, "Yükleme hatası"));
       toast.error(err);
     } finally {
       setUploading(false);
@@ -237,7 +237,7 @@ export function InlineFileUpload({
           <Upload size={13} className="text-[rgb(var(--v2-muted))]" />
         )}
         <span className="text-[rgb(var(--v2-muted))] font-medium">
-          {uploading ? "Yukleniyor..." : "Dosya / Fotograf Ekle"}
+          {uploading ? "Yükleniyor..." : "Dosya / Fotoğraf Ekle"}
         </span>
       </button>
 

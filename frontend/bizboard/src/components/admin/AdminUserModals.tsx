@@ -19,7 +19,7 @@ import type { AdminUser, Business } from "@/types";
 // ── Role Labels ─────────────────────────────────────────────
 export const ROLE_OPTIONS = [
   { value: "admin", label: "Admin" },
-  { value: "viewer", label: "Goruntuleyen" },
+  { value: "viewer", label: "Görüntüleyen" },
 ];
 
 export function getRoleLabel(role: string) {
@@ -56,17 +56,17 @@ export function CreateUserModal({
     setError(null);
 
     if (!username || !password || !fullName) {
-      setError("Tum alanlari doldurun");
+      setError("Tüm alanları doldurun");
       return;
     }
 
     if (password.length < 6) {
-      setError("Sifre en az 6 karakter olmali");
+      setError("Şifre en az 6 karakter olmalı");
       return;
     }
 
     if (role !== "admin" && selectedBusinessIds.length === 0) {
-      setError("En az bir isletme secmelisiniz");
+      setError("En az bir işletme seçmelisiniz");
       return;
     }
 
@@ -96,7 +96,7 @@ export function CreateUserModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">
-            Yeni Kullanici Olustur
+            Yeni Kullanıcı Oluştur
           </h3>
           <button
             onClick={onClose}
@@ -128,28 +128,28 @@ export function CreateUserModal({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
-              placeholder="Ornek: Ahmet Yilmaz"
+              placeholder="Örnek: Ahmet Yılmaz"
             />
           </div>
 
           {/* Username */}
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Kullanici Adi
+              Kullanıcı Adı
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
-              placeholder="ornek: ahmet"
+              placeholder="örnek: ahmet"
             />
           </div>
 
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Sifre
+              Şifre
             </label>
             <div className="relative">
               <input
@@ -197,10 +197,10 @@ export function CreateUserModal({
           {role !== "admin" && (
             <div>
               <label className="block text-sm font-medium text-surface-300 mb-1.5">
-                Erisebilecegi Isletmeler
+                Erişebileceği İşletmeler
               </label>
               <p className="text-xs text-surface-400 mb-3">
-                En az bir isletme secmelisiniz
+                En az bir işletme seçmelisiniz
               </p>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {businesses.map((biz) => (
@@ -230,7 +230,7 @@ export function CreateUserModal({
           {role === "admin" && (
             <div className="p-3 bg-accent/10 border border-accent/25 rounded-xl">
               <p className="text-sm text-accent-strong dark:text-accent">
-                Admin rolu tum isletmelere erisim saglar.
+                Admin rolü tüm işletmelere erişim sağlar.
               </p>
             </div>
           )}
@@ -241,7 +241,7 @@ export function CreateUserModal({
             disabled={submitting}
             className="v2-btn v2-btn--accent v2-press w-full py-3 disabled:opacity-50"
           >
-            {submitting ? "Olusturuluyor..." : "Kullanici Olustur"}
+            {submitting ? "Oluşturuluyor..." : "Kullanıcı Oluştur"}
           </button>
         </form>
       </div>
@@ -283,12 +283,12 @@ export function EditUserModal({
     setError(null);
 
     if (role !== "admin" && selectedBusinessIds.length === 0) {
-      setError("En az bir isletme secmelisiniz");
+      setError("En az bir işletme seçmelisiniz");
       return;
     }
 
     if (password && password.length < 6) {
-      setError("Sifre en az 6 karakter olmali");
+      setError("Şifre en az 6 karakter olmalı");
       return;
     }
 
@@ -318,7 +318,7 @@ export function EditUserModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">
-            Kullaniciyi Duzenle
+            Kullanıcıyı Düzenle
           </h3>
           <button
             onClick={onClose}
@@ -343,7 +343,7 @@ export function EditUserModal({
           {/* Username (read only) */}
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Kullanici Adi
+              Kullanıcı Adı
             </label>
             <input
               type="text"
@@ -369,8 +369,8 @@ export function EditUserModal({
           {/* Password (optional) */}
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Yeni Sifre{" "}
-              <span className="text-surface-300">(bos birakilabilir)</span>
+              Yeni Şifre{" "}
+              <span className="text-surface-300">(boş bırakılabilir)</span>
             </label>
             <div className="relative">
               <input
@@ -378,7 +378,7 @@ export function EditUserModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
-                placeholder="Degistirmek icin girin"
+                placeholder="Değiştirmek için girin"
               />
               <button
                 type="button"
@@ -439,7 +439,7 @@ export function EditUserModal({
           {role !== "admin" && (
             <div>
               <label className="block text-sm font-medium text-surface-300 mb-1.5">
-                Erisebilecegi Isletmeler
+                Erişebileceği İşletmeler
               </label>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {businesses.map((biz) => (
@@ -469,7 +469,7 @@ export function EditUserModal({
           {role === "admin" && (
             <div className="p-3 bg-accent/10 border border-accent/25 rounded-xl">
               <p className="text-sm text-accent-strong dark:text-accent">
-                Admin rolu tum isletmelere erisim saglar.
+                Admin rolü tüm işletmelere erişim sağlar.
               </p>
             </div>
           )}
@@ -480,7 +480,7 @@ export function EditUserModal({
             disabled={submitting}
             className="v2-btn v2-btn--accent v2-press w-full py-3 disabled:opacity-50"
           >
-            {submitting ? "Kaydediliyor..." : "Degisiklikleri Kaydet"}
+            {submitting ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
           </button>
         </form>
       </div>

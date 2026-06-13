@@ -199,14 +199,14 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {/* Teknik */}
           {(hasField("power_capacity") || hasField("energy_source")) && (
             editing ? (
-              <DetailSection title="Teknik Ozellikler">
+              <DetailSection title="Teknik Özellikler">
                 <div className="col-span-2 grid grid-cols-2 gap-2">
-                  {hasField("power_capacity") && <EditField label="Guc Kapasitesi" value={editPowerCapacity} onChange={setEditPowerCapacity} />}
+                  {hasField("power_capacity") && <EditField label="Güç Kapasitesi" value={editPowerCapacity} onChange={setEditPowerCapacity} />}
                   {hasField("energy_source") && (
                     <div>
-                      <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Enerji Kaynagi</label>
+                      <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Enerji Kaynağı</label>
                       <select value={editEnergySource} onChange={(e) => setEditEnergySource(e.target.value)} className={inputCls}>
-                        <option value="">Seciniz</option>
+                        <option value="">Seçiniz</option>
                         {Object.entries(ENERGY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                     </div>
@@ -214,9 +214,9 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                 </div>
               </DetailSection>
             ) : (item.power_capacity || item.energy_source) ? (
-              <DetailSection title="Teknik Ozellikler">
-                <DetailRow label="Guc Kapasitesi" value={item.power_capacity} />
-                <DetailRow label="Enerji Kaynagi" value={item.energy_source ? ENERGY_LABELS[item.energy_source] || item.energy_source : null} />
+              <DetailSection title="Teknik Özellikler">
+                <DetailRow label="Güç Kapasitesi" value={item.power_capacity} />
+                <DetailRow label="Enerji Kaynağı" value={item.energy_source ? ENERGY_LABELS[item.energy_source] || item.energy_source : null} />
               </DetailSection>
             ) : null
           )}
@@ -224,26 +224,26 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {/* Fiziksel */}
           {hasField("dimensions") && (
             editing ? (
-              <DetailSection title="Fiziksel Ozellikler">
+              <DetailSection title="Fiziksel Özellikler">
                 <div className="col-span-2 grid grid-cols-2 gap-2">
                   <EditField label="Ebatlar" value={editDimensions} onChange={setEditDimensions} />
                   <EditField label="Malzeme Tipi" value={editMaterialType} onChange={setEditMaterialType} />
-                  {hasField("module_count") && <EditField label="Modul Sayisi" value={editModuleCount} onChange={setEditModuleCount} type="number" />}
+                  {hasField("module_count") && <EditField label="Modül Sayısı" value={editModuleCount} onChange={setEditModuleCount} type="number" />}
                 </div>
                 {hasField("interior_details") && (
                   <div className="col-span-2">
-                    <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Ic Donanim</label>
+                    <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">İç Donanım</label>
                     <textarea value={editInteriorDetails} onChange={(e) => setEditInteriorDetails(e.target.value)}
                       rows={2} className={inputCls + " resize-none"} />
                   </div>
                 )}
               </DetailSection>
             ) : (item.dimensions || item.material_type || item.module_count || item.interior_details) ? (
-              <DetailSection title="Fiziksel Ozellikler">
+              <DetailSection title="Fiziksel Özellikler">
                 <DetailRow label="Ebatlar" value={item.dimensions} />
                 <DetailRow label="Malzeme Tipi" value={item.material_type} />
-                <DetailRow label="Modul Sayisi" value={item.module_count?.toString()} />
-                <DetailRow label="Ic Donanim" value={item.interior_details} />
+                <DetailRow label="Modül Sayısı" value={item.module_count?.toString()} />
+                <DetailRow label="İç Donanım" value={item.interior_details} />
               </DetailSection>
             ) : null
           )}
@@ -263,11 +263,11 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                   <EditField label="Min. Stok" value={editMinimumStock} onChange={setEditMinimumStock} type="number" />
                 </div>
                 <div className="col-span-2 grid grid-cols-2 gap-2">
-                  <EditField label="Reorder Esigi (ops.)" value={editReorderPoint} onChange={setEditReorderPoint} type="number" />
-                  <EditField label="Temin Suresi (gun)" value={editReorderLeadDays} onChange={setEditReorderLeadDays} type="number" />
+                  <EditField label="Reorder Eşiği (ops.)" value={editReorderPoint} onChange={setEditReorderPoint} type="number" />
+                  <EditField label="Temin Süresi (gün)" value={editReorderLeadDays} onChange={setEditReorderLeadDays} type="number" />
                 </div>
                 <p className="col-span-2 text-[10px] text-[rgb(var(--v2-muted))] -mt-1">
-                  Reorder esigi bos birakilirsa min. stok + temin suresi tamponuyla otomatik hesaplanir.
+                  Reorder eşiği boş bırakılırsa min. stok + temin süresi tamponuyla otomatik hesaplanır.
                 </p>
                 <div className="col-span-2 grid grid-cols-2 gap-2">
                   {hasField("sku") && <EditField label="SKU" value={editSku} onChange={setEditSku} />}
@@ -276,7 +276,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                     <div>
                       <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Kategori</label>
                       <select value={editStockCategory} onChange={(e) => setEditStockCategory(e.target.value)} className={inputCls}>
-                        <option value="">Seciniz</option>
+                        <option value="">Seçiniz</option>
                         {Object.entries(STOCK_CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                     </div>
@@ -288,8 +288,8 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                 <DetailRow label="SKU" value={item.sku} />
                 <DetailRow label="Mevcut Stok" value={item.current_stock != null ? `${item.current_stock} ${UNIT_LABELS[item.unit || ""] || item.unit || ""}` : null} />
                 <DetailRow label="Minimum Stok" value={item.minimum_stock != null ? `${item.minimum_stock} ${UNIT_LABELS[item.unit || ""] || item.unit || ""}` : null} />
-                <DetailRow label="Reorder Esigi" value={item.effective_reorder_point != null ? `${item.effective_reorder_point}${item.reorder_point != null ? " (manuel)" : " (oto)"}` : null} />
-                <DetailRow label="Temin Suresi" value={item.reorder_lead_days != null ? `${item.reorder_lead_days} gun` : null} />
+                <DetailRow label="Reorder Eşiği" value={item.effective_reorder_point != null ? `${item.effective_reorder_point}${item.reorder_point != null ? " (manuel)" : " (oto)"}` : null} />
+                <DetailRow label="Temin Süresi" value={item.reorder_lead_days != null ? `${item.reorder_lead_days} gün` : null} />
                 <DetailRow label="Malzeme Kategorisi" value={item.stock_category ? STOCK_CAT_LABELS[item.stock_category] || item.stock_category : null} />
                 <DetailRow label="Depo/Raf" value={item.warehouse_location} />
                 <DetailRow label="Parti No" value={item.batch_number} />
@@ -307,7 +307,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                     <div>
                       <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Zimmetli Personel</label>
                       <select value={editAssignedTo} onChange={(e) => setEditAssignedTo(e.target.value)} className={inputCls}>
-                        <option value="">Seciniz</option>
+                        <option value="">Seçiniz</option>
                         {employees.filter(e => e.is_active).map((emp) => (
                           <option key={emp.id} value={emp.full_name}>{emp.full_name}{emp.position ? ` (${emp.position})` : ""}</option>
                         ))}
@@ -318,9 +318,9 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                     <div>
                       <label className="block text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wider mb-1">Zimmet Tipi</label>
                       <select value={editAssignedType} onChange={(e) => setEditAssignedType(e.target.value)} className={inputCls}>
-                        <option value="">Seciniz</option>
+                        <option value="">Seçiniz</option>
                         <option value="PERSONNEL">Personel</option>
-                        <option value="SUBCONTRACTOR">Taseron</option>
+                        <option value="SUBCONTRACTOR">Taşeron</option>
                       </select>
                     </div>
                   )}
@@ -330,7 +330,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
             ) : (item.assigned_to || item.location) ? (
               <DetailSection title="Zimmet ve Lokasyon">
                 <DetailRow label="Zimmetli" value={item.assigned_to} />
-                <DetailRow label="Zimmet Tipi" value={item.assigned_type === "PERSONNEL" ? "Personel" : item.assigned_type === "SUBCONTRACTOR" ? "Taseron" : item.assigned_type} />
+                <DetailRow label="Zimmet Tipi" value={item.assigned_type === "PERSONNEL" ? "Personel" : item.assigned_type === "SUBCONTRACTOR" ? "Taşeron" : item.assigned_type} />
                 <DetailRow label="Lokasyon" value={item.location} />
               </DetailSection>
             ) : null
@@ -339,19 +339,19 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {/* Bakım / Satın Alma */}
           {(hasField("warranty_expiry") || hasField("purchase_price")) && (
             editing ? (
-              <DetailSection title="Bakim / Satin Alma">
+              <DetailSection title="Bakım / Satın Alma">
                 <div className="col-span-2 grid grid-cols-2 gap-2">
-                  {hasField("warranty_expiry") && <EditField label="Garanti Bitis" value={editWarrantyExpiry} onChange={setEditWarrantyExpiry} type="date" />}
+                  {hasField("warranty_expiry") && <EditField label="Garanti Bitiş" value={editWarrantyExpiry} onChange={setEditWarrantyExpiry} type="date" />}
                   {hasField("purchase_price") && <EditField label="Fiyat" value={editPurchasePrice} onChange={setEditPurchasePrice} money />}
-                  {hasField("purchase_date") && <EditField label="Satin Alma Tarihi" value={editPurchaseDate} onChange={setEditPurchaseDate} type="date" />}
+                  {hasField("purchase_date") && <EditField label="Satın Alma Tarihi" value={editPurchaseDate} onChange={setEditPurchaseDate} type="date" />}
                 </div>
               </DetailSection>
             ) : (
-              <DetailSection title="Bakim / Satin Alma">
-                {hasField("warranty_expiry") && <DetailRow label="Garanti Bitis" value={item.warranty_expiry} warn={item.warranty_expiry ? new Date(item.warranty_expiry) < new Date() : false} />}
-                {hasField("last_maintenance_date") && <DetailRow label="Son Bakim" value={item.last_maintenance_date} />}
-                {hasField("purchase_price") && <DetailRow label="Satin Alma Fiyati" value={item.purchase_price ? formatCurrency(item.purchase_price) : null} />}
-                {hasField("purchase_date") && <DetailRow label="Satin Alma Tarihi" value={item.purchase_date} />}
+              <DetailSection title="Bakım / Satın Alma">
+                {hasField("warranty_expiry") && <DetailRow label="Garanti Bitiş" value={item.warranty_expiry} warn={item.warranty_expiry ? new Date(item.warranty_expiry) < new Date() : false} />}
+                {hasField("last_maintenance_date") && <DetailRow label="Son Bakım" value={item.last_maintenance_date} />}
+                {hasField("purchase_price") && <DetailRow label="Satın Alma Fiyatı" value={item.purchase_price ? formatCurrency(item.purchase_price) : null} />}
+                {hasField("purchase_date") && <DetailRow label="Satın Alma Tarihi" value={item.purchase_date} />}
               </DetailSection>
             )
           )}
@@ -373,14 +373,14 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           {!editing && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-bold text-[rgb(var(--v2-ink))] flex items-center gap-1"><Activity size={14} /> Bakim Gecmisi</h4>
+                <h4 className="text-sm font-bold text-[rgb(var(--v2-ink))] flex items-center gap-1"><Activity size={14} /> Bakım Geçmişi</h4>
                 <button onClick={() => setShowAddMaint(true)}
                   className="text-xs font-medium text-accent-strong dark:text-accent flex items-center gap-1 hover:opacity-80">
                   <Plus size={12} /> Kayit Ekle
                 </button>
               </div>
               {logs.length === 0 ? (
-                <p className="text-xs text-[rgb(var(--v2-muted))] p-3 v2-sunken rounded-xl">Henuz bakim kaydi yok</p>
+                <p className="text-xs text-[rgb(var(--v2-muted))] p-3 v2-sunken rounded-xl">Henüz bakım kaydı yok</p>
               ) : (
                 <div className="space-y-1.5">
                   {logs.map((log) => (
@@ -406,7 +406,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-bold text-[rgb(var(--v2-ink))] flex items-center gap-1">
-                  <Fuel size={14} /> Yakit Masrafi
+                  <Fuel size={14} /> Yakıt Masrafı
                   {fuelLogs.length > 0 && (
                     <span className="text-[10px] font-normal text-[rgb(var(--v2-muted))] ml-1">
                       ({formatCurrency(totalFuelCost)} / {totalFuelLiters.toFixed(1)} L)
@@ -419,7 +419,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                 </button>
               </div>
               {fuelLogs.length === 0 ? (
-                <p className="text-xs text-[rgb(var(--v2-muted))] p-3 v2-sunken rounded-xl">Henuz yakit kaydi yok</p>
+                <p className="text-xs text-[rgb(var(--v2-muted))] p-3 v2-sunken rounded-xl">Henüz yakıt kaydı yok</p>
               ) : (
                 <div className="space-y-1.5">
                   {fuelLogs.map((log) => (
@@ -440,7 +440,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
                       {log.receipt_url && (
                         <a href={log.receipt_url} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 mt-1 text-[10px] text-accent-strong dark:text-accent hover:opacity-80">
-                          <Camera size={10} /> Fis Goruntule
+                          <Camera size={10} /> Fiş Görüntüle
                         </a>
                       )}
                     </div>
@@ -454,7 +454,7 @@ export function InventoryDetailModal({ item, onClose, onUpdated }: {
           <div className="flex gap-3 pt-2">
             {editing ? (
               <>
-                <button onClick={() => setEditing(false)} className="btn-secondary flex-1 px-4 py-2.5 text-sm">Vazgec</button>
+                <button onClick={() => setEditing(false)} className="btn-secondary flex-1 px-4 py-2.5 text-sm">Vazgeç</button>
                 <button onClick={handleSave} disabled={saving || !editName}
                   className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-ink))] hover:opacity-90 text-[rgb(var(--v2-card))] rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Kaydet

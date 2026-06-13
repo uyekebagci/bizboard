@@ -28,10 +28,10 @@ const PAGE_SIZE = 40;
 
 // ── Role helpers ─────────────────────────────────────────
 const ROLES: { value: CounterpartRole; label: string; badge: string; icon: typeof CircleUserRound }[] = [
-  { value: "CUSTOMER", label: "Musteri", badge: "bg-accent/15 text-accent-strong dark:text-accent", icon: CircleUserRound },
-  { value: "SUPPLIER", label: "Tedarikci", badge: "bg-accent/15 text-accent-strong dark:text-accent", icon: Package },
+  { value: "CUSTOMER", label: "Müşteri", badge: "bg-accent/15 text-accent-strong dark:text-accent", icon: CircleUserRound },
+  { value: "SUPPLIER", label: "Tedarikçi", badge: "bg-accent/15 text-accent-strong dark:text-accent", icon: Package },
   { value: "BOTH", label: "Her ikisi", badge: "bg-status-warning/15 text-status-warning", icon: RefreshCw },
-  { value: "OTHER", label: "Diger", badge: "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]", icon: Users },
+  { value: "OTHER", label: "Diğer", badge: "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]", icon: Users },
 ];
 
 function roleMeta(r: CounterpartRole) {
@@ -236,8 +236,8 @@ export default function CounterpartsPage() {
     <div className="space-y-5">
       {/* Header — UX-07 paylaşılan PageHeader. */}
       <PageHeader
-        title="Karsi Firmalar"
-        subtitle="Musteri, tedarikci ve diger dis paydaslarin cari hesabi"
+        title="Karşı Firmalar"
+        subtitle="Müşteri, tedarikçi ve diğer dış paydaşların cari hesabı"
         icon={Users}
         size="lg"
         actions={
@@ -264,7 +264,7 @@ export default function CounterpartsPage() {
           <div className="min-w-0">
             <p className="v2-eyebrow">
               {netTotal >= 0 ? "Toplam Net Alacak" : "Toplam Net Verecek"}
-              {hasNext && <span className="text-[rgb(var(--v2-muted))]/70 normal-case"> (yuklenen)</span>}
+              {hasNext && <span className="text-[rgb(var(--v2-muted))]/70 normal-case"> (yüklenen)</span>}
             </p>
             {/* İşaret-bazlı renk: pozitif (alacaklı) → yeşil; 0 → nötr; negatif → uyarı. */}
             <p className={cn(
@@ -305,7 +305,7 @@ export default function CounterpartsPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Isim veya vergi no ara..."
+              placeholder="İsim veya vergi no ara..."
               className="w-full pl-9 pr-3 py-2 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
           </div>
@@ -339,7 +339,7 @@ export default function CounterpartsPage() {
                     : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
                 )}
               >
-                {r === "ALL" ? "Tumu" : roleMeta(r as CounterpartRole).label}
+                {r === "ALL" ? "Tümü" : roleMeta(r as CounterpartRole).label}
               </button>
             ))}
           </div>
@@ -391,10 +391,10 @@ export default function CounterpartsPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={list.length === 0 ? "Henuz karsi firma yok" : "Aramaya uyan kayit bulunamadi"}
+          title={list.length === 0 ? "Henüz karşı firma yok" : "Aramaya uyan kayıt bulunamadı"}
           description={
             list.length === 0
-              ? '"Yeni" butonu ile ilk karsi firma kaydini ekleyebilirsin.'
+              ? '"Yeni" butonu ile ilk karşı firma kaydını ekleyebilirsin.'
               : undefined
           }
           action={
@@ -406,7 +406,7 @@ export default function CounterpartsPage() {
                 disabled={loadingMore}
                 className="px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] text-xs font-medium transition-colors disabled:opacity-50 v2-press"
               >
-                {loadingMore ? "Yukleniyor..." : "Daha fazla kayit ara"}
+                {loadingMore ? "Yükleniyor..." : "Daha fazla kayıt ara"}
               </button>
             ) : undefined
           }
@@ -446,11 +446,11 @@ export default function CounterpartsPage() {
             <table className="v2-table">
               <thead>
                 <tr>
-                  <th scope="col">Isim</th>
+                  <th scope="col">İsim</th>
                   <th scope="col">Rol</th>
                   <th scope="col">Vergi No</th>
                   <th scope="col" className="v2-td-num">Cari Bakiye</th>
-                  <th scope="col" className="v2-td-num w-16"><span className="sr-only">Islem</span></th>
+                  <th scope="col" className="v2-td-num w-16"><span className="sr-only">İşlem</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -489,8 +489,8 @@ export default function CounterpartsPage() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={(e) => { e.stopPropagation(); handleEdit(c); }}
-                            aria-label={`${c.name} duzenle`}
-                            title="Duzenle"
+                            aria-label={`${c.name} düzenle`}
+                            title="Düzenle"
                             className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))] transition-all"
                           >
                             <Pencil size={14} aria-hidden="true" />
@@ -537,7 +537,7 @@ export default function CounterpartsPage() {
       {/* Create */}
       {showCreate && (
         <CounterpartFormModal
-          title="Yeni Karsi Firma"
+          title="Yeni Karşı Firma"
           initial={emptyForm()}
           businesses={businesses}
           selectedBusinessId={selectedBusinessId}
@@ -560,7 +560,7 @@ export default function CounterpartsPage() {
             fetchList();
             if (typeof window !== "undefined" && created?.id) {
               const wantsPhone = window.confirm(
-                `"${created.name}" firmasi olusturuldu.\n\nBu firmaya telefon eklemek ister misin?`,
+                `"${created.name}" firması oluşturuldu.\n\nBu firmaya telefon eklemek ister misin?`,
               );
               if (wantsPhone) {
                 window.location.href = `/dashboard/telefonlar?counterpart_id=${created.id}`;
@@ -573,7 +573,7 @@ export default function CounterpartsPage() {
       {/* Edit */}
       {editing && (
         <CounterpartFormModal
-          title="Karsi Firmayi Duzenle"
+          title="Karşı Firmayı Düzenle"
           initial={formFromCp(editing)}
           onClose={() => setEditing(null)}
           onSubmit={async (f) => {
@@ -590,18 +590,18 @@ export default function CounterpartsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="v2-card shadow-v2-hover p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">
-              Karsi Firmayi Sil
+              Karşı Firmayı Sil
             </h3>
             <p className="text-sm text-[rgb(var(--v2-muted))] mb-6">
               <strong className="text-[rgb(var(--v2-ink))]">{deleteConfirm.name}</strong> kaydini
-              silmek istediginden emin misin? Bagli borc varsa silme reddedilir.
+              silmek istediğinden emin misin? Bağlı borç varsa silme reddedilir.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="px-4 py-2 rounded-xl font-semibold text-[rgb(var(--v2-ink))] v2-sunken hover:border-accent/50 transition-colors v2-press text-sm"
               >
-                Iptal
+                İptal
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
@@ -673,8 +673,8 @@ const CounterpartCard = memo(function CounterpartCard({
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(c); }}
               className="p-1.5 rounded-lg text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))]"
-              aria-label="Duzenle"
-              title="Duzenle"
+              aria-label="Düzenle"
+              title="Düzenle"
             >
               <Pencil size={14} />
             </button>
@@ -739,11 +739,11 @@ function CounterpartFormModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
-      setError("Isim zorunlu");
+      setError("İsim zorunlu");
       return;
     }
     if (taxIdInvalid) {
-      setError("Gecersiz VKN (10 hane) veya TCKN (11 hane).");
+      setError("Geçersiz VKN (10 hane) veya TCKN (11 hane).");
       return;
     }
     if (requireBusiness && !selectedBusinessId) {
@@ -755,7 +755,7 @@ function CounterpartFormModal({
     try {
       await onSubmit(form);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "Kaydetme basarisiz";
+      const msg = e instanceof ApiError ? e.message : "Kaydetme başarısız";
       setError(msg);
       toast.error(e);
     } finally {
@@ -811,7 +811,7 @@ function CounterpartFormModal({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Isim *" colSpan="md:col-span-2">
+          <Field label="İsim *" colSpan="md:col-span-2">
             <input
               required
               value={form.name}
@@ -828,7 +828,7 @@ function CounterpartFormModal({
             />
           </Field>
 
-          <Field label="Odeme vadesi (gun)">
+          <Field label="Ödeme vadesi (gün)">
             <input
               type="number"
               min={0}
@@ -848,7 +848,7 @@ function CounterpartFormModal({
               className={cn(inputClass, taxIdInvalid && "border-status-danger")}
             />
             {taxIdInvalid && (
-              <p className="mt-1 text-xs text-status-danger">Gecersiz format / checksum</p>
+              <p className="mt-1 text-xs text-status-danger">Geçersiz format / checksum</p>
             )}
           </Field>
 
@@ -860,7 +860,7 @@ function CounterpartFormModal({
             />
           </Field>
 
-          <Field label="Iletisim ad-soyad">
+          <Field label="İletişim ad-soyad">
             <input
               value={form.contact_name}
               onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
@@ -910,7 +910,7 @@ function CounterpartFormModal({
             onClick={onClose}
             className="px-4 py-2 rounded-xl font-semibold text-[rgb(var(--v2-ink))] v2-sunken hover:border-accent/50 transition-colors v2-press text-sm"
           >
-            Iptal
+            İptal
           </button>
           <button
             type="submit"

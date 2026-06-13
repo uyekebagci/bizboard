@@ -37,10 +37,10 @@ const RECEIVABLE_TYPE_OPTIONS: ReceivableType[] = ["SENET", "CEK", "ALTIN", "NAK
 function receivableTypeLabel(t: ReceivableType): string {
   switch (t) {
     case "SENET": return "Senet";
-    case "CEK": return "Cek";
-    case "ALTIN": return "Altin";
+    case "CEK": return "Çek";
+    case "ALTIN": return "Altın";
     case "NAKIT": return "Nakit";
-    case "DIGER": return "Diger";
+    case "DIGER": return "Diğer";
   }
 }
 
@@ -146,8 +146,8 @@ export function DebtModule({ businessId, currency }: Props) {
               {formatMoney(summary.pending_receivable)}
             </p>
             <p className="text-[10px] text-surface-400 mt-0.5">
-              {summary.receivable_count} kayit
-            </p>
+              {summary.receivable_count} kayıt
+</p>
           </div>
           <div className="glass-card p-3">
             <p className="text-xs text-surface-400 mb-1">Verecek</p>
@@ -156,8 +156,8 @@ export function DebtModule({ businessId, currency }: Props) {
               {formatMoney(summary.pending_payable)}
             </p>
             <p className="text-[10px] text-surface-400 mt-0.5">
-              {summary.payable_count} kayit
-            </p>
+              {summary.payable_count} kayıt
+</p>
           </div>
           <div className="glass-card p-3">
             <p className="text-xs text-surface-400 mb-1">Net</p>
@@ -181,7 +181,7 @@ export function DebtModule({ businessId, currency }: Props) {
           <div className="flex gap-1 bg-surface-700 rounded-xl p-0.5">
             {(
               [
-                { key: "all", label: "Tumu" },
+                { key: "all", label: "Tümü" },
                 { key: "RECEIVABLE", label: "Alacak" },
                 { key: "PAYABLE", label: "Verecek" },
               ] as const
@@ -205,7 +205,7 @@ export function DebtModule({ businessId, currency }: Props) {
             className={`p-1.5 rounded-lg transition-colors ${
               showSettled ? "bg-surface-600 text-surface-200" : "bg-surface-700 text-surface-400"
             }`}
-            title={showSettled ? "Kapatilanlari gizle" : "Kapatilanlari goster"}
+            title={showSettled ? "Kapatılanları gizle" : "Kapatılanları göster"}
           >
             {showSettled ? <Eye size={14} /> : <EyeOff size={14} />}
           </button>
@@ -223,7 +223,7 @@ export function DebtModule({ businessId, currency }: Props) {
       {/* Debt List */}
       {filteredDebts.length === 0 ? (
         <div className="glass-card p-6 text-center">
-          <p className="text-surface-400 text-sm">Kayit bulunamadi</p>
+          <p className="text-surface-400 text-sm">Kayıt bulunamadı</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -307,7 +307,7 @@ export function DebtModule({ businessId, currency }: Props) {
                         title={
                           debt.direction === "RECEIVABLE"
                             ? "Tahsil edildi"
-                            : "Odendi"
+                            : "Ödendi"
                         }
                       >
                         <Check size={14} className="text-emerald-300" />
@@ -350,19 +350,19 @@ export function DebtModule({ businessId, currency }: Props) {
           title={
             settleConfirm.direction === "RECEIVABLE"
               ? "Tahsil Edildi"
-              : "Odendi"
+              : "Ödendi"
           }
           message={`${settleConfirm.counterparty} - ${formatMoney(
             settleConfirm.amount
           )} TL borcu ${
             settleConfirm.direction === "RECEIVABLE"
               ? "tahsil edildi"
-              : "odendi"
-          } olarak isaretlensin mi?`}
+              : "ödendi"
+          } olarak işaretlensin mi?`}
           confirmLabel={
             settleConfirm.direction === "RECEIVABLE"
               ? "Tahsil Edildi"
-              : "Odendi"
+              : "Ödendi"
           }
           confirmColor="emerald"
           onCancel={() => setSettleConfirm(null)}
@@ -376,7 +376,7 @@ export function DebtModule({ businessId, currency }: Props) {
           title="Borcu Sil"
           message={`${deleteConfirm.counterparty} - ${formatMoney(
             deleteConfirm.amount
-          )} TL kaydi silinsin mi? Bu islem geri alinamaz.`}
+          )} TL kaydı silinsin mi? Bu işlem geri alınamaz.`}
           confirmLabel="Sil"
           confirmColor="red"
           onCancel={() => setDeleteConfirm(null)}
@@ -415,7 +415,7 @@ function ConfirmModal({
             onClick={onCancel}
             className="btn-secondary flex-1 px-4 py-2.5 text-sm"
           >
-            Iptal
+            İptal
           </button>
           <button
             onClick={onConfirm}
@@ -481,21 +481,21 @@ function CreateDebtModal({
     setError(null);
 
     if (!counterparty.trim()) {
-      setError("Karsi taraf adi zorunludur");
+      setError("Karşı taraf adı zorunludur");
       return;
     }
     if (!amount || parseMoneyInput(amount) <= 0) {
-      setError("Gecerli bir tutar girin");
+      setError("Geçerli bir tutar girin");
       return;
     }
     if (!effectiveInstrument.trim()) {
-      setError("Borc tipi zorunludur");
+      setError("Borç tipi zorunludur");
       return;
     }
 
     // v1.6.5+: RECEIVABLE için receivable_type + DIGER zorunlu metin kontrolü.
     if (direction === "RECEIVABLE" && receivableType === "DIGER" && !receivableTypeOther.trim()) {
-      setError("'Diger' seciliyse alacak tipini belirtin");
+      setError("'Diğer' seçiliyse alacak tipini belirtin");
       return;
     }
 
@@ -562,7 +562,7 @@ function CreateDebtModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-surface-100">
-            Yeni Borc / Alacak
+            Yeni Borç / Alacak
           </h3>
           <button
             onClick={onClose}
@@ -635,11 +635,11 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
               setCounterparty(text);
             }}
             defaultNewRole={direction === "RECEIVABLE" ? "CUSTOMER" : "SUPPLIER"}
-            placeholder="Karsi firma sec, ad gir veya yeni olustur"
+            placeholder="Karşı firma seç, ad gir veya yeni oluştur"
           />
           <p className="text-[10px] text-surface-400 -mt-2">
-            Var olan karsi firmadan sec → cari hesabi otomatik takip edilir.
-            Yoksa adi yaz veya yeni olustur.
+            Var olan karşı firmadan seç → cari hesabı otomatik takip edilir.
+            Yoksa adı yaz veya yeni oluştur.
           </p>
 
           {/* Amount */}
@@ -682,13 +682,13 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                   onChange={(e) => setReceivableTypeOther(e.target.value)}
                   maxLength={120}
                   className="input mt-2"
-                  placeholder="Alacak tipini girin (orn. doviz, hisse, vs.)"
+                  placeholder="Alacak tipini girin (örn. döviz, hisse, vs.)"
                 />
               )}
             </div>
           ) : (
             <div>
-              <label className="label">Borc Tipi</label>
+              <label className="label">Borç Tipi</label>
               <div className="flex flex-wrap gap-2">
                 {[...INSTRUMENT_OPTIONS, "DIGER"].map((opt) => (
                   <button
@@ -702,12 +702,12 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                     }`}
                   >
                     {opt === "CEK"
-                      ? "Cek"
+                      ? "Çek"
                       : opt === "SENET"
                       ? "Senet"
                       : opt === "NAKIT"
                       ? "Nakit"
-                      : "Diger"}
+                      : "Diğer"}
                   </button>
                 ))}
               </div>
@@ -717,7 +717,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                   value={customInstrument}
                   onChange={(e) => setCustomInstrument(e.target.value)}
                   className="input mt-2"
-                  placeholder="Borc tipini girin"
+                  placeholder="Borç tipini girin"
                 />
               )}
             </div>
@@ -791,7 +791,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
                 value={reminderNote}
                 onChange={(e) => setReminderNote(e.target.value)}
                 className="input"
-                placeholder="orn. Vadeden 3 gun once tahsile ver"
+                placeholder="örn. Vadeden 3 gün önce tahsile ver"
               />
             </div>
             <p className="text-[10px] text-amber-300/70">
@@ -801,7 +801,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
 
           {/* Description */}
           <div>
-            <label className="label">Aciklama (Opsiyonel)</label>
+            <label className="label">Açıklama (Opsiyonel)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -815,7 +815,7 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
             <label className="label">
               <span className="flex items-center gap-1.5">
                 <FileImage size={14} />
-                Belge / Fotograf (Opsiyonel)
+                Belge / Fotoğraf (Opsiyonel)
               </span>
             </label>
             <InlineFileUpload
@@ -836,10 +836,10 @@ Verecek = DGR bu kişi/firmaya para verecek (vereceğiz, −)."
             <div className="flex items-center justify-between p-3 bg-surface-700 border border-surface-600 rounded-xl">
               <div>
                 <p className="text-sm font-medium text-surface-200">
-                  Sadece Admin Gorsun
+                  Sadece Admin Görsün
                 </p>
                 <p className="text-xs text-surface-400">
-                  Bu kayit diger kullanicilara gizli olacak
+                  Bu kayıt diğer kullanıcılara gizli olacak
                 </p>
               </div>
               <button

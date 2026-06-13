@@ -61,13 +61,13 @@ function LoginForm() {
         switch (err.code) {
           case "AUTH-LOCK":
             setError(
-              "Hesabiniz cok fazla hatali denemeden dolayi gecici olarak kilitlendi. " +
-                "Lutfen 15 dakika sonra tekrar deneyin."
+              "Hesabınız çok fazla hatalı denemeden dolayı geçici olarak kilitlendi. " +
+                "Lütfen 15 dakika sonra tekrar deneyin."
             );
             break;
           case "AUTH-DIS":
             setError(
-              "Hesabiniz aktif degil. Lutfen yoneticiniz ile iletisime gecin."
+              "Hesabınız aktif değil. Lütfen yöneticiniz ile iletişime geçin."
             );
             break;
           case "RATE-429":
@@ -75,13 +75,13 @@ function LoginForm() {
             break;
           case "AUTH-401":
           default:
-            setError("Kullanici adi veya sifre hatali.");
+            setError("Kullanıcı adı veya şifre hatalı.");
         }
         setErrorRequestId(err.requestId ?? null);
       } else if (err instanceof Error) {
-        setError(err.message || "Giris yapilamadi");
+        setError(err.message || "Giriş yapılamadı");
       } else {
-        setError("Giris yapilamadi");
+        setError("Giriş yapılamadı");
       }
     } finally {
       setIsLoading(false);
@@ -89,13 +89,17 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 bg-surface-50">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 v2-app-bg">
       <div className="mb-8 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
-          <span className="text-surface-100 font-bold text-2xl">C</span>
+        <div className="w-16 h-16 rounded-2xl v2-logo-tile flex items-center justify-center mx-auto mb-4">
+          <span className="font-bold text-2xl">Ç</span>
         </div>
-        <h1 className="text-2xl font-bold text-surface-900">Tekrar Hosgeldiniz</h1>
-        <p className="text-surface-500 mt-1">CATI hesabiniza giris yapin</p>
+        <h1 className="text-2xl font-bold text-[rgb(var(--v2-ink))]">
+          Tekrar Hoşgeldiniz
+        </h1>
+        <p className="text-[rgb(var(--v2-muted))] mt-1">
+          ÇATI hesabınıza giriş yapın
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
@@ -108,7 +112,7 @@ function LoginForm() {
             <div>{error}</div>
             {errorRequestId && (
               <div className="mt-1 text-[10px] text-red-500/80 font-mono">
-                Destek icin referans: {errorRequestId}
+                Destek için referans: {errorRequestId}
               </div>
             )}
           </div>
@@ -116,13 +120,13 @@ function LoginForm() {
 
         <div>
           <label htmlFor="username" className="label">
-            Kullanici Adi
+            Kullanıcı Adı
           </label>
           <input
             id="username"
             type="text"
             className="input"
-            placeholder="kullanici adinizi girin"
+            placeholder="kullanıcı adınızı girin"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -132,7 +136,7 @@ function LoginForm() {
 
         <div>
           <label htmlFor="password" className="label">
-            Sifre
+            Şifre
           </label>
           <div className="relative">
             <input
@@ -161,7 +165,7 @@ function LoginForm() {
           disabled={isLoading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "Giris yapiliyor..." : "Giris Yap"}
+          {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
         </button>
       </form>
     </div>

@@ -61,7 +61,7 @@ export default function NakitPage() {
           <div>
             <h1 className="text-xl font-bold text-surface-100">Nakit</h1>
             <p className="text-xs text-surface-400">
-              Isletmelerin nakit bakiye dagilimi
+              İşletmelerin nakit bakiye dağılımı
             </p>
           </div>
         </div>
@@ -94,21 +94,21 @@ export default function NakitPage() {
           {balances.length === 0 ? (
             <div className="glass-card p-8 text-center">
               <Banknote size={32} className="mx-auto text-surface-500 mb-2" />
-              <p className="text-surface-300 font-medium">Henuz nakit bakiye yok</p>
+              <p className="text-surface-300 font-medium">Henüz nakit bakiye yok</p>
               <p className="text-surface-400 text-sm mt-1">
-                Islem eklerken &quot;Odeme Yontemi&quot; olarak Nakit seciniz.
+                İşlem eklerken &quot;Ödeme Yöntemi&quot; olarak Nakit seçiniz.
               </p>
               <Link
                 href="/dashboard/add-transaction?payment_method=NAKIT&type=income"
                 className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
               >
                 <Plus size={16} />
-                Nakit Islem Ekle
+                Nakit İşlem Ekle
               </Link>
             </div>
           ) : (
             <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-surface-200">Isletme Bakiyeleri</h2>
+              <h2 className="text-sm font-semibold text-surface-200">İşletme Bakiyeleri</h2>
               <div className="glass-card divide-y divide-surface-700">
                 {balances.map((b) => (
                   <Link
@@ -121,7 +121,7 @@ export default function NakitPage() {
                       <p className="text-xs text-surface-400 mt-0.5">{b.currency}</p>
                     </div>
                     <p className="text-base font-semibold text-emerald-300">
-                      {formatCurrency(b.balance, b.currency)}
+                      {formatCurrency(b.balance || 0, b.currency)}
                     </p>
                   </Link>
                 ))}

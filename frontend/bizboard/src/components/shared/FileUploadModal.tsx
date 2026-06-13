@@ -104,10 +104,10 @@ export function FileUploadModal({
         // Backend code'a göre kullanıcı dostu mesaj.
         switch (err.code) {
           case "FILE-413":
-            setError("Dosya boyutu izin verilen limiti asiyor (max 10 MB).");
+            setError("Dosya boyutu izin verilen limiti aşıyor (max 10 MB).");
             break;
           case "AUTH-403":
-            setError("Bu isletmeye dosya yukleme yetkiniz yok.");
+            setError("Bu işletmeye dosya yükleme yetkiniz yok.");
             break;
           case "RATE-429":
             setError(getErrorMessage(err));
@@ -117,13 +117,13 @@ export function FileUploadModal({
             setError(getErrorMessage(err));
             break;
           default:
-            setError(err.message || "Yukleme hatasi");
+            setError(err.message || "Yükleme hatası");
         }
         setErrorRequestId(err.requestId ?? null);
       } else if (err instanceof Error) {
-        setError(err.message || "Yukleme hatasi");
+        setError(err.message || "Yükleme hatası");
       } else {
-        setError("Yukleme hatasi");
+        setError("Yükleme hatası");
       }
     } finally {
       setUploading(false);
@@ -142,7 +142,7 @@ export function FileUploadModal({
         {/* Header */}
         <div className="modal-header">
           <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
-            Dosya / Fotograf Yukle
+            Dosya / Fotoğraf Yükle
           </h3>
           <button
             onClick={onClose}
@@ -157,7 +157,7 @@ export function FileUploadModal({
           {!preselectedBusinessId && (
             <div>
               <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
-                Isletme *
+                İşletme *
               </label>
               {loadingBiz ? (
                 <div className="h-11 v2-sunken rounded-xl animate-pulse" />
@@ -199,7 +199,7 @@ export function FileUploadModal({
               ) : (
                 <>
                   <Upload size={28} className="text-[rgb(var(--v2-muted))]" />
-                  <p className="text-sm text-[rgb(var(--v2-muted))]">Dosya secmek icin tiklayin</p>
+                  <p className="text-sm text-[rgb(var(--v2-muted))]">Dosya seçmek için tıklayın</p>
                   <p className="text-[10px] text-[rgb(var(--v2-muted))]">JPEG, PNG, PDF, DOC, XLS — Maks 10MB</p>
                 </>
               )}
@@ -225,14 +225,14 @@ export function FileUploadModal({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-[rgb(var(--v2-ink))] mb-1.5">
-              Aciklama
+              Açıklama
             </label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="field field-sm py-2.5"
-              placeholder="Dosya hakkinda kisa aciklama..."
+              placeholder="Dosya hakkında kısa açıklama..."
             />
           </div>
 
@@ -262,7 +262,7 @@ export function FileUploadModal({
           {uploaded && (
             <div className="flex items-center gap-2 p-3 bg-green-500/15 border border-green-500/30 rounded-xl">
               <Check size={16} className="text-green-700 dark:text-green-300" />
-              <span className="text-sm text-green-700 dark:text-green-300 font-medium">Dosya basariyla yuklendi!</span>
+              <span className="text-sm text-green-700 dark:text-green-300 font-medium">Dosya başarıyla yüklendi!</span>
             </div>
           )}
 
@@ -272,7 +272,7 @@ export function FileUploadModal({
               <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
               {errorRequestId && (
                 <p className="mt-1 text-[10px] font-mono text-red-700/80 dark:text-red-400/80">
-                  Destek icin referans: {errorRequestId}
+                  Destek için referans: {errorRequestId}
                 </p>
               )}
             </div>
@@ -284,7 +284,7 @@ export function FileUploadModal({
               onClick={onClose}
               className="btn-secondary flex-1 px-4 py-2.5 text-sm"
             >
-              {uploaded ? "Kapat" : "Iptal"}
+              {uploaded ? "Kapat" : "İptal"}
             </button>
             {!uploaded && (
               <button
@@ -295,12 +295,12 @@ export function FileUploadModal({
                 {uploading ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    Yukleniyor...
+                    Yükleniyor...
                   </>
                 ) : (
                   <>
                     <Upload size={14} />
-                    Yukle
+                    Yükle
                   </>
                 )}
               </button>

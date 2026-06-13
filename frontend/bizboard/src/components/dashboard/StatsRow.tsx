@@ -40,14 +40,14 @@ export function StatsRow({ portfolio, debtData, employeeData }: Props) {
     },
     {
       label: "Personel",
-      value: employeeData ? `${employeeData.count} kisi` : "—",
+      value: employeeData ? `${employeeData.count} kişi` : "—",
       icon: Users,
       color: "text-blue-400",
       bg: "bg-blue-500/15",
       sub: employeeData && employeeData.cost > 0 ? formatCurrency(employeeData.cost) + "/ay" : null,
     },
     {
-      label: "Kar Marji",
+      label: "Kâr Marjı",
       value: `%${margin.toFixed(1)}`,
       icon: Landmark,
       color: margin >= 20 ? "text-green-400" : margin >= 0 ? "text-amber-400" : "text-red-400",
