@@ -10,9 +10,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, UserPlus, CircleUserRound } from "lucide-react";
+import { UserPlus, CircleUserRound } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 import { formatCurrency } from "@/lib/utils";
 import type { Counterpart } from "@/types";
 
@@ -42,45 +45,33 @@ export default function KisilerPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="v2-icon-btn v2-press"
-            aria-label="Geri don"
+      <PageHeader
+        title="Kişiler"
+        subtitle="Gerçek kişi karşı tarafları (TCKN bazlı)"
+        icon={CircleUserRound}
+        actions={
+          <Link
+            href="/dashboard/counterparts"
+            className="v2-btn v2-btn--ink v2-press text-xs"
           >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="v2-display text-xl">Kişiler</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">Gerçek kişi karşı tarafları (TCKN bazlı)</p>
-          </div>
-        </div>
-        <Link
-          href="/dashboard/counterparts"
-          className="v2-btn v2-btn--ink v2-press text-xs"
-        >
-          <UserPlus size={14} />
-          Yeni
-        </Link>
-      </div>
+            <UserPlus size={14} />
+            Yeni
+          </Link>
+        }
+      />
 
       {error && (
         <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">{error}</div>
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={6} />
       ) : list.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <CircleUserRound size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz kişi yok</p>
-          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
-            Karşı Firmalar sayfasından "Tür: Kişi" seçerek ekleyebilirsiniz.
-          </p>
-        </div>
+        <EmptyState
+          icon={CircleUserRound}
+          title="Henüz kişi yok"
+          description="Karşı Firmalar sayfasından 'Tür: Kişi' seçerek ekleyebilirsiniz."
+        />
       ) : (
         <section className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
           {list.map((p) => (

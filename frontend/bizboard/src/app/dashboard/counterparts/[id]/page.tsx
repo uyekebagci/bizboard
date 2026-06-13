@@ -31,6 +31,7 @@ import { BounceInstrumentModal } from "@/components/payments/BounceInstrumentMod
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
 import { WriteoffModal } from "@/components/debts/WriteoffModal";
 import { EditDebtModal } from "@/components/debts/EditDebtModal";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 type TabKey = "running" | "receivables" | "payables" | "instruments" | "transactions";
 
@@ -216,10 +217,26 @@ function CounterpartDetailInner() {
   }, [statement]);
 
   if (loading || !cp || !statement) {
+    if (loading) {
+      return (
+        <div className="space-y-5 pb-24">
+          <div className="h-8 w-48 rounded-lg bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+          <div className="v2-card p-5 space-y-3">
+            <div className="h-8 w-32 rounded-lg bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+            <div className="h-4 w-64 rounded bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+          </div>
+          <div className="h-10 rounded-xl bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+          <div className="v2-card p-4 space-y-3">
+            {[0,1,2,3].map((i) => (
+              <div key={i} className="h-10 rounded-lg bg-[rgb(var(--v2-border))]/60 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="text-[rgb(var(--v2-muted))] text-sm py-8 flex items-center gap-2 justify-center">
-        {loading && <Loader2 size={16} className="animate-spin" />}
-        {error || (loading ? "Yükleniyor..." : "Karşı firma bulunamadı")}
+        {error || "Karşı firma bulunamadı"}
       </div>
     );
   }
@@ -232,38 +249,43 @@ function CounterpartDetailInner() {
   return (
     <div className="space-y-5 pb-24">
       {/* ── Header ─────────────────────────────────────────────── */}
-      <section className="flex items-center gap-3">
-        {/* v1.7.x: router.back() ile geçmişe geri dön — kullanıcı /alacaklar
-            veya /verecekler'den geldiyse o sayfaya döner. Fallback: counterparts. */}
-        <button onClick={() => router.back()}
-          className="p-2 rounded-lg bg-[rgb(var(--v2-sunken))] hover:opacity-80"
-          title="Geri">
-          <ChevronLeft size={20} className="text-[rgb(var(--v2-ink))]" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] truncate">{cp.name}</h1>
-          <div className="flex items-center gap-2 mt-1">
+      <PageHeader
+        title={cp.name}
+        subtitle={
+          <>
             {cp.kind && (
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))]">
+              <span className="inline-flex items-center mr-2 text-[10px] font-medium px-2 py-0.5 rounded v2-sunken text-[rgb(var(--v2-muted))]">
                 {cp.kind === "FIRM" ? "Firma" : "Kişi"}
               </span>
             )}
-            {cp.tax_id && <span className="text-[11px] text-[rgb(var(--v2-muted))]">{cp.tax_id}</span>}
+            {cp.tax_id && <span>{cp.tax_id}</span>}
+          </>
+        }
+        fallbackHref="/dashboard/counterparts"
+        actions={
+          <div className="flex items-center gap-1.5">
+            {isAdmin && (
+              <button
+                onClick={handleRecompute}
+                disabled={recomputing}
+                className="v2-icon-btn v2-press disabled:opacity-50"
+                title="Bakiye Yeniden Hesapla (admin)"
+                aria-label="Bakiye yeniden hesapla"
+              >
+                {recomputing ? <Loader2 size={14} className="animate-spin" /> : <Gauge size={14} />}
+              </button>
+            )}
+            <button
+              onClick={refresh}
+              className="v2-icon-btn v2-press"
+              title="Yenile"
+              aria-label="Yenile"
+            >
+              <RefreshCw size={14} />
+            </button>
           </div>
-        </div>
-        {isAdmin && (
-          <button onClick={handleRecompute} disabled={recomputing}
-            className="p-2 rounded-lg bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-muted))] disabled:opacity-50"
-            title="Bakiye Yeniden Hesapla (admin)">
-            {recomputing ? <Loader2 size={14} className="animate-spin" /> : <Gauge size={14} />}
-          </button>
-        )}
-        <button onClick={refresh}
-          className="p-2 rounded-lg bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-muted))]"
-          title="Yenile">
-          <RefreshCw size={14} />
-        </button>
-      </section>
+        }
+      />
 
       {/* ── Balance + Action buttons — v2 hero (Daxa): glass/sheen/gradient kaldırıldı ── */}
       <section className="v2-card relative overflow-hidden p-5">

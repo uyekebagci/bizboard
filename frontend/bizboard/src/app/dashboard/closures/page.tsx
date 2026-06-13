@@ -10,9 +10,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, CalendarClock, ChevronRight } from "lucide-react";
+import { CalendarClock, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 interface ClosingRow {
   id: string;
@@ -63,29 +66,19 @@ export default function ClosuresListPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-5 pb-24">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors"
+      <PageHeader
+        title="Gün Kapanışları"
+        subtitle="Geçmiş kapanış kayıtları"
+        icon={CalendarClock}
+        actions={
+          <Link
+            href={`/dashboard/closure${businessId ? `?business_id=${businessId}` : ""}`}
+            className="v2-btn v2-btn--ink v2-press text-sm"
           >
-            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] inline-flex items-center gap-2">
-              <CalendarClock size={18} className="text-accent" />
-              Gün Kapanışları
-            </h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">Geçmiş kapanış kayıtları</p>
-          </div>
-        </div>
-        <Link
-          href={`/dashboard/closure${businessId ? `?business_id=${businessId}` : ""}`}
-          className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-        >
-          Bugünü Kapat
-        </Link>
-      </div>
+            Bugünü Kapat
+          </Link>
+        }
+      />
 
       {businesses.length > 1 && (
         <div className="v2-card p-3">
@@ -103,14 +96,13 @@ export default function ClosuresListPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={6} />
       ) : closings.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <CalendarClock size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-sm text-[rgb(var(--v2-ink))]">Henüz kapanış kaydı yok.</p>
-        </div>
+        <EmptyState
+          icon={CalendarClock}
+          title="Henüz kapanış kaydı yok"
+          description="İlk gün kapanışını yaptığınızda burada görünür."
+        />
       ) : (
         <ul className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {closings.map((c) => {

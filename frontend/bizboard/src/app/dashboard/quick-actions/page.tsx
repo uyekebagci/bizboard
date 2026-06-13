@@ -13,7 +13,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, Zap, Search, X, Trash2, Pencil, Copy, GripVertical,
+  Loader2, Zap, Search, X, Trash2, Pencil, Copy, GripVertical,
   LayoutGrid, List as ListIcon, ArrowDownLeft, ArrowUpRight, CreditCard,
   ArrowLeftRight, AlertTriangle,
 } from "lucide-react";
@@ -26,6 +26,8 @@ import { toast } from "@/lib/toast";
 import type { QuickActionListItem, QuickActionTemplate } from "@/types";
 import { QuickActionExecuteModal } from "@/components/business/dashboard/QuickActionExecuteModal";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type ViewMode = "list" | "grid";
 const VIEW_KEY = "quickActions.viewMode";
@@ -204,47 +206,42 @@ export default function QuickActionsManagePage() {
   return (
     <div className="space-y-5 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
-          >
-            <ArrowLeft size={20} className="text-surface-300" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-surface-100 inline-flex items-center gap-2">
-              <Zap size={18} className="text-amber-400" />
-              Hızlı İşlemler
-            </h1>
-            <p className="text-xs text-surface-400">
-              Sık kullandığın tx şablonlarını yönet — drag-drop ile sırala, sağ klikle düzenle.
-            </p>
+      <PageHeader
+        title="Hızlı İşlemler"
+        subtitle="Sık kullandığın tx şablonlarını yönet — drag-drop ile sırala, sağ klikle düzenle."
+        icon={Zap}
+        iconClassName="bg-status-warning/15 border-status-warning/30 text-status-warning"
+        actions={
+          <div className="flex items-center gap-1.5 v2-sunken p-1 rounded-xl">
+            <button
+              onClick={() => setView("list")}
+              className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                view === "list"
+                  ? "bg-accent/16 text-accent-strong dark:text-accent"
+                  : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
+              )}
+              title="Liste"
+              aria-pressed={view === "list"}
+            >
+              <ListIcon size={14} />
+            </button>
+            <button
+              onClick={() => setView("grid")}
+              className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                view === "grid"
+                  ? "bg-accent/16 text-accent-strong dark:text-accent"
+                  : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
+              )}
+              title="Grid"
+              aria-pressed={view === "grid"}
+            >
+              <LayoutGrid size={14} />
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-1.5 rounded-xl bg-surface-700 p-1">
-          <button
-            onClick={() => setView("list")}
-            className={cn(
-              "p-1.5 rounded-lg transition-colors",
-              view === "list" ? "bg-surface-500 text-surface-100" : "text-surface-400 hover:text-surface-100",
-            )}
-            title="Liste"
-          >
-            <ListIcon size={14} />
-          </button>
-          <button
-            onClick={() => setView("grid")}
-            className={cn(
-              "p-1.5 rounded-lg transition-colors",
-              view === "grid" ? "bg-surface-500 text-surface-100" : "text-surface-400 hover:text-surface-100",
-            )}
-            title="Grid"
-          >
-            <LayoutGrid size={14} />
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Business selector + search + filter */}
       <section className="space-y-2.5">
@@ -308,20 +305,18 @@ export default function QuickActionsManagePage() {
       {/* Liste / Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-surface-500" />
+          <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card p-8 text-center">
-          <Zap size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-sm text-surface-300 font-medium">
-            {items.length === 0 ? "Henüz hızlı işlem yok" : "Filtreyle eşleşen yok"}
-          </p>
-          {items.length === 0 && (
-            <p className="text-[11px] text-surface-400 mt-2">
-              Yeni işlem oluştururken &quot;Hızlı işlemlere kaydet&quot; toggle&apos;ını işaretle.
-            </p>
-          )}
-        </div>
+        <EmptyState
+          icon={Zap}
+          title={items.length === 0 ? "Henüz hızlı işlem yok" : "Filtreyle eşleşen yok"}
+          description={
+            items.length === 0
+              ? "Yeni işlem oluştururken \"Hızlı işlemlere kaydet\" toggle'ını işaretle."
+              : undefined
+          }
+        />
       ) : view === "list" ? (
         <ListView
           items={filtered}

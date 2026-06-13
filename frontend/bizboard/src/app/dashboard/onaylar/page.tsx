@@ -13,7 +13,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   ShieldCheck,
   Loader2,
   Check,
@@ -29,6 +28,8 @@ import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { ApiError } from "@/lib/api/client";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 import {
   listApprovals,
   approveApproval,
@@ -218,26 +219,31 @@ export default function OnaylarPage() {
     }
   }
 
+  const headerEl = (
+    <PageHeader
+      title="Onay Kuyruğu"
+      subtitle="Hassas işlemler için onay talepleri"
+      icon={ShieldCheck}
+      iconClassName="bg-status-warning/15 border-status-warning/30 text-status-warning"
+    />
+  );
+
   if (!isAdmin) {
     return (
       <div className="space-y-5 pb-24">
-        <Header onBack={() => router.back()} />
-        <div className="v2-card p-6 text-center">
-          <ShieldCheck size={28} className="mx-auto text-status-warning mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">
-            Onay Kuyruğu yalnızca yöneticiler içindir.
-          </p>
-          <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
-            Erişiminiz yoksa lütfen bir yönetici ile iletişime geçin.
-          </p>
-        </div>
+        {headerEl}
+        <EmptyState
+          icon={ShieldCheck}
+          title="Onay Kuyruğu yalnızca yöneticiler içindir"
+          description="Erişiminiz yoksa lütfen bir yönetici ile iletişime geçin."
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-5 pb-24">
-      <Header onBack={() => router.back()} />
+      {headerEl}
 
       {/* Status tabs + actions */}
       <div className="flex flex-wrap items-center gap-2">
@@ -314,10 +320,10 @@ export default function OnaylarPage() {
           <Loader2 size={28} className="animate-spin text-accent-strong dark:text-accent" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="v2-card p-10 text-center">
-          <Clock size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-muted))]">Bu filtrede onay talebi yok.</p>
-        </div>
+        <EmptyState
+          icon={Clock}
+          title="Bu filtrede onay talebi yok"
+        />
       ) : (
         <ul className="space-y-3">
           {rows.map((a) => {
@@ -444,27 +450,3 @@ export default function OnaylarPage() {
   );
 }
 
-function Header({ onBack }: { onBack: () => void }) {
-  return (
-    <div className="flex items-center gap-3">
-      <button
-        onClick={onBack}
-        className="v2-icon-btn v2-press"
-        aria-label="Geri"
-      >
-        <ArrowLeft size={18} />
-      </button>
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 rounded-xl bg-status-warning/15 flex items-center justify-center">
-          <ShieldCheck size={20} className="text-status-warning" />
-        </div>
-        <div>
-          <h1 className="v2-display text-xl">Onay Kuyruğu</h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">
-            Hassas işlemler için onay talepleri
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}

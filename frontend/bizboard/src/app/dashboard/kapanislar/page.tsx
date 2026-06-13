@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, CalendarCheck, Lock, AlertCircle, ChevronLeft, ChevronRight,
+  Loader2, CalendarCheck, Lock, AlertCircle, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useBusinesses } from "@/hooks/useBusinesses";
@@ -20,6 +20,9 @@ import { useCashClosing } from "@/hooks/useCashClosing";
 import { CloseTodayModal } from "@/components/closing/CloseTodayModal";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { CashClosing } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 export default function KapanislarPage() {
   const router = useRouter();
@@ -43,19 +46,11 @@ export default function KapanislarPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="v2-icon-btn v2-press"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="v2-display text-xl">Günlük Kapanışlar</h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">Kasa kapanış geçmişi + bugünün durumu</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Günlük Kapanışlar"
+        subtitle="Kasa kapanış geçmişi + bugünün durumu"
+        icon={CalendarCheck}
+      />
 
       {/* Today preview / actions */}
       {preview && (
@@ -121,14 +116,12 @@ export default function KapanislarPage() {
 
       {/* Archive list */}
       {loading && closings.length === 0 ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={5} />
       ) : closings.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <CalendarCheck size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Geçmiş kapanış kaydı yok</p>
-        </div>
+        <EmptyState
+          icon={CalendarCheck}
+          title="Geçmiş kapanış kaydı yok"
+        />
       ) : (
         <>
           <section className="space-y-2">
