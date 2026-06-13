@@ -10,8 +10,14 @@ export type Period = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 /** Tüm periyot türleri — UI selector'larda iterate edilir. */
 export const PERIODS: Period[] = ["daily", "weekly", "monthly", "quarterly", "yearly"];
 
-/** v1.6.7+ sistem varsayılanı (backend ile uyumlu): bugün. */
-export const SYSTEM_DEFAULT_PERIOD: Period = "daily";
+/**
+ * Sistem varsayılanı: "Bu ay".
+ *
+ * <p>UI v2: "Bugün" çoğu zaman hareketsiz olduğu için panel ölü (₺0) görünüyordu.
+ * "Bu ay" varsayılanı dolu/canlı bir ilk izlenim verir. Kullanıcının kaydettiği
+ * tercih (localStorage) her zaman bunun önüne geçer.</p>
+ */
+export const SYSTEM_DEFAULT_PERIOD: Period = "monthly";
 
 const STORAGE_KEY = "bizboard.preferences.defaultPeriod";
 
@@ -54,21 +60,21 @@ export function setDefaultPeriod(value: Period | null): void {
 /** Periyot için Türkçe etiket. */
 export function periodLabel(period: Period): string {
   switch (period) {
-    case "daily": return "Bugun";
+    case "daily": return "Bugün";
     case "weekly": return "Bu hafta";
     case "monthly": return "Bu ay";
-    case "quarterly": return "Bu ceyrek";
-    case "yearly": return "Bu yil";
+    case "quarterly": return "Bu çeyrek";
+    case "yearly": return "Bu yıl";
   }
 }
 
 /** Periyot için kısa etiket (selector chip'leri için). */
 export function periodShortLabel(period: Period): string {
   switch (period) {
-    case "daily": return "Gun";
+    case "daily": return "Gün";
     case "weekly": return "Hafta";
     case "monthly": return "Ay";
-    case "quarterly": return "Ceyrek";
-    case "yearly": return "Yil";
+    case "quarterly": return "Çeyrek";
+    case "yearly": return "Yıl";
   }
 }

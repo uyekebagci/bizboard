@@ -48,6 +48,35 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Changed
 
+- **UI v2 (Daxa) — yeni "Genel Bakış" tasarımı GERÇEK `/dashboard` landing'ine taşındı (promote).**
+  Showcase'teki (`/dashboard/ui-v2`) Daxa "Overview Panel" artık login sonrası
+  gerçek ana sayfa. Görsel hero katmanı (metrik kartları + net-kâr marjı gauge'ı +
+  haftalık hareket bar-chart + asistan motifi + insight stack'leri) yeni tasarımdan
+  geldi. **Eski dashboard'ın kritik işlevsel widget'ları korundu:** `CarryOverBanner`
+  ("Dünden Kalan Eksik/Fazla" — gün-kapanışı taşıma, `/kapanislar` aksiyonu),
+  `AlertsWidget` (envanter/personel uyarıları), `GroupedBusinessGrid` (işletme
+  kartları + gruplama + drag-drop + "İşletme Ekle"), `RecentActivity` (son işlemler,
+  tıklanabilir). "Dikkat Gerektirenler" insight'ı artık SENTETİK değil — gerçek
+  borç/alacak özeti (`/businesses/{id}/debts/summary`) + dönem net negatifliği ile
+  besleniyor; "Öne Çıkanlar" portföyden türetiliyor (haftalık-bar ve delta yüzdeleri
+  görsel motif olarak kaldı). Veri bağlama (usePortfolio/useBusinesses/dönem seçici)
+  korundu; çift tema + a11y + reduced-motion saygılı. Eski `/dashboard/ui-v2` route'u
+  duplike kalmasın diye `/dashboard`'a redirect'e indirildi (eski bookmark'lar kırılmaz).
+- **UI v2 (Daxa) — uygulama kabuğu yeni tasarım diline geçirildi + tam Türkçe + canlı varsayılan.**
+  Önizlemede içerik alanı yeni Daxa dilinde, kabuk (Sidebar + TopBar) ise eski
+  indigo/glass yüzeylerdeydi → "Frankenstein" görünüm. Düzeltildi:
+  (1) **Kabuk Daxa diline çevrildi** — yeni `v2-sidebar / v2-topbar / v2-nav-item /
+  v2-nav-active / v2-nav-rail / v2-icon-btn / v2-avatar / v2-logo-tile` CSS sınıfları
+  (solid/katmanlı koyu yüzey + lime-yeşil accent + yuvarlak, blur yok). Eski
+  `.sidebar-glass / .nav-item / .glass-card` DOKUNULMADI (v2-dışı sayfalar etkilenmez).
+  Tüm nav öğeleri/işlevsellik (İşletmeler, pin, arama, tema toggle, bildirim, avatar,
+  global arama, admin filtresi) ve ÇATI markası korundu.
+  (2) **Tam Türkçe lokalizasyon** — "Overview Panel" → "Genel Bakış", "UI v2 önizleme"
+  rozeti kaldırıldı (eyebrow "Genel Bakış" oldu), selamlama ve tüm sidebar/topbar
+  etiketleri doğru Türkçe karakterlerle (ı/İ/ş/ğ/ç) düzeltildi.
+  (3) **Anlamlı varsayılan dönem** — `SYSTEM_DEFAULT_PERIOD`: "daily" → "monthly"
+  ("Bugün" çoğu zaman ₺0/ölü görünüyordu; "Bu ay" dolu görünür). Kayıtlı kullanıcı
+  tercihi (localStorage) korunur. Çift tema + a11y + reduced-motion korundu.
 - **Hata yanıt gövdesi tek şekle birleştirildi: `{error}` → `{message}` (M-3).**
   10 controller (BankAccount, Business, CashClosing, Counterpart, Firms, Phone,
   Pos, PosDevice, SubCash, Transfer) `GlobalExceptionHandler`'ın zaten ürettiği

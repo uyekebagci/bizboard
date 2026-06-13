@@ -20,8 +20,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    /* Redesign PR-1: app-bg → ambient radial gradient (::before, z-0). */
-    <div className="app-bg min-h-[100dvh] bg-surface-900">
+    /* UI v2: Daxa solid app zemini (--v2-app) — ambient gradient yerine
+       içerik kartlarıyla tutarlı düz katmanlı yüzey. */
+    <div className="v2-app-bg min-h-[100dvh]">
       <Sidebar mobileOpen={mobileOpen} onMobileOpenChange={setMobileOpen} />
 
       {/* Desktop'ta sidebar 240px alır; sıkı bir margin yerine padding-left ile

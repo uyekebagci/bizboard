@@ -18,6 +18,31 @@
     --color-surface: 255 255 255;
     --radius: 0.75rem;
 
+    /* ── UI v2 (Daxa / Overview Panel) — LIGHT ──────────────────
+       Accent = lime-yeşil (token-bazlı → kullanıcı tonu buradan değiştirir).
+       Brand indigo SİLİNMEDİ; v2 yüzeyleri accent kullanır, eski yüzeyler brand. */
+    --accent: 132 204 22;        /* #84cc16 lime-500 — highlight */
+    --accent-bright: 163 230 53; /* #a3e635 lime-400 — ilerleme arkı/aktif */
+    --accent-strong: 77 124 15;  /* #4d7c0f lime-700 — light'ta metin/kontrast */
+    --accent-soft: 236 252 203;  /* #ecfccb lime-100 — tint zemin */
+    --accent-ink: 26 46 5;       /* #1a2e05 — accent zemin üstü koyu metin */
+
+    /* v2 yüzey hiyerarşisi (blur yerine katman) — LIGHT */
+    --v2-app: 240 241 243;       /* #f0f1f3 — app zemini */
+    --v2-card: 255 255 255;      /* #ffffff — kart yüzeyi */
+    --v2-sunken: 244 245 247;    /* #f4f5f7 — alt-yüzey / chip */
+    --v2-border: 230 232 236;    /* #e6e8ec — ince border */
+    --v2-ink: 17 19 22;          /* #111316 — vurgu/siyah metin + buton */
+    --v2-muted: 100 106 116;     /* #646a74 — muted metin */
+
+    --radius-card: 20px;
+    --shadow-card:
+      0 1px 2px rgba(17, 19, 22, 0.04),
+      0 8px 24px -12px rgba(17, 19, 22, 0.12);
+    --shadow-card-hover:
+      0 2px 4px rgba(17, 19, 22, 0.05),
+      0 18px 40px -16px rgba(17, 19, 22, 0.2);
+
     /* LIGHT palet — premium revize (FAZ 2 cila).
      * Koyu indeksler = metin (açık→koyu), açık indeksler = yüzey.
      * Hedef: derinlikli, temiz, hafif soğuk-nötr ("slate") tonlar; düz/
@@ -55,6 +80,29 @@
 
     --body-bg: 33 37 41;       /* #212529 */
     --body-text: 222 226 230;  /* #dee2e6 */
+
+    /* ── UI v2 (Daxa) — DARK ────────────────────────────────────
+       Accent lime aynı (her iki temada canlı); yüzeyler koyu solid. */
+    --accent: 163 230 53;        /* #a3e635 — dark'ta daha parlak lime okunur */
+    --accent-bright: 190 242 100;/* #bef264 lime-300 */
+    --accent-strong: 132 204 22; /* #84cc16 — dark vurgu */
+    --accent-soft: 30 41 12;     /* koyu lime tint zemin */
+    --accent-ink: 12 18 4;       /* accent zemin üstü koyu metin */
+
+    /* v2 yüzey hiyerarşisi — DARK */
+    --v2-app: 14 16 18;          /* #0e1012 — app zemini */
+    --v2-card: 23 25 28;         /* #17191c — kart yüzeyi */
+    --v2-sunken: 32 35 39;       /* #202327 — alt-yüzey / chip */
+    --v2-border: 38 41 46;       /* #26292e — ince border */
+    --v2-ink: 244 245 247;       /* dark'ta vurgu = açık metin */
+    --v2-muted: 148 156 168;     /* muted metin */
+
+    --shadow-card:
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 10px 28px -14px rgba(0, 0, 0, 0.7);
+    --shadow-card-hover:
+      0 2px 6px rgba(0, 0, 0, 0.5),
+      0 22px 48px -18px rgba(0, 0, 0, 0.8);
   }
 
   html {
@@ -571,6 +619,260 @@
   html:not(.dark) .row-hover:hover {
     background: rgba(15, 23, 42, 0.04);
   }
+
+  /* ════════════════════════════════════════════════════════════
+   * UI v2 — Daxa / "Overview Panel" tasarım dili.
+   * Solid + katmanlı (blur YOK). Accent = lime (token). Çift tema.
+   * Mevcut .card / .glass-card DOKUNULMADI (broad rollout sonrası geçiş).
+   * ════════════════════════════════════════════════════════════ */
+
+  /* App zemini — açık-gri (light) / koyu (dark); kartlardan AYRI. */
+  .v2-app-bg {
+    background: rgb(var(--v2-app));
+  }
+
+  /* v2 kart — net solid yüzey + ince border + çok-katmanlı yumuşak gölge. */
+  .v2-card {
+    background: rgb(var(--v2-card));
+    border: 1px solid rgb(var(--v2-border));
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    color: rgb(var(--body-text));
+  }
+
+  /* Alt-yüzey (kart içi chip/segment zemini). */
+  .v2-sunken {
+    background: rgb(var(--v2-sunken));
+    border: 1px solid rgb(var(--v2-border));
+  }
+
+  /* Hover lift — translateY + daha derin gölge (motion). */
+  .v2-lift {
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      border-color 0.25s;
+  }
+  .v2-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Accent vurgulu kart (highlight metrik) — ince accent border + glow. */
+  .v2-card--accent {
+    border-color: rgb(var(--accent) / 0.5);
+    box-shadow: var(--shadow-card), 0 0 0 1px rgb(var(--accent) / 0.18);
+  }
+
+  /* Ink (siyah) vurgulu kart — light'ta koyu zemin + açık metin (Daxa hero). */
+  .v2-card--ink {
+    background: rgb(var(--v2-ink));
+    border-color: rgb(var(--v2-ink));
+    color: rgb(var(--v2-card));
+  }
+
+  /* Stack/katmanlı insight kartları — alttaki katmanlar peek eder (derinlik). */
+  .v2-stack {
+    position: relative;
+    border-radius: var(--radius-card);
+  }
+  .v2-stack::before,
+  .v2-stack::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    border-radius: var(--radius-card);
+    background: rgb(var(--v2-card));
+    border: 1px solid rgb(var(--v2-border));
+    z-index: -1;
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .v2-stack::before {
+    top: 8px;
+    width: 92%;
+    height: 100%;
+    transform: translateX(-50%);
+    opacity: 0.7;
+  }
+  .v2-stack::after {
+    top: 16px;
+    width: 84%;
+    height: 100%;
+    transform: translateX(-50%);
+    opacity: 0.4;
+  }
+  .v2-stack:hover::before {
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  /* ── v2 Tipografi ─────────────────────────────────────────── */
+  .v2-display {
+    @apply font-extrabold;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: rgb(var(--v2-ink));
+  }
+  .v2-metric {
+    @apply font-extrabold;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: rgb(var(--v2-ink));
+  }
+  .v2-eyebrow {
+    @apply text-[11px] font-semibold uppercase;
+    letter-spacing: 0.06em;
+    color: rgb(var(--v2-muted));
+  }
+
+  /* ── v2 Accent chip / pill ────────────────────────────────── */
+  .v2-chip-accent {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: rgb(var(--accent) / 0.16);
+    color: rgb(var(--accent-strong));
+  }
+  .dark .v2-chip-accent {
+    color: rgb(var(--accent));
+  }
+  .v2-chip-ink {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: rgb(var(--v2-ink));
+    color: rgb(var(--v2-card));
+  }
+
+  /* ── v2 Primary buton — siyah (Daxa) + accent buton ───────── */
+  .v2-btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+           text-sm font-semibold transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .v2-btn--ink {
+    background: rgb(var(--v2-ink));
+    color: rgb(var(--v2-card));
+  }
+  .v2-btn--ink:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px -12px rgb(var(--v2-ink) / 0.6);
+  }
+  .v2-btn--accent {
+    background: linear-gradient(180deg, rgb(var(--accent-bright)), rgb(var(--accent)));
+    color: rgb(var(--accent-ink));
+  }
+  .v2-btn--accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px -12px rgb(var(--accent) / 0.6);
+  }
+  .v2-press:active {
+    transform: scale(0.97);
+  }
+
+  /* ── v2 Segment mini-bar (Daxa kart altı şerit) ───────────── */
+  .v2-segbar {
+    @apply flex items-stretch h-2 rounded-full overflow-hidden;
+    background: rgb(var(--v2-sunken));
+  }
+
+  /* ════════════════════════════════════════════════════════════
+   * UI v2 — SHELL (Sidebar + TopBar). Eski indigo/glass yüzeyleri
+   * yerine Daxa solid/katmanlı yüzey + lime accent + yuvarlak.
+   * İçerik alanıyla (.v2-card / .v2-app-bg) TUTARLI. Çift tema.
+   * blur YOK (Daxa solid dil). Eski .sidebar-glass / .nav-item
+   * DOKUNULMADI — v2-dışı sayfalar etkilenmez.
+   * ════════════════════════════════════════════════════════════ */
+
+  /* Sidebar yüzeyi — kart yüzeyinden (--v2-card) ince border ile ayrılır. */
+  .v2-sidebar {
+    background: rgb(var(--v2-card));
+    border-right: 1px solid rgb(var(--v2-border));
+  }
+  .v2-sidebar-divider {
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+
+  /* Logo plakası — Daxa: ink (siyah/açık) zemin + accent harf. */
+  .v2-logo-tile {
+    background: rgb(var(--v2-ink));
+    color: rgb(var(--accent-bright));
+  }
+
+  /* TopBar — solid app zemini + ince alt border (blur yok). */
+  .v2-topbar {
+    background: rgb(var(--v2-app));
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+
+  /* Yüzey ikon butonu (tema/bildirim) — sunken chip + hover lift. */
+  .v2-icon-btn {
+    @apply inline-flex items-center justify-center rounded-xl p-2.5 transition-all;
+    background: rgb(var(--v2-sunken));
+    border: 1px solid rgb(var(--v2-border));
+    color: rgb(var(--v2-muted));
+  }
+  .v2-icon-btn:hover {
+    color: rgb(var(--v2-ink));
+    border-color: rgb(var(--accent) / 0.5);
+  }
+
+  /* Avatar chip — Daxa ink zemin + accent metin. */
+  .v2-avatar {
+    background: rgb(var(--v2-ink));
+    color: rgb(var(--accent-bright));
+  }
+
+  /* Nav öğesi — pasif: muted; hover: sunken + ink; aktif: accent şerit + tint. */
+  .v2-nav-item {
+    position: relative;
+    border-radius: 12px;
+  }
+  .v2-nav-link {
+    color: rgb(var(--v2-muted));
+  }
+  .v2-nav-item:hover .v2-nav-link {
+    color: rgb(var(--v2-ink));
+  }
+  .v2-nav-hover:hover {
+    background: rgb(var(--v2-sunken));
+  }
+  /* Aktif: accent tint zemin + kalın metin; sol rail accent renkli. */
+  .v2-nav-active {
+    background: rgb(var(--accent) / 0.12);
+  }
+  .v2-nav-active .v2-nav-link {
+    color: rgb(var(--v2-ink));
+    font-weight: 600;
+  }
+  /* Sol dikey accent rail — yalnız aktifte görünür. */
+  .v2-nav-rail {
+    opacity: 0;
+    background: rgb(var(--accent));
+    transition: opacity 0.15s;
+  }
+  .v2-nav-active .v2-nav-rail {
+    opacity: 1;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+   * UI v2 — Motion util'leri (CSS; reduced-motion saygılı, altta).
+   * Stagger: --rd değişkeni ile gecikme (Reveal komponenti set eder).
+   * ════════════════════════════════════════════════════════════ */
+  .v2-rise {
+    animation: v2Rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--rd, 0ms);
+  }
+  .v2-fade-up {
+    animation: v2FadeUp 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--rd, 0ms);
+  }
+  .v2-grow {
+    transform-origin: bottom;
+    animation: v2Grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--rd, 0ms);
+  }
+  /* Gauge / sparkline stroke çizimi. */
+  .v2-draw {
+    animation: v2Draw 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--rd, 0ms);
+  }
 }
 
 /* ============================================================
@@ -668,10 +970,56 @@ html:not(.dark) .text-pink-300    { color: #be185d; } /* pink-700 */
   }
 }
 
-/* prefers-reduced-motion: animasyonları kapat. */
+/* UI v2 motion keyframe'leri. */
+@keyframes v2Rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes v2FadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes v2Grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes v2Draw {
+  from {
+    stroke-dashoffset: var(--draw-len, 1000);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* prefers-reduced-motion: animasyonları kapat (mevcut + v2). */
 @media (prefers-reduced-motion: reduce) {
   .rise,
-  .chart-bar {
+  .chart-bar,
+  .v2-rise,
+  .v2-fade-up,
+  .v2-grow,
+  .v2-draw {
     animation: none !important;
+  }
+  .v2-lift:hover,
+  .v2-stack:hover::before {
+    transform: none !important;
   }
 }
