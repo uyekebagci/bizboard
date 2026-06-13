@@ -50,85 +50,86 @@ export default function AylikKarPage() {
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
-          <ArrowLeft size={20} className="text-surface-300" />
+          className="v2-icon-btn v2-press"
+          aria-label="Geri">
+          <ArrowLeft size={18} />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-white">Aylık Kâr</h1>
-          <p className="text-xs text-surface-400">kategori P&L · gider≠masraf · operatör kırılımı</p>
+          <h1 className="v2-display text-xl">Aylık Kâr</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">kategori P&L · gider≠masraf · operatör kırılımı</p>
         </div>
       </div>
 
       {/* Dönem seçici */}
-      <div className="flex items-center justify-between glass-card p-2">
-        <button onClick={() => shift(-1)} className="p-2 rounded-lg hover:bg-surface-700 text-surface-300">
+      <div className="flex items-center justify-between v2-card p-2">
+        <button onClick={() => shift(-1)} className="p-2 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] transition-colors">
           <ChevronLeft size={18} />
         </button>
-        <span className="text-sm font-semibold text-white">{MONTHS[month - 1]} {year}</span>
-        <button onClick={() => shift(1)} className="p-2 rounded-lg hover:bg-surface-700 text-surface-300">
+        <span className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{MONTHS[month - 1]} {year}</span>
+        <button onClick={() => shift(1)} className="p-2 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] transition-colors">
           <ChevronRight size={18} />
         </button>
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
+        <div className="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-status-danger text-sm">{error}</div>
       )}
 
       {loading && !report ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-surface-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : report ? (
         <>
           {/* Net kâr özeti */}
-          <section className="card p-4 border border-surface-700">
-            <p className="text-[11px] text-surface-400 uppercase tracking-wider mb-1">Net Kâr</p>
+          <section className="v2-card p-4">
+            <p className="v2-eyebrow mb-1">Net Kâr</p>
             <p className={cn("text-3xl font-bold num",
-              report.net_profit >= 0 ? "text-emerald-400" : "text-red-400")}>
+              report.net_profit >= 0 ? "text-accent-strong dark:text-accent" : "text-status-danger")}>
               {formatCurrency(report.net_profit, "TRY")}
             </p>
             <div className="grid grid-cols-3 gap-2 mt-3">
-              <Stat label="Gelir" value={report.total_income} className="text-emerald-400" />
-              <Stat label="Gider" value={report.total_expense} className="text-red-400" />
-              <Stat label="Masraf" value={report.total_cost} className="text-amber-400" />
+              <Stat label="Gelir" value={report.total_income} tone="income" />
+              <Stat label="Gider" value={report.total_expense} tone="expense" />
+              <Stat label="Masraf" value={report.total_cost} tone="cost" />
             </div>
           </section>
 
           {/* Kategori P&L — gider≠masraf (§5) */}
-          <CategorySection title="Gelir" icon={<TrendingUp size={14} className="text-emerald-400" />}
-            lines={report.income_by_category} color="text-emerald-400" />
+          <CategorySection title="Gelir" icon={<TrendingUp size={14} className="text-accent-strong dark:text-accent" />}
+            lines={report.income_by_category} tone="income" />
           <CategorySection title="Gider (kira/maaş/operatör payı)"
-            icon={<TrendingDown size={14} className="text-red-400" />}
-            lines={report.expense_by_category} color="text-red-400" />
+            icon={<TrendingDown size={14} className="text-status-danger" />}
+            lines={report.expense_by_category} tone="expense" />
           <CategorySection title="Masraf (komisyon/transfer ücreti)"
-            icon={<Receipt size={14} className="text-amber-400" />}
-            lines={report.cost_by_category} color="text-amber-400" />
+            icon={<Receipt size={14} className="text-status-warning" />}
+            lines={report.cost_by_category} tone="cost" />
 
           {/* Operatör kırılımı (KİM) */}
           <section className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-semibold text-white">
-              <Users size={14} className="text-brand-300" /> Operatör Kârı
+            <div className="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--v2-ink))]">
+              <Users size={14} className="text-accent-strong dark:text-accent" /> Operatör Kârı
             </div>
             {(report.operator_profit ?? []).length === 0 && report.company_residual === 0 ? (
-              <div className="glass-card p-4 text-center text-sm text-surface-400">
+              <div className="v2-card p-4 text-center text-sm text-[rgb(var(--v2-muted))]">
                 Bu dönemde operatör kârı yok.
               </div>
             ) : (
-              <div className="glass-card divide-y divide-surface-700">
+              <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
                 {(report.operator_profit ?? []).map((op) => (
                   <div key={op.account_id} className="p-3 flex items-center justify-between gap-2">
-                    <span className="text-sm text-white truncate">
+                    <span className="text-sm text-[rgb(var(--v2-ink))] truncate">
                       {op.operator_name ?? op.account_name}
                     </span>
-                    <span className="text-sm font-semibold text-emerald-400 num">
+                    <span className="text-sm font-semibold text-accent-strong dark:text-accent num">
                       {formatCurrency(op.earned, "TRY")}
                     </span>
                   </div>
                 ))}
                 {report.company_residual !== 0 && (
-                  <div className="p-3 flex items-center justify-between gap-2 bg-surface-900/30">
-                    <span className="text-sm text-surface-300">Şirket (residual)</span>
-                    <span className="text-sm font-semibold text-white num">
+                  <div className="p-3 flex items-center justify-between gap-2 bg-[rgb(var(--v2-sunken))]">
+                    <span className="text-sm text-[rgb(var(--v2-muted))]">Şirket (residual)</span>
+                    <span className="text-sm font-semibold text-[rgb(var(--v2-ink))] num">
                       {formatCurrency(report.company_residual, "TRY")}
                     </span>
                   </div>
@@ -142,26 +143,36 @@ export default function AylikKarPage() {
   );
 }
 
-function Stat({ label, value, className }: { label: string; value: number; className?: string }) {
+function Stat({ label, value, tone }: { label: string; value: number; tone: "income" | "expense" | "cost" }) {
+  const color = tone === "income"
+    ? "text-accent-strong dark:text-accent"
+    : tone === "expense"
+    ? "text-status-danger"
+    : "text-status-warning";
   return (
-    <div className="rounded-xl p-2 bg-surface-900/40 border border-surface-700/60 text-center">
-      <p className="text-[10px] text-surface-400 uppercase tracking-wider">{label}</p>
-      <p className={cn("text-sm font-bold num mt-0.5", className)}>{formatCurrency(value, "TRY")}</p>
+    <div className="rounded-xl p-2 v2-sunken text-center">
+      <p className="v2-eyebrow text-[10px]">{label}</p>
+      <p className={cn("text-sm font-bold num mt-0.5", color)}>{formatCurrency(value, "TRY")}</p>
     </div>
   );
 }
 
-function CategorySection({ title, icon, lines, color }: {
-  title: string; icon: React.ReactNode; lines: ProfitCategoryLine[]; color: string;
+function CategorySection({ title, icon, lines, tone }: {
+  title: string; icon: React.ReactNode; lines: ProfitCategoryLine[]; tone: "income" | "expense" | "cost";
 }) {
   if (!lines || lines.length === 0) return null;
+  const color = tone === "income"
+    ? "text-accent-strong dark:text-accent"
+    : tone === "expense"
+    ? "text-status-danger"
+    : "text-status-warning";
   return (
     <section className="space-y-2">
-      <div className="flex items-center gap-2 text-sm font-semibold text-white">{icon} {title}</div>
-      <div className="glass-card divide-y divide-surface-700">
+      <div className="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--v2-ink))]">{icon} {title}</div>
+      <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
         {lines.map((l, i) => (
           <div key={l.category_id ?? `${title}-${i}`} className="p-3 flex items-center justify-between gap-2">
-            <span className="text-sm text-surface-300 truncate">{l.category_name}</span>
+            <span className="text-sm text-[rgb(var(--v2-muted))] truncate">{l.category_name}</span>
             <span className={cn("text-sm font-semibold num", color)}>{formatCurrency(l.amount, "TRY")}</span>
           </div>
         ))}

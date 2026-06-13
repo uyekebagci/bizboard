@@ -5,7 +5,7 @@
  *
  * Bekleyen (ve diğer) onay taleplerini listeler; admin onaylayabilir / reddedebilir /
  * iptal edebilir; verify-code gerektiren talepleri önce doğrular; çoklu seçimle
- * bulk-approve yapabilir. Çift tema — mevcut glass/.field/.btn-* desenleri.
+ * bulk-approve yapabilir. Çift tema — UI v2 token'ları.
  *
  * ADMIN-only: admin olmayan kullanıcı uyarı görür (route render olsa da uçlar 403).
  */
@@ -51,17 +51,17 @@ const STATUS_TABS: { key: ApprovalStatus | "ALL"; label: string }[] = [
 function statusBadgeClass(status: ApprovalStatus): string {
   switch (status) {
     case "PENDING":
-      return "bg-amber-500/15 text-amber-300 border-amber-500/30";
+      return "bg-status-warning/15 text-status-warning border-status-warning/30";
     case "APPROVED":
-      return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+      return "bg-accent/15 text-accent-strong dark:text-accent border-accent/30";
     case "REJECTED":
-      return "bg-red-500/15 text-red-300 border-red-500/30";
+      return "bg-status-danger/15 text-status-danger border-status-danger/30";
     case "CANCELLED":
-      return "bg-surface-600/40 text-surface-300 border-surface-500/40";
+      return "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]";
     case "EXPIRED":
-      return "bg-surface-600/40 text-surface-400 border-surface-500/40";
+      return "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]";
     default:
-      return "bg-surface-600/40 text-surface-300 border-surface-500/40";
+      return "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]";
   }
 }
 
@@ -222,12 +222,12 @@ export default function OnaylarPage() {
     return (
       <div className="space-y-5 pb-24">
         <Header onBack={() => router.back()} />
-        <div className="glass-card p-6 text-center">
-          <ShieldCheck size={28} className="mx-auto text-amber-300 mb-2" />
-          <p className="text-surface-200 font-medium">
+        <div className="v2-card p-6 text-center">
+          <ShieldCheck size={28} className="mx-auto text-status-warning mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">
             Onay Kuyruğu yalnızca yöneticiler içindir.
           </p>
-          <p className="text-xs text-surface-400 mt-1">
+          <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
             Erişiminiz yoksa lütfen bir yönetici ile iletişime geçin.
           </p>
         </div>
@@ -250,8 +250,8 @@ export default function OnaylarPage() {
               className={cn(
                 "px-3 py-1.5 rounded-xl text-sm font-medium transition-colors border",
                 tab === t.key
-                  ? "bg-brand-500/20 text-brand-200 border-brand-500/40"
-                  : "bg-surface-700/40 text-surface-300 border-surface-600/40 hover:text-surface-100"
+                  ? "bg-accent/16 text-accent-strong dark:text-accent border-accent/30"
+                  : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))] hover:text-[rgb(var(--v2-ink))]"
               )}
             >
               {t.label}
@@ -289,7 +289,7 @@ export default function OnaylarPage() {
 
       {/* Bulk select-all (yalnız bekleyenler sekmesinde) */}
       {tab === "PENDING" && selectablePending.length > 0 && (
-        <label className="flex items-center gap-2 text-xs text-surface-400 px-1 cursor-pointer">
+        <label className="flex items-center gap-2 text-xs text-[rgb(var(--v2-muted))] px-1 cursor-pointer">
           <input
             type="checkbox"
             checked={
@@ -297,26 +297,26 @@ export default function OnaylarPage() {
               selectablePending.length > 0
             }
             onChange={toggleSelectAll}
-            className="rounded border-surface-500"
+            className="rounded border-[rgb(var(--v2-border))]"
           />
           Doğrulanmış bekleyenlerin hepsini seç ({selectablePending.length})
         </label>
       )}
 
       {error && (
-        <div className="glass-card p-4 border border-red-500/30 bg-red-500/5">
-          <p className="text-sm text-red-300">{error}</p>
+        <div className="v2-card p-4 border border-status-danger/30 bg-status-danger/5">
+          <p className="text-sm text-status-danger">{error}</p>
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-brand-400" />
+          <Loader2 size={28} className="animate-spin text-accent-strong dark:text-accent" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="glass-card p-10 text-center">
-          <Clock size={28} className="mx-auto text-surface-400 mb-2" />
-          <p className="text-surface-300">Bu filtrede onay talebi yok.</p>
+        <div className="v2-card p-10 text-center">
+          <Clock size={28} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-muted))]">Bu filtrede onay talebi yok.</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -326,12 +326,12 @@ export default function OnaylarPage() {
             const selectable = isPending && !verifyPending;
             const rowBusy = busyId === a.id;
             return (
-              <li key={a.id} className="glass-card p-4">
+              <li key={a.id} className="v2-card p-4">
                 <div className="flex items-start gap-3">
                   {tab === "PENDING" && (
                     <input
                       type="checkbox"
-                      className="mt-1.5 rounded border-surface-500 disabled:opacity-40"
+                      className="mt-1.5 rounded border-[rgb(var(--v2-border))] disabled:opacity-40"
                       checked={selected.has(a.id)}
                       disabled={!selectable}
                       onChange={() => toggleSelect(a.id)}
@@ -340,7 +340,7 @@ export default function OnaylarPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-surface-100 truncate">
+                      <span className="font-semibold text-[rgb(var(--v2-ink))] truncate">
                         {a.title}
                       </span>
                       <span
@@ -352,20 +352,20 @@ export default function OnaylarPage() {
                         {statusLabel(a.status)}
                       </span>
                       {verifyPending && (
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-purple-500/15 text-purple-300 border-purple-500/30 inline-flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30 inline-flex items-center gap-1">
                           <KeyRound size={11} /> Kod gerekli
                         </span>
                       )}
                       {a.telegram_sent && (
                         <span
-                          className="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-sky-500/15 text-sky-300 border-sky-500/30 inline-flex items-center gap-1"
+                          className="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30 inline-flex items-center gap-1"
                           title="Onay butonları Telegram'a iletildi"
                         >
                           <Send size={11} /> Telegram'a iletildi
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-surface-400 mt-1">
+                    <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
                       <span className="font-mono">{a.action_type}</span>
                       {a.business_name && <> · {a.business_name}</>}
                       {a.requested_by_name && <> · talep: {a.requested_by_name}</>}
@@ -374,16 +374,16 @@ export default function OnaylarPage() {
                       )}
                     </p>
                     {a.reason && (
-                      <p className="text-xs text-surface-300 mt-1 italic">
+                      <p className="text-xs text-[rgb(var(--v2-muted))] mt-1 italic">
                         Gerekçe: {a.reason}
                       </p>
                     )}
                     {a.payload && Object.keys(a.payload).length > 0 && (
                       <details className="mt-2">
-                        <summary className="text-[11px] text-surface-400 cursor-pointer select-none">
+                        <summary className="text-[11px] text-[rgb(var(--v2-muted))] cursor-pointer select-none">
                           Detay (payload)
                         </summary>
-                        <pre className="mt-1 text-[11px] text-surface-300 bg-surface-800/60 rounded-lg p-2 overflow-x-auto">
+                        <pre className="mt-1 text-[11px] text-[rgb(var(--v2-muted))] bg-[rgb(var(--v2-sunken))] rounded-lg p-2 overflow-x-auto">
                           {JSON.stringify(a.payload, null, 2)}
                         </pre>
                       </details>
@@ -394,7 +394,7 @@ export default function OnaylarPage() {
                   {isPending && (
                     <div className="flex items-center gap-1.5 shrink-0">
                       {rowBusy ? (
-                        <Loader2 size={16} className="animate-spin text-brand-400" />
+                        <Loader2 size={16} className="animate-spin text-accent-strong dark:text-accent" />
                       ) : verifyPending ? (
                         <button
                           type="button"
@@ -449,18 +449,18 @@ function Header({ onBack }: { onBack: () => void }) {
     <div className="flex items-center gap-3">
       <button
         onClick={onBack}
-        className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
+        className="v2-icon-btn v2-press"
         aria-label="Geri"
       >
-        <ArrowLeft size={20} className="text-surface-300" />
+        <ArrowLeft size={18} />
       </button>
       <div className="flex items-center gap-2">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-          <ShieldCheck size={20} className="text-amber-300" />
+        <div className="w-10 h-10 rounded-xl bg-status-warning/15 flex items-center justify-center">
+          <ShieldCheck size={20} className="text-status-warning" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-surface-100">Onay Kuyruğu</h1>
-          <p className="text-xs text-surface-400">
+          <h1 className="v2-display text-xl">Onay Kuyruğu</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">
             Hassas işlemler için onay talepleri
           </p>
         </div>
