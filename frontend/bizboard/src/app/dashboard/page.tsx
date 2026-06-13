@@ -17,7 +17,10 @@
  *
  * <p>Veri: usePortfolio + useBusinesses (dönem seçici localStorage'a yazılır).
  * Borç/alacak özeti gerçek API'den çekilip "Dikkat Gerektirenler" insight'ına
- * beslenir; haftalık-trend barları ve delta yüzdeleri görsel motiflerdir.</p>
+ * beslenir. Haftalık-trend barları (GET /portfolio/activity/daily) ve
+ * MetricCard delta yüzdeleri (GET /portfolio/comparison) artık GERÇEK
+ * veriden gelir (usePortfolioCharts) — veri yoksa nötr boş-durum, uydurma
+ * sayı yok.</p>
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -35,6 +38,7 @@ import {
 } from "lucide-react";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { usePortfolio } from "@/hooks/usePortfolio";
+import { usePortfolioCharts } from "@/hooks/usePortfolioCharts";
 import { api } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -68,6 +72,15 @@ function getGreeting(): string {
 }
 
 const tl = (n: number) => formatCurrency(n);
+
+/** ISO tarihten (yyyy-MM-dd) Türkçe kısa gün etiketi (Pzt..Paz). */
+const TR_WEEKDAYS = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+function weekdayLabel(isoDate: string): string {
+  // Saat dilimi kaymasını önlemek için yerel gün olarak ayrıştır.
+  const [y, m, d] = isoDate.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  return TR_WEEKDAYS[new Date(y, m - 1, d).getDay()] ?? "";
+}
 
 interface DebtSummary {
   receivable_count: number;
@@ -134,6 +147,8 @@ export default function DashboardPage() {
   // v1.6.7: kullanıcının seçtiği periyot — localStorage'a yazılıp tüm visit'lerde aktif.
   const [period, setPeriod] = useState<Period>(() => getDefaultPeriod());
   const { portfolio, isLoading: portLoading } = usePortfolio(period);
+  // Grafik verisi (gerçek): haftalık aktivite serisi + dönem delta yüzdeleri.
+  const { activity, comparison } = usePortfolioCharts(period);
 
   function handlePeriodChange(next: Period) {
     setPeriod(next);
@@ -159,20 +174,20 @@ export default function DashboardPage() {
   // Net kar marjı (gauge) — gelir>0 ise net/gelir, aksi 0.
   const margin = income > 0 ? Math.max(0, Math.min(1, net / income)) : 0;
 
-  // Haftalık trend (görsel motif — son barı highlight).
-  const weekBars = [
-    { value: 42, label: "Pzt" },
-    { value: 55, label: "Sal" },
-    { value: 38, label: "Çar" },
-    { value: 67, label: "Per" },
-    { value: 49, label: "Cum" },
-    { value: 73, label: "Cmt" },
-    {
-      value: Math.max(20, Math.round(margin * 100)) || 80,
-      label: "Bug",
-      highlight: true,
-    },
-  ];
+  // Haftalık trend — GERÇEK günlük aktivite serisi (/portfolio/activity/daily).
+  // Bar yüksekliği = günlük net büyüklüğü (BarChartMini abs ile normalize eder),
+  // son gün (bugün) vurgulu. Veri yoksa boş seri → nötr boş-durum (uydurma yok).
+  const days = activity?.days ?? [];
+  const hasActivity =
+    (activity?.business_count ?? 0) > 0 &&
+    days.some((d) => d.income !== 0 || d.expense !== 0);
+  const weekBars = hasActivity
+    ? days.map((d, i) => ({
+        value: d.net,
+        label: weekdayLabel(d.date),
+        highlight: i === days.length - 1,
+      }))
+    : [];
 
   // "Öne Çıkanlar" — portföyden türetilen gerçek değerler.
   const highlightInsights: Insight[] = [
@@ -287,7 +302,7 @@ export default function DashboardPage() {
             format={tl}
             icon={Wallet}
             variant="ink"
-            delta={12.4}
+            delta={comparison?.net_delta_pct ?? null}
             segments={[
               { value: Math.max(1, net), tone: "accent" },
               { value: Math.max(1, expense), tone: "muted" },
@@ -301,7 +316,7 @@ export default function DashboardPage() {
             format={tl}
             icon={TrendingUp}
             variant="accent"
-            delta={8.1}
+            delta={comparison?.income_delta_pct ?? null}
             segments={[
               { value: Math.max(1, income), tone: "accent" },
               { value: Math.max(1, expense), tone: "ink" },
@@ -314,7 +329,7 @@ export default function DashboardPage() {
             value={expense}
             format={tl}
             icon={Receipt}
-            delta={-3.2}
+            delta={comparison?.expense_delta_pct ?? null}
             segments={[
               { value: Math.max(1, expense - fixed), tone: "muted" },
               { value: Math.max(0, fixed), tone: "negative" },
@@ -368,10 +383,21 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <span className="v2-eyebrow">Haftalık Hareket</span>
             <span className="v2-chip-ink">
-              <CalendarCheck size={13} /> bu hafta
+              <CalendarCheck size={13} /> son 7 gün
             </span>
           </div>
-          <BarChartMini bars={weekBars} height={140} showLabels className="flex-1" />
+          {weekBars.length > 0 ? (
+            <BarChartMini
+              bars={weekBars}
+              height={140}
+              showLabels
+              className="flex-1"
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-center text-sm text-[rgb(var(--v2-muted))]">
+              Son 7 günde hareket yok
+            </div>
+          )}
         </Reveal>
 
         {/* AI-asistan motifi */}

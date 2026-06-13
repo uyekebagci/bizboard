@@ -1,6 +1,8 @@
 package com.bizboard.api.controller;
 
 import com.bizboard.common.dto.PagedResponseDto;
+import com.bizboard.common.dto.PortfolioActivityDto;
+import com.bizboard.common.dto.PortfolioComparisonDto;
 import com.bizboard.common.dto.PortfolioSummaryDto;
 import com.bizboard.common.dto.TransactionDto;
 import com.bizboard.security.UserPrincipal;
@@ -60,6 +62,46 @@ public class PortfolioController {
 
         return ResponseEntity.ok(
                 summaryService.getPortfolioSummary(principal.getId(), period, from, to));
+    }
+
+    /**
+     * Portfolio günlük aktivite serisi — dashboard "Haftalık Hareket" bar-chart'ı.
+     *
+     * <p>GET /portfolio/activity/daily?days=7</p>
+     *
+     * <p>Erişilebilir TÜM işletmelerin son N gün gün-bazında gelir/gider/net'i.
+     * Salt-okunur, additive; mevcut /portfolio (consolidated net) hesabını
+     * DEĞİŞTİRMEZ. Tenant-scope ve net tutarlılığı servis katmanında
+     * ({@code SummaryService} → {@code BusinessAccessGuard} +
+     * {@code PosIncomeCalculator}). {@code days} clamp: 1..31, default 7.
+     * Erişilebilir işletme yoksa {@code business_count=0} + sıfır seri (nötr).</p>
+     */
+    @GetMapping("/activity/daily")
+    public ResponseEntity<PortfolioActivityDto> getDailyActivity(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(value = "days", required = false) Integer days) {
+        return ResponseEntity.ok(
+                summaryService.getPortfolioActivity(principal.getId(), days));
+    }
+
+    /**
+     * Portfolio dönem karşılaştırması (delta %) — dashboard MetricCard yüzdeleri.
+     *
+     * <p>GET /portfolio/comparison?period=monthly</p>
+     * <p>GET /portfolio/comparison?from=2026-01-01&to=2026-03-31</p>
+     *
+     * <p>Seçili dönem vs önceki eşdeğer dönem (aynı uzunluk) gelir/gider/net +
+     * yüzde değişim. Önceki dönem 0 ise ilgili delta {@code null} (FE uydurma
+     * yüzde göstermez). Salt-okunur, additive, tenant-scope.</p>
+     */
+    @GetMapping("/comparison")
+    public ResponseEntity<PortfolioComparisonDto> getComparison(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ResponseEntity.ok(
+                summaryService.getPortfolioComparison(principal.getId(), period, from, to));
     }
 
     @GetMapping("/transactions/recent")

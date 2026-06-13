@@ -30,6 +30,32 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ## [Unreleased]
 
+### Added
+
+- **Dashboard grafikleri gerçek veriye bağlandı — "Haftalık Hareket" bar-chart'ı
+  ve MetricCard delta yüzdeleri artık placeholder değil.** Önceden dashboard'da
+  haftalık-trend barları (sabit `42,55,38,...`) ve metrik delta'ları (`+12.4%`,
+  `+8.1%`, `-3.2%`) uydurma sabitlerdi; artık iki additive, salt-okunur,
+  tenant-scope endpoint'ten GERÇEK veriyle besleniyor.
+  - **Backend** (`SummaryService` + `PortfolioController`, additive — mevcut
+    `/portfolio` consolidated net hesabı DEĞİŞMEDİ):
+    - `GET /portfolio/activity/daily?days=7` → erişilebilir tüm işletmelerin son N
+      gün GÜN BAZINDA gelir/gider/net serisi (bar-chart). `days` clamp 1..31,
+      default 7. (`PortfolioActivityDto`)
+    - `GET /portfolio/comparison?period=monthly` (veya `from/to`) → seçili dönem vs
+      önceki eşdeğer dönem gelir/gider/net + yüzde değişim. Önceki dönem 0 ise
+      delta `null` (FE uydurma yüzde göstermez). (`PortfolioComparisonDto`)
+    - Tenant-scope `BusinessAccessGuard.accessibleBusinesses` üzerinden; net hesabı
+      `PosIncomeCalculator` ile (TRANSFER/LOAN dışlanır, POS tam tutar) →
+      konsolide net ile tutarlı. Erişilebilir işletme yoksa `business_count=0` +
+      sıfır/nötr seri.
+  - **Frontend** (`dashboard/page.tsx` + yeni `usePortfolioCharts` hook):
+    `weekBars` gerçek günlük net serisinden türetiliyor (son gün vurgulu, Türkçe
+    gün etiketleri); MetricCard `delta` değerleri comparison'dan geliyor
+    (`null` → MetricCard delta'yı gizler). Veri yoksa nötr boş-durum ("Son 7
+    günde hareket yok"); uydurma sayı yok. Dönem seçici ile uyumlu, çift tema
+    korunur.
+
 ### Changed
 
 - **UI v2 (Daxa) shell + tema rollout — logo, light-theme saydamlık, paylaşılan primitive'ler.**

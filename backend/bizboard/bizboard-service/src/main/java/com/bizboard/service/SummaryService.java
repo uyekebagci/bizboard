@@ -1,6 +1,8 @@
 package com.bizboard.service;
 
 import com.bizboard.common.dto.PeriodSummaryDto;
+import com.bizboard.common.dto.PortfolioActivityDto;
+import com.bizboard.common.dto.PortfolioComparisonDto;
 import com.bizboard.common.dto.PortfolioSummaryDto;
 import com.bizboard.common.entity.Business;
 import com.bizboard.common.entity.ClosedPeriodSummary;
@@ -152,6 +154,197 @@ public class SummaryService {
                 .netProfitWithFixed(totalIncome.subtract(totalExpenseWithFixed))
                 .businesses(businessSummaries)
                 .build();
+    }
+
+    // ─── Portfolio Günlük Aktivite Serisi (Bar-chart) ───────────────────
+
+    /**
+     * Erişilebilir işletmelerin son {@code days} gün GÜN BAZINDA gelir/gider/net
+     * serisi — dashboard "Haftalık Hareket" bar-chart'ı için.
+     *
+     * <p>Salt-okunur, additive: mevcut {@link #getPortfolioSummary} ve konsolide
+     * net hesabını DEĞİŞTİRMEZ. Net hesabı {@link PosIncomeCalculator} ile
+     * (TRANSFER/LOAN dışlanır, POS tam tutar) yapılır → konsolide net ile
+     * tutarlı. Tenant-scope: yalnızca {@code accessGuard.accessibleBusinesses}.</p>
+     *
+     * @param userId aktör
+     * @param days   gün sayısı (sınır-doğrulama: 1..31, default 7); bugün dahil
+     */
+    @Transactional(readOnly = true)
+    public PortfolioActivityDto getPortfolioActivity(UUID userId, Integer days) {
+        int safeDays = clampDays(days);
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusDays(safeDays - 1L);
+
+        List<Business> businesses = getAccessibleBusinesses(userId);
+        if (businesses.isEmpty()) {
+            return PortfolioActivityDto.builder()
+                    .from(start)
+                    .to(today)
+                    .businessCount(0)
+                    .days(emptyDaySeries(start, today))
+                    .build();
+        }
+
+        List<UUID> businessIds = businesses.stream().map(Business::getId).toList();
+        List<Transaction> txs = transactionRepository
+                .findByBusinessIdInAndDateBetween(businessIds, start, today);
+
+        // Gün bazında işaretli net topla (income +, expense −, TRANSFER/LOAN 0).
+        Map<LocalDate, BigDecimal[]> byDay = new HashMap<>();
+        for (Transaction t : txs) {
+            LocalDate d = t.getDate();
+            if (d == null) continue;
+            BigDecimal[] acc = byDay.computeIfAbsent(d,
+                    k -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
+            BigDecimal amount = PosIncomeCalculator.effectiveAmount(t);
+            if (amount.signum() == 0) continue;
+            if (t.getDirection() == TransactionDirection.INCOME) {
+                acc[0] = acc[0].add(amount);
+            } else if (t.getDirection() == TransactionDirection.EXPENSE) {
+                acc[1] = acc[1].add(amount);
+            }
+        }
+
+        List<PortfolioActivityDto.DayPoint> points = new ArrayList<>();
+        for (LocalDate d = start; !d.isAfter(today); d = d.plusDays(1)) {
+            BigDecimal[] acc = byDay.getOrDefault(d,
+                    new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
+            BigDecimal income = acc[0];
+            BigDecimal expense = acc[1];
+            points.add(PortfolioActivityDto.DayPoint.builder()
+                    .date(d)
+                    .income(income)
+                    .expense(expense)
+                    .net(income.subtract(expense))
+                    .build());
+        }
+
+        return PortfolioActivityDto.builder()
+                .from(start)
+                .to(today)
+                .businessCount(businesses.size())
+                .days(points)
+                .build();
+    }
+
+    private static int clampDays(Integer days) {
+        if (days == null) return 7;
+        return Math.min(Math.max(days, 1), 31);
+    }
+
+    private static List<PortfolioActivityDto.DayPoint> emptyDaySeries(LocalDate start, LocalDate end) {
+        List<PortfolioActivityDto.DayPoint> points = new ArrayList<>();
+        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+            points.add(PortfolioActivityDto.DayPoint.builder()
+                    .date(d)
+                    .income(BigDecimal.ZERO)
+                    .expense(BigDecimal.ZERO)
+                    .net(BigDecimal.ZERO)
+                    .build());
+        }
+        return points;
+    }
+
+    // ─── Portfolio Dönem Karşılaştırması (Delta %) ──────────────────────
+
+    /**
+     * Seçili dönemin gelir/gider/net toplamını ÖNCEKİ eşdeğer dönemle
+     * karşılaştırır — dashboard MetricCard delta yüzdeleri için.
+     *
+     * <p>Önceki dönem: seçili dönemle AYNI uzunlukta, hemen öncesinde biten
+     * pencere. Yüzde değişim önceki 0 ise {@code null} (tanımsız; FE uydurma
+     * yüzde göstermez). Net hesabı {@link PosIncomeCalculator} ile (TRANSFER/LOAN
+     * dışlanır) → konsolide net ile tutarlı. Salt-okunur, additive,
+     * tenant-scope.</p>
+     *
+     * @param userId aktör
+     * @param period periyot etiketi; {@code from/to} verilirse custom
+     * @param from   custom dönem başı (opsiyonel)
+     * @param to     custom dönem sonu (opsiyonel)
+     */
+    @Transactional(readOnly = true)
+    public PortfolioComparisonDto getPortfolioComparison(UUID userId, String period,
+                                                          LocalDate from, LocalDate to) {
+        DateRange current = resolveDateRange(period, from, to);
+        // Önceki eşdeğer pencere: aynı uzunluk, current.start'tan hemen önce biter.
+        long span = java.time.temporal.ChronoUnit.DAYS.between(current.start, current.end);
+        LocalDate prevEnd = current.start.minusDays(1);
+        LocalDate prevStart = prevEnd.minusDays(span);
+
+        List<Business> businesses = getAccessibleBusinesses(userId);
+        String periodLabel = (period == null || period.isBlank())
+                ? (from != null && to != null ? "custom" : "daily")
+                : period.toLowerCase(java.util.Locale.ENGLISH);
+
+        if (businesses.isEmpty()) {
+            PortfolioComparisonDto.Window emptyCurrent = window(current.start, current.end,
+                    BigDecimal.ZERO, BigDecimal.ZERO);
+            PortfolioComparisonDto.Window emptyPrev = window(prevStart, prevEnd,
+                    BigDecimal.ZERO, BigDecimal.ZERO);
+            return PortfolioComparisonDto.builder()
+                    .period(periodLabel)
+                    .businessCount(0)
+                    .current(emptyCurrent)
+                    .previous(emptyPrev)
+                    .incomeDeltaPct(null)
+                    .expenseDeltaPct(null)
+                    .netDeltaPct(null)
+                    .build();
+        }
+
+        List<UUID> businessIds = businesses.stream().map(Business::getId).toList();
+
+        BigDecimal[] cur = sumWindow(businessIds, current.start, current.end);
+        BigDecimal[] prev = sumWindow(businessIds, prevStart, prevEnd);
+
+        PortfolioComparisonDto.Window currentWindow = window(current.start, current.end, cur[0], cur[1]);
+        PortfolioComparisonDto.Window previousWindow = window(prevStart, prevEnd, prev[0], prev[1]);
+
+        return PortfolioComparisonDto.builder()
+                .period(periodLabel)
+                .businessCount(businesses.size())
+                .current(currentWindow)
+                .previous(previousWindow)
+                .incomeDeltaPct(deltaPct(cur[0], prev[0]))
+                .expenseDeltaPct(deltaPct(cur[1], prev[1]))
+                .netDeltaPct(deltaPct(currentWindow.getNet(), previousWindow.getNet()))
+                .build();
+    }
+
+    /** İşletmeler toplamı tek pencere için [income, expense] magnitude. */
+    private BigDecimal[] sumWindow(List<UUID> businessIds, LocalDate start, LocalDate end) {
+        List<Transaction> txs = transactionRepository
+                .findByBusinessIdInAndDateBetween(businessIds, start, end);
+        return new BigDecimal[]{
+                sumByDirection(txs, TransactionDirection.INCOME),
+                sumByDirection(txs, TransactionDirection.EXPENSE)
+        };
+    }
+
+    private static PortfolioComparisonDto.Window window(LocalDate from, LocalDate to,
+                                                        BigDecimal income, BigDecimal expense) {
+        return PortfolioComparisonDto.Window.builder()
+                .from(from)
+                .to(to)
+                .income(income)
+                .expense(expense)
+                .net(income.subtract(expense))
+                .build();
+    }
+
+    /**
+     * Yüzde değişim: (current − previous) / |previous| × 100, 1 ondalık.
+     * Önceki 0 ise tanımsız → {@code null} (FE uydurma yüzde göstermez).
+     */
+    private static BigDecimal deltaPct(BigDecimal current, BigDecimal previous) {
+        if (previous == null || previous.signum() == 0) {
+            return null;
+        }
+        BigDecimal cur = current != null ? current : BigDecimal.ZERO;
+        return cur.subtract(previous)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(previous.abs(), 1, java.math.RoundingMode.HALF_UP);
     }
 
     // ─── Ay Sonu Kapanış (Kayıt Defteri) ────────────────────────────────
