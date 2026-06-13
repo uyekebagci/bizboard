@@ -9,9 +9,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, Plus, Check, Flag, Send, Landmark,
+  Loader2, Plus, Check, Flag, Send, Landmark,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useBusinesses } from "@/hooks/useBusinesses";
@@ -19,9 +18,11 @@ import { useBankImport } from "@/hooks/useBankImport";
 import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { BankAccountListItem, BankImportBatch, BankImportLine, Category } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 export default function BankaImportPage() {
-  const router = useRouter();
   const { businesses } = useBusinesses();
   const businessId = businesses?.[0]?.id ?? null;
   const { batches, loading, createBatch, getBatch, addLine, categorize, flag, postLine } =
@@ -67,16 +68,11 @@ export default function BankaImportPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] transition-colors">
-          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Banka Hareketi Import</h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">Manuel satır girişi (PDF otomatik okuma yakında)</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Banka Hareketi Import"
+        subtitle="Manuel satır girişi (PDF otomatik okuma yakında)"
+        icon={Landmark}
+      />
 
       {/* Yeni parti */}
       <section className="card p-4 space-y-3">
@@ -109,11 +105,9 @@ export default function BankaImportPage() {
       <section className="space-y-2">
         <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Partiler</p>
         {loading && batches.length === 0 ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
-          </div>
+          <ListSkeleton rows={3} />
         ) : batches.length === 0 ? (
-          <div className="v2-card p-6 text-center text-[rgb(var(--v2-muted))] text-sm">Henüz parti yok</div>
+          <EmptyState icon={Landmark} title="Henüz parti yok" size="sm" />
         ) : (
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {batches.map((b) => (

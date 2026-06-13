@@ -9,9 +9,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, ScanLine, UploadCloud, FileText, Receipt,
+  Loader2, ScanLine, UploadCloud, FileText, Receipt,
   CheckCircle2, AlertTriangle, XCircle, Trash2,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
@@ -23,6 +22,9 @@ import { toast } from "@/lib/toast";
 import type {
   BankAccountListItem, Category, Counterpart, OcrDocumentType, OcrScan,
 } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 const DOC_TYPES: { value: OcrDocumentType; label: string }[] = [
   { value: "RECEIPT", label: "Fiş / Dekont" },
@@ -34,7 +36,6 @@ const DOC_TYPES: { value: OcrDocumentType; label: string }[] = [
 const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
 
 export default function BelgeTaramaPage() {
-  const router = useRouter();
   const { businesses } = useBusinesses();
   const businessId = businesses?.[0]?.id ?? null;
   const { scans, loading, scanFile, scanBulk, confirm, discard } = useOcr(businessId);
@@ -111,20 +112,11 @@ export default function BelgeTaramaPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] transition-colors">
-          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
-            <ScanLine size={20} className="text-accent" /> Belge Tarama (OCR)
-          </h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">
-            Fiş, çek/senet ve dekont fotoğrafı/PDF&apos;i yükleyin — alanlar otomatik çıkarılır
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Belge Tarama (OCR)"
+        subtitle="Fiş, çek/senet ve dekont fotoğrafı/PDF'i yükleyin — alanlar otomatik çıkarılır"
+        icon={ScanLine}
+      />
 
       {/* Belge tipi + yükleme */}
       <section className="card p-4 space-y-3">
@@ -181,13 +173,9 @@ export default function BelgeTaramaPage() {
       <section className="space-y-2">
         <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Taramalar</p>
         {loading && scans.length === 0 ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 size={24} className="animate-spin text-[rgb(var(--v2-muted))]" />
-          </div>
+          <ListSkeleton rows={3} />
         ) : scans.length === 0 ? (
-          <div className="v2-card p-6 text-center text-[rgb(var(--v2-muted))] text-sm">
-            Henüz tarama yok — yukarıdan belge yükleyin
-          </div>
+          <EmptyState icon={ScanLine} title="Henüz tarama yok" description="Yukarıdan belge yükleyin" size="sm" />
         ) : (
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {scans.map((s) => (

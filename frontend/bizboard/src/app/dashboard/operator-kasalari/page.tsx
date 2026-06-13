@@ -12,18 +12,19 @@
  */
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, Users, Lock, Clock, ChevronRight,
+  Loader2, Users, Lock, Clock, ChevronRight,
 } from "lucide-react";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { useOperatorStatements } from "@/hooks/useOperatorStatements";
 import { OperatorStatementModal } from "@/components/posdeal/OperatorStatementModal";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { OperatorStatement } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 export default function OperatorKasalariPage() {
-  const router = useRouter();
   const { businesses } = useBusinesses();
   const businessId = businesses?.[0]?.id ?? null;
   const { operators, loading, error, statement } = useOperatorStatements(businessId);
@@ -31,35 +32,24 @@ export default function OperatorKasalariPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors">
-          <ArrowLeft size={20} className="text-surface-300" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
-            Operatör Kasaları <Lock size={14} className="text-[rgb(var(--v2-muted))]" />
-          </h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">read-only kâr-merkezi · biriken kâr − ödeme = bakiye</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Operatör Kasaları"
+        subtitle="read-only kâr-merkezi · biriken kâr − ödeme = bakiye"
+        icon={Users}
+      />
 
       {error && (
         <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
       )}
 
       {loading && operators.length === 0 ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={4} />
       ) : operators.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <Users size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Operatör kâr-merkezi yok</p>
-          <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
-            Alt kasa hesaplarını &quot;kâr-merkezi (operatör)&quot; olarak işaretleyin.
-          </p>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="Operatör kâr-merkezi yok"
+          description='Alt kasa hesaplarını "kâr-merkezi (operatör)" olarak işaretleyin.'
+        />
       ) : (
         <section className="space-y-2">
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">

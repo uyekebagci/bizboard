@@ -9,9 +9,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, AlarmClock, Plus, Loader2, Pencil, Trash2, Repeat, Clock,
+  AlarmClock, Plus, Loader2, Pencil, Trash2, Repeat, Clock,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -19,6 +18,9 @@ import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
 import type { Reminder, ReminderRecurrence } from "@/types";
 import { ReminderModal } from "@/components/reminders/ReminderModal";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 const RECURRENCE_LABEL: Record<ReminderRecurrence, string> = {
   NONE: "Tek sefer",
@@ -28,7 +30,6 @@ const RECURRENCE_LABEL: Record<ReminderRecurrence, string> = {
 };
 
 export default function HatirlaticilarPage() {
-  const router = useRouter();
   const [rows, setRows] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -77,46 +78,31 @@ export default function HatirlaticilarPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors"
-          aria-label="Geri"
-        >
-          <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
-        </button>
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center shrink-0">
-            <AlarmClock size={20} className="text-accent" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Hatırlatıcılar</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">Kişisel hatırlatmalarınız</p>
-          </div>
-        </div>
-        <button
-          onClick={openCreate}
-          className="btn-primary flex items-center gap-1.5 px-3 py-2 text-sm"
-        >
-          <Plus size={16} />
-          Ekle
-        </button>
-      </div>
+      <PageHeader
+        title="Hatırlatıcılar"
+        subtitle="Kişisel hatırlatmalarınız"
+        icon={AlarmClock}
+        actions={
+          <button onClick={openCreate} className="v2-btn v2-btn--ink v2-press text-sm">
+            <Plus size={16} />
+            Ekle
+          </button>
+        }
+      />
 
       {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-brand-400" />
-        </div>
+        <ListSkeleton rows={4} />
       ) : rows.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <AlarmClock size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz hatırlatıcınız yok</p>
-          <button onClick={openCreate} className="text-sm text-accent hover:text-accent-strong mt-2">
-            İlk hatırlatıcıyı ekle
-          </button>
-        </div>
+        <EmptyState
+          icon={AlarmClock}
+          title="Henüz hatırlatıcınız yok"
+          action={
+            <button onClick={openCreate} className="text-sm text-accent hover:text-accent-strong">
+              İlk hatırlatıcıyı ekle
+            </button>
+          }
+        />
       ) : (
         <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {rows.map((r) => (

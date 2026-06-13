@@ -11,7 +11,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   CreditCard,
   TrendingUp,
   Percent,
@@ -31,6 +30,8 @@ import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import type { PosBusinessSummary, PosTransactionRow, PosDeviceListItem } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 /** v1.6.21 (WP-4): /pos-devices/analytics cevap tipi */
 interface PosAnalytics {
@@ -118,37 +119,22 @@ export default function PosCihazlariPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
-          >
-            <ArrowLeft size={20} className="text-surface-300" />
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
-              <CreditCard size={20} className="text-[rgb(var(--accent-bright))]" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-surface-100">POS Cihazları</h1>
-              <p className="text-xs text-surface-500 dark:text-surface-400">
-                Tüm POS cihaz işlemleri + komisyon + trend
-              </p>
-            </div>
-          </div>
-        </div>
-        {isAdmin && (
-          <Link
-            href="/dashboard/pos-cihazlari/yonetim"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-xs font-medium"
-          >
-            <Settings size={14} />
-            Cihaz Yönetimi
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title="POS Cihazları"
+        subtitle="Tüm POS cihaz işlemleri + komisyon + trend"
+        icon={CreditCard}
+        actions={
+          isAdmin ? (
+            <Link
+              href="/dashboard/pos-cihazlari/yonetim"
+              className="v2-btn v2-btn--ink v2-press text-sm"
+            >
+              <Settings size={14} />
+              Cihaz Yönetimi
+            </Link>
+          ) : undefined
+        }
+      />
 
       {/* v1.6.21 (WP-4): Analytics trend chart (30 gün) */}
       {analytics && analytics.series.length > 0 && (
@@ -172,20 +158,20 @@ export default function PosCihazlariPage() {
           <Loader2 size={28} className="animate-spin text-[rgb(var(--accent-bright))]" />
         </div>
       ) : summaries.length === 0 ? (
-        <div className="v2-card rounded-2xl p-8 text-center">
-          <CreditCard size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-700 dark:text-surface-300 font-medium">Henüz POS işlemi yok</p>
-          <p className="text-surface-500 dark:text-surface-400 text-sm mt-1">
-            İşlem eklerken &quot;Ödeme Yöntemi&quot; olarak POS seçiniz.
-          </p>
-          <Link
-            href="/dashboard/add-transaction?payment_method=POS&type=income"
-            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors"
-          >
-            <Plus size={16} />
-            POS İşlemi Ekle
-          </Link>
-        </div>
+        <EmptyState
+          icon={CreditCard}
+          title="Henüz POS işlemi yok"
+          description='İşlem eklerken "Ödeme Yöntemi" olarak POS seçiniz.'
+          action={
+            <Link
+              href="/dashboard/add-transaction?payment_method=POS&type=income"
+              className="v2-btn v2-btn--ink v2-press text-sm"
+            >
+              <Plus size={16} />
+              POS İşlemi Ekle
+            </Link>
+          }
+        />
       ) : (
         <>
           {/* Toplamlar */}

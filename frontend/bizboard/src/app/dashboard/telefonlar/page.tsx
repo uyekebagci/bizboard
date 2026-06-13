@@ -13,9 +13,9 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
-  ArrowLeft, Smartphone, Plus, Loader2, X, Search, Trash2, Edit2,
+  Smartphone, Plus, Loader2, X, Search, Trash2, Edit2,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -25,9 +25,11 @@ import type {
 } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import { toast } from "@/lib/toast";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 export default function TelefonlarPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const refreshKey = useAppStore((s) => s.refreshKey);
   const [devices, setDevices] = useState<PhoneDevice[]>([]);
@@ -91,34 +93,20 @@ export default function TelefonlarPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+      <PageHeader
+        title="Telefonlar"
+        subtitle="Fiziki telefonlar + atanmış firmalar + bankacılık uygulamaları"
+        icon={Smartphone}
+        actions={
           <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600"
+            onClick={() => setShowModal(true)}
+            className="v2-btn v2-btn--ink v2-press text-sm"
           >
-            <ArrowLeft size={20} className="text-surface-300" />
+            <Plus size={14} />
+            Yeni Telefon
           </button>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
-              <Smartphone size={20} className="text-[rgb(var(--accent-bright))]" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Telefonlar</h1>
-              <p className="text-xs text-[rgb(var(--v2-muted))]">
-                Fiziki telefonlar + atanmış firmalar + bankacılık uygulamaları
-              </p>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="v2-btn v2-btn--accent flex items-center gap-1.5 px-3 py-2 text-sm font-medium"
-        >
-          <Plus size={14} />
-          Yeni Telefon
-        </button>
-      </div>
+        }
+      />
 
       {/* Filtreler */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -155,17 +143,13 @@ export default function TelefonlarPage() {
 
       {/* Tablo */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--accent-bright))]" />
-        </div>
+        <ListSkeleton rows={4} />
       ) : filtered.length === 0 ? (
-        <div className="v2-card rounded-2xl p-8 text-center">
-          <Smartphone size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Telefon yok</p>
-          <p className="text-[rgb(var(--v2-muted))] text-sm mt-1">
-            Üstteki &quot;Yeni Telefon&quot; butonu ile başla.
-          </p>
-        </div>
+        <EmptyState
+          icon={Smartphone}
+          title="Telefon yok"
+          description='Üstteki "Yeni Telefon" butonu ile başla.'
+        />
       ) : (
         <div className="v2-table-wrap">
           <table className="v2-table w-full text-sm">

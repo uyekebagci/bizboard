@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Plus, Search, AlertTriangle } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Plus, Search, AlertTriangle, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -17,6 +17,9 @@ import { InventoryDetailModal } from "@/components/inventory/InventoryDetailModa
 import { CreateInventoryModal } from "@/components/inventory/CreateInventoryModal";
 import { InfiniteScrollSentinel } from "@/components/shared/InfiniteScrollSentinel";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 const PAGE_SIZE = 40;
 
@@ -33,7 +36,6 @@ export default function InventoryPageWrapper() {
 }
 
 function InventoryPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshKey, triggerRefresh } = useAppStore();
 
@@ -133,24 +135,19 @@ function InventoryPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-5 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 transition-colors">
-            <ArrowLeft size={20} className="text-[rgb(var(--v2-muted))]" />
+      <PageHeader
+        title="Envanter Yönetimi"
+        subtitle={`${totalCount} kalem`}
+        icon={Package}
+        actions={
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="v2-btn v2-btn--ink v2-press text-sm shrink-0"
+          >
+            <Plus size={16} /> Ekle
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">Envanter Yönetimi</h1>
-            <p className="text-xs text-[rgb(var(--v2-muted))]">{totalCount} kalem</p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition-colors"
-        >
-          <Plus size={16} /> Ekle
-        </button>
-      </div>
+        }
+      />
 
       {/* Category Tabs */}
       <div className="flex flex-wrap gap-1.5 py-1">
@@ -206,27 +203,24 @@ function InventoryPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="space-y-3 animate-pulse">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 bg-[rgb(var(--v2-sunken))] rounded-xl" />)}
-        </div>
+        <ListSkeleton rows={4} />
       ) : filtered.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <p className="text-[rgb(var(--v2-muted))] text-sm">
-            {items.length === 0 ? "Henüz envanter kalemi yok" : "Filtreye uygun kalem bulunamadı"}
-          </p>
-          {hasClientFilter && hasNext && (
-            <div className="mt-4">
+        <EmptyState
+          icon={Package}
+          title={items.length === 0 ? "Henüz envanter kalemi yok" : "Filtreye uygun kalem bulunamadı"}
+          action={
+            hasClientFilter && hasNext ? (
               <button
                 type="button"
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="px-4 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-ink))] text-xs font-medium transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 text-[rgb(var(--v2-ink))] text-xs font-medium transition-colors disabled:opacity-50 v2-press"
               >
                 {loadingMore ? "Yükleniyor..." : "Daha fazla kalem ara"}
               </button>
-            </div>
-          )}
-        </div>
+            ) : undefined
+          }
+        />
       ) : (
         <>
           <div className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">

@@ -12,7 +12,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, Plus, Pencil, Trash2, X, AlertTriangle, CreditCard,
+  Loader2, Plus, Pencil, Trash2, X, AlertTriangle, CreditCard,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
@@ -21,6 +21,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { DarkSelect } from "@/components/shared/DarkSelect";
 import type { PosDeviceListItem, MyCompany } from "@/types";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton } from "@/components/shared/Skeleton";
 
 export default function PosDeviceManagementPage() {
   const router = useRouter();
@@ -79,25 +82,20 @@ export default function PosDeviceManagementPage() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="p-2 -ml-2 rounded-xl bg-surface-700 hover:bg-surface-600 transition-colors"
-        >
-          <ArrowLeft size={20} className="text-surface-300" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">POS Cihazı Yönetimi</h1>
-          <p className="text-xs text-[rgb(var(--v2-muted))]">Cihaz ekle, düzenle, pasif yap</p>
-        </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold"
-        >
-          <Plus size={16} />
-          Yeni Cihaz
-        </button>
-      </div>
+      <PageHeader
+        title="POS Cihazı Yönetimi"
+        subtitle="Cihaz ekle, düzenle, pasif yap"
+        icon={CreditCard}
+        actions={
+          <button
+            onClick={() => setShowCreate(true)}
+            className="v2-btn v2-btn--ink v2-press text-sm shrink-0"
+          >
+            <Plus size={16} />
+            Yeni Cihaz
+          </button>
+        }
+      />
 
       <div className="flex items-center gap-2 text-xs">
         <label className="flex items-center gap-1.5 text-[rgb(var(--v2-muted))]">
@@ -117,21 +115,21 @@ export default function PosDeviceManagementPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
-        </div>
+        <ListSkeleton rows={4} />
       ) : devices.length === 0 ? (
-        <div className="v2-card p-8 text-center">
-          <CreditCard size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
-          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz POS cihazı yok</p>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-medium"
-          >
-            <Plus size={16} />
-            İlk cihazı ekle
-          </button>
-        </div>
+        <EmptyState
+          icon={CreditCard}
+          title="Henüz POS cihazı yok"
+          action={
+            <button
+              onClick={() => setShowCreate(true)}
+              className="v2-btn v2-btn--ink v2-press text-sm"
+            >
+              <Plus size={16} />
+              İlk cihazı ekle
+            </button>
+          }
+        />
       ) : (
         <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {devices.map((d) => (
