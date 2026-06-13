@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -151,6 +154,45 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Kullanici adi veya sifre hatali"));
+    }
+
+    /**
+     * Devre dışı (pasifleştirilmiş) hesapla login → <b>403 Forbidden</b>.
+     * Spring Security {@code DaoAuthenticationProvider}, {@link UserPrincipal#isEnabled()}
+     * {@code false} dönünce şifre doğru olsa bile {@link DisabledException} fırlatır.
+     * Bu exception {@link BadCredentialsException} değildir; daha önce yakalanmadığı
+     * için generic handler üzerinden <b>500</b>'e düşüyordu (bug: "umut-login 500").
+     * Artık temiz 403 + anlamlı Türkçe mesaj döner.
+     */
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<Map<String, String>> handleDisabled(DisabledException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", "Hesabiniz devre disi birakilmis. Lutfen yonetici ile iletisime gecin."));
+    }
+
+    /**
+     * Kilitli hesapla login → <b>403 Forbidden</b>. {@link LockedException} de
+     * {@link DisabledException} gibi {@code AccountStatusException} alt tipidir ve
+     * {@code BadCredentialsException} değildir; yakalanmazsa 500'e düşerdi.
+     */
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<Map<String, String>> handleLocked(LockedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", "Hesabiniz kilitlenmis. Lutfen yonetici ile iletisime gecin."));
+    }
+
+    /**
+     * Diğer tüm kimlik-doğrulama hataları (örn. {@code AccountExpiredException},
+     * {@code CredentialsExpiredException}) → <b>401</b>. Güvenli son durak: hiçbir
+     * {@link AuthenticationException} alt tipi generic 500 handler'ına düşmesin.
+     * Daha spesifik handler'lar ({@code BadCredentials} 401, {@code Disabled}/{@code Locked}
+     * 403) Spring tarafından önce seçilir; bu sadece kalanları yakalar.
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, String>> handleAuthentication(AuthenticationException e) {
+        log.warn("[auth -> 401] type={} message={}", e.getClass().getSimpleName(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "Kullanici adi veya sifre hatali"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
