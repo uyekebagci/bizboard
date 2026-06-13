@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Upload, Loader2, Check, FileText, EyeOff } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { useAppStore } from "@/lib/store";
@@ -15,6 +15,7 @@ import {
 } from "@/lib/files";
 import type { Business, FileUploadInfo } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface FileUploadModalProps {
   preselectedBusinessId?: string;
@@ -42,6 +43,16 @@ export function FileUploadModal({
   const [uploaded, setUploaded] = useState<FileUploadInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorRequestId, setErrorRequestId] = useState<string | null>(null);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, dialogRef);
+
+  // ESC → close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   useEffect(() => {
     if (!preselectedBusinessId) {
@@ -137,11 +148,16 @@ export function FileUploadModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="v2-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="file-upload-modal-title"
+    >
+      <div ref={dialogRef} className="v2-card shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
+          <h3 id="file-upload-modal-title" className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             Dosya / Fotoğraf Yükle
           </h3>
           <button

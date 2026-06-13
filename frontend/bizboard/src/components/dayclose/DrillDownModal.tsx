@@ -6,12 +6,13 @@
  * hareketleri (hangi işlem). Portal'lı, çift tema (v2 Daxa).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Search } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
 import type { DayCloseDrillDown } from "@/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   date: string | null;
@@ -23,6 +24,8 @@ export function DrillDownModal({ date, load, onClose }: Props) {
   const open = !!date;
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
 
   const [data, setData] = useState<DayCloseDrillDown | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,12 +44,17 @@ export function DrillDownModal({ date, load, onClose }: Props) {
   if (!open || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="drilldown-modal-title"
+    >
+      <div ref={dialogRef} className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2">
             <Search size={16} className="text-accent-strong dark:text-accent" />
-            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Kaçak Detayı — {date}</h3>
+            <h3 id="drilldown-modal-title" className="text-lg font-bold text-[rgb(var(--v2-ink))]">Kaçak Detayı — {date}</h3>
           </div>
           <button
             onClick={onClose}

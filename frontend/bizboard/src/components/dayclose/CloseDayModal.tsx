@@ -19,7 +19,7 @@
  * Çift tema: v2 Daxa design language.</p>
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, AlertTriangle, Check, ShieldAlert, CalendarClock } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
@@ -27,6 +27,7 @@ import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/uti
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import type { DayClose } from "@/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const REASONS = [
   { value: "LOSS", label: "Kayıp" },
@@ -50,6 +51,8 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
   const open = !!preview;
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
 
   const [closeDate, setCloseDate] = useState("");
   const [counts, setCounts] = useState<Record<string, string>>({});
@@ -138,10 +141,15 @@ export function CloseDayModal({ preview, businessId, isAdmin, onClose, onClosed 
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="close-day-modal-title"
+    >
+      <div ref={dialogRef} className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
-          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Gün Kapanışı — Mutabakat</h3>
+          <h3 id="close-day-modal-title" className="text-lg font-bold text-[rgb(var(--v2-ink))]">Gün Kapanışı — Mutabakat</h3>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"

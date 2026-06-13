@@ -6,7 +6,7 @@
  * oluşur (kapanış değişmez, onay bekler). Portal'lı, çift tema (v2 Daxa).
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, AlertTriangle, FileEdit } from "lucide-react";
 import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import type { DayClose } from "@/types";
 import type { EditRequestInput } from "@/hooks/useDayCloseEdit";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const REASONS = [
   { value: "LOSS", label: "Kayıp" },
@@ -32,6 +33,8 @@ export function EditRequestModal({ dayClose, submit, onClose }: Props) {
   const open = !!dayClose;
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
 
   const [counts, setCounts] = useState<Record<string, string>>({});
   const [reason, setReason] = useState("");
@@ -86,12 +89,17 @@ export function EditRequestModal({ dayClose, submit, onClose }: Props) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-request-modal-title"
+    >
+      <div ref={dialogRef} className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
           <div className="flex items-center gap-2">
             <FileEdit size={16} className="text-amber-700 dark:text-amber-300" />
-            <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))]">
+            <h3 id="edit-request-modal-title" className="text-lg font-bold text-[rgb(var(--v2-ink))]">
               Kapanış Düzenle (Onaylı) — {dayClose?.close_date}
             </h3>
           </div>

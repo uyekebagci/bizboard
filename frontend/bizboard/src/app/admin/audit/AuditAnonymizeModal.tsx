@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import { Loader2, UserX } from "lucide-react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface AuditAnonymizeModalProps {
   days: string;
@@ -28,17 +30,20 @@ export function AuditAnonymizeModal({
   onConfirm,
   onCancel,
 }: AuditAnonymizeModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, dialogRef);
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="KVKK anonimleştirme onayı"
+      aria-labelledby="audit-anonymize-modal-title"
     >
-      <div className="modal-surface rounded-2xl p-6 max-w-md w-full">
+      <div ref={dialogRef} className="modal-surface rounded-2xl p-6 max-w-md w-full">
         <div className="flex items-center gap-2.5 mb-2">
           <UserX size={20} className="text-accent-strong dark:text-accent shrink-0" />
-          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
+          <h3 id="audit-anonymize-modal-title" className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             KVKK Anonimleştir
           </h3>
         </div>

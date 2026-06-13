@@ -18,7 +18,7 @@
  * <p>Portal'lı (createPortal); çift tema (v2 Daxa design language).</p>
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, AlertTriangle, Sunrise, CalendarClock, ArrowRight } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
@@ -26,6 +26,7 @@ import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/uti
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import type { DayOpen } from "@/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   /** null ise modal kapalı. preview = backend hesap açılışları + otomatik devir. */
@@ -40,6 +41,8 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
   const open = !!preview;
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
 
   const [openDate, setOpenDate] = useState("");
   const [rounded, setRounded] = useState<Record<string, string>>({});
@@ -113,10 +116,15 @@ export function OpenDayModal({ preview, businessId, isAdmin, onClose, onOpened }
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-      <div className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="open-day-modal-title"
+    >
+      <div ref={dialogRef} className="v2-card shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--v2-border))]">
-          <h3 className="text-lg font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
+          <h3 id="open-day-modal-title" className="text-lg font-bold text-[rgb(var(--v2-ink))] flex items-center gap-2">
             <Sunrise size={18} className="text-amber-700 dark:text-amber-300" /> Günü Aç — Devir Yuvarlama
           </h3>
           <button
