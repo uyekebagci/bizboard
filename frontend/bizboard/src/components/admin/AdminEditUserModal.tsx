@@ -102,18 +102,18 @@ export function EditUserModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-surface-100">
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             Kullanıcıyı Düzenle
           </h3>
           <button
             onClick={onClose}
             aria-label="Kapat"
-            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] transition-colors"
           >
-            <X size={18} className="text-surface-400" />
+            <X size={18} className="text-[rgb(var(--v2-muted))]" />
           </button>
         </div>
 
@@ -130,49 +130,49 @@ export function EditUserModal({
 
           {/* Username (read only) */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Kullanıcı Adı
             </label>
             <input
               type="text"
               value={user.username}
               disabled
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-400 text-sm cursor-not-allowed"
+              className="input opacity-60 cursor-not-allowed"
             />
           </div>
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Ad Soyad
             </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
+              className="input"
             />
           </div>
 
           {/* Password (optional) */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Yeni Şifre{" "}
-              <span className="text-surface-300">(boş bırakılabilir)</span>
+              <span className="text-[rgb(var(--v2-muted))]">(boş bırakılabilir)</span>
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
+                className="input pr-12"
                 placeholder="Değiştirmek için girin"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -181,7 +181,7 @@ export function EditUserModal({
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Rol
             </label>
             <div className="flex gap-3">
@@ -193,7 +193,7 @@ export function EditUserModal({
                   className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     role === opt.value
                       ? "bg-accent/16 border-accent/50 text-accent-strong dark:text-accent"
-                      : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
+                      : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-accent/40"
                   }`}
                 >
                   {opt.label}
@@ -203,8 +203,8 @@ export function EditUserModal({
           </div>
 
           {/* Active toggle */}
-          <div className="flex items-center justify-between p-4 bg-surface-900 border border-surface-600 rounded-xl">
-            <span className="text-sm text-surface-300">Aktif Durum</span>
+          <div className="flex items-center justify-between p-4 v2-sunken rounded-xl">
+            <span className="text-sm text-[rgb(var(--v2-ink))]">Aktif Durum</span>
             <button
               type="button"
               onClick={() => setIsActive(!isActive)}
@@ -212,7 +212,7 @@ export function EditUserModal({
               aria-checked={isActive}
               aria-label="Aktif durum"
               className={`relative w-12 h-6 rounded-full transition-colors ${
-                isActive ? "bg-accent" : "bg-surface-600"
+                isActive ? "bg-accent" : "bg-[rgb(var(--v2-border))]"
               }`}
             >
               <span
@@ -226,7 +226,7 @@ export function EditUserModal({
           {/* Business Selection (hide for admin) */}
           {role !== "admin" && (
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">
+              <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
                 Erişebileceği İşletmeler
               </label>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -238,7 +238,7 @@ export function EditUserModal({
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm border transition-colors ${
                       selectedBusinessIds.includes(biz.id)
                         ? "bg-accent/12 border-accent/45 text-[rgb(var(--v2-ink))]"
-                        : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
+                        : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-accent/40"
                     }`}
                   >
                     <div className="flex items-center gap-3">

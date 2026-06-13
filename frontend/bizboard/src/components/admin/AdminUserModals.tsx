@@ -111,18 +111,18 @@ export function CreateUserModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="v2-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-surface-100">
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             Yeni Kullanıcı Oluştur
           </h3>
           <button
             onClick={onClose}
             aria-label="Kapat"
-            className="p-1.5 rounded-lg hover:bg-surface-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))] transition-colors"
           >
-            <X size={18} className="text-surface-400" />
+            <X size={18} className="text-[rgb(var(--v2-muted))]" />
           </button>
         </div>
 
@@ -139,35 +139,35 @@ export function CreateUserModal({
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Ad Soyad
             </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
+              className="input"
               placeholder="Örnek: Ahmet Yılmaz"
             />
           </div>
 
           {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Kullanıcı Adı
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
+              className="input"
               placeholder="örnek: ahmet"
             />
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Şifre
             </label>
             <div className="relative">
@@ -175,14 +175,14 @@ export function CreateUserModal({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 pr-12 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-gray-600 focus:outline-none focus:border-accent/60 transition-colors"
+                className="input pr-12"
                 placeholder="En az 6 karakter"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -191,7 +191,7 @@ export function CreateUserModal({
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+            <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
               Rol
             </label>
             <div className="flex gap-3">
@@ -203,7 +203,7 @@ export function CreateUserModal({
                   className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     role === opt.value
                       ? "bg-accent/16 border-accent/50 text-accent-strong dark:text-accent"
-                      : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
+                      : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-accent/40"
                   }`}
                 >
                   {opt.label}
@@ -215,10 +215,10 @@ export function CreateUserModal({
           {/* Business Selection (hide for admin) */}
           {role !== "admin" && (
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">
+              <label className="block text-sm font-medium text-[rgb(var(--v2-muted))] mb-1.5">
                 Erişebileceği İşletmeler
               </label>
-              <p className="text-xs text-surface-400 mb-3">
+              <p className="text-xs text-[rgb(var(--v2-muted))] mb-3">
                 En az bir işletme seçmelisiniz
               </p>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -230,7 +230,7 @@ export function CreateUserModal({
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm border transition-colors ${
                       selectedBusinessIds.includes(biz.id)
                         ? "bg-accent/12 border-accent/45 text-[rgb(var(--v2-ink))]"
-                        : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-600"
+                        : "v2-sunken text-[rgb(var(--v2-muted))] hover:border-accent/40"
                     }`}
                   >
                     <div className="flex items-center gap-3">

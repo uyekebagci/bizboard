@@ -105,13 +105,13 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         {error && (
           <div
-            className="p-3 rounded-xl bg-red-500/15 text-red-300 text-sm"
+            className="p-3 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm"
             role="alert"
             aria-live="polite"
           >
             <div>{error}</div>
             {errorRequestId && (
-              <div className="mt-1 text-[10px] text-red-500/80 font-mono">
+              <div className="mt-1 text-[10px] text-status-danger/60 font-mono">
                 Destek için referans: {errorRequestId}
               </div>
             )}
@@ -152,7 +152,7 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
               aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}

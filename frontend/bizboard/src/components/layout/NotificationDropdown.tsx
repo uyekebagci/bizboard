@@ -116,11 +116,11 @@ export function NotificationDropdown() {
         aria-label="Bildirimler"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="p-2.5 rounded-xl hover:bg-surface-700 transition-colors relative"
+        className="p-2.5 rounded-xl hover:bg-[rgb(var(--v2-sunken))] transition-colors relative"
       >
-        <Bell size={20} className="text-surface-300" />
+        <Bell size={20} className="text-[rgb(var(--v2-muted))]" />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 bg-status-danger text-surface-100 text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 bg-status-danger text-white text-xs font-bold rounded-full flex items-center justify-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -129,15 +129,15 @@ export function NotificationDropdown() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] bg-surface-800 rounded-xl shadow-card-hover border border-surface-700 py-1 z-50"
+          className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] popover-surface rounded-xl shadow-card-hover py-1 z-50"
         >
           <div className="modal-header">
-            <p className="text-sm font-semibold text-surface-100">Bildirimler</p>
+            <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">Bildirimler</p>
             <button
               type="button"
               onClick={handleMarkAll}
               disabled={busyAll || unread === 0}
-              className="text-xs text-brand-400 hover:text-brand-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="text-xs text-accent-strong dark:text-accent hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               {busyAll ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={12} />}
               Tümünü okundu işaretle
@@ -146,11 +146,11 @@ export function NotificationDropdown() {
 
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center py-10 text-surface-400">
+              <div className="flex items-center justify-center py-10 text-[rgb(var(--v2-muted))]">
                 <Loader2 size={18} className="animate-spin" />
               </div>
             ) : items.length === 0 ? (
-              <p className="text-sm text-surface-400 text-center py-10 px-4">
+              <p className="text-sm text-[rgb(var(--v2-muted))] text-center py-10 px-4">
                 Henüz bildiriminiz yok
               </p>
             ) : (
@@ -184,18 +184,18 @@ function NotificationItem({ notification, busy, onMarkRead, onClose }: ItemProps
     <>
       {!notification.is_read && (
         <span
-          className="absolute left-1.5 top-3 w-2 h-2 rounded-full bg-brand-500"
+          className="absolute left-1.5 top-3 w-2 h-2 rounded-full bg-accent"
           aria-hidden="true"
         />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-surface-100 font-medium truncate">
+        <p className="text-sm text-[rgb(var(--v2-ink))] font-medium truncate">
           {notification.title}
         </p>
-        <p className="text-xs text-surface-300 line-clamp-2 mt-0.5">
+        <p className="text-xs text-[rgb(var(--v2-muted))] line-clamp-2 mt-0.5">
           {notification.message}
         </p>
-        <p className="text-[10px] text-surface-400 mt-1">{time}</p>
+        <p className="text-[10px] text-[rgb(var(--v2-muted))] mt-1">{time}</p>
       </div>
     </>
   );
@@ -208,7 +208,7 @@ function NotificationItem({ notification, busy, onMarkRead, onClose }: ItemProps
           onClose();
           if (!notification.is_read) onMarkRead();
         }}
-        className="relative flex items-start gap-3 px-5 py-3 hover:bg-surface-700 transition-colors"
+        className="relative flex items-start gap-3 px-5 py-3 hover:bg-[rgb(var(--v2-sunken))] transition-colors"
       >
         {inner}
       </Link>
@@ -216,7 +216,7 @@ function NotificationItem({ notification, busy, onMarkRead, onClose }: ItemProps
   }
 
   return (
-    <div className="relative flex items-start gap-3 px-5 py-3 hover:bg-surface-700 transition-colors group">
+    <div className="relative flex items-start gap-3 px-5 py-3 hover:bg-[rgb(var(--v2-sunken))] transition-colors group">
       {inner}
       {!notification.is_read && (
         <button
@@ -224,7 +224,7 @@ function NotificationItem({ notification, busy, onMarkRead, onClose }: ItemProps
           onClick={onMarkRead}
           disabled={busy}
           aria-label="Okundu işaretle"
-          className="opacity-0 group-hover:opacity-100 p-1 rounded text-surface-400 hover:text-brand-400 transition"
+          className="opacity-0 group-hover:opacity-100 p-1 rounded text-[rgb(var(--v2-muted))] hover:text-accent-strong dark:hover:text-accent transition"
         >
           {busy ? <Loader2 size={12} className="animate-spin" /> : <Check size={14} />}
         </button>
