@@ -13,8 +13,10 @@ import { BETA_LABEL } from "@/lib/version";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 
 /**
- * Mobile bottom-nav "Profil" sayfasi — kullanici bilgileri + parola degisikligi
- * + cikis. Desktop'tan da erisilebilir (responsive).
+ * Mobile bottom-nav "Profil" sayfası — kullanıcı bilgileri + parola değişikliği
+ * + çıkış. Desktop'tan da erişilebilir (responsive).
+ *
+ * Çift tema (dark default + light) — Daxa v2 token'ları.
  */
 export default function ProfilePage() {
   const router = useRouter();
@@ -34,8 +36,8 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="glass-card p-8 text-center">
-        <Loader2 size={20} className="animate-spin mx-auto text-surface-400" />
+      <div className="v2-card p-8 text-center">
+        <Loader2 size={20} className="animate-spin mx-auto text-[rgb(var(--v2-muted))]" />
       </div>
     );
   }
@@ -45,26 +47,26 @@ export default function ProfilePage() {
   return (
     <div className="space-y-5">
       {/* Header card */}
-      <section className="glass-card p-5">
+      <section className="v2-card p-5">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center text-white font-bold text-xl">
             {getInitials(profile.full_name)}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-surface-100 truncate">
+            <h1 className="text-lg font-bold text-[rgb(var(--v2-ink))] truncate">
               {profile.full_name}
             </h1>
-            <p className="text-xs text-surface-400 truncate">
+            <p className="text-xs text-[rgb(var(--v2-muted))] truncate">
               @{profile.username}
             </p>
             <div className="flex items-center gap-2 mt-1">
               {isAdmin ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-400 text-[10px] font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-[10px] font-medium">
                   <Shield size={10} />
                   Admin
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-700 text-surface-300 text-[10px] font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] text-[10px] font-medium">
                   Görüntüleyen
                 </span>
               )}
@@ -74,7 +76,7 @@ export default function ProfilePage() {
       </section>
 
       {/* Contact / preferences */}
-      <section className="glass-card divide-y divide-surface-700">
+      <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
         <InfoRow icon={Mail} label="E-posta" value={profile.email ?? "—"} />
         <InfoRow icon={Phone} label="Telefon" value={profile.phone ?? "—"} />
         <InfoRow
@@ -89,7 +91,7 @@ export default function ProfilePage() {
       <NotificationPreferences />
 
       {/* Actions */}
-      <section className="glass-card divide-y divide-surface-700 overflow-hidden">
+      <section className="v2-card divide-y divide-[rgb(var(--v2-border))] overflow-hidden">
         <ActionRow
           icon={Lock}
           label="Parola Değiştir"
@@ -114,7 +116,7 @@ export default function ProfilePage() {
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="w-full glass-card p-4 flex items-center justify-center gap-2 text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+          className="w-full v2-card p-4 flex items-center justify-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
         >
           {loggingOut ? (
             <Loader2 size={16} className="animate-spin" />
@@ -128,8 +130,8 @@ export default function ProfilePage() {
       </section>
 
       {/* v1.7.x BETA: sabit etiket; beta sonrası formatVersion'a geri dönülecek. */}
-      <p className="text-center text-[10px] text-surface-500">
-        CATI <span className="italic text-yellow-400 font-mono">{BETA_LABEL}</span>
+      <p className="text-center text-[10px] text-[rgb(var(--v2-muted))]">
+        ÇATI <span className="italic text-yellow-600 dark:text-yellow-400 font-mono">{BETA_LABEL}</span>
       </p>
     </div>
   );
@@ -140,10 +142,10 @@ function InfoRow({
 }: { icon: typeof User; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3">
-      <Icon size={16} className="text-surface-400 shrink-0" />
+      <Icon size={16} className="text-[rgb(var(--v2-muted))] shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-surface-500 uppercase tracking-wide">{label}</p>
-        <p className="text-sm text-surface-100 truncate">{value}</p>
+        <p className="text-[10px] text-[rgb(var(--v2-muted))] uppercase tracking-wide">{label}</p>
+        <p className="text-sm text-[rgb(var(--v2-ink))] truncate">{value}</p>
       </div>
     </div>
   );
@@ -157,9 +159,9 @@ function ActionRow({
       onClick={onClick}
       className="row-hover w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left"
     >
-      <Icon size={16} className="text-surface-400 shrink-0" />
-      <span className="flex-1 text-sm text-surface-100">{label}</span>
-      <ChevronRight size={16} className="text-surface-500" />
+      <Icon size={16} className="text-[rgb(var(--v2-muted))] shrink-0" />
+      <span className="flex-1 text-sm text-[rgb(var(--v2-ink))]">{label}</span>
+      <ChevronRight size={16} className="text-[rgb(var(--v2-muted))]" />
     </button>
   );
 }

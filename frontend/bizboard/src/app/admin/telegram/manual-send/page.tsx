@@ -3,8 +3,10 @@
 /**
  * MAN-2 (Telegram Admin Hedefli Gönderim): admin manuel bildirim gönderim ekranı.
  *
- * <p>Mesaj yaz + hedef seç (tüm adminler / bağlı Telegram chat'leri) + kanal seç
- * + gönder + sonuç (gitti/gitmedi). ADMIN-only. Çift tema (surface tokens).</p>
+ * Mesaj yaz + hedef seç (tüm adminler / bağlı Telegram chat'leri) + kanal seç
+ * + gönder + sonuç (gitti/gitmedi). ADMIN-only.
+ *
+ * Çift tema (dark default + light) — Daxa v2 token'ları.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -117,26 +119,26 @@ export default function AdminManualSendPage() {
   if (profile?.role !== "admin") return null;
 
   return (
-    <div className="min-h-[100dvh] bg-surface-900 text-surface-100">
-      <header className="sticky top-0 z-40 bg-surface-800/95 backdrop-blur-lg border-b border-surface-700">
+    <div className="min-h-[100dvh] bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-ink))]">
+      <header className="sticky top-0 z-40 bg-[rgb(var(--v2-card))]/95 backdrop-blur-lg border-b border-[rgb(var(--v2-border))]">
         <div className="flex items-center gap-3 px-4 py-3 max-w-3xl mx-auto">
           <button
             type="button"
             onClick={() => router.push("/admin/telegram")}
-            className="p-2 rounded-xl hover:bg-surface-700"
+            className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))]"
             aria-label="Geri"
           >
-            <ChevronLeft size={18} className="text-surface-300" />
+            <ChevronLeft size={18} className="text-[rgb(var(--v2-muted))]" />
           </button>
-          <Send size={20} className="text-sky-400" />
-          <h1 className="text-lg font-bold">Manuel Bildirim Gönder</h1>
+          <Send size={20} className="text-[rgb(var(--accent))]" />
+          <h1 className="text-lg font-bold text-[rgb(var(--v2-ink))]">Manuel Bildirim Gönder</h1>
         </div>
       </header>
 
       <main className="px-4 py-4 max-w-3xl mx-auto space-y-4">
         {/* Hedef tipi */}
-        <section className="glass-card p-5 space-y-3">
-          <h3 className="text-sm font-bold text-surface-100">Hedef</h3>
+        <section className="v2-card p-5 space-y-3">
+          <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Hedef</h3>
           <div className="flex flex-wrap gap-2">
             {(
               [
@@ -150,8 +152,8 @@ export default function AdminManualSendPage() {
                 onClick={() => setRecipientType(o.v)}
                 className={`px-3 py-2 rounded-xl text-sm font-medium border transition-colors ${
                   recipientType === o.v
-                    ? "bg-sky-500/15 border-sky-500/50 text-sky-300"
-                    : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-500"
+                    ? "bg-[rgb(var(--accent)/_0.15)] border-[rgb(var(--accent)/_0.5)] text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent-bright))]"
+                    : "bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--v2-ink)/_0.3)]"
                 }`}
               >
                 {o.l}
@@ -162,7 +164,7 @@ export default function AdminManualSendPage() {
           {/* ALL_ADMINS → kanal seçimi */}
           {recipientType === "ALL_ADMINS" && (
             <div>
-              <label className="block text-[11px] uppercase tracking-wider text-surface-400 mb-1.5">
+              <label className="block text-[11px] uppercase tracking-wider text-[rgb(var(--v2-muted))] mb-1.5">
                 Kanal
               </label>
               <div className="flex gap-2">
@@ -179,8 +181,8 @@ export default function AdminManualSendPage() {
                     onClick={() => setChannel(o.v)}
                     className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium border transition-colors ${
                       channel === o.v
-                        ? "bg-sky-500/15 border-sky-500/50 text-sky-300"
-                        : "bg-surface-900 border-surface-600 text-surface-400 hover:border-surface-500"
+                        ? "bg-[rgb(var(--accent)/_0.15)] border-[rgb(var(--accent)/_0.5)] text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent-bright))]"
+                        : "bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))] hover:border-[rgb(var(--v2-ink)/_0.3)]"
                     }`}
                   >
                     {o.l}
@@ -193,16 +195,16 @@ export default function AdminManualSendPage() {
           {/* TELEGRAM_CHATS → chat çoklu seçim */}
           {recipientType === "TELEGRAM_CHATS" && (
             <div>
-              <label className="block text-[11px] uppercase tracking-wider text-surface-400 mb-1.5">
+              <label className="block text-[11px] uppercase tracking-wider text-[rgb(var(--v2-muted))] mb-1.5">
                 Chat / Grup seç ({selectedChatIds.length} seçili)
               </label>
               {chatsLoading ? (
                 <div className="py-6 flex justify-center">
-                  <Loader2 size={18} className="animate-spin text-surface-400" />
+                  <Loader2 size={18} className="animate-spin text-[rgb(var(--v2-muted))]" />
                 </div>
               ) : chats.length === 0 ? (
-                <p className="text-sm text-surface-400 py-3">
-                  Bağlı Telegram chat'i yok.
+                <p className="text-sm text-[rgb(var(--v2-muted))] py-3">
+                  Bağlı Telegram chat&apos;i yok.
                 </p>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -215,15 +217,15 @@ export default function AdminManualSendPage() {
                         onClick={() => toggleChat(c.chat_id)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm border transition-colors ${
                           sel
-                            ? "bg-sky-500/10 border-sky-500/40"
-                            : "bg-surface-900 border-surface-600 hover:border-surface-500"
+                            ? "bg-[rgb(var(--accent)/_0.10)] border-[rgb(var(--accent)/_0.4)]"
+                            : "bg-[rgb(var(--v2-sunken))] border-[rgb(var(--v2-border))] hover:border-[rgb(var(--v2-ink)/_0.3)]"
                         }`}
                       >
                         <span
                           className={`w-7 h-7 rounded-lg grid place-items-center shrink-0 ${
                             c.chat_type === "GROUP"
-                              ? "bg-violet-500/15 text-violet-300"
-                              : "bg-sky-500/15 text-sky-300"
+                              ? "bg-[rgb(var(--accent)/_0.15)] text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent-bright))]"
+                              : "bg-[rgb(var(--accent)/_0.10)] text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent))]"
                           }`}
                         >
                           {c.chat_type === "GROUP" ? (
@@ -233,15 +235,15 @@ export default function AdminManualSendPage() {
                           )}
                         </span>
                         <span className="flex-1 min-w-0 text-left">
-                          <span className="block text-surface-100 truncate">
+                          <span className="block text-[rgb(var(--v2-ink))] truncate">
                             {c.chat_name}
                           </span>
-                          <span className="block text-[11px] text-surface-400 truncate">
+                          <span className="block text-[11px] text-[rgb(var(--v2-muted))] truncate">
                             {c.user_name ?? "—"}
                             {c.username ? ` (@${c.username})` : ""}
                           </span>
                         </span>
-                        {sel && <Check size={16} className="text-sky-400 shrink-0" />}
+                        {sel && <Check size={16} className="text-[rgb(var(--accent))] shrink-0" />}
                       </button>
                     );
                   })}
@@ -252,10 +254,10 @@ export default function AdminManualSendPage() {
         </section>
 
         {/* İçerik */}
-        <section className="glass-card p-5 space-y-3">
-          <h3 className="text-sm font-bold text-surface-100">İçerik</h3>
+        <section className="v2-card p-5 space-y-3">
+          <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">İçerik</h3>
           <div>
-            <label className="block text-[11px] uppercase tracking-wider text-surface-400 mb-1.5">
+            <label className="block text-[11px] uppercase tracking-wider text-[rgb(var(--v2-muted))] mb-1.5">
               Başlık (opsiyonel)
             </label>
             <input
@@ -264,14 +266,14 @@ export default function AdminManualSendPage() {
               maxLength={TITLE_MAX}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="örn. Önemli duyuru"
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-surface-500 focus:outline-none focus:border-sky-500/50 transition-colors"
+              className="input w-full"
             />
-            <div className="text-right text-[10px] text-surface-500 mt-1">
+            <div className="text-right text-[10px] text-[rgb(var(--v2-muted))] mt-1">
               {title.length}/{TITLE_MAX}
             </div>
           </div>
           <div>
-            <label className="block text-[11px] uppercase tracking-wider text-surface-400 mb-1.5">
+            <label className="block text-[11px] uppercase tracking-wider text-[rgb(var(--v2-muted))] mb-1.5">
               Mesaj
             </label>
             <textarea
@@ -280,9 +282,9 @@ export default function AdminManualSendPage() {
               onChange={(e) => setBody(e.target.value)}
               rows={5}
               placeholder="Gönderilecek mesaj..."
-              className="w-full px-4 py-2.5 bg-surface-900 border border-surface-600 rounded-xl text-surface-100 text-sm placeholder-surface-500 focus:outline-none focus:border-sky-500/50 transition-colors resize-y"
+              className="input w-full resize-y"
             />
-            <div className="text-right text-[10px] text-surface-500 mt-1">
+            <div className="text-right text-[10px] text-[rgb(var(--v2-muted))] mt-1">
               {body.length}/{BODY_MAX}
             </div>
           </div>
@@ -291,7 +293,7 @@ export default function AdminManualSendPage() {
             type="button"
             onClick={handleSend}
             disabled={!canSend()}
-            className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            className="v2-btn v2-btn--accent w-full py-3 text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
           >
             {sending ? (
               <Loader2 size={16} className="animate-spin" />
@@ -304,36 +306,38 @@ export default function AdminManualSendPage() {
 
         {/* Sonuç */}
         {result && (
-          <section className="glass-card p-5 space-y-3">
-            <h3 className="text-sm font-bold text-surface-100">Sonuç</h3>
+          <section className="v2-card p-5 space-y-3">
+            <h3 className="text-sm font-bold text-[rgb(var(--v2-ink))]">Sonuç</h3>
             <div className="flex flex-wrap gap-3 text-sm">
               {result.dispatched_recipients > 0 && (
-                <span className="inline-flex items-center gap-1.5 text-surface-300">
+                <span className="inline-flex items-center gap-1.5 text-[rgb(var(--v2-muted))]">
                   <Users size={14} /> {result.dispatched_recipients} alıcıya iletildi
                 </span>
               )}
               {result.telegram_sent > 0 && (
-                <span className="inline-flex items-center gap-1.5 text-emerald-400">
+                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 size={14} /> {result.telegram_sent} Telegram gönderildi
                 </span>
               )}
               {result.telegram_failed > 0 && (
-                <span className="inline-flex items-center gap-1.5 text-red-400">
+                <span className="inline-flex items-center gap-1.5 text-red-600 dark:text-red-400">
                   <XCircle size={14} /> {result.telegram_failed} başarısız
                 </span>
               )}
             </div>
             {result.telegram_targets.length > 0 && (
-              <ul className="divide-y divide-surface-700/60 text-sm">
+              <ul className="divide-y divide-[rgb(var(--v2-border))] text-sm">
                 {result.telegram_targets.map((t, i) => (
                   <li
                     key={`${t.chat_id}-${i}`}
                     className="flex items-center justify-between py-2"
                   >
-                    <span className="text-surface-300 num truncate">{t.chat_id}</span>
+                    <span className="text-[rgb(var(--v2-muted))] num truncate">{t.chat_id}</span>
                     <span
                       className={`inline-flex items-center gap-1.5 text-xs ${
-                        t.status === "OK" ? "text-emerald-400" : "text-red-400"
+                        t.status === "OK"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-red-600 dark:text-red-400"
                       }`}
                     >
                       {t.status === "OK" ? (

@@ -8,13 +8,13 @@
  * - POS işlem listesi: brüt/oran/cihaz/durum + kâr-payı bacakları (provisional/T+1).
  * - Yatış finalize: bekleyen gün+cihaz için yatan tutar gir → ort.komisyon kesinleşir.
  *
- * Çift tema; modal'lar portal'lı.
+ * Çift tema (dark default + light) — Daxa v2 token'ları.
  */
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Loader2, Sparkles, Clock, ShieldAlert, Plus, RotateCcw, Banknote,
+  ArrowLeft, Loader2, Sparkles, Clock, Plus, RotateCcw, Banknote,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useBusinesses } from "@/hooks/useBusinesses";
@@ -63,8 +63,8 @@ export default function PosKarPage() {
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-white">POS Kâr</h1>
-          <p className="text-xs text-surface-400">işlem girişi · kâr-payı şelalesi · T+1 yatış</p>
+          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">POS Kâr</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">işlem girişi · kâr-payı şelalesi · T+1 yatış</p>
         </div>
         <button onClick={() => setShowDeal(true)}
           className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold
@@ -76,23 +76,23 @@ export default function PosKarPage() {
       {/* Yatış bekleyen (kaçak adayı) */}
       {pending.length > 0 && (
         <section className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Clock size={14} className="text-amber-300" /> Yatış Bekleyen (T+1 ort.komisyon)
+          <div className="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--v2-ink))]">
+            <Clock size={14} className="text-amber-600 dark:text-amber-300" /> Yatış Bekleyen (T+1 ort.komisyon)
           </div>
-          <div className="glass-card divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {pending.map((p) => (
               <div key={`${p.settle_date}-${p.pos_device_id}`}
                 className="p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm text-white">
+                  <p className="text-sm text-[rgb(var(--v2-ink))]">
                     {new Date(p.settle_date).toLocaleDateString("tr-TR")} · {p.pos_device_name}
                   </p>
-                  <p className="text-[11px] text-surface-400">
+                  <p className="text-[11px] text-[rgb(var(--v2-muted))]">
                     Brüt {formatCurrency(p.gross_total, "TRY")} · {p.deal_count} işlem
                   </p>
                 </div>
                 <button onClick={() => setSettleTarget(p)}
-                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-600/30
+                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-600 dark:text-emerald-300 border border-emerald-600/30
                              text-xs flex items-center gap-1 hover:bg-emerald-600/30 shrink-0">
                   <Banknote size={12} /> Yatış Gir
                 </button>
@@ -103,23 +103,23 @@ export default function PosKarPage() {
       )}
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
+        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-400 text-sm">{error}</div>
       )}
 
       {/* POS işlem listesi */}
       {loading && deals.length === 0 ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-surface-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : deals.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Sparkles size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henüz POS işlemi yok</p>
-          <p className="text-xs text-surface-400 mt-1">"İşlem Gir" ile başla.</p>
+        <div className="v2-card p-8 text-center">
+          <Sparkles size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz POS işlemi yok</p>
+          <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">&quot;İşlem Gir&quot; ile başla.</p>
         </div>
       ) : (
         <section className="space-y-2">
-          <div className="glass-card divide-y divide-surface-700">
+          <div className="v2-card divide-y divide-[rgb(var(--v2-border))]">
             {deals.map((d) => (
               <PosDealRow key={d.id} deal={d} isAdmin={isAdmin} onReverse={() => handleReverse(d.id)} />
             ))}
@@ -145,13 +145,13 @@ function PosDealRow({ deal, isAdmin, onReverse }: {
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-white num">
+            <p className="text-sm font-semibold text-[rgb(var(--v2-ink))] num">
               {formatCurrency(deal.gross_amount, "TRY")}
             </p>
-            <span className="text-[11px] text-surface-400">%{deal.customer_rate}</span>
+            <span className="text-[11px] text-[rgb(var(--v2-muted))]">%{deal.customer_rate}</span>
             <StatusBadge status={deal.status} />
           </div>
-          <p className="text-[11px] text-surface-400 mt-0.5">
+          <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
             {deal.pos_device_name}
             {deal.owner_company_name && <> · {deal.owner_company_name}</>}
             {" · "}{new Date(deal.deal_date).toLocaleDateString("tr-TR")}
@@ -160,7 +160,7 @@ function PosDealRow({ deal, isAdmin, onReverse }: {
         </div>
         {isAdmin && !reversed && (
           <button onClick={onReverse}
-            className="p-1.5 rounded-lg bg-surface-700 hover:bg-surface-600 text-surface-300 shrink-0"
+            className="p-1.5 rounded-lg bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))] shrink-0"
             title="Geri al">
             <RotateCcw size={13} />
           </button>
@@ -173,8 +173,8 @@ function PosDealRow({ deal, isAdmin, onReverse }: {
             <span key={i} className={cn(
               "text-[10px] px-1.5 py-0.5 rounded-lg border flex items-center gap-1",
               s.provisional
-                ? "bg-amber-500/10 text-amber-300 border-amber-500/25"
-                : "bg-surface-700/60 text-surface-300 border-surface-600",
+                ? "bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/25"
+                : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]",
             )}>
               {s.operator_name ?? "Şirket"}: {formatCurrency(s.amount, "TRY")}
               {s.provisional && <Clock size={8} />}
@@ -188,12 +188,12 @@ function PosDealRow({ deal, isAdmin, onReverse }: {
 
 function StatusBadge({ status }: { status: string }) {
   const cls = status === "FINALIZED"
-    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+    ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30"
     : status === "PROVISIONAL"
-      ? "bg-amber-500/15 text-amber-300 border-amber-500/25"
+      ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/25"
       : status === "REVERSED"
-        ? "bg-red-500/15 text-red-300 border-red-500/25"
-        : "bg-surface-700 text-surface-300 border-surface-600";
+        ? "bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/25"
+        : "bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border-[rgb(var(--v2-border))]";
   const label = status === "FINALIZED" ? "KESİN"
     : status === "PROVISIONAL" ? "T+1 BEKLİYOR"
       : status === "REVERSED" ? "GERİ ALINDI" : status;

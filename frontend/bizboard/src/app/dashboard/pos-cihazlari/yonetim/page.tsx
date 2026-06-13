@@ -5,6 +5,8 @@
  *
  * Liste tablo: name, owner firma, bank, default rate, last_used rate, status.
  * Yeni cihaz modal, düzenle, soft-delete (is_active=false).
+ *
+ * Çift tema (dark default + light) — Daxa v2 token'ları.
  */
 
 import { useEffect, useState } from "react";
@@ -85,8 +87,8 @@ export default function PosDeviceManagementPage() {
           <ArrowLeft size={20} className="text-surface-300" />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-surface-100">POS Cihazı Yönetimi</h1>
-          <p className="text-xs text-surface-400">Cihaz ekle, düzenle, pasif yap</p>
+          <h1 className="text-xl font-bold text-[rgb(var(--v2-ink))]">POS Cihazı Yönetimi</h1>
+          <p className="text-xs text-[rgb(var(--v2-muted))]">Cihaz ekle, düzenle, pasif yap</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -98,7 +100,7 @@ export default function PosDeviceManagementPage() {
       </div>
 
       <div className="flex items-center gap-2 text-xs">
-        <label className="flex items-center gap-1.5 text-surface-300">
+        <label className="flex items-center gap-1.5 text-[rgb(var(--v2-muted))]">
           <input
             type="checkbox"
             checked={includeInactive}
@@ -109,19 +111,19 @@ export default function PosDeviceManagementPage() {
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-400 text-sm">
           {error}
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-surface-400" />
+          <Loader2 size={28} className="animate-spin text-[rgb(var(--v2-muted))]" />
         </div>
       ) : devices.length === 0 ? (
-        <div className="card p-8 text-center">
-          <CreditCard size={32} className="mx-auto text-surface-500 mb-2" />
-          <p className="text-surface-300 font-medium">Henüz POS cihazı yok</p>
+        <div className="v2-card p-8 text-center">
+          <CreditCard size={32} className="mx-auto text-[rgb(var(--v2-muted))] mb-2" />
+          <p className="text-[rgb(var(--v2-ink))] font-medium">Henüz POS cihazı yok</p>
           <button
             onClick={() => setShowCreate(true)}
             className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-medium"
@@ -131,7 +133,7 @@ export default function PosDeviceManagementPage() {
           </button>
         </div>
       ) : (
-        <section className="card divide-y divide-surface-700">
+        <section className="v2-card divide-y divide-[rgb(var(--v2-border))]">
           {devices.map((d) => (
             <div key={d.id} className={cn(
               "p-4 flex items-center justify-between gap-3",
@@ -139,38 +141,38 @@ export default function PosDeviceManagementPage() {
             )}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-surface-100 truncate">{d.name}</p>
+                  <p className="text-sm font-semibold text-[rgb(var(--v2-ink))] truncate">{d.name}</p>
                   {!d.is_active && (
-                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-surface-700 text-surface-400 border border-surface-600">
-                      PASIF
+                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] border border-[rgb(var(--v2-border))]">
+                      PASİF
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-surface-400 truncate">
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] truncate">
                   {d.owner_my_company_name || d.owner_counterpart_name || "Sahip firma seçilmedi"}
                   {d.bank_name && <> · {d.bank_name}</>}
                 </p>
-                <p className="text-[11px] text-surface-300 mt-0.5">
-                  Banka: <span className="text-surface-100">%{d.default_rate ?? "—"}</span>
+                <p className="text-[11px] text-[rgb(var(--v2-muted))] mt-0.5">
+                  Banka: <span className="text-[rgb(var(--v2-ink))]">%{d.default_rate ?? "—"}</span>
                   {d.our_commission_rate != null && (
-                    <> · Biz: <span className="text-surface-100">%{d.our_commission_rate}</span></>
+                    <> · Biz: <span className="text-[rgb(var(--v2-ink))]">%{d.our_commission_rate}</span></>
                   )}
                   {d.last_used_rate != null && (
-                    <> · Son: <span className="text-surface-100">%{d.last_used_rate}</span></>
+                    <> · Son: <span className="text-[rgb(var(--v2-ink))]">%{d.last_used_rate}</span></>
                   )}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setEditing(d)}
-                  className="p-2 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-700"
+                  className="p-2 rounded-lg text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))]"
                   title="Düzenle"
                 >
                   <Pencil size={14} />
                 </button>
                 <button
                   onClick={() => setPendingDelete(d)}
-                  className="p-2 rounded-lg text-red-400 hover:bg-red-900/30"
+                  className="p-2 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-500/10"
                   title="Pasif yap"
                 >
                   <Trash2 size={14} />
@@ -273,25 +275,25 @@ function PosDeviceFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card shadow-xl w-full max-w-md">
+      <div className="modal-surface shadow-xl w-full max-w-md">
         <div className="modal-header">
-          <h3 className="text-lg font-semibold text-surface-100">
+          <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
             {isEdit ? "POS Cihazını Düzenle" : "Yeni POS Cihazı"}
           </h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-700">
-            <X size={18} className="text-surface-400" />
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[rgb(var(--v2-sunken))]">
+            <X size={18} className="text-[rgb(var(--v2-muted))]" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
           {error && (
-            <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+            <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-400 text-sm flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           <div>
-            <label className="label">Cihaz Adi *</label>
+            <label className="label">Cihaz Adı *</label>
             <input
               type="text"
               value={name}
@@ -364,7 +366,7 @@ function PosDeviceFormModal({
             const ours = ourCommissionRate.trim() !== "" ? Number(ourCommissionRate.replace(",", ".")) : NaN;
             if (!isNaN(bank) && !isNaN(ours) && ours < bank) {
               return (
-                <p className="text-[11px] text-red-300 -mt-1">
+                <p className="text-[11px] text-red-500 dark:text-red-300 -mt-1">
                   Bizim komisyonumuz banka komisyonundan düşük olamaz.
                 </p>
               );
@@ -372,7 +374,7 @@ function PosDeviceFormModal({
             if (!isNaN(bank) && !isNaN(ours)) {
               const diff = ours - bank;
               return (
-                <p className="text-[11px] text-emerald-300 -mt-1">
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-300 -mt-1">
                   Bu cihaz default kâr marjı: <strong>%{diff.toFixed(2)}</strong>
                 </p>
               );
@@ -381,7 +383,7 @@ function PosDeviceFormModal({
           })()}
 
           {isEdit && (
-            <label className="flex items-center gap-2 text-sm text-surface-200">
+            <label className="flex items-center gap-2 text-sm text-[rgb(var(--v2-ink))]">
               <input
                 type="checkbox"
                 checked={active}
@@ -405,7 +407,7 @@ function PosDeviceFormModal({
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 px-4 py-2.5 bg-surface-700 hover:bg-surface-600 text-surface-200 rounded-xl text-sm font-medium"
+              className="flex-1 px-4 py-2.5 bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-ink))] rounded-xl text-sm font-medium"
             >
               Vazgeç
             </button>
@@ -432,16 +434,16 @@ function DeleteConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="glass-card w-full max-w-sm p-5">
-        <h3 className="text-base font-semibold text-surface-100 mb-1">Cihazı pasif yap</h3>
-        <p className="text-sm text-surface-300">
+      <div className="modal-surface w-full max-w-sm p-5">
+        <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))] mb-1">Cihazı pasif yap</h3>
+        <p className="text-sm text-[rgb(var(--v2-muted))]">
           <strong>{device.name}</strong> cihazı <strong>pasif</strong> yapılacak (fiziksel
           silinmez; tx referansları korunur). Tekrar aktif edilebilir.
         </p>
         <div className="flex gap-2 mt-4">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 rounded-xl bg-surface-700 hover:bg-surface-600 text-surface-200 text-sm"
+            className="flex-1 px-4 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-ink))] text-sm"
           >
             Vazgeç
           </button>

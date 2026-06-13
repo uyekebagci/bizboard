@@ -5,10 +5,10 @@
  *
  * - Üst arama input (URL `?q=` ile senkron) + sort + Cmd/Ctrl+S kaydet.
  * - Faceted sidebar (tip checkbox'ları + işletme/kategori/tarih + kayıtlı/son).
- * - Sonuç listesi + pagination, snippet highlight, maskeli alan 🔒.
+ * - Sonuç listesi + pagination, snippet highlight, maskeli alan.
  * - Boş input → ileri seviye arama yardım kartı.
  *
- * Çift tema: glass-card / field / surface-* token'ları (dark default + light).
+ * Çift tema (dark default + light) — Daxa v2 token'ları.
  */
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -146,7 +146,7 @@ function SearchPageInner() {
         <div className="relative flex-1">
           <Search
             size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] pointer-events-none"
           />
           <input
             value={input}
@@ -183,7 +183,7 @@ function SearchPageInner() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[16rem_1fr] gap-6">
           {/* Faceted sidebar */}
-          <aside className="glass-card !rounded-xl p-4 space-y-6 h-fit lg:sticky lg:top-20">
+          <aside className="v2-card !rounded-xl p-4 space-y-6 h-fit lg:sticky lg:top-20">
             {result && (
               <SearchFacets
                 facets={result.facets}
@@ -191,7 +191,7 @@ function SearchPageInner() {
                 onToggleType={toggleType}
               />
             )}
-            <div className="border-t border-surface-700/60 pt-4">
+            <div className="border-t border-[rgb(var(--v2-border))] pt-4">
               <SavedSearchesPanel currentQuery={activeQuery} onRun={runFromPanel} />
             </div>
           </aside>
@@ -199,23 +199,23 @@ function SearchPageInner() {
           {/* Sonuçlar */}
           <main>
             {loading && (
-              <div className="flex items-center justify-center py-16 text-surface-400">
+              <div className="flex items-center justify-center py-16 text-[rgb(var(--v2-muted))]">
                 <Loader2 className="animate-spin mr-2" size={20} /> Aranıyor...
               </div>
             )}
 
             {error && !loading && (
-              <div className="glass-card !rounded-xl p-4 text-sm text-red-400">{error}</div>
+              <div className="v2-card !rounded-xl p-4 text-sm text-red-500 dark:text-red-400">{error}</div>
             )}
 
             {!loading && !error && result && (
               <>
-                <p className="text-sm text-surface-400 mb-3">
+                <p className="text-sm text-[rgb(var(--v2-muted))] mb-3">
                   {result.total} sonuç
-                  <span className="text-surface-600"> · {result.tookMs} ms</span>
+                  <span className="opacity-50"> · {result.tookMs} ms</span>
                 </p>
                 {result.items.length === 0 ? (
-                  <div className="glass-card !rounded-xl p-8 text-center text-surface-400">
+                  <div className="v2-card !rounded-xl p-8 text-center text-[rgb(var(--v2-muted))]">
                     Eşleşen sonuç bulunamadı.
                   </div>
                 ) : (
@@ -235,7 +235,7 @@ function SearchPageInner() {
                     >
                       Önceki
                     </button>
-                    <span className="text-sm text-surface-400">
+                    <span className="text-sm text-[rgb(var(--v2-muted))]">
                       {page + 1} / {totalPages}
                     </span>
                     <button
@@ -258,7 +258,7 @@ function SearchPageInner() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-surface-400">Yükleniyor...</div>}>
+    <Suspense fallback={<div className="p-8 text-[rgb(var(--v2-muted))]">Yükleniyor...</div>}>
       <SearchPageInner />
     </Suspense>
   );
