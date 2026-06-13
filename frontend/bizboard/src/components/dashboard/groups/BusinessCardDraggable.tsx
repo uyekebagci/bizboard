@@ -47,8 +47,8 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
     <div
       ref={setNodeRef}
       className={cn(
-        "glass-card glass-hover p-5 group relative",
-        isDragging && "opacity-50 ring-2 ring-brand-400 rotate-1",
+        "v2-widget v2-widget--interactive p-5 group relative",
+        isDragging && "opacity-50 ring-2 ring-[rgb(var(--accent))] rotate-1",
       )}
     >
       {/* Drag handle — kart üst-solda */}
@@ -56,7 +56,7 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
         type="button"
         {...attributes}
         {...listeners}
-        className="absolute top-2 left-2 p-1 rounded-md text-surface-500 hover:text-surface-100 hover:bg-surface-700 transition-colors cursor-grab active:cursor-grabbing"
+        className="absolute top-2 left-2 p-1 rounded-md text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] hover:bg-[rgb(var(--v2-sunken))] transition-colors cursor-grab active:cursor-grabbing"
         aria-label="Surukle"
         onClick={(e) => e.stopPropagation()}
       >
@@ -68,7 +68,7 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onRemoveFromGroup(); }}
-          className="absolute top-2 right-2 p-1 rounded-md text-surface-500 hover:text-red-400 hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all"
+          className="absolute top-2 right-2 p-1 rounded-md text-[rgb(var(--v2-muted))] hover:text-red-400 hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all"
           aria-label="Gruptan cikar"
           title="Gruptan cikar"
         >
@@ -89,10 +89,10 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
               <LayoutGrid size={20} style={{ color }} />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-surface-100 text-sm leading-tight truncate">
+              <h3 className="font-semibold text-[rgb(var(--v2-ink))] text-sm leading-tight truncate">
                 {business.name}
               </h3>
-              <p className="text-[11px] text-surface-400 capitalize truncate">
+              <p className="text-[11px] text-[rgb(var(--v2-muted))] capitalize truncate">
                 {business.business_type_name || "İşletme"}
               </p>
             </div>
@@ -109,7 +109,7 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
               </span>
               <span className="num font-semibold text-emerald-300">{formatCurrency(income)}</span>
             </div>
-            <div className="h-1.5 rounded-full bg-surface-700/60 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-[rgb(var(--v2-sunken))] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
                 style={{ width: `${(income / barMax) * 100}%` }} />
             </div>
@@ -121,21 +121,21 @@ export function BusinessCardDraggable({ business, portfolio, fromGroupId, onRemo
               </span>
               <span className="num font-semibold text-rose-300">{formatCurrency(expense + fixedCost)}</span>
             </div>
-            <div className="h-1.5 rounded-full bg-surface-700/60 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-[rgb(var(--v2-sunken))] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-rose-500 to-rose-400"
                 style={{ width: `${((expense + fixedCost) / barMax) * 100}%` }} />
             </div>
           </div>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-surface-700/60 flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-[rgb(var(--v2-border))] flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <span className="text-[12px] text-surface-400">Net Kar</span>
-            {fixedCost > 0 && <Pin size={8} className="text-surface-400" />}
+            <span className="text-[12px] text-[rgb(var(--v2-muted))]">Net Kar</span>
+            {fixedCost > 0 && <Pin size={8} className="text-[rgb(var(--v2-muted))]" />}
           </div>
           <p className={cn(
             "num text-base font-bold",
-            netProfit > 0 ? "text-emerald-300" : netProfit < 0 ? "text-rose-300" : "text-surface-100"
+            netProfit > 0 ? "text-emerald-300" : netProfit < 0 ? "text-rose-300" : "text-[rgb(var(--v2-ink))]"
           )}>
             {formatCurrency(netProfit, business.currency)}
           </p>
