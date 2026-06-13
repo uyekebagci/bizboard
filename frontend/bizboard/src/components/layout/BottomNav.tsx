@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 // İşletme yaratma sidebar'da + ana sayfada ayrı buton ile erişilir.
 const navItems = [
   { href: "/dashboard", label: "Ana Sayfa", icon: LayoutDashboard },
-  { href: "/dashboard/businesses", label: "Isletmeler", icon: Building2 },
-  { href: "/dashboard/add-transaction", label: "Islem", icon: PlusCircle, accent: true },
+  { href: "/dashboard/businesses", label: "İşletmeler", icon: Building2 },
+  { href: "/dashboard/add-transaction", label: "İşlem", icon: PlusCircle, accent: true },
   { href: "/dashboard/reports", label: "Raporlar", icon: BarChart3 },
   { href: "/dashboard/profile", label: "Profil", icon: User },
 ];
@@ -33,7 +33,7 @@ export function BottomNav() {
               href={item.href}
               className="flex flex-col items-center justify-center -mt-5"
             >
-              <div className="w-14 h-14 rounded-2xl bg-brand-600 text-white flex items-center justify-center shadow-glow">
+              <div className="w-14 h-14 rounded-2xl v2-btn--accent flex items-center justify-center">
                 <Icon size={26} />
               </div>
             </Link>
@@ -47,8 +47,8 @@ export function BottomNav() {
             className={cn(
               "flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
               isActive
-                ? "text-brand-600"
-                : "text-surface-500 hover:text-surface-700"
+                ? "text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent))]"
+                : "text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]"
             )}
           >
             <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />

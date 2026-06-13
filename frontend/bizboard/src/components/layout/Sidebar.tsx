@@ -60,51 +60,51 @@ const GROUP_ORDER: { key: NavGroup; label: string }[] = [
 const ALL_LINKS: SidebarLink[] = [
   // ── Genel ──
   { href: "/dashboard",                  label: "Ana Sayfa",     icon: LayoutDashboard, group: "genel" },
-  { href: "/dashboard/firmalarim",       label: "Firmalarim",    icon: Building2,       group: "genel" },
-  { href: "/dashboard/add-transaction",  label: "Islem Ekle",    icon: Receipt,         group: "genel" },
-  { href: "/dashboard/transactions",     label: "Islemler",      icon: Receipt,         group: "genel" },
+  { href: "/dashboard/firmalarim",       label: "Firmalarım",    icon: Building2,       group: "genel" },
+  { href: "/dashboard/add-transaction",  label: "İşlem Ekle",    icon: Receipt,         group: "genel" },
+  { href: "/dashboard/transactions",     label: "İşlemler",      icon: Receipt,         group: "genel" },
   { href: "/dashboard/categories",       label: "Kategoriler",   icon: Tags,            group: "genel" },
   { href: "/dashboard/finance",          label: "Finans",        icon: BarChart3,       group: "genel" },
   { href: "/dashboard/reports",          label: "Raporlar",      icon: BarChart3,       group: "genel" },
   { href: "/dashboard/ai",               label: "AI Asistan",    icon: Bot,             group: "genel" },
   { href: "/dashboard/e-fatura",         label: "e-Fatura",      icon: Receipt,         group: "genel" },
   { href: "/dashboard/reports/forecast", label: "Nakit Tahmin",  icon: TrendingUp,      group: "genel" },
-  { href: "/dashboard/reports/butce",    label: "Butce",         icon: Wallet,          group: "genel" },
+  { href: "/dashboard/reports/butce",    label: "Bütçe",         icon: Wallet,          group: "genel" },
   { href: "/dashboard/bildirimler",      label: "Bildirimler",   icon: Bell,            group: "genel" },
-  { href: "/dashboard/hatirlaticilar",   label: "Hatirlaticilar", icon: AlarmClock,     group: "genel" },
+  { href: "/dashboard/hatirlaticilar",   label: "Hatırlatıcılar", icon: AlarmClock,     group: "genel" },
   // ── Cari & Borçlar ──
   { href: "/dashboard/counterparts",     label: "Cari Hesap",    icon: Users,           group: "cari" },
   { href: "/dashboard/alacaklar",        label: "Alacaklar",     icon: HandCoins,       group: "cari" },
   { href: "/dashboard/verecekler",       label: "Verecekler",    icon: HandCoins,       group: "cari" },
   { href: "/dashboard/krediler",         label: "Krediler",      icon: Landmark,        group: "cari" },
-  { href: "/dashboard/cekler",           label: "Cekler",        icon: FileText,        group: "cari" },
-  { href: "/dashboard/cek-senet",        label: "Cek/Senet (Ledger)", icon: FileText,   group: "cari" },
+  { href: "/dashboard/cekler",           label: "Çekler",        icon: FileText,        group: "cari" },
+  { href: "/dashboard/cek-senet",        label: "Çek/Senet (Ledger)", icon: FileText,   group: "cari" },
   // ── Kasa & Banka ──
-  { href: "/dashboard/hesaplar",         label: "Banka Hesaplari", icon: Wallet,        group: "kasa" },
+  { href: "/dashboard/hesaplar",         label: "Banka Hesapları", icon: Wallet,        group: "kasa" },
   { href: "/dashboard/nakit",            label: "Nakit",         icon: Banknote,        group: "kasa" },
   { href: "/dashboard/pos-cihazlari",    label: "POS",           icon: CreditCard,      group: "kasa" },
-  { href: "/dashboard/pos-kar",          label: "POS Kar",       icon: Sparkles,        group: "kasa" },
-  { href: "/dashboard/operator-kasalari", label: "Operator Kasalari", icon: Lock,       group: "kasa" },
-  { href: "/dashboard/aylik-kar",        label: "Aylik Kar",     icon: PieChart,        group: "kasa" },
-  { href: "/dashboard/kapanislar",       label: "Kapanislar",    icon: CalendarCheck,   group: "kasa" },
-  { href: "/dashboard/gun-kapanisi",     label: "Gun Kapanisi",  icon: CalendarCheck,   group: "kasa" },
-  { href: "/dashboard/banka-import",     label: "Banka Import",  icon: Landmark,        group: "kasa" },
+  { href: "/dashboard/pos-kar",          label: "POS Kâr",       icon: Sparkles,        group: "kasa" },
+  { href: "/dashboard/operator-kasalari", label: "Operatör Kasaları", icon: Lock,       group: "kasa" },
+  { href: "/dashboard/aylik-kar",        label: "Aylık Kâr",     icon: PieChart,        group: "kasa" },
+  { href: "/dashboard/kapanislar",       label: "Kapanışlar",    icon: CalendarCheck,   group: "kasa" },
+  { href: "/dashboard/gun-kapanisi",     label: "Gün Kapanışı",  icon: CalendarCheck,   group: "kasa" },
+  { href: "/dashboard/banka-import",     label: "Banka İçe Aktar", icon: Landmark,      group: "kasa" },
   // ── Operasyon ──
   { href: "/dashboard/inventory",        label: "Envanter",      icon: Package,         group: "operasyon" },
-  { href: "/dashboard/ayni-varlik",      label: "Ayni Varlik",   icon: Package,         group: "operasyon" },
+  { href: "/dashboard/ayni-varlik",      label: "Ayni Varlık",   icon: Package,         group: "operasyon" },
   { href: "/dashboard/belge-tarama",     label: "Belge Tarama (OCR)", icon: ScanLine,   group: "operasyon" },
   { href: "/dashboard/documents",        label: "Belgeler",      icon: FolderOpen,      group: "operasyon" },
-  { href: "/dashboard/kisiler",          label: "Kisiler",       icon: User,            group: "operasyon" },
+  { href: "/dashboard/kisiler",          label: "Kişiler",       icon: User,            group: "operasyon" },
   { href: "/dashboard/telefonlar",       label: "Telefonlar",    icon: Smartphone,      group: "operasyon" },
   { href: "/dashboard/vergi-takvimi",    label: "Vergi Takvimi", icon: Landmark,        group: "operasyon" },
   // ── Yönetim (yalnız admin) ──
-  { href: "/dashboard/onaylar",          label: "Onay Kuyrugu",        icon: ClipboardCheck, group: "yonetim", adminOnly: true },
+  { href: "/dashboard/onaylar",          label: "Onay Kuyruğu",        icon: ClipboardCheck, group: "yonetim", adminOnly: true },
   { href: "/admin",                      label: "Admin Paneli",        icon: ShieldCheck, group: "yonetim", adminOnly: true },
-  { href: "/admin/audit",                label: "Admin: Audit Log",    icon: FileSearch,  group: "yonetim", adminOnly: true },
-  { href: "/admin/debt-migration",       label: "Admin: Borc Migrate", icon: History,     group: "yonetim", adminOnly: true },
-  { href: "/admin/my-companies",         label: "Admin: Sirketlerim",  icon: Building2,   group: "yonetim", adminOnly: true },
-  { href: "/admin/recurring",            label: "Admin: Recurring",    icon: Repeat,      group: "yonetim", adminOnly: true },
-  { href: "/dashboard/pos-cihazlari/yonetim", label: "Admin: POS Yonetim", icon: CreditCard, group: "yonetim", adminOnly: true },
+  { href: "/admin/audit",                label: "Admin: Denetim Kaydı", icon: FileSearch, group: "yonetim", adminOnly: true },
+  { href: "/admin/debt-migration",       label: "Admin: Borç Taşıma",  icon: History,     group: "yonetim", adminOnly: true },
+  { href: "/admin/my-companies",         label: "Admin: Şirketlerim",  icon: Building2,   group: "yonetim", adminOnly: true },
+  { href: "/admin/recurring",            label: "Admin: Tekrarlayan",  icon: Repeat,      group: "yonetim", adminOnly: true },
+  { href: "/dashboard/pos-cihazlari/yonetim", label: "Admin: POS Yönetim", icon: CreditCard, group: "yonetim", adminOnly: true },
 ];
 
 const SEARCH_THRESHOLD = 10;
@@ -216,7 +216,7 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
       {mobileOpen && (
         <button
           type="button"
-          aria-label="Sidebar'i kapat"
+          aria-label="Menüyü kapat"
           onClick={() => onMobileOpenChange(false)}
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
         />
@@ -225,33 +225,32 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
       {/* Sidebar panel */}
       <aside
         className={cn(
-          "sidebar-glass fixed top-0 left-0 z-50 h-[100dvh] w-60 transition-transform duration-200 ease-out",
+          "v2-sidebar fixed top-0 left-0 z-50 h-[100dvh] w-60 transition-transform duration-200 ease-out",
           // mobile/tablet (<lg): hamburger ile aç-kapat
           mobileOpen ? "translate-x-0" : "-translate-x-full",
           // desktop (≥lg): her zaman sabit
           "lg:translate-x-0",
         )}
-        aria-label="Yan menu"
+        aria-label="Yan menü"
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header — logo + marka adı + version badge (herkes görür) */}
-          <div className="flex items-center justify-between px-4 py-4 shrink-0 sidebar-divider">
+          <div className="flex items-center justify-between px-4 py-4 shrink-0 v2-sidebar-divider">
             <Link
               href="/dashboard"
               onClick={() => onMobileOpenChange(false)}
               className="flex items-center gap-3"
-              aria-label="CATI ana sayfa"
+              aria-label="ÇATI ana sayfa"
             >
-              {/* Mockup hizası: w-10 h-10 rounded-2xl gradient logo + glow. */}
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-glow"
-                style={{ background: "linear-gradient(135deg,#4263eb,#4c6ef5 55%,#6741d9)" }}>
-                <span className="text-white font-extrabold text-base">Ç</span>
+              {/* Daxa logo plakası: ink zemin + accent harf, yuvarlak. */}
+              <div className="v2-logo-tile w-10 h-10 rounded-2xl flex items-center justify-center">
+                <span className="font-extrabold text-base">Ç</span>
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="font-extrabold text-[17px] tracking-tight text-surface-100 leading-none h-display">ÇATI</span>
+                <span className="font-extrabold text-[17px] tracking-tight text-[rgb(var(--v2-ink))] leading-none">ÇATI</span>
                 {versionLabel && (
                   <span
-                    className="mt-0.5 text-[10px] italic text-yellow-400 font-mono leading-none tracking-tight"
+                    className="mt-0.5 text-[10px] italic text-[rgb(var(--v2-muted))] font-mono leading-none tracking-tight"
                     title="Beta sürümü"
                   >
                     {versionLabel}
@@ -263,7 +262,7 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
             <button
               type="button"
               onClick={() => onMobileOpenChange(false)}
-              className="modal-close lg:hidden"
+              className="v2-icon-btn !p-2 lg:hidden"
               aria-label="Kapat"
             >
               <X size={16} />
@@ -274,13 +273,13 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
           {showSearch && (
             <div className="px-3 pt-3 shrink-0">
               <div className="relative">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" />
+                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))]" />
                 <input
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Ara..."
-                  className="field field-sm py-2 pl-8 pr-3"
+                  className="w-full py-2 pl-8 pr-3 text-sm rounded-xl v2-sunken text-[rgb(var(--body-text))] placeholder:text-[rgb(var(--v2-muted))] focus:outline-none focus:ring-2 focus:ring-accent/40"
                 />
               </div>
             </div>
@@ -289,8 +288,8 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
           {/* Items — GRUPLU bölümler (arama modunda düz liste) */}
           <nav className="flex-1 overflow-y-auto px-2 py-3">
             {!hasAny ? (
-              <p className="px-3 py-4 text-xs text-surface-400 text-center">
-                {isSearching ? "Eslesen kisayol yok" : "Kisayol yok"}
+              <p className="px-3 py-4 text-xs text-[rgb(var(--v2-muted))] text-center">
+                {isSearching ? "Eşleşen kısayol yok" : "Kısayol yok"}
               </p>
             ) : isSearching ? (
               /* Arama: düz filtrelenmiş sonuç (grup başlığı yok). */
@@ -359,7 +358,7 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: Props) {
 function NavSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-4 first:mt-0">
-      <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[.14em] text-surface-500">{title}</p>
+      <p className="px-3 mb-1.5 v2-eyebrow">{title}</p>
       <ul className="space-y-0.5">{children}</ul>
     </div>
   );
@@ -377,25 +376,23 @@ function SidebarItem({
 }) {
   const Icon = item.icon;
   return (
-    <div className={cn("nav-item group relative flex items-stretch rounded-xl", active && "nav-item-active")}>
-      {/* Mockup nav-rail: sol kenarda dikey brand çubuk (aktifte görünür). */}
+    <div className={cn("v2-nav-item group relative flex items-stretch", active && "v2-nav-active")}>
+      {/* Daxa nav-rail: sol kenarda dikey accent çubuk (aktifte görünür). */}
       <span
-        className="nav-rail absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-brand-500"
+        className="v2-nav-rail absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full"
         aria-hidden="true"
       />
       <Link
         href={item.href}
         onClick={onClick}
         className={cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-l-xl text-sm transition-colors flex-1 min-w-0",
-          active
-            ? "text-surface-100 font-semibold"
-            : "text-surface-300 nav-hover hover:text-surface-100",
+          "v2-nav-link flex items-center gap-3 px-3 py-2.5 rounded-l-xl text-sm transition-colors flex-1 min-w-0",
+          !active && "v2-nav-hover",
         )}
         aria-current={active ? "page" : undefined}
       >
-        <Icon size={18} className={cn("nav-ico shrink-0", active ? "text-brand-400" : "text-surface-400")} />
-        <span className="flex-1 truncate nav-label">{item.label}</span>
+        <Icon size={18} className={cn("shrink-0", active ? "text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent))]" : "text-[rgb(var(--v2-muted))]")} />
+        <span className="flex-1 truncate">{item.label}</span>
         {item.count != null && item.count > 0 && (
           <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
             {item.count > 99 ? "99+" : item.count}
@@ -409,8 +406,8 @@ function SidebarItem({
           className={cn(
             "shrink-0 px-2 rounded-r-xl flex items-center justify-center transition-all",
             pinned
-              ? "text-brand-400 hover:text-brand-300"
-              : "text-surface-500 opacity-0 group-hover:opacity-100 hover:text-surface-100",
+              ? "text-[rgb(var(--accent-strong))] dark:text-[rgb(var(--accent))]"
+              : "text-[rgb(var(--v2-muted))] opacity-0 group-hover:opacity-100 hover:text-[rgb(var(--v2-ink))]",
           )}
           aria-label={pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
           title={pinned ? "Sabitlemeyi kaldır" : "Sabitle (üste taşı)"}

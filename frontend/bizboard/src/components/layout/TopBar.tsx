@@ -54,8 +54,8 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
   }
 
   return (
-    /* Redesign PR-1: glass topbar — yarı saydam + blur, surface-token tabanlı. */
-    <header className="sticky top-0 z-40 bg-surface-900/70 backdrop-blur-xl border-b border-surface-700/60">
+    /* UI v2: Daxa solid topbar — app zemini + ince border (blur yok). */
+    <header className="v2-topbar sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
         {/* Sol: mobile hamburger + global arama kutusu (spec v2.2 §10.1). */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -63,10 +63,10 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
             <button
               type="button"
               onClick={onMenuClick}
-              className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-surface-700 transition-colors shrink-0"
-              aria-label="Menuyu ac"
+              className="v2-icon-btn !p-2 -ml-1 lg:hidden shrink-0"
+              aria-label="Menüyü aç"
             >
-              <Menu size={20} className="text-surface-300" />
+              <Menu size={20} />
             </button>
           )}
           {/* v2.2 Advanced Search — global arama + autocomplete. */}
@@ -74,29 +74,24 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* Çift tema FAZ 1: tema geçişi (güneş/ay). localStorage persist, default dark. */}
+          {/* Çift tema: tema geçişi (güneş/ay). localStorage persist, default dark. */}
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
             title={theme === "dark" ? "Açık tema" : "Koyu tema"}
-            className="glass-card glass-hover !rounded-xl p-2.5"
+            className="v2-icon-btn v2-press"
           >
-            {theme === "dark" ? (
-              <Sun size={20} className="text-surface-300" />
-            ) : (
-              <Moon size={20} className="text-surface-300" />
-            )}
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
           <NotificationDropdown />
 
           <div className="relative ml-1" ref={menuRef}>
-            {/* Redesign PR-1: gradient profil chip. */}
+            {/* UI v2: Daxa profil chip — ink zemin + accent metin. */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="w-9 h-9 rounded-full text-white font-semibold text-sm flex items-center justify-center hover:opacity-90 transition-opacity ring-1 ring-surface-600/40"
-              style={{ background: "linear-gradient(135deg,#4263eb,#6741d9)" }}
+              className="v2-avatar w-9 h-9 rounded-full font-semibold text-sm flex items-center justify-center hover:opacity-90 transition-opacity"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >
@@ -110,7 +105,7 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
               >
                 <div className="px-4 py-2.5 border-b border-surface-700/60">
                   <p className="font-semibold text-surface-100 text-sm truncate">
-                    {profile?.full_name || "Kullanici"}
+                    {profile?.full_name || "Kullanıcı"}
                   </p>
                   {profile?.username && (
                     <p className="text-[11px] text-surface-400 truncate">
@@ -135,7 +130,7 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
                   className="row-hover w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 transition-colors"
                 >
                   <KeyRound size={16} />
-                  <span>Sifre Degistir</span>
+                  <span>Şifre Değiştir</span>
                 </Link>
 
                 {profile?.role === "admin" && (
@@ -155,7 +150,7 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/30 transition-colors disabled:opacity-50"
                 >
                   <LogOut size={16} />
-                  <span>{loggingOut ? "Cikis yapiliyor..." : "Cikis Yap"}</span>
+                  <span>{loggingOut ? "Çıkış yapılıyor..." : "Çıkış Yap"}</span>
                 </button>
               </div>
             )}

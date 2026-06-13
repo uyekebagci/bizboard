@@ -773,6 +773,85 @@
   }
 
   /* ════════════════════════════════════════════════════════════
+   * UI v2 — SHELL (Sidebar + TopBar). Eski indigo/glass yüzeyleri
+   * yerine Daxa solid/katmanlı yüzey + lime accent + yuvarlak.
+   * İçerik alanıyla (.v2-card / .v2-app-bg) TUTARLI. Çift tema.
+   * blur YOK (Daxa solid dil). Eski .sidebar-glass / .nav-item
+   * DOKUNULMADI — v2-dışı sayfalar etkilenmez.
+   * ════════════════════════════════════════════════════════════ */
+
+  /* Sidebar yüzeyi — kart yüzeyinden (--v2-card) ince border ile ayrılır. */
+  .v2-sidebar {
+    background: rgb(var(--v2-card));
+    border-right: 1px solid rgb(var(--v2-border));
+  }
+  .v2-sidebar-divider {
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+
+  /* Logo plakası — Daxa: ink (siyah/açık) zemin + accent harf. */
+  .v2-logo-tile {
+    background: rgb(var(--v2-ink));
+    color: rgb(var(--accent-bright));
+  }
+
+  /* TopBar — solid app zemini + ince alt border (blur yok). */
+  .v2-topbar {
+    background: rgb(var(--v2-app));
+    border-bottom: 1px solid rgb(var(--v2-border));
+  }
+
+  /* Yüzey ikon butonu (tema/bildirim) — sunken chip + hover lift. */
+  .v2-icon-btn {
+    @apply inline-flex items-center justify-center rounded-xl p-2.5 transition-all;
+    background: rgb(var(--v2-sunken));
+    border: 1px solid rgb(var(--v2-border));
+    color: rgb(var(--v2-muted));
+  }
+  .v2-icon-btn:hover {
+    color: rgb(var(--v2-ink));
+    border-color: rgb(var(--accent) / 0.5);
+  }
+
+  /* Avatar chip — Daxa ink zemin + accent metin. */
+  .v2-avatar {
+    background: rgb(var(--v2-ink));
+    color: rgb(var(--accent-bright));
+  }
+
+  /* Nav öğesi — pasif: muted; hover: sunken + ink; aktif: accent şerit + tint. */
+  .v2-nav-item {
+    position: relative;
+    border-radius: 12px;
+  }
+  .v2-nav-link {
+    color: rgb(var(--v2-muted));
+  }
+  .v2-nav-item:hover .v2-nav-link {
+    color: rgb(var(--v2-ink));
+  }
+  .v2-nav-hover:hover {
+    background: rgb(var(--v2-sunken));
+  }
+  /* Aktif: accent tint zemin + kalın metin; sol rail accent renkli. */
+  .v2-nav-active {
+    background: rgb(var(--accent) / 0.12);
+  }
+  .v2-nav-active .v2-nav-link {
+    color: rgb(var(--v2-ink));
+    font-weight: 600;
+  }
+  /* Sol dikey accent rail — yalnız aktifte görünür. */
+  .v2-nav-rail {
+    opacity: 0;
+    background: rgb(var(--accent));
+    transition: opacity 0.15s;
+  }
+  .v2-nav-active .v2-nav-rail {
+    opacity: 1;
+  }
+
+  /* ════════════════════════════════════════════════════════════
    * UI v2 — Motion util'leri (CSS; reduced-motion saygılı, altta).
    * Stagger: --rd değişkeni ile gecikme (Reveal komponenti set eder).
    * ════════════════════════════════════════════════════════════ */

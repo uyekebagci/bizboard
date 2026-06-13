@@ -44,10 +44,10 @@ import {
 
 function getGreeting(): string {
   const hour = new Date().getHours();
-  if (hour >= 4 && hour < 12) return "Gunaydin";
-  if (hour >= 12 && hour < 17) return "Iyi gunler";
-  if (hour >= 17 && hour < 23) return "Iyi aksamlar";
-  return "Iyi geceler";
+  if (hour >= 4 && hour < 12) return "Günaydın";
+  if (hour >= 12 && hour < 17) return "İyi günler";
+  if (hour >= 17 && hour < 23) return "İyi akşamlar";
+  return "İyi geceler";
 }
 
 const tl = (n: number) => formatCurrency(n);
@@ -91,10 +91,10 @@ export default function DashboardV2Page() {
         <Reveal as="section" index={0} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <p className="v2-eyebrow text-accent-strong dark:text-accent">
-              {getGreeting()} • UI v2 önizleme
+              {getGreeting()} • Genel Bakış
             </p>
             <h1 className="v2-display text-3xl sm:text-5xl mt-2">
-              Overview Panel
+              Genel Bakış
             </h1>
             <p className="text-[rgb(var(--v2-muted))] text-sm mt-2">
               {bizCount} işletme • {periodLabel(period).toLowerCase()} özeti
@@ -292,7 +292,7 @@ export default function DashboardV2Page() {
         </section>
 
         <p className="text-center text-xs text-[rgb(var(--v2-muted))] pt-2">
-          UI v2 referans önizleme — onay sonrası ana sayfaya uygulanır.
+          Veriler {periodLabel(period).toLowerCase()} dönemine göre gösterilir.
         </p>
       </div>
     </div>
