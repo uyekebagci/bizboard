@@ -116,6 +116,30 @@ sürüm kesilince başlık güncellenip yeni `[Unreleased]` bölümü açılır.
 
 ### Fixed
 
+- **Light tema sıfırdan, light'a özel yeniden tasarlandı — dark'ın naive
+  inversiyonu giderildi (kontrastsız/parlak/okunmaz → okunur, katmanlı, AA).**
+  Önceki light palet dark token'larının ters çevrilmesiydi: app zemini ile
+  kartlar neredeyse aynı beyazdı (#f0f1f3 vs #ffffff), border'lar görünmezdi
+  (#e6e8ec), lime accent metin/ikonlar beyaz üstünde okunmuyordu, logo + avatar
+  "beyaz parlıyordu". Light token'ları (`:root`) artık dark'tan bağımsız,
+  amaca-uygun değerlerle yeniden atandı; **DARK tema (`.dark`) hiç değişmedi.**
+  - **Yüzey hiyerarşisi** — 3 net katman: app `#edf0f5` (soğuk açık-gri) <
+    sunken `#e8ecf2` < kart `#ffffff`; border `#cdd5e0` (gerçekten görünür,
+    eski #e6e8ec ~görünmezdi). app→kart luminans deltası 0.13 (gözle ayrışır).
+  - **Metin WCAG AA** — başlık/body near-black slate; muted `#5b6573`
+    (white üstü ~5.9:1, eski #64748b 4.76 idi). surface-400 da koyulaştırıldı.
+  - **Accent (lime) light'a uyarlandı** — lime-on-white okunmaz; standalone
+    metin/ikon `--accent-strong` = lime-800 `#3f6212` (white üstü 7.08:1);
+    dolgu (buton/chip) parlak lime + üstünde koyu ink (`#172505`, ~8:1).
+    `--accent` light = lime-600 `#65a30d` (white üstü segment/halka okunur).
+  - **ÇATI logosu** — tile KASITLI koyu (slate gradient `#1e293b→#0f172a`),
+    "Ç" harfi parlak lime-400 `#a3e635` (tile üstü 11.84:1); beyaz-parlama YOK,
+    light'a uygun yumuşak gölge. Logo imza noktası da light'a özel.
+  - **Avatar** — koyu ink daire + parlak lime-400 baş harf (11.84:1); logo ile
+    tutarlı, beyaz-parlama YOK.
+  - **Shell/badge/buton/input** — sidebar/topbar/badge/nav-active hepsi
+    headless Chromium'da doğrulandı (AA geçti). `tsc --noEmit` + `next build`
+    temiz (statik 66/66 sayfa).
 - **MetricCard "Toplam Gider" delta tonu — artan gider artık yeşil değil
   kırmızı.** `MetricCard`'a (`components/v2`) `goodDirection: "up" | "down"`
   prop'u eklendi: ok yönü değerin gerçek işaretini gösterir (↑ artış / ↓ azalış),
