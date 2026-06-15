@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Wallet, Package, Users, FolderKanban, FileText,
   CalendarCheck, CarFront, UtensilsCrossed, UserCircle,
-  Landmark, StickyNote, Plus, X, Check, Loader2, Pin,
+  Landmark, Plus, X, Check, Loader2, Pin,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,10 +53,11 @@ const DocumentsModule = dynamic(
   () => import("@/components/business/DocumentsModule").then((m) => m.DocumentsModule),
   { loading: loadingFallback, ssr: false },
 );
-const NotesModule = dynamic(
-  () => import("@/components/business/NotesModule").then((m) => m.NotesModule),
-  { loading: loadingFallback, ssr: false },
-);
+// NOT: NotesModule artık ModuleTabs içinde DEĞİL — işletme detay sayfasında
+// "alacaklar" pattern'iyle ekranın sağına sabit (sticky) bir panel olarak
+// render edilir (bkz. /business/[id]/page.tsx). Sekme satırından + "Modül
+// Ekle" listesinden çıkarıldı; notlar artık tab seçiminden bağımsız her zaman
+// sağda görünür (mobilde alta yığılır).
 const FixedCostsWidget = dynamic(
   () => import("@/components/business/FixedCostsWidget").then((m) => m.FixedCostsWidget),
   { loading: loadingFallback, ssr: false },
@@ -93,7 +94,9 @@ const moduleConfig: Partial<Record<
   menu: { label: "Menü", icon: UtensilsCrossed },
   crm: { label: "Müşteriler", icon: UserCircle },
   debt: { label: "Borçlar", icon: Landmark },
-  notes: { label: "Notlar", icon: StickyNote },
+  // NOT: notes BİLİNÇLİ olarak burada YOK — Notlar artık bir sekme/modül değil;
+  // işletme detay sayfasında sağ sabit panel (alacaklar pattern). Bu yüzden
+  // hem sekme satırında hem "Modül Ekle" listesinde görünmez.
   fixed_costs: { label: "Sabit Masraflar", icon: Pin },
 };
 
@@ -107,35 +110,39 @@ export function ModuleTabs({ business }: Props) {
   const { profile, triggerRefresh } = useAppStore();
   const isAdmin = profile?.role === "admin";
 
-  // v1.7.0.x: Notlar (notes) modülü her zaman ilk sırada sabit ve
-  // sayfa açılışında default aktif tab.
-  const enabledModules = useMemo(() => {
-    const all = business.modules?.filter((m) => m.is_enabled) ?? [];
-    // Notes'u öne çek — diğerleri DB sırasını korur.
-    return [...all].sort((a, b) => {
-      if (a.module === "notes" && b.module !== "notes") return -1;
-      if (a.module !== "notes" && b.module === "notes") return 1;
-      return 0;
-    });
-  }, [business.modules]);
+  // Notlar artık modül sekmesi DEĞİL (sağ sabit panele taşındı), bu yüzden
+  // sekme sırasında özel "öne çek" mantığı yok — enabled modüller DB sırasını
+  // korur. moduleConfig'te 'notes' anahtarı olmadığından, enabled bir 'notes'
+  // satırı gelse bile aşağıda render'da config bulunamayıp atlanır.
+  const enabledModules = useMemo(
+    () => business.modules?.filter((m) => m.is_enabled) ?? [],
+    [business.modules],
+  );
+
+  // Sekme satırında gerçekten gösterilebilen (moduleConfig'i olan) modüller.
+  // Default aktif tab + boş-state kararı bunun üzerinden verilir → Notlar
+  // çıktığı için kırık/boş state olmaz.
+  const tabbableModules = useMemo(
+    () => enabledModules.filter((m) => moduleConfig[m.module]),
+    [enabledModules],
+  );
 
   // v2.2 Advanced Search: arama deep-link'i `?tab=vehicles` ile ilgili modülü
   // açabilir. Geçerli + enabled değilse default mantığa düşülür.
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<ModuleType>(() => {
     const requested = searchParams.get("tab") as ModuleType | null;
-    const isEnabled = (m: string) => enabledModules.some((e) => e.module === m);
+    const isEnabled = (m: string) => tabbableModules.some((e) => e.module === m);
     if (requested && moduleConfig[requested] && (isEnabled(requested) || isAdmin)) {
       return requested;
     }
-    // Sayfa açılışında Notlar varsa onu aç; yoksa ilk enabled; o da yoksa "notes".
-    const hasNotes = enabledModules.some((m) => m.module === "notes");
-    if (hasNotes) return "notes";
-    return enabledModules[0]?.module || "notes";
+    // Notlar artık tab değil → default ilk gösterilebilir modül (genelde Finans);
+    // hiç yoksa "finance" (admin boş-state'i renderContent default'una düşer).
+    return tabbableModules[0]?.module || "finance";
   });
   const [showAddModal, setShowAddModal] = useState(false);
 
-  if (enabledModules.length === 0 && !isAdmin) {
+  if (tabbableModules.length === 0 && !isAdmin) {
     return null;
   }
 
@@ -153,9 +160,8 @@ export function ModuleTabs({ business }: Props) {
         return <VehicleModule businessId={business.id} currency={business.currency} />;
       case "inventory":
         return <InventoryModule businessId={business.id} currency={business.currency} />;
-      case "notes":
-        // WP a9da4e9d fix: işletme detay = BUSINESS scope (alacaklar notlarından ayrı).
-        return <NotesModule businessId={business.id} scope="BUSINESS" />;
+      // NOT: "notes" case'i kaldırıldı — Notlar artık sağ sabit panelde
+      // (page.tsx), sekme içeriği değil.
       case "fixed_costs":
         return <FixedCostsWidget businessId={business.id} currency={business.currency} />;
       default:
@@ -176,7 +182,7 @@ export function ModuleTabs({ business }: Props) {
     <div>
       {/* Scrollable Tab Bar */}
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
-        {enabledModules.map((mod) => {
+        {tabbableModules.map((mod) => {
           const config = moduleConfig[mod.module];
           if (!config) return null;
 
@@ -216,7 +222,7 @@ export function ModuleTabs({ business }: Props) {
 
       {/* Tab Content */}
       <div className="mt-4">
-        {enabledModules.length > 0 ? renderContent() : (
+        {tabbableModules.length > 0 ? renderContent() : (
           <div className="v2-card p-6 text-center">
             <p className="text-[rgb(var(--v2-muted))] text-sm">Henüz aktif modül yok.</p>
             <p className="text-[rgb(var(--v2-muted))] text-xs mt-1">Modül eklemek için + butonuna tıklayın.</p>

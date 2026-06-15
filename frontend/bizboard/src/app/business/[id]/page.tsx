@@ -18,6 +18,7 @@ import { useCashClosing } from "@/hooks/useCashClosing";
 // hâlâ erişilebilir — sadece bu standalone dashboard widget'ı gizlendi).
 import { TransactionList } from "@/components/business/TransactionList";
 import { ModuleTabs } from "@/components/business/ModuleTabs";
+import { NotesModule } from "@/components/business/NotesModule";
 import { useBusiness } from "@/hooks/useBusiness";
 import { useAppStore } from "@/lib/store";
 import { api, ApiError } from "@/lib/api/client";
@@ -253,45 +254,70 @@ export default function BusinessDetailPage() {
 
       {/* v1.6.23: BusinessHeader widget kaldırıldı — info "Geri" satırında. */}
 
-      {/* v1.6.19 (WP-2): Dünden Kalan Eksik banner */}
-      <CarryOverBanner businessId={businessId} />
+      {/* feat(notes): "alacaklar" pattern — lg+ iki kolon: SOL ana içerik
+          (banner + konsolide widget'lar + modüller + hızlı işlemler), SAĞ
+          Notlar sabit (sticky, kendi içinde scroll) panel. Notlar artık modül
+          sekmesi DEĞİL; tab seçiminden bağımsız her zaman sağda görünür.
+          <lg tek kolon → DOM sırası gereği Notlar ana içeriğin ALTINA yığılır
+          (mobilde sağa-fix YOK; alacaklar mobil davranışıyla birebir). */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
+        {/* SOL kolon: işletmenin ana içeriği */}
+        <div className="space-y-5 min-w-0">
+          {/* v1.6.19 (WP-2): Dünden Kalan Eksik banner */}
+          <CarryOverBanner businessId={businessId} />
 
-      {/* v1.6.20 (WP-3) + v1.6.23.24 (UI Fix WP): Consolidated dashboard widgets — DGR pano.
-          Son İşlemler bölümü Row 2 col 1'e slot olarak veriliyor (Hesaptan Harcama
-          ile yan yana). "+ Yeni İşlem" butonu vurgulu solid renkli. */}
-      {consolidated && (
-        <ConsolidatedWidgets
-          data={consolidated}
-          dayCycleEnabled={dayCycleEnabled}
-          onCloseDay={() => {
-            // Beta v1.1: modal yerine dedicated /closure sayfası
-            window.location.href = `/dashboard/closure?business_id=${consolidated.business_id}`;
-          }}
-          onChange={() => {
-            void refreshConsolidated();
-            triggerRefresh();
-          }}
-          recentTransactionsSlot={
-            <RecentTransactionsSection
-              businessId={businessId}
-              transactions={transactions}
-              currency={business.currency}
-              paymentFilter={paymentFilter}
-              setPaymentFilter={setPaymentFilter}
+          {/* v1.6.20 (WP-3) + v1.6.23.24 (UI Fix WP): Consolidated dashboard widgets — DGR pano.
+              Son İşlemler bölümü Row 2 col 1'e slot olarak veriliyor (Hesaptan Harcama
+              ile yan yana). "+ Yeni İşlem" butonu vurgulu solid renkli. */}
+          {consolidated && (
+            <ConsolidatedWidgets
+              data={consolidated}
+              dayCycleEnabled={dayCycleEnabled}
+              onCloseDay={() => {
+                // Beta v1.1: modal yerine dedicated /closure sayfası
+                window.location.href = `/dashboard/closure?business_id=${consolidated.business_id}`;
+              }}
               onChange={() => {
                 void refreshConsolidated();
-                void refreshClosing();
                 triggerRefresh();
               }}
+              recentTransactionsSlot={
+                <RecentTransactionsSection
+                  businessId={businessId}
+                  transactions={transactions}
+                  currency={business.currency}
+                  paymentFilter={paymentFilter}
+                  setPaymentFilter={setPaymentFilter}
+                  onChange={() => {
+                    void refreshConsolidated();
+                    void refreshClosing();
+                    triggerRefresh();
+                  }}
+                />
+              }
+              modulesSlot={
+                /* fix(business-detail): Modüller widget'ı Row 1 (Konsolide + Kasa
+                   Durumu) hemen altına taşındı — Row 2'nin üstünde konumlanır. */
+                <ModuleTabs business={business} />
+              }
             />
-          }
-          modulesSlot={
-            /* fix(business-detail): Modüller widget'ı Row 1 (Konsolide + Kasa
-               Durumu) hemen altına taşındı — Row 2'nin üstünde konumlanır. */
-            <ModuleTabs business={business} />
-          }
-        />
-      )}
+          )}
+
+          {/* v1.7.x (dashboard reorg): Hızlı İşlemler EN ALTA taşındı
+              (önceden ConsolidatedWidgets içinde Row 1 altındaydı). */}
+          {consolidated && (
+            <QuickActionsWidget businessId={consolidated.business_id} />
+          )}
+        </div>
+
+        {/* SAĞ kolon: işletme Notları (scope=BUSINESS). lg+ sticky + kendi
+            içinde scroll → ne kadar not olursa olsun sayfa aşağı uzamaz, panel
+            ana içeriğin altına binmez. <lg: grid tek kolona düşer → panel ana
+            içeriğin altına yığılır (mobil-uyumlu, alacaklar pattern). */}
+        <section className="space-y-2 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto no-scrollbar">
+          <NotesModule businessId={businessId} scope="BUSINESS" />
+        </section>
+      </div>
 
       {/* Close Today Modal */}
       {showCloseModal && preview && (
@@ -308,11 +334,8 @@ export default function BusinessDetailPage() {
           import bloğundaki not. Veri/hesaplama (summary) ve FixedCosts
           özelliği yerinde duruyor; sadece bu sayfadaki render iptal edildi. */}
 
-      {/* v1.7.x (dashboard reorg): Hızlı İşlemler EN ALTA taşındı
-          (önceden ConsolidatedWidgets içinde Row 1 altındaydı). */}
-      {consolidated && (
-        <QuickActionsWidget businessId={consolidated.business_id} />
-      )}
+      {/* NOT: Hızlı İşlemler artık yukarıdaki 2-kolon grid'in SOL kolonunda
+          (Notlar sağ sabit panele taşındığında ana içerikle birlikte kaldı). */}
     </div>
   );
 }
