@@ -167,12 +167,12 @@ export function BankAccountCreateForm({
                 className={cn(
                   "p-2.5 rounded-lg border text-left transition-colors",
                   type === t.value
-                    ? "border-brand-500 bg-brand-500/10 text-white"
+                    ? "border-brand-500 bg-brand-500/10 text-[rgb(var(--v2-ink))]"
                     : "border-surface-600 bg-surface-900 hover:border-surface-500 text-surface-200",
                 )}
               >
                 <p className="text-sm font-medium">{t.label}</p>
-                {t.hint && <p className="text-[10px] text-surface-400 mt-0.5">{t.hint}</p>}
+                {t.hint && <p className="text-[10px] mt-0.5 text-[rgb(var(--v2-muted))]">{t.hint}</p>}
               </button>
             ))}
           </div>
