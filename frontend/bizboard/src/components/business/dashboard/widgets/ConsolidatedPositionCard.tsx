@@ -62,9 +62,10 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
             <p className="mt-1 text-[10px] text-[rgb(var(--v2-card))]/45">nakit + banka</p>
           </div>
 
-          {/* Sub-stat row: 3 küçük metric */}
-          <div className="mt-3 pt-3 border-t border-[rgb(var(--v2-card))]/12 grid grid-cols-3 gap-2 text-[10px]">
-            <HeroStat label="Alacaklar" value={c.receivables} tone="positive" censor={receivableCensor} />
+          {/* Sub-stat row: 2 küçük metric. Kullanıcı isteği: ALACAKLAR kalemi
+              widget yüzünden KALDIRILDI (detay modal'ında kalır). VERECEKLER +
+              BEKLEYEN POS (yoksa KK+Kredi) kalır → grid-cols-2. */}
+          <div className="mt-3 pt-3 border-t border-[rgb(var(--v2-card))]/12 grid grid-cols-2 gap-2 text-[10px]">
             <HeroStat label="Verecekler" value={-Math.abs(c.payables)} tone="negative" censor={payableCensor} />
             {pendingPos > 0 ? (
               <div>

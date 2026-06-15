@@ -229,9 +229,10 @@ public class TransactionMutationService {
 
         accessGuard.assertCanAccessBusiness(userId, businessId);
 
-        // Gün Açılışı enforcement (feature-flag arkasında, NON-BREAKING): işlem
-        // yalnız AÇIK güne girilebilir. Flag kapalıyken no-op (mevcut canlı akış
-        // korunur). İşlem tarihi null ise bugün varsayılır.
+        // Gün Açılışı enforcement (per-işletme DAY_CYCLE modülü arkasında,
+        // NON-BREAKING): modül AÇIK işletmede işlem yalnız AÇIK güne girilebilir.
+        // Modül KAPALI/yok işletmelerde no-op (mevcut canlı akış aynen korunur).
+        // İşlem tarihi null ise bugün varsayılır.
         LocalDate entryDate = request.getDate() != null ? request.getDate() : LocalDate.now();
         dayOpenService.assertDayOpenForEntry(businessId, entryDate);
 

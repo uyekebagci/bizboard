@@ -32,7 +32,8 @@ export type ModuleType =
   | "crm"
   | "debt"
   | "notes"
-  | "fixed_costs";
+  | "fixed_costs"
+  | "day_cycle";
 
 export type TransactionDirection = "income" | "expense";
 
