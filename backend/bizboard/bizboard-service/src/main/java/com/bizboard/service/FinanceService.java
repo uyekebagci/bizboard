@@ -268,8 +268,11 @@ public class FinanceService {
             List<Transaction> transactions, TransactionDirection direction) {
 
         // v1.7.0-beta (Bankalar WP TODO d0567538): TRANSFER tx dışla.
+        // FİNANSAL KURAL (Z, 2026-06): LOAN (tahsilat/cari kapatma) gelir/gider
+        // DEĞİL — kategori kırılımına da girmez (Net Kâr ile tutarlı).
         List<Transaction> filtered = transactions.stream()
-                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .filter(t -> t.getDirection() == direction)
                 .toList();
 
@@ -357,7 +360,9 @@ public class FinanceService {
 
         return transactions.stream()
                 // v1.7.0-beta (TODO d0567538): TRANSFER tx dışla
-                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                // FİNANSAL KURAL (Z, 2026-06): LOAN gelir/gider değil — listelenmez.
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .filter(t -> t.getDirection() == direction)
                 .sorted((a, b) -> b.getAmount().compareTo(a.getAmount()))
                 .limit(limit)

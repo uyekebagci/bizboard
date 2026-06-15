@@ -128,7 +128,10 @@ public class ClosingCalculator {
             // Defansif (no-op): DB zaten business'a filtreledi.
             if (t.getBusiness() == null || !businessId.equals(t.getBusiness().getId())) continue;
             // v1.7.0-beta: TRANSFER tx'leri kasa akışına girmez.
-            if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) continue;
+            // FİNANSAL KURAL (Z, 2026-06): LOAN (tahsilat/cari kapatma) da
+            // kasa akışına GİRMEZ — operasyonel kasayı etkilemez.
+            if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                    || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) continue;
             // Beta v1.1 hotfix v2: NAKIT + POS hareketleri dahil. HESAPDAN
             // hâlâ dışlanır (banka hesabını etkiler, kasayı değil).
             String pm = t.getPaymentMethod();
@@ -153,7 +156,9 @@ public class ClosingCalculator {
         BigDecimal income = BigDecimal.ZERO;
         BigDecimal expense = BigDecimal.ZERO;
         for (Transaction t : txs) {
-            if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) continue;
+            // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN kasa akışına girmez.
+            if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                    || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) continue;
             if (!"NAKIT".equalsIgnoreCase(Objects.requireNonNullElse(t.getPaymentMethod(), "NAKIT"))) {
                 continue;
             }

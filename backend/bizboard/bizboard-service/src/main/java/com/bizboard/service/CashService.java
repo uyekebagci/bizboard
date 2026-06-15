@@ -3,6 +3,7 @@ package com.bizboard.service;
 import com.bizboard.common.dto.CashBusinessBalanceDto;
 import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.enums.TransactionDirection;
+import com.bizboard.common.enums.TransactionKind;
 import com.bizboard.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,13 @@ public class CashService {
         Map<UUID, BigDecimal> balanceByBiz = new HashMap<>();
         Map<UUID, String> nameByBiz = new HashMap<>();
         for (Transaction t : cashTxs) {
+            // FİNANSAL KURAL (kullanıcı onayı Z, 2026-06): TRANSFER (hesaplar arası
+            // taşıma) ve LOAN (tahsilat/cari kapatma) NAKİT KASA bakiyesine
+            // GİRMEZ. Tahsilat/LOAN operasyonel kasayı etkilemez (gelir/satış
+            // orijinal işlemde tanındı). Bu agregasyonda kind filtresi YOKTU →
+            // eklendi (diğer kasa noktalarıyla simetri).
+            if (t.getKind() == TransactionKind.TRANSFER
+                    || t.getKind() == TransactionKind.LOAN) continue;
             UUID bid = t.getBusiness().getId();
             BigDecimal amt = t.getAmount() != null ? t.getAmount() : BigDecimal.ZERO;
             BigDecimal signed = t.getDirection() == TransactionDirection.INCOME ? amt : amt.negate();

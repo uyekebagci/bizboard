@@ -113,7 +113,9 @@ public class SubCashBalanceRecomputeRunner implements ApplicationRunner {
     /** Önceki commit (72ced5a) tarafından eklenen yanlış delta — legacy formula. */
     private static BigDecimal legacyIncomeValue(Transaction t) {
         if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
-        if (t.getKind() == TransactionKind.TRANSFER) return BigDecimal.ZERO;
+        // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN alt-kasa bakiyesine girmez.
+        if (t.getKind() == TransactionKind.TRANSFER
+                || t.getKind() == TransactionKind.LOAN) return BigDecimal.ZERO;
         String pm = t.getPaymentMethod();
         boolean isPos = pm != null && pm.toUpperCase(java.util.Locale.ENGLISH).startsWith("POS");
         if (isPos && t.getDirection() == TransactionDirection.INCOME) {
@@ -136,7 +138,9 @@ public class SubCashBalanceRecomputeRunner implements ApplicationRunner {
     /** Beta v1.1 yeni formula — POS dahil tüm income amount, komisyon yok. */
     private static BigDecimal simpleIncomeValue(Transaction t) {
         if (t == null || t.getAmount() == null) return BigDecimal.ZERO;
-        if (t.getKind() == TransactionKind.TRANSFER) return BigDecimal.ZERO;
+        // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN alt-kasa bakiyesine girmez.
+        if (t.getKind() == TransactionKind.TRANSFER
+                || t.getKind() == TransactionKind.LOAN) return BigDecimal.ZERO;
         if (t.getDirection() == TransactionDirection.INCOME) return t.getAmount();
         if (t.getDirection() == TransactionDirection.EXPENSE) return t.getAmount().negate();
         return BigDecimal.ZERO;

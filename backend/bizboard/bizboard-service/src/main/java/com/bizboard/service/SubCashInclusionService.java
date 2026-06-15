@@ -118,9 +118,12 @@ public class SubCashInclusionService {
         if (subCashId == null || txId == null) return;
         Transaction tx = transactionRepository.findById(txId)
                 .orElseThrow(() -> new IllegalArgumentException("Tx bulunamadi: " + txId));
-        if (tx.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+        if (tx.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                || tx.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
+            // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN (tahsilat/cari kapatma)
+            // alt-kasaya atanamaz — kasa/nakit bakiyesini etkilemez.
             throw new IllegalArgumentException(
-                    "Transfer tx'lerinde manuel alt kasa ataması yapılamaz");
+                    "Transfer/tahsilat (LOAN) tx'lerinde manuel alt kasa ataması yapılamaz");
         }
         BankAccount subCash = bankAccountRepository.findById(subCashId)
                 .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
@@ -180,7 +183,9 @@ public class SubCashInclusionService {
      */
     private static java.math.BigDecimal incomeValueForTx(Transaction t) {
         if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
-        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+        // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN alt-kasa bakiyesine girmez.
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
             return java.math.BigDecimal.ZERO;
         }
         if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {
@@ -359,7 +364,9 @@ public class SubCashInclusionService {
 
     private static java.math.BigDecimal simpleIncomeValueLocal(Transaction t) {
         if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
-        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+        // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN alt-kasa bakiyesine girmez.
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
             return java.math.BigDecimal.ZERO;
         }
         if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {

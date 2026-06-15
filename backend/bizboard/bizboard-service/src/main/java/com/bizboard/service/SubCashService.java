@@ -488,7 +488,10 @@ public class SubCashService {
      */
     private static java.math.BigDecimal incomeValue(Transaction t) {
         if (t == null || t.getAmount() == null) return java.math.BigDecimal.ZERO;
-        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER) {
+        // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN (tahsilat/cari kapatma)
+        // alt-kasa (nakit kâr-merkezi) bakiyesine GİRMEZ — kasayı etkilemez.
+        if (t.getKind() == com.bizboard.common.enums.TransactionKind.TRANSFER
+                || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
             return java.math.BigDecimal.ZERO;
         }
         if (t.getDirection() == com.bizboard.common.enums.TransactionDirection.INCOME) {

@@ -213,17 +213,30 @@ public class LedgerPostingService {
         BankAccount loc = resolveLocationAccount(tx);
 
         if (isLoan(tx)) {
-            // LOAN (Verilen/Alınan Borç): kasa ↔ cari (alacak/verecek) arası
-            // TRANSFER. Verilen borç → nakit ÇIKAR (direction=EXPENSE, kasa −);
-            // alınan borç → nakit ARTAR (direction=INCOME, kasa +). Karşı bacak
-            // bir cari (alacak/verecek) hareketidir → KONUM bacağı (LOCATION_MOVE),
-            // account NULL (cari bakiyesi Debt entity'sinden okunur; posting çift
-            // sayım yapmasın diye RECEIVABLE/PAYABLE hesabı AÇMIYORUZ). P&L bacağı
-            // YOK → Net Kâr'a girmez. Σ=0 dengeli. Karşı bacak counterpart taşır
-            // (iz/drill-down). Bakiye yalnız gerçek kasa hesabına (loc) yansır.
-            if (loc == null) return legs;
+            // LOAN (Verilen/Alınan/Tahsilat — cari kapatma): kasa ↔ cari
+            // (alacak/verecek) arası bilanço hareketi.
+            //
+            // FİNANSAL KURAL (kullanıcı onayı Z, 2026-06): tahsilat/LOAN
+            // OPERASYONEL KASAYA (Genel Kasa = nakit + banka) YANSIMAZ. Gelir/satış
+            // zaten orijinal işlemde tanındı; tahsilat sadece alacağı kapatır.
+            // Net Kâr LOAN'ı zaten dışlıyordu (SummaryService); kasa hesapları ise
+            // LOAN'ı dışlamıyordu (asimetri) → kasa hayali şişiyordu. Simetri:
+            // LOAN bacaklarının HİÇBİRİ gerçek kasa/banka hesabına (account)
+            // bağlanmaz.
+            //
+            // Eski model: konum bacağı (loc, ±amount) + karşı clearing → kasa
+            //   derived balance (Σ posting.amount, account=loc) LOAN'ı SAYIYORDU.
+            // Yeni model: İKİ bacak da account NULL (clearing) → posting-türetilen
+            //   kasa bakiyesi / gün-kapanışı LOCATION_MOVE toplamı (account IN ...)
+            //   LOAN'ı OTOMATİK dışlar. Cari bakiye Debt entity'sinden okunur
+            //   (RECEIVABLE/PAYABLE hesabı açmıyoruz → çift sayım yok). P&L bacağı
+            //   YOK → Net Kâr'a girmez. Σ=0 dengeli; iz için bir bacak counterpart
+            //   taşır.
+            //
+            // Not: kasa hesabını ÇÖZMEYE GEREK YOK (loc null olsa da entry üretilir)
+            // — LOAN artık konum hesabına dokunmuyor; FLAGGED riskini de kaldırır.
             BigDecimal signedLoc = income ? amount : amount.negate();
-            legs.add(PostingDraft.location(loc, signedLoc));
+            legs.add(PostingDraft.clearing(signedLoc, PostingLegKind.LOCATION_MOVE));
             legs.add(PostingDraft.clearingWithCounterpart(signedLoc.negate()));
             return legs;
         }

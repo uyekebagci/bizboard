@@ -148,8 +148,7 @@ public class LoanService {
         // ── Kasa hesabı çöz (NAKIT → Genel Nakit; HESAPDAN → zorunlu) ──
         BankAccount bankAccount = resolveBankAccount(businessId, pm, request.getBankAccountId());
 
-        // ── 1) Kasa hareketi: Transaction (kind=LOAN) ───────────────
-        boolean income = txDir == TransactionDirection.INCOME;
+        // ── 1) Cari hareketi: Transaction (kind=LOAN) ───────────────
         String desc = buildTxDescription(given, counterpartyName, request.getDescription());
         // transactions.category_id NOT NULL → sistem "Borç" kategorisi (P&L'e girmez).
         Category loanCategory = resolveLoanCategory(business);
@@ -169,17 +168,17 @@ public class LoanService {
                 .build();
         tx = transactionRepository.save(tx);
 
-        // Kasa bakiyesi (snapshot facade) güncelle — NAKIT/HESAPDAN ile aynı kural.
-        if (bankAccount != null) {
-            BigDecimal delta = income ? request.getAmount() : request.getAmount().negate();
-            BigDecimal cur = bankAccount.getCurrentBalance() != null
-                    ? bankAccount.getCurrentBalance() : BigDecimal.ZERO;
-            bankAccount.setCurrentBalance(cur.add(delta));
-            bankAccountRepository.save(bankAccount);
-        }
+        // FİNANSAL KURAL (kullanıcı onayı Z, 2026-06): kind=LOAN (verilen/alınan
+        // borç + tahsilat = cari hareket) OPERASYONEL KASAYA (Genel Kasa) YANSIMAZ.
+        // Net Kâr LOAN'ı zaten dışlıyor; kasa da SİMETRİK olarak dışlamalı (cached
+        // current_balance ↔ posting-türetilen bakiye tutarlı kalsın). Bu yüzden
+        // kasa snapshot'ı (current_balance) BUMPLANMAZ — LedgerPostingService LOAN
+        // posting'i de gerçek hesaba bağlanmaz (her iki bacak account=NULL). Cari
+        // (alacak/verecek) hareketi aşağıda Debt kaydında izlenir.
 
-        // Dengeli çift-giriş Posting türet (iki LOCATION_MOVE bacağı, PNL YOK → Net
-        // Kâr'a girmez, Σ=0). Non-fatal: türetme hatası borç akışını BOZMAZ.
+        // Dengeli çift-giriş Posting türet (iki clearing LOCATION_MOVE bacağı,
+        // account=NULL, PNL YOK → kasaya da Net Kâr'a da girmez, Σ=0). Non-fatal:
+        // türetme hatası borç akışını BOZMAZ.
         try {
             ledgerPostingService.deriveForTransactionId(tx.getId());
         } catch (Exception e) {
