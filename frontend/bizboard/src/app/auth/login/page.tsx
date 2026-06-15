@@ -2,10 +2,20 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Sun,
+  Moon,
+  ShieldCheck,
+  LineChart,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
 import { api, ApiError, setToken } from "@/lib/api/client";
 import { safeRedirectOr } from "@/lib/safe-redirect";
 import { getErrorMessage } from "@/lib/errors";
+import { useTheme } from "@/components/layout/ThemeProvider";
 
 interface LoginResponse {
   token: string;
@@ -28,10 +38,92 @@ function setSessionFlag() {
   document.cookie = `bb_session=1; path=/; max-age=${maxAge}; samesite=lax; secure`;
 }
 
+/** Marka logosu plakası — Daxa ink zemin + accent harf + imza noktası. */
+function BrandMark({ size = "md" }: { size?: "md" | "lg" }) {
+  const dims = size === "lg" ? "w-16 h-16 text-2xl" : "w-12 h-12 text-xl";
+  return (
+    <div className="relative inline-flex">
+      <div
+        className={`${dims} rounded-2xl v2-logo-tile flex items-center justify-center font-bold`}
+      >
+        <span>Ç</span>
+      </div>
+      <span className="v2-logo-dot absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full" />
+    </div>
+  );
+}
+
+/** Sol marka paneli — yalnız masaüstü; ink zemin her iki temada koyu. */
+function BrandPanel() {
+  const highlights = [
+    {
+      icon: Layers,
+      title: "Tüm işletmeleriniz tek ekranda",
+      desc: "Birden fazla işletmeyi tek panelden yönetin.",
+    },
+    {
+      icon: LineChart,
+      title: "Gerçek zamanlı finans takibi",
+      desc: "Kasa, gelir-gider ve performansı anlık izleyin.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Güvenli ve kontrollü erişim",
+      desc: "Rol bazlı yetkiler ve denetim kaydıyla tam kontrol.",
+    },
+  ];
+
+  return (
+    <div className="relative hidden lg:flex flex-col justify-between overflow-hidden auth-brand-panel p-12 xl:p-16">
+      {/* Dekoratif accent glow + ince ızgara deseni (Daxa derinlik). */}
+      <div className="auth-brand-glow" aria-hidden="true" />
+      <div className="auth-brand-grid" aria-hidden="true" />
+
+      <div className="relative z-10 flex items-center gap-3">
+        <BrandMark size="md" />
+        <span className="text-xl font-extrabold tracking-tight text-white">
+          ÇATI
+        </span>
+      </div>
+
+      <div className="relative z-10 max-w-md">
+        <p className="auth-brand-eyebrow mb-4">İşletme yönetim platformu</p>
+        <h2 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight text-white">
+          Tüm işletmeleriniz,
+          <br />
+          <span className="auth-brand-accent">tek ekranda.</span>
+        </h2>
+        <p className="mt-4 text-white/70 text-base leading-relaxed">
+          Finansları takip edin, performansı izleyin, kontrolü elinizde tutun.
+        </p>
+
+        <ul className="mt-10 space-y-5">
+          {highlights.map(({ icon: Icon, title, desc }) => (
+            <li key={title} className="flex items-start gap-3.5">
+              <span className="auth-brand-feature-icon shrink-0">
+                <Icon size={18} />
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold text-white text-sm">{title}</p>
+                <p className="text-white/55 text-sm mt-0.5">{desc}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="relative z-10 text-white/40 text-xs">
+        &copy; {new Date().getFullYear()} ÇATI. Tüm hakları saklıdır.
+      </p>
+    </div>
+  );
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = safeRedirectOr(searchParams.get("redirect"), "/dashboard");
+  const { theme, toggleTheme } = useTheme();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -89,85 +181,112 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 v2-app-bg">
-      <div className="mb-8 text-center">
-        <div className="w-16 h-16 rounded-2xl v2-logo-tile flex items-center justify-center mx-auto mb-4">
-          <span className="font-bold text-2xl">Ç</span>
-        </div>
-        <h1 className="text-2xl font-bold text-[rgb(var(--v2-ink))]">
-          Tekrar Hoşgeldiniz
-        </h1>
-        <p className="text-[rgb(var(--v2-muted))] mt-1">
-          ÇATI hesabınıza giriş yapın
-        </p>
-      </div>
+    <div className="relative flex flex-col items-center justify-center px-6 py-10 v2-app-bg">
+      {/* Tema geçişi (güneş/ay) — sağ üst köşe, app'in geri kalanıyla tutarlı. */}
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
+        title={theme === "dark" ? "Açık tema" : "Koyu tema"}
+        className="v2-icon-btn v2-press absolute top-5 right-5"
+      >
+        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        {error && (
-          <div
-            className="p-3 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm"
-            role="alert"
-            aria-live="polite"
-          >
-            <div>{error}</div>
-            {errorRequestId && (
-              <div className="mt-1 text-[10px] text-status-danger/60 font-mono">
-                Destek için referans: {errorRequestId}
-              </div>
-            )}
+      <div className="w-full max-w-sm">
+        {/* Mobil/tablet: form üstünde marka (sol panel gizli olduğunda). */}
+        <div className="lg:hidden mb-8 text-center">
+          <div className="flex justify-center mb-4">
+            <BrandMark size="lg" />
           </div>
-        )}
-
-        <div>
-          <label htmlFor="username" className="label">
-            Kullanıcı Adı
-          </label>
-          <input
-            id="username"
-            type="text"
-            className="input"
-            placeholder="kullanıcı adınızı girin"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            autoComplete="username"
-          />
         </div>
 
-        <div>
-          <label htmlFor="password" className="label">
-            Şifre
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              className="input pr-11"
-              placeholder="Lütfen Şifrenizi Girin"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
-              aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+        <div className="mb-8 text-center lg:text-left">
+          <h1 className="text-2xl font-extrabold tracking-tight text-[rgb(var(--v2-ink))]">
+            Tekrar Hoşgeldiniz
+          </h1>
+          <p className="text-[rgb(var(--v2-muted))] mt-1.5">
+            ÇATI hesabınıza giriş yapın
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div
+              className="p-3 rounded-xl border border-status-danger/40 bg-status-danger/10 text-status-danger text-sm"
+              role="alert"
+              aria-live="polite"
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-        </div>
+              <div>{error}</div>
+              {errorRequestId && (
+                <div className="mt-1 text-[10px] text-status-danger/60 font-mono">
+                  Destek için referans: {errorRequestId}
+                </div>
+              )}
+            </div>
+          )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
-        </button>
-      </form>
+          <div>
+            <label htmlFor="username" className="label">
+              Kullanıcı Adı
+            </label>
+            <input
+              id="username"
+              type="text"
+              className="input"
+              placeholder="kullanıcı adınızı girin"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoComplete="username"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="label">
+              Şifre
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                className="input pr-11"
+                placeholder="Lütfen Şifrenizi Girin"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
+                aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="v2-btn v2-btn--accent v2-press w-full py-3 text-base group disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              "Giriş yapılıyor..."
+            ) : (
+              <>
+                Giriş Yap
+                <ArrowRight
+                  size={18}
+                  className="transition-transform duration-150 group-hover:translate-x-0.5"
+                />
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -175,7 +294,10 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense>
-      <LoginForm />
+      <div className="min-h-[100dvh] grid lg:grid-cols-2">
+        <BrandPanel />
+        <LoginForm />
+      </div>
     </Suspense>
   );
 }

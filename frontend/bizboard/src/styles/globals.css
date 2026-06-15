@@ -1024,6 +1024,58 @@
     box-shadow: 0 0 0 1px rgb(15 23 42 / 0.06);
   }
 
+  /* ════════════════════════════════════════════════════════════
+   * UI v2 — AUTH / LOGIN (split-screen marka paneli)
+   * ─────────────────────────────────────────────────────────────
+   * Sol panel KASITLI koyu ink (her iki temada): premium finans-app
+   * hissi + lime accent glow + ince ızgara deseni (Daxa derinlik, blur
+   * YOK). Sağ form alanı .v2-app-bg + .input/.label/.v2-btn ile app
+   * diliyle birebir tutarlı. Yalnız görsel; auth mantığı sayfada aynı.
+   * ════════════════════════════════════════════════════════════ */
+  .auth-brand-panel {
+    /* Koyu ink zemin — slate-900 → daha derin radial; light+dark aynı. */
+    background:
+      radial-gradient(120% 120% at 100% 0%, rgb(30 41 59), rgb(var(--v2-ink)));
+    color: rgb(255 255 255);
+  }
+  /* Accent (lime) yumuşak glow — sağ-üstte derinlik veren ışık halkası. */
+  .auth-brand-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(60% 50% at 85% 12%, rgb(var(--accent) / 0.22), transparent 70%),
+      radial-gradient(45% 40% at 8% 95%, rgb(var(--accent) / 0.1), transparent 70%);
+  }
+  /* İnce ızgara deseni — düz koyu yüzeye doku/derinlik (Daxa). */
+  .auth-brand-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(80% 80% at 50% 30%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(80% 80% at 50% 30%, #000 30%, transparent 100%);
+  }
+  .auth-brand-eyebrow {
+    @apply inline-flex items-center text-[11px] font-semibold uppercase;
+    letter-spacing: 0.1em;
+    color: rgb(var(--accent-bright));
+  }
+  .auth-brand-accent {
+    color: rgb(var(--accent-bright));
+  }
+  /* Özellik ikon plakası — accent tint zemin + parlak lime ikon. */
+  .auth-brand-feature-icon {
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-xl;
+    background: rgb(var(--accent) / 0.14);
+    color: rgb(var(--accent-bright));
+    box-shadow: inset 0 0 0 1px rgb(var(--accent) / 0.2);
+  }
+
   /* Nav öğesi — pasif: muted; hover: sunken + ink; aktif: accent şerit + tint. */
   .v2-nav-item {
     position: relative;
