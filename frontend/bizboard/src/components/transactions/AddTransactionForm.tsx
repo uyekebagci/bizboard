@@ -206,11 +206,24 @@ export function AddTransactionForm({
     }
   }, [paymentMethod, direction, posTxSubtype, relatedBankAccountId]);
 
+  // P0 GÜVENLİK (cross-tenant cari sızıntısı): "Karşı Taraf" dropdown'ı SEÇİLİ
+  // işletmeyle scope edilir. Önceden business_id'siz `/counterparts` çağrılıyordu →
+  // kullanıcının erişebildiği TÜM işletmelerin carileri (DGR vb.) PARA-IZI modalında
+  // sızıyordu. business_id geçilir; işletme değişince yeniden çekilir; işletme yoksa
+  // liste boşaltılır. Asıl izolasyon backend'de (business-access guard) zorlanır —
+  // bu FE filtresi yalnız doğru UX/scope içindir, güvenlik garantisi değildir.
   useEffect(() => {
-    api.get<Counterpart[]>("/counterparts")
-      .then((r) => setCounterparts(r || []))
-      .catch(() => { /* silent */ });
-  }, []);
+    if (!businessId) {
+      setCounterparts([]);
+      setTargetCounterpartId("");
+      return;
+    }
+    let cancelled = false;
+    api.get<Counterpart[]>(`/counterparts?business_id=${businessId}`)
+      .then((r) => { if (!cancelled) setCounterparts(r || []); })
+      .catch(() => { if (!cancelled) setCounterparts([]); });
+    return () => { cancelled = true; };
+  }, [businessId]);
 
   // cari-tahsilat-ux: Karşı taraf seçilince açık alacak/verecek özetini çek.
   // /counterparts/{id}/account-statement reuse — open_debts içinden RECEIVABLE
