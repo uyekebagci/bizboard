@@ -336,29 +336,43 @@ public class SubCashInclusionService {
      * çağırırlar. Yeni create/delete akışı zaten doğru tutmalı.</p>
      */
     @Transactional
-    public java.math.BigDecimal recomputeBalance(UUID subCashId, UUID actorUserId) {
-        BankAccount subCash = bankAccountRepository.findById(subCashId)
-                .orElseThrow(() -> new IllegalArgumentException("Sub-cash bulunamadi: " + subCashId));
-        UUID businessId = subCash.getBusiness() != null ? subCash.getBusiness().getId() : null;
+    public java.math.BigDecimal recomputeBalance(UUID accountId, UUID actorUserId) {
+        BankAccount account = bankAccountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Hesap bulunamadi: " + accountId));
+        UUID businessId = account.getBusiness() != null ? account.getBusiness().getId() : null;
         accessGuard.assertCanAccessBusiness(actorUserId, businessId);
-        if (subCash.getType() != BankAccountType.SUB_CASH) {
-            throw new IllegalArgumentException("Yalnız SUB_CASH için recompute yapılır");
+
+        java.math.BigDecimal sum;
+        if (account.getType() == BankAccountType.SUB_CASH) {
+            // SUB_CASH: bakiye inclusion table'dan türetilir (LOAN/TRANSFER zaten
+            // simpleIncomeValueLocal içinde dışlanır).
+            sum = java.math.BigDecimal.ZERO;
+            for (SubCashTxInclusion inc : inclusionRepository.findBySubCash_Id(accountId)) {
+                Transaction t = inc.getTransaction();
+                if (t == null) continue;
+                // Double-count önle: tx zaten sub-cash bank_account'a routed ise
+                // TransactionService onu artırmıştı — fakat biz buradaki recompute'da
+                // sıfırdan başlayacağız, NAKIT routing kontribüsyonu UYGULANMAYACAK.
+                // Bu yüzden bu durum exception: o tutarı ekle. Aksi taktirde
+                // bank routing'li tx görünmez.
+                sum = sum.add(simpleIncomeValueLocal(t));
+            }
+        } else if (account.getType() == BankAccountType.CASH_HOLDER) {
+            // fix(cash): CASH_HOLDER bakiyesi kendisine routed tx'lerden authoritative
+            // türetilir — LOAN/TRANSFER dışlanır (hayali tahsilat snapshot fix).
+            // (Endpoint eskiden CASH_HOLDER'da 400 atıyordu; artık kullanıcı manuel
+            // tetikleyebilir.)
+            sum = CashHolderBalanceCalculator.authoritativeBalance(
+                    transactionRepository.findByBankAccountId(accountId));
+        } else {
+            throw new IllegalArgumentException(
+                    "Yalnız SUB_CASH veya CASH_HOLDER için recompute yapılır");
         }
 
-        java.math.BigDecimal sum = java.math.BigDecimal.ZERO;
-        for (SubCashTxInclusion inc : inclusionRepository.findBySubCash_Id(subCashId)) {
-            Transaction t = inc.getTransaction();
-            if (t == null) continue;
-            // Double-count önle: tx zaten sub-cash bank_account'a routed ise
-            // TransactionService onu artırmıştı — fakat biz buradaki recompute'da
-            // sıfırdan başlayacağız, NAKIT routing kontribüsyonu UYGULANMAYACAK.
-            // Bu yüzden bu durum exception: o tutarı ekle. Aksi taktirde
-            // bank routing'li tx görünmez.
-            sum = sum.add(simpleIncomeValueLocal(t));
-        }
-        subCash.setCurrentBalance(sum);
-        bankAccountRepository.save(subCash);
-        log.info("[inclusion-recompute] subCash={} → balance={}", subCashId, sum);
+        account.setCurrentBalance(sum);
+        bankAccountRepository.save(account);
+        log.info("[balance-recompute] account={} type={} → balance={}",
+                accountId, account.getType(), sum);
         return sum;
     }
 

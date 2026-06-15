@@ -299,6 +299,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findByBankAccountIdOrderByDateDesc(
             @Param("bankAccountId") UUID bankAccountId, Pageable pageable);
 
+    /**
+     * fix(cash) CASH_HOLDER recompute: bir hesaba routed TÜM tx'ler (limitsiz).
+     * Authoritative bakiye yeniden-türetme için kullanılır — bakiye = bu hesaba
+     * atanmış non-LOAN, non-TRANSFER nakit hareketlerinin işaretli toplamı.
+     * Her hesap kendi business'ına bağlı olduğundan scope per-account zaten
+     * per-business'tır (cross-tenant sızıntı yok).
+     */
+    @Query("SELECT t FROM Transaction t WHERE t.bankAccount.id = :bankAccountId")
+    List<Transaction> findByBankAccountId(@Param("bankAccountId") UUID bankAccountId);
+
     @Query("SELECT t FROM Transaction t " +
             "WHERE t.bankAccount.id = :bankAccountId " +
             "AND t.date >= :from " +
