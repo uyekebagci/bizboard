@@ -301,12 +301,27 @@ public class LedgerService {
     private Map<String, Map<String, BigDecimal>> buildCategoryBreakdown(List<Transaction> transactions) {
         Map<String, Map<String, BigDecimal>> breakdown = new HashMap<>();
         for (Transaction t : transactions) {
-            String catName = t.getCategory() != null ? t.getCategory().getName() : "Kategorisiz";
+            // Bug fix: kategori soft-delete'tir (active=false) ama tx FK'sı durur.
+            // Çözülemeyen (null/pasif) kategori "Diğer"e toplanır — silinmiş kategori
+            // kırılımda ayrı satır göstermesin (tutar kaybolmaz).
+            String catName = resolveCategoryName(t);
             String dirKey = t.getDirection() == TransactionDirection.INCOME ? "income" : "expense";
             breakdown.computeIfAbsent(catName, k -> new HashMap<>());
             breakdown.get(catName).merge(dirKey, t.getAmount(), BigDecimal::add);
         }
         return breakdown;
+    }
+
+    /**
+     * Kategori kırılımı görünen ad çözümü: tx'in kategorisi null VEYA pasif
+     * (soft-delete) ise "Diğer" döner; aksi halde kategori adı.
+     */
+    private static String resolveCategoryName(Transaction t) {
+        var cat = t.getCategory();
+        if (cat != null && cat.isActive() && cat.getName() != null) {
+            return cat.getName();
+        }
+        return "Diğer";
     }
 
     /**

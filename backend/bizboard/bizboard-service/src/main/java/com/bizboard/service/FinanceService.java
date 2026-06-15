@@ -40,6 +40,12 @@ public class FinanceService {
             "Temmuz", "Agustos", "Eylul", "Ekim", "Kasim", "Aralik"
     };
 
+    /**
+     * Sistem backfill kategorisinin adı (bkz. {@code CategoryRequiredMigrationRunner}).
+     * Çözülemeyen (null/pasif) kategorili işlemler kırılımda bu ad altında toplanır.
+     */
+    private static final String OTHER_CATEGORY_NAME = "Diğer";
+
     // ─── Ana Finans Özeti ───────────────────────────────────────────────
 
     /**
@@ -280,10 +286,14 @@ public class FinanceService {
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Kategoriye göre grupla
+        // Kategoriye göre grupla.
+        // Bug fix (silinen kategori kırılımda görünmesin): kategori soft-delete'tir
+        // (active=false) ama tx'in category_id FK'sı durur. Çözülemeyen kategori =
+        // null FK VEYA pasif (silinmiş) kategori → "Diğer" altında toplanır; ayrı
+        // satır oluşturup silinmiş "fatih abi" gibi görünmesini önler. Tutar
+        // kaybolmaz, sadece etiket "Diğer"e çözülür.
         Map<String, List<Transaction>> grouped = filtered.stream()
-                .collect(Collectors.groupingBy(t ->
-                        t.getCategory() != null ? t.getCategory().getName() : "Kategorisiz"));
+                .collect(Collectors.groupingBy(FinanceService::resolveCategoryName));
 
         List<FinanceOverviewDto.CategoryData> result = new ArrayList<>();
         for (Map.Entry<String, List<Transaction>> entry : grouped.entrySet()) {
@@ -295,14 +305,17 @@ public class FinanceService {
                     ? catAmount.multiply(BigDecimal.valueOf(100)).divide(total, 1, RoundingMode.HALF_UP)
                     : BigDecimal.ZERO;
 
-            // İlk işlemin kategorisinden icon ve color al
+            // İlk işlemin kategorisinden icon ve color al. Yalnız AKTİF kategori
+            // ikonu/rengi kullanılır; "Diğer"e düşen (silinmiş/çözülemeyen) gruplar
+            // için ikon/renk taşınmaz (silinen kategorinin görseli sızmasın).
             Transaction firstTx = entry.getValue().get(0);
             Category cat = firstTx.getCategory();
+            boolean activeCat = cat != null && cat.isActive();
 
             result.add(FinanceOverviewDto.CategoryData.builder()
                     .name(entry.getKey())
-                    .icon(cat != null ? cat.getIcon() : null)
-                    .color(cat != null ? cat.getColor() : null)
+                    .icon(activeCat ? cat.getIcon() : null)
+                    .color(activeCat ? cat.getColor() : null)
                     .amount(catAmount)
                     .percentage(pct)
                     .transactionCount(entry.getValue().size())
@@ -312,6 +325,20 @@ public class FinanceService {
         // Büyükten küçüğe sırala
         result.sort((a, b) -> b.getAmount().compareTo(a.getAmount()));
         return result;
+    }
+
+    /**
+     * Kategori kırılımı görünen ad çözümü. Tx'in kategorisi null VEYA pasif
+     * (soft-delete edilmiş, {@code active=false}) ise "Diğer" döner; böylece
+     * silinmiş kategoriler kırılımda ayrı satır oluşturmaz, tutar "Diğer"e
+     * toplanır. Tutar/işlem KAYBOLMAZ — sadece etiket çözülür.
+     */
+    private static String resolveCategoryName(Transaction t) {
+        Category cat = t.getCategory();
+        if (cat != null && cat.isActive() && cat.getName() != null) {
+            return cat.getName();
+        }
+        return OTHER_CATEGORY_NAME;
     }
 
     // ─── İşletme Bazlı Kırılım ─────────────────────────────────────────

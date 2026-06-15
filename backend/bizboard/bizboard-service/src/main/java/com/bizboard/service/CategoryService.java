@@ -10,6 +10,7 @@ import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.CategoryApplicability;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CategoryRepository;
+import com.bizboard.repository.TransactionRepository;
 import com.bizboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
 
@@ -174,8 +176,39 @@ public class CategoryService {
         category.setActive(false);
         categoryRepository.save(category);
 
+        // Temizlik (idempotent): bu kategoriye bağlı tx'leri işletmenin AKTİF "Diğer"
+        // kategorisine taşı. category_id NOT NULL olduğundan null bırakılamaz; repoint
+        // ile orphan/stale referans kalmaz ve kategori kırılımı "Diğer" altında
+        // tutarlı görünür. Tutar/işlem KAYBOLMAZ — sadece kategori etiketi değişir.
+        // Hedef "Diğer" bulunamazsa (migration garantili, defansif) tx'ler dokunulmaz;
+        // okuma tarafı (buildCategoryBreakdown) zaten pasif kategoriyi "Diğer"e çözer.
+        int repointed = repointToOther(business.getId(), categoryId);
+
         recordAudit(AuditAction.CATEGORY_DELETE, userId, business.getId(), business.getName(), category,
-                business.getName() + " — kategori pasiflestirildi (soft-delete): " + category.getName());
+                business.getName() + " — kategori pasiflestirildi (soft-delete): " + category.getName()
+                        + (repointed > 0 ? " — " + repointed + " islem '" + OTHER_NAME + "'e tasindi" : ""));
+    }
+
+    /**
+     * Silinen kategoriye bağlı tx'leri işletmenin AKTİF "Diğer" kategorisine
+     * yönlendirir (idempotent). Hedef yoksa (defansif) hiçbir şey yapmaz.
+     *
+     * @return taşınan tx sayısı (hedef yoksa 0)
+     */
+    private int repointToOther(UUID businessId, UUID deletedCategoryId) {
+        Category other = categoryRepository
+                .findFirstByBusinessIdAndNameIgnoreCaseAndActiveTrue(businessId, OTHER_NAME)
+                .orElse(null);
+        if (other == null) {
+            log.warn("[category] '{}' kategorisi bulunamadi (business={}); tx repoint atlandi.",
+                    OTHER_NAME, businessId);
+            return 0;
+        }
+        if (other.getId().equals(deletedCategoryId)) {
+            // "Diğer" zaten silinemez (isSystemOtherCategory koruması); defansif no-op.
+            return 0;
+        }
+        return transactionRepository.repointCategory(deletedCategoryId, other.getId());
     }
 
     // ───────── helpers ─────────

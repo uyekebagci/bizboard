@@ -578,7 +578,10 @@ public class SummaryService {
                     || t.getKind() == com.bizboard.common.enums.TransactionKind.LOAN) {
                 continue;
             }
-            String catName = t.getCategory() != null ? t.getCategory().getName() : "Kategorisiz";
+            // Bug fix: kategori soft-delete'tir (active=false) ama tx FK'sı durur.
+            // Çözülemeyen (null/pasif) kategori "Diğer"e toplanır — silinmiş kategori
+            // kırılımda ayrı satır göstermesin (tutar kaybolmaz).
+            String catName = resolveCategoryName(t);
             String dirKey = t.getDirection() == TransactionDirection.INCOME ? "income" : "expense";
 
             BigDecimal value = effectiveAmount(t);
@@ -591,6 +594,18 @@ public class SummaryService {
         }
 
         return breakdown;
+    }
+
+    /**
+     * Kategori kırılımı görünen ad çözümü: tx'in kategorisi null VEYA pasif
+     * (soft-delete) ise "Diğer" döner; aksi halde kategori adı.
+     */
+    private static String resolveCategoryName(Transaction t) {
+        var cat = t.getCategory();
+        if (cat != null && cat.isActive() && cat.getName() != null) {
+            return cat.getName();
+        }
+        return "Diğer";
     }
 
     private boolean isClosedPeriod(LocalDate endDate) {

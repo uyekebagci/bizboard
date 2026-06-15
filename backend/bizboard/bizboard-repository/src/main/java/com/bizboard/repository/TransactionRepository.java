@@ -4,6 +4,7 @@ import com.bizboard.common.entity.Transaction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -331,4 +332,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             "ORDER BY t.date DESC, t.createdAt DESC")
     List<Transaction> findUnsettledPosTransactionsByBusiness(
             @Param("businessId") UUID businessId);
+
+    /**
+     * Kategori silme temizliği: bir kategoriye bağlı tx'lerin {@code category_id}'sini
+     * yeni hedef kategoriye taşır (repoint). category_id NOT NULL olduğundan null'a
+     * çekilemez — silinen kategorinin tx'leri işletmenin "Diğer" kategorisine
+     * yönlendirilir. İdempotent: zaten taşınmışsa 0 satır günceller.
+     *
+     * @return güncellenen tx sayısı
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Transaction t SET t.category.id = :targetCategoryId " +
+            "WHERE t.category.id = :sourceCategoryId")
+    int repointCategory(@Param("sourceCategoryId") UUID sourceCategoryId,
+                        @Param("targetCategoryId") UUID targetCategoryId);
 }
