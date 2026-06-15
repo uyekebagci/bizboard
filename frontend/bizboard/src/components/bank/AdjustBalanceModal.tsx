@@ -24,7 +24,7 @@ import { createPortal } from "react-dom";
 import { X, Scale, AlertTriangle, Loader2, ShieldAlert } from "lucide-react";
 import { api, ApiError } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { BankAccountListItem } from "@/types";
 
@@ -52,7 +52,7 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
   // Açıldığında formu hesabın mevcut bakiyesiyle prefill et.
   useEffect(() => {
     if (account) {
-      setNewBalanceStr(String(account.current_balance ?? 0));
+      setNewBalanceStr(formatMoneyInput(String(account.current_balance ?? 0)));
       setDescription("");
       setError(null);
       setSubmitting(false);
@@ -71,7 +71,8 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
 
   const oldBalance = account?.current_balance ?? 0;
   const parsedNew = useMemo(() => {
-    const n = Number(newBalanceStr.replace(",", "."));
+    if (!newBalanceStr) return null;
+    const n = parseMoneyInput(newBalanceStr);
     return Number.isFinite(n) ? n : null;
   }, [newBalanceStr]);
   const diff = parsedNew !== null ? parsedNew - oldBalance : null;
@@ -165,13 +166,12 @@ export function AdjustBalanceModal({ account, onClose, onAdjusted }: Props) {
             <div className="relative">
               <input
                 id="adjust-new-balance"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
+                type="text"
+                inputMode="numeric"
                 value={newBalanceStr}
-                onChange={(e) => setNewBalanceStr(e.target.value)}
+                onChange={(e) => setNewBalanceStr(formatMoneyInput(e.target.value))}
                 className={cn("field pr-12 font-mono", parsedNew === null && newBalanceStr !== "" && "field-error")}
-                placeholder="0.00"
+                placeholder="0"
                 autoFocus
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[rgb(var(--v2-muted))] pointer-events-none">
