@@ -26,5 +26,12 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, UUID> 
     @Query("SELECT COALESCE(MAX(p.deviceNumber), 0) FROM PhoneDevice p WHERE p.business.id = :businessId")
     int findMaxDeviceNumberByBusinessId(UUID businessId);
 
+    /** Etiket (label) numarası önerisi için: işletmedeki max labelNo (null'lar hariç). */
+    @Query("SELECT COALESCE(MAX(p.labelNo), 0) FROM PhoneDevice p WHERE p.business.id = :businessId")
+    int findMaxLabelNoByBusinessId(UUID businessId);
+
+    /** Soft-uniqueness uyarısı için: aynı işletmede aynı labelNo'ya sahip BAŞKA cihaz var mı. */
+    boolean existsByBusinessIdAndLabelNoAndIdNot(UUID businessId, Integer labelNo, UUID id);
+
     long countByActiveTrue();
 }

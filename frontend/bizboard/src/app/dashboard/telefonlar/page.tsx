@@ -12,7 +12,7 @@
  *   DELETE /phone-devices/{id}   (soft)
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Smartphone, Plus, Loader2, X, Search, Trash2, Edit2,
@@ -21,9 +21,10 @@ import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type {
-  PhoneDevice, PhoneBrand, PhoneModel, PhoneDeviceBank, Counterpart, Business,
+  PhoneDevice, PhoneBrand, PhoneModel, PhoneDeviceBank, Employee, Business,
 } from "@/types";
 import { DarkSelect } from "@/components/shared/DarkSelect";
+import { QuickPersonnelModal } from "@/components/phones/QuickPersonnelModal";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -77,17 +78,26 @@ export default function TelefonlarPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return devices.filter((d) => {
+    const matched = devices.filter((d) => {
       if (filterBrand && d.brand_id !== filterBrand) return false;
       if (!q) return true;
       const blob = [
         d.display_label,
         d.phone_number,
+        d.assigned_employee_name,
         d.assigned_counterpart_name,
+        d.label_no?.toString(),
         d.notes,
         ...(d.banks || []).map((b) => b.bank_name),
       ].filter(Boolean).join(" ").toLowerCase();
       return blob.includes(q);
+    });
+    // Etiket numarasına göre sırala (boş labelNo en sona).
+    return [...matched].sort((a, b) => {
+      const la = a.label_no ?? Number.MAX_SAFE_INTEGER;
+      const lb = b.label_no ?? Number.MAX_SAFE_INTEGER;
+      if (la !== lb) return la - lb;
+      return a.device_number - b.device_number;
     });
   }, [devices, search, filterBrand]);
 
@@ -157,7 +167,7 @@ export default function TelefonlarPage() {
               <tr>
                 <th>#</th>
                 <th>Marka / Model</th>
-                <th>Atanan Firma</th>
+                <th>Atanan Personel</th>
                 <th>Telefon No</th>
                 <th>Bankalar</th>
                 <th>Notlar</th>
@@ -170,7 +180,11 @@ export default function TelefonlarPage() {
                   key={d.id}
                   className={d.is_active ? "" : "opacity-50"}
                 >
-                  <td className="text-[rgb(var(--v2-muted))]">#{d.device_number}</td>
+                  <td className="text-[rgb(var(--v2-ink))] font-medium">
+                    {d.label_no != null
+                      ? `#${d.label_no}`
+                      : <span className="text-[rgb(var(--v2-muted))]">—</span>}
+                  </td>
                   <td className="text-[rgb(var(--v2-ink))]">
                     {d.display_label}
                     {d.custom_model && (
@@ -180,7 +194,9 @@ export default function TelefonlarPage() {
                     )}
                   </td>
                   <td className="text-[rgb(var(--v2-ink))]">
-                    {d.assigned_counterpart_name || <span className="text-[rgb(var(--v2-muted))]">—</span>}
+                    {d.assigned_employee_name || d.assigned_counterpart_name || (
+                      <span className="text-[rgb(var(--v2-muted))]">—</span>
+                    )}
                   </td>
                   <td className="font-mono text-[rgb(var(--v2-ink))]">
                     {d.phone_number || <span className="text-[rgb(var(--v2-muted))]">—</span>}
@@ -233,6 +249,7 @@ export default function TelefonlarPage() {
         <PhoneDeviceModal
           mode="create"
           brands={brands}
+          allDevices={devices}
           preselectedCounterpartId={pendingCounterpartId}
           onClose={() => { setShowModal(false); setPendingCounterpartId(null); }}
           onSuccess={() => {
@@ -246,6 +263,7 @@ export default function TelefonlarPage() {
         <PhoneDeviceModal
           mode="edit"
           brands={brands}
+          allDevices={devices}
           existing={editTarget}
           onClose={() => setEditTarget(null)}
           onSuccess={() => {
@@ -273,6 +291,7 @@ export default function TelefonlarPage() {
 function PhoneDeviceModal({
   mode,
   brands,
+  allDevices,
   existing,
   preselectedCounterpartId,
   onClose,
@@ -280,6 +299,7 @@ function PhoneDeviceModal({
 }: {
   mode: "create" | "edit";
   brands: PhoneBrand[];
+  allDevices: PhoneDevice[];
   existing?: PhoneDevice;
   preselectedCounterpartId?: string | null;
   onClose: () => void;
@@ -287,10 +307,19 @@ function PhoneDeviceModal({
 }) {
   const [businessId, setBusinessId] = useState<string>(existing?.business_id || "");
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [counterparts, setCounterparts] = useState<Counterpart[]>([]);
-  const [counterpartId, setCounterpartId] = useState<string>(
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const [employeeId, setEmployeeId] = useState<string>(existing?.assigned_employee_id || "");
+  // LEGACY: counterparts sayfasından "bu firma için telefon" deep-link'i —
+  // personel modeline geçtik; eski atama geriye-uyum için korunur.
+  const [legacyCounterpartId] = useState<string>(
     existing?.assigned_counterpart_id || preselectedCounterpartId || ""
   );
+  const [showQuickPersonnel, setShowQuickPersonnel] = useState(false);
+  const [labelNo, setLabelNo] = useState<string>(
+    existing?.label_no != null ? String(existing.label_no) : ""
+  );
+  const [labelTouched, setLabelTouched] = useState<boolean>(mode === "edit");
   const [phoneNumber, setPhoneNumber] = useState(existing?.phone_number || "");
   const [brandId, setBrandId] = useState<string>(existing?.brand_id || "");
   const [models, setModels] = useState<PhoneModel[]>([]);
@@ -304,17 +333,63 @@ function PhoneDeviceModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      api.get<Business[]>("/businesses").catch(() => []),
-      api.get<Counterpart[] | { items: Counterpart[] }>("/counterparts").catch(() => []),
-    ]).then(([bz, cp]) => {
+    api.get<Business[]>("/businesses").catch(() => []).then((bz) => {
       setBusinesses(bz || []);
-      const cps = Array.isArray(cp) ? cp : (cp?.items ?? []);
-      setCounterparts(cps || []);
       if (!businessId && bz && bz.length > 0) setBusinessId(bz[0].id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Personel listesi — seçili işletmeye bağlı. İşletme değişince yeniden çek.
+  const loadEmployees = useCallback(async (bizId: string) => {
+    if (!bizId) {
+      setEmployees([]);
+      return;
+    }
+    setEmployeesLoading(true);
+    try {
+      const list = await api.get<Employee[]>(`/businesses/${bizId}/employees`);
+      setEmployees(list || []);
+    } catch {
+      setEmployees([]);
+    } finally {
+      setEmployeesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEmployees(businessId);
+  }, [businessId, loadEmployees]);
+
+  // İşletme değişince başka işletmeye ait seçili personeli temizle.
+  useEffect(() => {
+    if (employeeId && !employees.some((e) => e.id === employeeId)) {
+      setEmployeeId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employees]);
+
+  // Create modunda etiket numarasını otomatik öner (kullanıcı elle değiştirmediyse).
+  // Seçili işletmedeki en büyük labelNo + 1. Kullanıcı override edebilir (manuel esas).
+  useEffect(() => {
+    if (mode !== "create" || labelTouched || !businessId) return;
+    const maxLabel = allDevices
+      .filter((d) => d.business_id === businessId && d.label_no != null)
+      .reduce((m, d) => Math.max(m, d.label_no as number), 0);
+    setLabelNo(String(maxLabel + 1));
+  }, [businessId, mode, labelTouched, allDevices]);
+
+  // Aynı işletmede aynı etiket numarası başka cihazda var mı (soft uyarı).
+  const labelDuplicate = useMemo(() => {
+    const n = parseInt(labelNo, 10);
+    if (!businessId || Number.isNaN(n)) return false;
+    return allDevices.some(
+      (d) =>
+        d.business_id === businessId &&
+        d.label_no === n &&
+        d.id !== existing?.id
+    );
+  }, [labelNo, businessId, allDevices, existing?.id]);
 
   useEffect(() => {
     if (!brandId) {
@@ -353,8 +428,11 @@ function PhoneDeviceModal({
       if (mode === "create") {
         const payload: Record<string, unknown> = {
           business_id: businessId,
+          label_no: labelNo.trim() ? parseInt(labelNo, 10) : null,
           phone_number: phoneNumber || null,
-          assigned_counterpart_id: counterpartId || null,
+          assigned_employee_id: employeeId || null,
+          // LEGACY: counterparts sayfasından gelen deep-link ataması korunur.
+          assigned_counterpart_id: legacyCounterpartId || null,
           notes: notes || null,
           banks: banks.length > 0 ? banks : null,
         };
@@ -370,10 +448,15 @@ function PhoneDeviceModal({
           phone_number: phoneNumber,
           notes: notes,
         };
-        if (counterpartId) {
-          payload.assigned_counterpart_id = counterpartId;
+        if (labelNo.trim()) {
+          payload.label_no = parseInt(labelNo, 10);
         } else {
-          payload.clear_assigned_counterpart = true;
+          payload.clear_label_no = true;
+        }
+        if (employeeId) {
+          payload.assigned_employee_id = employeeId;
+        } else {
+          payload.clear_assigned_employee = true;
         }
         if (useCustom) {
           payload.clear_brand = true;
@@ -416,7 +499,9 @@ function PhoneDeviceModal({
       <div className="modal-surface rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="modal-header">
           <h3 className="text-base font-semibold text-[rgb(var(--v2-ink))]">
-            {mode === "create" ? "Yeni Telefon" : `Telefon #${existing?.device_number} Düzenle`}
+            {mode === "create"
+              ? "Yeni Telefon"
+              : `Telefon ${existing?.label_no != null ? "#" + existing.label_no : "#" + existing?.device_number} Düzenle`}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-[rgb(var(--v2-sunken))]">
             <X size={16} className="text-[rgb(var(--v2-muted))]" />
@@ -442,6 +527,26 @@ function PhoneDeviceModal({
               />
             </div>
           )}
+
+          {/* Etiket (sticker) numarası */}
+          <div>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">
+              Numara <span className="text-[10px] text-[rgb(var(--v2-muted))]">(telefon arkasındaki etiket)</span>
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={labelNo}
+              onChange={(e) => { setLabelNo(e.target.value); setLabelTouched(true); }}
+              placeholder="örn. 5, 17..."
+              className="w-full px-3 py-2 rounded-lg bg-surface-700 border border-surface-600 text-surface-100 text-sm"
+            />
+            {labelDuplicate && (
+              <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
+                Bu numara bu işletmede başka bir telefonda var — yine de kaydedebilirsin.
+              </p>
+            )}
+          </div>
 
           {/* Marka / Model / Custom */}
           {!useCustom ? (
@@ -522,18 +627,35 @@ function PhoneDeviceModal({
             />
           </div>
 
-          {/* Karşı firma */}
+          {/* Atanan personel */}
           <div>
-            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Atanan Firma / Kişi</label>
+            <label className="text-xs text-[rgb(var(--v2-muted))] mb-1 block">Atanan Personel</label>
             <DarkSelect
-              value={counterpartId}
-              onChange={setCounterpartId}
-              placeholder="— atanmamış (havuz) —"
-              searchable={counterparts.length > 6}
-              options={counterparts.map((c) => ({ value: c.id, label: c.name }))}
+              value={employeeId}
+              onChange={setEmployeeId}
+              placeholder={
+                !businessId
+                  ? "— önce işletme seç —"
+                  : employeesLoading
+                    ? "Personel yükleniyor…"
+                    : "— atanmamış (havuz) —"
+              }
+              disabled={!businessId}
+              searchable={employees.length > 6}
+              options={employees.map((e) => ({
+                value: e.id,
+                label: e.full_name,
+                meta: e.position || undefined,
+              }))}
               addOption={{
-                label: "+ Yeni Firma/Kişi Ekle",
-                onClick: () => { window.location.href = "/dashboard/counterparts"; },
+                label: "+ Hızlı Personel Ekle",
+                onClick: () => {
+                  if (!businessId) {
+                    setError("Önce işletme seç");
+                    return;
+                  }
+                  setShowQuickPersonnel(true);
+                },
               }}
             />
           </div>
@@ -601,6 +723,18 @@ function PhoneDeviceModal({
           </button>
         </div>
       </div>
+
+      {showQuickPersonnel && businessId && (
+        <QuickPersonnelModal
+          businessId={businessId}
+          onClose={() => setShowQuickPersonnel(false)}
+          onCreated={async (newId) => {
+            setShowQuickPersonnel(false);
+            await loadEmployees(businessId);
+            setEmployeeId(newId);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -636,7 +770,7 @@ function DeleteConfirmModal({
         </div>
         <div className="p-4 text-sm text-[rgb(var(--v2-muted))]">
           <p>
-            #{device.device_number} {device.display_label} pasif yapılacak. Tx referansları
+            #{device.label_no ?? device.device_number} {device.display_label} pasif yapılacak. Tx referansları
             korunur (soft delete). Onaylıyor musun?
           </p>
         </div>

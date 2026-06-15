@@ -1567,9 +1567,15 @@ export interface PhoneDevice {
   business_id: string;
   business_name: string;
   device_number: number;
+  /** v1.7.x: kullanıcı-atamalı etiket (sticker) numarası — UI "#" kolonu. */
+  label_no?: number | null;
   phone_number?: string | null;
+  /** LEGACY firma/kişi ataması (geriye-uyum). */
   assigned_counterpart_id?: string | null;
   assigned_counterpart_name?: string | null;
+  /** v1.7.x: atanan personel (null = havuz). */
+  assigned_employee_id?: string | null;
+  assigned_employee_name?: string | null;
   brand_id?: string | null;
   brand_name?: string | null;
   model_id?: string | null;

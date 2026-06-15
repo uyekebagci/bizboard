@@ -29,6 +29,7 @@ import java.util.UUID;
                                               columnNames = {"business_id", "device_number"}),
        indexes = {
                @Index(name = "idx_phone_device_counterpart", columnList = "assigned_counterpart_id"),
+               @Index(name = "idx_phone_device_employee", columnList = "assigned_employee_id"),
                @Index(name = "idx_phone_device_brand", columnList = "brand_id"),
                @Index(name = "idx_phone_device_active", columnList = "is_active")
        })
@@ -44,22 +45,46 @@ public class PhoneDevice {
     private Business business;
 
     /**
-     * İşletme içindeki sıra numarası (1, 2, 3, ...). UI'da "#1, #2" diye
-     * gösterilir. Aynı işletmede UNIQUE.
+     * İşletme içindeki sıra numarası (1, 2, 3, ...). Sistemsel — UNIQUE garanti
+     * için kullanılır. UI artık {@link #labelNo} (kullanıcı sticker numarası)
+     * gösterir; bu alan dahili kalır.
      */
     @Column(name = "device_number", nullable = false)
     private int deviceNumber;
+
+    /**
+     * Kullanıcı-atamalı ETİKET numarası — telefonun arkasındaki fiziksel sticker
+     * ("5 numaralı telefon"). UI'da "#" kolonunda gösterilir. Kullanıcı elle
+     * girer; null = atanmamış. {@link #deviceNumber}'dan bağımsız (nullable,
+     * additive — eski kayıtlar etkilenmez). İşletme-içinde benzersiz olması
+     * ÖNERİLİR (soft — servis uyarır, hard-block YOK).
+     */
+    @Column(name = "label_no")
+    private Integer labelNo;
 
     @Column(name = "phone_number", length = 32)
     private String phoneNumber;
 
     /**
-     * Atanmış karşı taraf — bu telefon hangi firma/kişi için kullanılıyor.
+     * Atanmış karşı taraf — LEGACY (v1.6.23.12). Telefon eskiden firma/kişiye
+     * atanırdı. v1.7.x'te şirket telefonu PERSONELE atanmaya geçti
+     * ({@link #assignedEmployee}). Bu alan geriye-uyum için KORUNUR — eski
+     * atamalar orphan olmaz; UI artık {@code assignedEmployee} kullanır.
      * Null = atanmamış (havuzda).
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_counterpart_id")
     private Counterpart assignedCounterpart;
+
+    /**
+     * Atanmış personel — bu şirket telefonunu hangi personel kullanıyor.
+     * Null = atanmamış (havuzda). v1.7.x'te {@link #assignedCounterpart}
+     * yerine birincil atama alanı oldu (nullable, additive — eski data
+     * etkilenmez).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_employee_id")
+    private Employee assignedEmployee;
 
     /**
      * Marka — master listeden. {@code customModel} kullanıldıysa null olabilir.
