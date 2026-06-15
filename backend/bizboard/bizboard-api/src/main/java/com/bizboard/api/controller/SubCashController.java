@@ -325,6 +325,11 @@ public class SubCashController {
     /**
      * Beta v1.1 hotfix recovery: SUB_CASH bakiyesini inclusion table'dan
      * sıfırdan recompute eder. Stale/şişmiş bakiyeleri temizler.
+     *
+     * <p>fix(cash): CASH_HOLDER da desteklenir — bakiyesi kendisine routed
+     * tx'lerden authoritative türetilir (LOAN/TRANSFER dışlanır). Kullanıcı
+     * hayali LOAN tahsilatı snapshot'ını manuel temizleyebilir. (Eskiden
+     * CASH_HOLDER'da 400/500 dönüyordu.)</p>
      */
     @PostMapping("/recompute-balance")
     public ResponseEntity<?> recomputeBalance(
