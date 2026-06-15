@@ -136,6 +136,7 @@ export function FundTrailSection({
                 link={l}
                 counterTxId={l.source_transaction_id}
                 counterDirection={l.source_direction}
+                counterAmount={l.source_amount}
                 counterDate={l.source_date}
                 counterDesc={l.source_description}
                 counterWho={l.source_counterpart_name}
@@ -197,6 +198,7 @@ export function FundTrailSection({
                   link={l}
                   counterTxId={l.target_transaction_id}
                   counterDirection={l.target_direction}
+                  counterAmount={l.target_amount}
                   counterDate={l.target_date}
                   counterDesc={l.target_description}
                   counterWho={l.target_counterpart_name}
@@ -233,6 +235,7 @@ function LinkRow({
   link,
   counterTxId,
   counterDirection,
+  counterAmount,
   counterDate,
   counterDesc,
   counterWho,
@@ -245,6 +248,8 @@ function LinkRow({
   link: FundLink;
   counterTxId: string;
   counterDirection?: string | null;
+  /** Karşı işlemin GERÇEK tutarı (kaynağın/hedefin kendi tutarı). */
+  counterAmount?: number | null;
   counterDate?: string | null;
   counterDesc?: string | null;
   counterWho?: string | null;
@@ -262,6 +267,16 @@ function LinkRow({
   const sub = [counterDate, counterWho && counterDesc ? counterWho : null]
     .filter(Boolean)
     .join(" · ");
+
+  // PRİMER tutar = karşı işlemin GERÇEK tutarı (ör. 3.000.000'luk kaynak), DEĞİL
+  // bu bağa tahsis edilen kısım (link.amount). Kullanıcı kaynağı kendi tutarından
+  // tanır. Tahsis (link.amount) yalnız gerçek tutardan farklıysa ikincil/etiketli
+  // gösterilir ("bu işleme ₺… tahsis") — eşitse gürültü yapma.
+  const realAmount =
+    counterAmount !== null && counterAmount !== undefined
+      ? counterAmount
+      : link.amount;
+  const showAllocation = Math.abs(realAmount - link.amount) > 0.001;
 
   return (
     <div
@@ -286,8 +301,14 @@ function LinkRow({
         </p>
         <p className="text-[11px] text-surface-400 truncate">
           <span className={tone === "emerald" ? "text-emerald-300" : "text-rose-300"}>
-            {formatCurrency(link.amount, currency)}
+            {formatCurrency(realAmount, currency)}
           </span>
+          {showAllocation && (
+            <span className="text-surface-400">
+              {" "}
+              · bu işleme {formatCurrency(link.amount, currency)} tahsis
+            </span>
+          )}
           {sub && <> · {sub}</>}
           {link.note && <> · {link.note}</>}
         </p>

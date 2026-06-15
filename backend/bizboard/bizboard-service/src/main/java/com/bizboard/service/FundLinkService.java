@@ -10,6 +10,7 @@ import com.bizboard.common.entity.Counterpart;
 import com.bizboard.common.entity.FundLink;
 import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.entity.User;
+import com.bizboard.common.enums.TransactionDirection;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.FundLinkRepository;
 import com.bizboard.repository.TransactionRepository;
@@ -97,18 +98,40 @@ public class FundLinkService {
      * Bağlanabilir KAYNAK adayları (bind-picker): kalanı ({@code amount −
      * allocated}) &gt; 0 olan işlemler. Hedef işlemin kendisi hariç. En yeni önce,
      * {@code limit} ile sınırlı.
+     *
+     * <p><b>Yön semantiği (para-izi kuralı):</b> kaynak adayları HEDEFİN
+     * TERS-YÖNÜdür. Hedef bir GİDER (EXPENSE) ise para mantıken bir GİRİŞ'ten
+     * (INCOME) gelir — başka bir gider kaynak olamaz. Hedef bir GELİR (INCOME)
+     * ise "bu para nereye gitti" tarafı çıkışlardır (EXPENSE). Bu yüzden adaylar
+     * hedefin yönünün TERSİyle süzülür. Hedefin yönü bilinmiyorsa (null) filtre
+     * uygulanmaz (geriye-uyumlu).</p>
      */
     @Transactional(readOnly = true)
     public List<FundSourceCandidateDto> listSourceCandidates(UUID userId, UUID businessId,
                                                              UUID excludeTxId, int limit) {
         accessGuard.assertCanReadBusiness(userId, businessId);
         int cap = limit <= 0 ? 50 : Math.min(limit, 200);
+
+        // Hedefin yönüne göre ters-yön kaynakları süz (gider → giriş kaynakları).
+        // Hedef yüklenemiyorsa/yön null ise filtre yok (güvenli geriye-uyum).
+        TransactionDirection wantDirection = null;
+        if (excludeTxId != null) {
+            Transaction target = transactionRepository.findById(excludeTxId).orElse(null);
+            if (target != null && target.getBusiness() != null
+                    && businessId.equals(target.getBusiness().getId())
+                    && target.getDirection() != null) {
+                wantDirection = oppositeDirection(target.getDirection());
+            }
+        }
+
         List<Object[]> rows = fundLinkRepository.findSourceCandidatesWithAllocation(businessId);
         List<FundSourceCandidateDto> out = new java.util.ArrayList<>();
         for (Object[] row : rows) {
             Transaction tx = (Transaction) row[0];
             BigDecimal allocated = nz((BigDecimal) row[1]);
             if (excludeTxId != null && excludeTxId.equals(tx.getId())) continue;
+            // Yön filtresi: hedefin tersi olmayan adayları ele.
+            if (wantDirection != null && tx.getDirection() != wantDirection) continue;
             BigDecimal amount = nz(tx.getAmount());
             BigDecimal remaining = amount.subtract(allocated);
             if (remaining.signum() <= 0) continue; // tamamen tahsisli / tutarsız
@@ -284,6 +307,16 @@ public class FundLinkService {
 
     private static BigDecimal nz(BigDecimal v) {
         return v != null ? v : BigDecimal.ZERO;
+    }
+
+    /**
+     * Para-izi yön kuralı için ters-yön: GİDER ⇄ GİRİŞ. Hedef bir gider ise
+     * kaynak bir giriş; hedef bir giriş ise (kullanım tarafı) kaynak bir çıkıştır.
+     */
+    private static TransactionDirection oppositeDirection(TransactionDirection d) {
+        return d == TransactionDirection.EXPENSE
+                ? TransactionDirection.INCOME
+                : TransactionDirection.EXPENSE;
     }
 
     private static String trimToNull(String s) {
