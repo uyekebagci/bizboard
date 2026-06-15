@@ -21,6 +21,7 @@ import { logger } from "@/lib/logger";
 import { useAppStore } from "@/lib/store";
 import type { ReceivableAggregate, ReceivableTypeBreakdown, Counterpart, Business } from "@/types";
 import { CounterpartDebtModal } from "@/components/debts/CounterpartDebtModal";
+import { FreetextDebtDetailModal } from "@/components/debts/FreetextDebtDetailModal";
 import { NotesModule } from "@/components/business/NotesModule";
 import { ExchangeRateBar } from "@/components/debts/ExchangeRateBar";
 import { CurrencyEquivalentLine } from "@/components/debts/CurrencyEquivalentLine";
@@ -64,6 +65,8 @@ export default function AlacaklarPage() {
   const [businessFilter, setBusinessFilter] = useState<string>(ALL_BUSINESSES);
   // v1.7.x (UI Fix WP TODO 2c83bc5c): + Alacak Ekle modal
   const [showAddModal, setShowAddModal] = useState(false);
+  // counterpart_id olmayan satırlar: tıklanınca detay+sil modalı aç.
+  const [freetextRow, setFreetextRow] = useState<string | null>(null);
   // Sansür (privacy): göz ikonu ile tutarları blur'la. localStorage persist, default GÖRÜNÜR.
   const [censored, setCensored] = useState(false);
   useEffect(() => {
@@ -413,12 +416,18 @@ export default function AlacaklarPage() {
                     {sorted.map((r) => {
                       const key = r.counterpart_id || `name:${r.counterpart_name}`;
                       const href = r.counterpart_id ? `/dashboard/counterparts/${r.counterpart_id}` : null;
-                      const rowCls = href ? "cursor-pointer" : "";
+                      const rowCls = href || !r.counterpart_id ? "cursor-pointer hover:bg-[rgb(var(--v2-sunken))]" : "";
                       return (
                         <tr
                           key={key}
                           className={rowCls}
-                          onClick={href ? () => router.push(href) : undefined}
+                          onClick={
+                            href
+                              ? () => router.push(href)
+                              : !r.counterpart_id
+                              ? () => setFreetextRow(r.counterpart_name)
+                              : undefined
+                          }
                         >
                           <td className="font-medium text-[rgb(var(--v2-ink))] max-w-[200px] truncate">
                             {r.counterpart_name || "Bilinmiyor"}
@@ -484,7 +493,15 @@ export default function AlacaklarPage() {
                     {Inner}
                   </Link>
                 ) : (
-                  <div key={key}>{Inner}</div>
+                  <button
+                    key={key}
+                    type="button"
+                    className="w-full text-left transition-colors hover:bg-[rgb(var(--v2-sunken))]"
+                    onClick={() => setFreetextRow(r.counterpart_name)}
+                    title="Kayıtları görüntüle / sil"
+                  >
+                    {Inner}
+                  </button>
                 );
               })}
             </section>
@@ -521,6 +538,14 @@ export default function AlacaklarPage() {
         <CounterpartDebtModal
           direction="RECEIVABLE"
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {/* counterpart_id olmayan satır detay + sil modalı */}
+      {freetextRow && (
+        <FreetextDebtDetailModal
+          counterpartName={freetextRow}
+          onClose={() => setFreetextRow(null)}
         />
       )}
     </div>
