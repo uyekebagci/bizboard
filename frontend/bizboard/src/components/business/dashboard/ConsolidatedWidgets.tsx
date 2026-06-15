@@ -31,6 +31,11 @@ interface Props {
    */
   recentTransactionsSlot?: React.ReactNode;
   /**
+   * fix(business-detail): Modüller (ModuleTabs) slot — Row 1 (Konsolide +
+   * Kasa Durumu) hemen altına, Row 2'nin üstüne yerleştirilir.
+   */
+  modulesSlot?: React.ReactNode;
+  /**
    * v1.6.23.26 (UI Fix WP TODO b12c1dce): parent'ta refresh callback —
    * BankAccountsCard yeni hesap yaratınca consolidated cache'i invalidate
    * etmek için kullanılır.
@@ -38,7 +43,7 @@ interface Props {
   onChange?: () => void;
 }
 
-export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, onChange }: Props) {
+export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, modulesSlot, onChange }: Props) {
   // v1.6.23.29 (UI Fix WP): Layout reorg.
   //
   // Yeni sıra:
@@ -64,6 +69,10 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
       {/* v1.7.x (dashboard reorg): Hızlı İşlemler widget'ı buradan KALDIRILDI;
           artık page.tsx'te ModuleTabs'in altında — sayfanın EN ALTINDA render
           edilir. Modüller widget'ı yukarı, Hızlı İşlemler aşağı taşındı. */}
+
+      {/* fix(business-detail): Modüller slot — Row 1 (Konsolide + Kasa Durumu)
+          hemen altına, Row 2'nin üstüne. page.tsx'ten ModuleTabs geçirilir. */}
+      {modulesSlot}
 
       {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">

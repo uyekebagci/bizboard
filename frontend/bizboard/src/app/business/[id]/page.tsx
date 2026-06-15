@@ -189,6 +189,11 @@ export default function BusinessDetailPage() {
               }}
             />
           }
+          modulesSlot={
+            /* fix(business-detail): Modüller widget'ı Row 1 (Konsolide + Kasa
+               Durumu) hemen altına taşındı — Row 2'nin üstünde konumlanır. */
+            <ModuleTabs business={business} />
+          }
         />
       )}
 
@@ -206,9 +211,6 @@ export default function BusinessDetailPage() {
           FixedCostsWidget (Sabit Masraflar) bu konumdan kaldırıldı — bkz.
           import bloğundaki not. Veri/hesaplama (summary) ve FixedCosts
           özelliği yerinde duruyor; sadece bu sayfadaki render iptal edildi. */}
-
-      {/* Module Tabs (modüller widget'ı) — Hızlı İşlemler'in üstünde */}
-      <ModuleTabs business={business} />
 
       {/* v1.7.x (dashboard reorg): Hızlı İşlemler EN ALTA taşındı
           (önceden ConsolidatedWidgets içinde Row 1 altındaydı). */}
