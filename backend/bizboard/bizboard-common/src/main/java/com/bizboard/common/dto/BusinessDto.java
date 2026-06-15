@@ -36,6 +36,9 @@ public class BusinessDto {
     @JsonProperty("is_active")
     private boolean active;
 
+    /** Soft-delete / arşiv bayrağı — {@code true} ise işletme arşivlenmiş. */
+    private boolean archived;
+
     private Map<String, Object> metadata;
 
     @JsonProperty("created_at")

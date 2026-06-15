@@ -55,6 +55,18 @@ public class Business {
     @Builder.Default
     private boolean active = true;
 
+    /**
+     * Soft-delete / arşiv bayrağı. {@code true} → işletme arşivlenmiş:
+     * varsayılan listelerden ve portföy/DGR agregalarından gizlenir, ancak
+     * verisi korunur ve "Arşivden Çıkar" ile geri yüklenebilir.
+     *
+     * <p>{@code is_active} ile AYRI bir kavram: arşiv mantığı bu yeni alan
+     * üzerinden yürür. ddl-auto:update güvenli — NOT NULL default false.</p>
+     */
+    @Column(name = "archived", nullable = false)
+    @Builder.Default
+    private boolean archived = false;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     @Builder.Default

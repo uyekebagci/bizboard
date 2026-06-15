@@ -110,35 +110,9 @@ public class BusinessAccessGuard {
      *         null değer DÖNDÜRÜLMEZ.
      */
     public List<UUID> accessibleBusinessIds(UUID userId) {
-        if (userId == null) return List.of();
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) return List.of();
-
-        if ("admin".equalsIgnoreCase(user.getRole())) {
-            return businessRepository.findAll().stream().map(Business::getId).toList();
-        }
-        String accessible = user.getAccessibleBusinesses();
-        if (accessible != null && !accessible.isBlank()) {
-            String trimmed = accessible.trim();
-            if ("all".equalsIgnoreCase(trimmed)) {
-                return businessRepository.findAll().stream().map(Business::getId).toList();
-            }
-            return Arrays.stream(trimmed.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(s -> {
-                        try { return UUID.fromString(s); } catch (Exception e) { return null; }
-                    })
-                    .filter(java.util.Objects::nonNull)
-                    .toList();
-        }
-        // Legacy: owner + member relations
-        return businessRepository.findAll().stream()
-                .filter(b ->
-                    (b.getOwner() != null && b.getOwner().getId().equals(userId)) ||
-                    (b.getMembers() != null && b.getMembers().stream()
-                        .anyMatch(m -> m.getUser() != null && m.getUser().getId().equals(userId)))
-                )
+        // Arşivlenmiş işletmeler portföy/agrega/DGR'ye DAHİL DEĞİL — tek kaynak
+        // {@link #accessibleBusinesses} (arşiv filtresini orada uygular).
+        return accessibleBusinesses(userId).stream()
                 .map(Business::getId)
                 .toList();
     }
@@ -161,12 +135,12 @@ public class BusinessAccessGuard {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return List.of();
 
+        List<Business> result;
         String accessible = user.getAccessibleBusinesses();
         if ("admin".equalsIgnoreCase(user.getRole())
                 || (accessible != null && "all".equalsIgnoreCase(accessible.trim()))) {
-            return businessRepository.findAll();
-        }
-        if (accessible != null && !accessible.isBlank()) {
+            result = businessRepository.findAll();
+        } else if (accessible != null && !accessible.isBlank()) {
             List<UUID> ids = Arrays.stream(accessible.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
@@ -175,9 +149,15 @@ public class BusinessAccessGuard {
                     })
                     .filter(java.util.Objects::nonNull)
                     .toList();
-            return ids.isEmpty() ? List.of() : businessRepository.findByIdIn(ids);
+            result = ids.isEmpty() ? List.of() : businessRepository.findByIdIn(ids);
+        } else {
+            result = businessRepository.findAllAccessibleByUser(userId);
         }
-        return businessRepository.findAllAccessibleByUser(userId);
+
+        // Arşivlenmiş işletmeler portföy/agrega/DGR'den HARİÇ — net etkilenmesin.
+        // (Tekil erişim kararı canAccessBusiness'tedir; orası AYNEN korunur, yani
+        //  arşivli işletmenin detayına/unarchive'ına erişim engellenmez.)
+        return result.stream().filter(b -> !b.isArchived()).toList();
     }
 
     /**
