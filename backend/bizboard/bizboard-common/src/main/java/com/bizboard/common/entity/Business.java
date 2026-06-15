@@ -2,6 +2,7 @@ package com.bizboard.common.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -64,6 +65,7 @@ public class Business {
      * üzerinden yürür. ddl-auto:update güvenli — NOT NULL default false.</p>
      */
     @Column(name = "archived", nullable = false)
+    @ColumnDefault("false")
     @Builder.Default
     private boolean archived = false;
 
