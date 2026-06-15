@@ -100,7 +100,15 @@ export default function BusinessDetailPage() {
     }
   }
 
-  if (isLoading) {
+  // fix(modules): Full-page skeleton SADECE ilk yüklemede (business henüz
+  // gelmemişken) gösterilir. Önceden `isLoading` her arka-plan refetch'inde
+  // (triggerRefresh → refreshKey++ → useBusiness yeniden çeker) true olduğu
+  // için tüm sayfa skeleton'a düşüyor, ModuleTabs UNMOUNT/REMOUNT oluyor ve
+  // aktif sekme (örn. Personel) ilk modüle (Notlar) sıçrıyordu. Personel
+  // ekleme/silme/düzenleme vb. tüm modül CRUD akışları triggerRefresh
+  // çağırdığı için kök neden paylaşımlıydı; bu guard ile sayfa remount olmaz,
+  // sekme korunur, alt-modül kendi verisini (fetchData / refreshKey) tazeler.
+  if (isLoading && !business) {
     return <BusinessDetailSkeleton />;
   }
 
