@@ -451,8 +451,13 @@ public class FinanceService {
         // POS dahil tüm gelir/gider TAM tutar (Beta v1.1); konsolide/özet net ile
         // tutarlı. (Eski yorum "POS net = amount − commission" geçersiz.)
         // TRANSFER tx dışlanır (gelir/gider değil, hesaplar arası taşıma).
+        // fix(cash) Kural Z (kalıcı): LOAN (verilen/alınan borç + tahsilat = cari
+        // kapatma) da gelir/gider DEĞİL — Net Kâr/Toplam Gelir'e GİRMEZ (kasa
+        // exclusion'ı + SummaryService/LedgerService ile SİMETRİK). Karşılığı
+        // Alacaklar/Verecekler'de izlenir.
         return transactions.stream()
-                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .filter(t -> t.getDirection() == dir)
                 .map(SummaryService::effectiveAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

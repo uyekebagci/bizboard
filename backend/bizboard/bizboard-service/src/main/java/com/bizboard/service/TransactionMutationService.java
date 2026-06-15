@@ -12,6 +12,7 @@ import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.entity.User;
 import com.bizboard.common.enums.NotificationEvent;
 import com.bizboard.common.enums.TransactionDirection;
+import com.bizboard.common.enums.TransactionKind;
 import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.repository.BusinessRepository;
 import com.bizboard.repository.CategoryRepository;
@@ -143,7 +144,10 @@ public class TransactionMutationService {
         BankAccount txBank = transaction.getBankAccount();
         String txPm = transaction.getPaymentMethod();
         BigDecimal reverseDelta = null;
-        if (txBank != null) {
+        // fix(cash) Kural Z (kalıcı): LOAN/TRANSFER create'de current_balance'a
+        // DOKUNMADI (affectsCashSnapshot=false) → silerken de reverse ETME. Aksi
+        // halde tahsilat silmek kasayı tutarsız biçimde EKSİLTİRDİ (asimetri).
+        if (txBank != null && affectsCashSnapshot(transaction.getKind())) {
             if (("HESAPDAN".equals(txPm) || "NAKIT".equals(txPm))) {
                 // Direction'a göre apply edilmiş delta'yı tersle.
                 BigDecimal applied = transaction.getAmount();
@@ -413,7 +417,12 @@ public class TransactionMutationService {
         // edildiği için aynı kuralla balance güncellenir. Aggregate formülü
         // Σ ba.current_balance üzerinden hesaplandığı için bu güncelleme MAIN
         // ve sub-cash aggregate'lerine doğru yansır.
-        if (bankAccount != null && ("HESAPDAN".equals(pm) || "NAKIT".equals(pm))) {
+        // fix(cash) Kural Z (kalıcı): LOAN (tahsilat/cari kapatma) ve TRANSFER kasa
+        // snapshot'ını BUMPLAMAZ — posting-türetilen bakiye (clearing legs) ve
+        // CashHolderBalanceCalculator ile simetrik. (Bu endpoint normalde kind=NORMAL
+        // üretir; LOAN/TRANSFER ayrı servislerden gelir ama defansif guard tek-kaynak.)
+        if (bankAccount != null && ("HESAPDAN".equals(pm) || "NAKIT".equals(pm))
+                && affectsCashSnapshot(transaction.getKind())) {
             java.math.BigDecimal delta = transaction.getAmount();
             if (transaction.getDirection() == TransactionDirection.EXPENSE) {
                 delta = delta.negate();
@@ -537,6 +546,10 @@ public class TransactionMutationService {
         final java.math.BigDecimal oldAmount = transaction.getAmount();
         final TransactionDirection oldDirection = transaction.getDirection();
         final com.bizboard.common.entity.BankAccount oldBank = transaction.getBankAccount();
+        // fix(cash) Kural Z: tx kind'ı bu endpoint'te değişmez (LOAN/TRANSFER ayrı
+        // servislerden gelir). LOAN/TRANSFER kasa snapshot'ına dokunmadığı için
+        // update reversal/apply de atlanmalı (simetri).
+        final TransactionKind txKind = transaction.getKind();
 
         // WP Sub-Cash Retroactive Inclusion: entity ID snapshot — update sonrası
         // değişim olduysa eski inclusion'lar silinip yenisi hesaplanacak.
@@ -792,7 +805,9 @@ public class TransactionMutationService {
         // v1.6.23.4: Bank balance reversal + apply.
         // 1) Eski tx HESAPDAN ise old bank'tan reverse et.
         // 2) Yeni tx HESAPDAN ise new bank'a apply et.
-        if ("HESAPDAN".equals(oldPm) && oldBank != null) {
+        // fix(cash) Kural Z: LOAN/TRANSFER kasa snapshot'ına hiç dokunmadı →
+        // update reversal/apply de atlanır (affectsCashSnapshot=false).
+        if (affectsCashSnapshot(txKind) && "HESAPDAN".equals(oldPm) && oldBank != null) {
             java.math.BigDecimal revert = oldDirection == TransactionDirection.EXPENSE
                     ? oldAmount  // expense reversed → add back
                     : oldAmount.negate();  // income reversed → subtract
@@ -802,7 +817,8 @@ public class TransactionMutationService {
                             : oldBank.getCurrentBalance()).add(revert));
             bankAccountRepository.save(oldBank);
         }
-        if ("HESAPDAN".equals(newPm) && transaction.getBankAccount() != null) {
+        if (affectsCashSnapshot(txKind) && "HESAPDAN".equals(newPm)
+                && transaction.getBankAccount() != null) {
             com.bizboard.common.entity.BankAccount finalBank = transaction.getBankAccount();
             java.math.BigDecimal delta = transaction.getDirection() == TransactionDirection.EXPENSE
                     ? transaction.getAmount().negate()
@@ -930,6 +946,30 @@ public class TransactionMutationService {
                         && ba.getType() == com.bizboard.common.enums.BankAccountType.CASH_HOLDER)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * fix(cash) Kural Z (kalıcı): bir tx'in {@code kind}'ı kasa snapshot'ını
+     * ({@code bank_account.current_balance}) etkileyip etkilemeyeceğini belirler.
+     *
+     * <p>FİNANSAL KURAL Z (Umut, 2026-06 — iki kez netleştirildi): <b>HİÇBİR
+     * TAHSİLAT KASAYA GİRMESİN.</b> Tahsilat/cari kapatma = {@code kind=LOAN};
+     * hesaplar-arası taşıma = {@code kind=TRANSFER}. İkisi de OPERASYONEL KASAYA
+     * (Genel Kasa = nakit + banka) ve Net Kâr'a YANSIMAZ — gelir/satış zaten
+     * orijinal işlemde tanındı; tahsilat yalnız alacağı kapatır.</p>
+     *
+     * <p><b>Simetri / tek-kaynak:</b> bu guard, posting-türetilen bakiye
+     * ({@link LedgerPostingService} LOAN/TRANSFER → clearing, account=NULL) ve
+     * {@link CashHolderBalanceCalculator#cashContribution} (LOAN/TRANSFER → 0) ile
+     * BİREBİR aynı kuralı uygular. Böylece cached {@code current_balance} snapshot'ı
+     * ile posting-türetilen bakiye TUTARLI kalır → tahsilat eklemek/silmek/güncellemek
+     * Genel Nakit'i ŞİŞİRMEZ ve eksiltmez.</p>
+     *
+     * <p>NULL kind (legacy) → {@code NORMAL} sayılır (snapshot etkiler — mevcut
+     * davranış korunur; LOAN/TRANSFER her zaman açıkça set edilir).</p>
+     */
+    static boolean affectsCashSnapshot(TransactionKind kind) {
+        return kind != TransactionKind.LOAN && kind != TransactionKind.TRANSFER;
     }
 
     // ───────── shared mutation helpers (create + update; R3) ─────────

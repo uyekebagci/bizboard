@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,9 +44,14 @@ import java.util.List;
  * yalnız kasa snapshot düzeltmesi. Scope per-account = per-business (cross-tenant
  * etki yok).</p>
  *
- * <p><b>İdempotency:</b> {@code system_flags} YENİ bayrağı ile tek-sefer çalışır
- * (eski restore bayrağından bağımsız — eski runner bu etkiyi kaçırdığı için yeni
- * bayrak gerekli). Tam recompute olduğundan flag silinse bile tekrar koşmak güvenli.
+ * <p><b>İdempotency:</b> fix(cash) Kural Z (kalıcı) — runner artık HER BOOT'TA
+ * çalışır (tek-sefer {@code system_flags} bayrağı KALDIRILDI). Tam authoritative
+ * recompute olduğundan ve yalnız değer farklıysa save ettiğinden çift koşmak
+ * güvenli + ucuz; herhangi bir kalıntı/legacy drift (örn. eski deploy'da bumplanmış
+ * tahsilat snapshot'ı) her boot'ta SELF-HEAL olur. Ongoing yazma yolu
+ * ({@link TransactionMutationService#affectsCashSnapshot}) LOAN/TRANSFER'i artık
+ * snapshot'a yansıtmadığından recompute tekrar şişmeyi GERİ ALMAZ — doğru değerde
+ * sabit kalır (no-op olur).
  * {@code @Order(90)}: {@link LoanCashExclusionRestoreRunner} ({@code @Order(80)})
  * SONRASI — posting yeniden-türetme bittikten sonra snapshot'ı authoritative'e oturt.</p>
  *
@@ -59,30 +63,21 @@ import java.util.List;
 @Order(90) // LoanCashExclusionRestoreRunner (80) SONRASI
 public class CashHolderBalanceRecomputeRunner implements ApplicationRunner {
 
-    private static final String FLAG_KEY = "cashholder_balance_recompute_loan_snapshot_v1";
-
-    private final JdbcTemplate jdbc;
     private final BankAccountRepository bankAccountRepository;
     private final TransactionRepository transactionRepository;
 
     @Override
     public void run(ApplicationArguments args) {
         try {
-            jdbc.execute("CREATE TABLE IF NOT EXISTS system_flags ("
-                    + "key VARCHAR(120) PRIMARY KEY, "
-                    + "set_at TIMESTAMP NOT NULL DEFAULT NOW())");
-            Integer cnt = jdbc.queryForObject(
-                    "SELECT COUNT(*) FROM system_flags WHERE key=?", Integer.class, FLAG_KEY);
-            if (cnt != null && cnt > 0) {
-                log.debug("[cashholder-balance-recompute] already applied — skip");
-                return;
-            }
+            // fix(cash) Kural Z (kalıcı): tek-sefer flag YOK — her boot'ta authoritative
+            // recompute (idempotent; yalnız farklıysa save). Ongoing path LOAN'ı artık
+            // snapshot'a yazmadığı için tekrar şişme olmaz → recompute no-op'a yakınsar.
             int updated = recompute();
-            jdbc.update("INSERT INTO system_flags(key) VALUES(?) ON CONFLICT DO NOTHING", FLAG_KEY);
-            log.info("[cashholder-balance-recompute] applied — {} CASH_HOLDER bakiyesi "
-                    + "authoritative recompute edildi (hayali LOAN tahsilatı temizlendi).", updated);
+            log.info("[cashholder-balance-recompute] applied (every-boot, idempotent) — "
+                    + "{} CASH_HOLDER bakiyesi authoritative recompute edildi "
+                    + "(LOAN/TRANSFER tahsilatı kasaya yansımaz, Kural Z).", updated);
         } catch (Exception e) {
-            // Boot'u DÜŞÜRME — non-fatal; flag yazılmadıysa sonraki boot tekrar dener.
+            // Boot'u DÜŞÜRME — non-fatal; sonraki boot tekrar dener.
             log.error("[cashholder-balance-recompute] FAILED (boot devam ediyor):", e);
         }
     }

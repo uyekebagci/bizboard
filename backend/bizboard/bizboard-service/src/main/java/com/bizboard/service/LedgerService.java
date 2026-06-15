@@ -292,7 +292,14 @@ public class LedgerService {
         // Bug a1d58d6e/a90a8d42 fix: ortak {@link PosIncomeCalculator} — POS dahil
         // tüm gelir/gider TAM tutar (Beta v1.1); konsolide/özet net ile tutarlı.
         // (Eski yorum "POS net = amount − commission" geçersiz.)
+        // fix(cash) Kural Z (kalıcı): TRANSFER (hesaplar arası taşıma) + LOAN
+        // (verilen/alınan borç + tahsilat = cari kapatma) gelir/gider DEĞİL —
+        // bilanço hareketi. Net Kâr/Toplam Gelir'e GİRMEZ (kasa exclusion'ı ile
+        // SİMETRİK; SummaryService.sumByDirection ile birebir). Karşılığı
+        // Alacaklar/Verecekler'de izlenir.
         return transactions.stream()
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .filter(t -> t.getDirection() == dir)
                 .map(SummaryService::effectiveAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
