@@ -25,7 +25,8 @@ import java.util.UUID;
  *   <li>{@code POST /bank-imports?business_id=}                 — parti aç</li>
  *   <li>{@code GET  /bank-imports/{batchId}?business_id=}       — parti + satırlar</li>
  *   <li>{@code POST /bank-imports/{batchId}/lines?business_id=} — elle satır ekle</li>
- *   <li>{@code POST /bank-imports/{batchId}/import-pdf?business_id=} — ekstre PDF parse (multipart)</li>
+ *   <li>{@code POST /bank-imports/parse-pdf?business_id=} — ekstre PDF parse-only (persist YOK)</li>
+ *   <li>{@code POST /bank-imports/{batchId}/lines/bulk?business_id=} — seçilen satırları toplu ekle</li>
  *   <li>{@code POST /bank-imports/lines/{lineId}/categorize?business_id=} — kategori onayla</li>
  *   <li>{@code POST /bank-imports/lines/{lineId}/flag?business_id=}       — açıklanamayan (FLAGGED)</li>
  *   <li>{@code POST /bank-imports/lines/{lineId}/post?business_id=}       — ledger'a postala</li>
@@ -97,15 +98,15 @@ public class BankImportController {
     }
 
     /**
-     * Banka ekstresi PDF'ini parse edip mevcut partiye otomatik satır olarak
-     * ekler (multipart {@code file}). Açılış bakiyesi ayrı raporlanır; çift
-     * import dedupe edilir; bakiye zinciri tutmayan satır FLAGGED gelir.
+     * Banka ekstresi PDF'ini parse eder ve satırları DB'ye YAZMADAN döndürür
+     * (multipart {@code file}). Frontend bu satırları önizleme ekranında
+     * gösterir/düzenler; kullanıcı seçtiklerini {@code /lines/bulk} ile ekler.
+     * Açılış bakiyesi + zincir tutarlılığı bilgi amaçlı döner.
      */
-    @PostMapping(value = "/{batchId}/import-pdf", consumes = "multipart/form-data")
-    public ResponseEntity<?> importPdf(
+    @PostMapping(value = "/parse-pdf", consumes = "multipart/form-data")
+    public ResponseEntity<?> parsePdf(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(name = "business_id") UUID businessId,
-            @PathVariable UUID batchId,
             @RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "PDF dosyası gerekli"));
@@ -113,12 +114,33 @@ public class BankImportController {
         try {
             byte[] bytes = file.getBytes();
             return ResponseEntity.ok(
-                    service.importPdf(principal.getId(), businessId, batchId, bytes));
+                    service.parsePdf(principal.getId(), businessId, bytes));
         } catch (IOException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Dosya okunamadı: " + e.getMessage()));
         } catch (StatementParseException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (SecurityException e) {
+            return notFound();
+        }
+    }
+
+    /**
+     * Önizlemeden seçilen satırları partiye toplu (veya tek) ekler. Her satır
+     * PARSED olur (zincir-şüphesi FLAGGED); parti-içi dedupe korunur. Eklenen
+     * satır ledger'a/kasaya GİRMEZ — kategorile→postala onayı aynen gerekir.
+     */
+    @PostMapping("/{batchId}/lines/bulk")
+    public ResponseEntity<?> bulkAddLines(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
+            @PathVariable UUID batchId,
+            @Valid @RequestBody BulkAddLinesRequest req) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(service.bulkAddLines(principal.getId(), businessId, batchId, req));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
