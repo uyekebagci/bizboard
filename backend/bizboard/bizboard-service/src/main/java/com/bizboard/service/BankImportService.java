@@ -125,93 +125,155 @@ public class BankImportService {
         return toLineDto(line);
     }
 
-    // ──────────────────────────── PDF IMPORT ────────────────────────────
+    // ──────────────────────────── PDF PARSE (persist YOK) ────────────────────────────
 
     /**
-     * Banka ekstresi PDF'ini parse edip mevcut import akışına otomatik satır
-     * olarak ekler (PDFBox). Açılış bakiyesi ("DEVREDEN BAKİYE") hareket
-     * değildir, ayrı raporlanır. Çift-import dedupe: tarih+tutar+bakiye+desc
-     * hash'i aynı parti içinde tekrar görülürse satır atlanır. Bakiye zinciri
-     * tutmayan satır (parse şüphesi) FLAGGED işaretlenir.
+     * Banka ekstresi PDF'ini parse eder ve satırları DB'ye YAZMADAN döndürür.
+     * Kullanıcı önizleme ekranında bu satırları görür/düzenler, sonra
+     * seçtiklerini {@link #bulkAddLines} ile partiye ekler (PARSED).
      *
-     * <p>Çıkan satırlar mevcut {@link #addLine} ile aynı entity/akışa girer:
-     * PARSED → (öğrenmeden öneri) → kategorile → postala.</p>
+     * <p>Açılış bakiyesi ("DEVREDEN BAKİYE") hareket değildir, ayrı raporlanır.
+     * Her satıra parti-içi dedupe hash'i + bu hash zaten parti içinde var mı
+     * ({@code isDuplicate}) bilgisi eklenir; bakiye zinciri tutmayan satır
+     * {@code chainOk=false} olarak işaretlenir (eklenince FLAGGED gelir).</p>
      */
-    @Transactional
-    public PdfImportResult importPdf(UUID userId, UUID businessId, UUID batchId,
-                                     byte[] pdfBytes) {
-        accessGuard.assertCanAccessBusiness(userId, businessId);
-        BankImportBatch b = requireBatch(businessId, batchId);
-        if (b.getStatus() != BankImportBatchStatus.OPEN) {
-            throw new IllegalStateException("Kapalı partiye PDF import edilemez");
-        }
+    @Transactional(readOnly = true)
+    public ParsedPdfResult parsePdf(UUID userId, UUID businessId, byte[] pdfBytes) {
+        accessGuard.assertCanReadBusiness(userId, businessId);
 
         ParsedStatement parsed = pdfParser.parse(pdfBytes);
 
-        Set<String> existingHashes =
-                new HashSet<>(lineRepository.findDedupeHashesByBatchId(batchId));
-        int imported = 0, skipped = 0, flagged = 0;
+        // En son açık partinin dedupe hash'lerine bakmıyoruz; her parti kendi
+        // içinde tekil. Önizleme dedupe'i tüm açık-partiler yerine PDF satırları
+        // arasında ve isteğe bağlı bir batchId verilmediği için parti-içi
+        // kontrol bulkAddLines'da yapılır. Burada PDF içindeki tekrarları
+        // (aynı PDF'te dönen satır) işaretleriz.
+        Set<String> seenInPdf = new HashSet<>();
+        List<ParsedPdfLine> lines = new ArrayList<>();
+        int flagged = 0, duplicate = 0;
 
         for (ParsedStatement.ParsedMovement mv : parsed.getMovements()) {
             if (mv.getAmount() == null || mv.getAmount().signum() == 0) {
                 continue; // sıfır tutar = hareket değil, atla
             }
-            String hash = dedupeHash(mv);
+            String hash = dedupeHash(mv.getDate(), mv.getAmount(),
+                    mv.getBalance(), mv.getRawDescription());
+            boolean dup = !seenInPdf.add(hash);
+            if (dup) duplicate++;
+            if (!mv.isChainOk()) flagged++;
+
+            lines.add(ParsedPdfLine.builder()
+                    .parsedDate(mv.getDate())
+                    .channel(mv.getChannel())
+                    .rawText(mv.getRawDescription())
+                    .parsedCounterpart(mv.getCounterpartyName())
+                    .parsedAmount(mv.getAmount())
+                    .direction(mv.getDirection() != null ? mv.getDirection().name() : null)
+                    .parsedBalance(mv.getBalance())
+                    .chainOk(mv.isChainOk())
+                    .dedupeHash(hash)
+                    .duplicate(dup)
+                    .build());
+        }
+
+        return ParsedPdfResult.builder()
+                .openingBalance(parsed.getOpeningBalance())
+                .parsedCount(lines.size())
+                .flaggedCount(flagged)
+                .duplicateCount(duplicate)
+                .chainConsistent(parsed.isChainConsistent())
+                .lines(lines)
+                .build();
+    }
+
+    // ──────────────────────────── SEÇİLEN SATIRLARI EKLE ────────────────────────────
+
+    /**
+     * Önizlemeden seçilen satırları partiye toplu (veya tek) ekler. Her satır
+     * {@link BankImportLine} PARSED olur; {@code chainOk=false} olan FLAGGED
+     * gelir. Parti-içi dedupe korunur (mevcut hash mantığı): aynı hash zaten
+     * partide varsa satır atlanır. Eklenen satır SADECE PARSED — ledger'a /
+     * kasaya GİRMEZ (kategorile→postala onayı aynen kalır).
+     */
+    @Transactional
+    public BulkAddResult bulkAddLines(UUID userId, UUID businessId, UUID batchId,
+                                      BulkAddLinesRequest req) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
+        BankImportBatch b = requireBatch(businessId, batchId);
+        if (b.getStatus() != BankImportBatchStatus.OPEN) {
+            throw new IllegalStateException("Kapalı partiye satır eklenemez");
+        }
+        if (req.getLines() == null || req.getLines().isEmpty()) {
+            throw new IllegalArgumentException("Eklenecek satır yok");
+        }
+
+        Set<String> existingHashes =
+                new HashSet<>(lineRepository.findDedupeHashesByBatchId(batchId));
+        int added = 0, skipped = 0, flagged = 0;
+
+        for (BulkAddLineItem item : req.getLines()) {
+            if (item.getParsedAmount() == null || item.getParsedAmount().signum() == 0) {
+                continue; // sıfır tutar = hareket değil, atla
+            }
+            // Hash istemciden gelebilir (parse'tan); yoksa/yeniden güvenmek için
+            // sunucuda hesapla (düzenlenmiş satırlar için doğru tekillik).
+            String hash = (item.getDedupeHash() != null && !item.getDedupeHash().isBlank())
+                    ? item.getDedupeHash()
+                    : dedupeHash(item.getParsedDate(), item.getParsedAmount(),
+                            item.getParsedBalance(), item.getRawText());
             if (existingHashes.contains(hash)) {
                 skipped++;
                 continue;
             }
             existingHashes.add(hash);
 
+            boolean chainOk = item.getChainOk() == null || item.getChainOk();
             BankImportLine line = BankImportLine.builder()
                     .batch(b)
-                    .parsedDate(mv.getDate() != null ? mv.getDate() : b.getStatementDate())
-                    .parsedAmount(mv.getAmount())
-                    .parsedCounterpart(mv.getCounterpartyName())
-                    .parsedBalance(mv.getBalance())
-                    .rawText(mv.getRawDescription())
+                    .parsedDate(item.getParsedDate() != null
+                            ? item.getParsedDate() : b.getStatementDate())
+                    .parsedAmount(item.getParsedAmount())
+                    .parsedCounterpart(item.getParsedCounterpart())
+                    .parsedBalance(item.getParsedBalance())
+                    .rawText(item.getRawText())
                     .dedupeHash(hash)
                     // Bakiye zinciri tutmayan satır → FLAGGED (parse şüphesi).
-                    .status(mv.isChainOk()
-                            ? BankImportLineStatus.PARSED
-                            : BankImportLineStatus.FLAGGED)
+                    .status(chainOk ? BankImportLineStatus.PARSED : BankImportLineStatus.FLAGGED)
                     .build();
-            if (!mv.isChainOk()) flagged++;
+            if (!chainOk) flagged++;
 
-            Category suggested = suggestCategory(businessId, mv.getCounterpartyName());
+            Category suggested = suggestCategory(businessId, item.getParsedCounterpart());
             if (suggested != null) line.setSuggestedCategory(suggested);
 
             lineRepository.save(line);
-            imported++;
+            added++;
         }
         bumpCounts(b);
 
         auditLogService.recordEntityAction(
                 AuditAction.BANK_IMPORT_PDF, userId, username(userId),
                 "BANK_IMPORT_BATCH", b.getId(),
-                "Banka ekstresi PDF import: " + imported + " satır eklendi"
+                "Banka import satır ekleme: " + added + " satır eklendi"
                         + (skipped > 0 ? " (" + skipped + " çift atlandı)" : ""),
-                Map.of("imported", imported, "skipped", skipped, "flagged", flagged), null);
+                Map.of("added", added, "skipped", skipped, "flagged", flagged), null);
 
         List<LineDto> lines = lineRepository.findByBatchId(batchId).stream()
                 .map(this::toLineDto).toList();
-        return PdfImportResult.builder()
-                .openingBalance(parsed.getOpeningBalance())
-                .parsedCount(parsed.getMovementCount())
-                .importedCount(imported)
+        return BulkAddResult.builder()
+                .addedCount(added)
                 .skippedDuplicateCount(skipped)
                 .flaggedCount(flagged)
-                .chainConsistent(parsed.isChainConsistent())
                 .batch(toBatchDto(b, lines))
                 .build();
     }
 
     /** Dedupe anahtarı: tarih|tutar|bakiye|desc → SHA-256 (parti içi tekillik). */
-    private String dedupeHash(ParsedStatement.ParsedMovement mv) {
-        String raw = (mv.getDate() != null ? mv.getDate().toString() : "")
-                + "|" + (mv.getAmount() != null ? mv.getAmount().toPlainString() : "")
-                + "|" + (mv.getBalance() != null ? mv.getBalance().toPlainString() : "")
-                + "|" + (mv.getRawDescription() != null ? mv.getRawDescription() : "");
+    private String dedupeHash(LocalDate date, BigDecimal amount,
+                              BigDecimal balance, String description) {
+        String raw = (date != null ? date.toString() : "")
+                + "|" + (amount != null ? amount.toPlainString() : "")
+                + "|" + (balance != null ? balance.toPlainString() : "")
+                + "|" + (description != null ? description : "");
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(raw.getBytes(StandardCharsets.UTF_8));

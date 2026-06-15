@@ -56,6 +56,46 @@ public final class BankImportDtos {
         private UUID categoryId;
     }
 
+    /**
+     * Önizlemeden seçilen satırları toplu (veya tek) ekle. Kullanıcı PDF'i
+     * parse edip önizlediği satırlardan onayladıklarını gönderir; her biri
+     * PARSED satır olur (zincir-şüphesi olanlar FLAGGED). Dedupe korunur.
+     */
+    @Data
+    public static class BulkAddLinesRequest {
+        @NotNull
+        private List<BulkAddLineItem> lines;
+    }
+
+    /** Toplu eklemede tek satır (önizlemede düzenlenebilir alanlar dâhil). */
+    @Data
+    public static class BulkAddLineItem {
+        @JsonProperty("parsed_date")
+        private LocalDate parsedDate;
+
+        /** İşaretli: + giriş, − çıkış. */
+        @NotNull
+        @JsonProperty("parsed_amount")
+        private BigDecimal parsedAmount;
+
+        @JsonProperty("parsed_counterpart")
+        private String parsedCounterpart;
+
+        @JsonProperty("parsed_balance")
+        private BigDecimal parsedBalance;
+
+        @JsonProperty("raw_text")
+        private String rawText;
+
+        /** Parser'dan gelen dedupe hash'i (yeniden hesaplanmazsa korunur). */
+        @JsonProperty("dedupe_hash")
+        private String dedupeHash;
+
+        /** Bakiye zinciri tuttu mu? false → satır FLAGGED gelir. */
+        @JsonProperty("chain_ok")
+        private Boolean chainOk;
+    }
+
     @Data
     @Builder
     public static class BatchDto {
@@ -105,25 +145,69 @@ public final class BankImportDtos {
     }
 
     /**
-     * PDF import sonucu özeti: kaç satır oluşturuldu, kaçı atlandı (dedupe),
-     * kaçı flag'lendi (bakiye zinciri tutmadı), açılış bakiyesi ve güncel
-     * parti durumu (satırlarıyla).
+     * PDF parse-ONLY sonucu (persist YOK). Kullanıcı önizleme ekranında bu
+     * satırları görür/düzenler, sonra seçtiklerini {@link BulkAddLinesRequest}
+     * ile partiye ekler. Açılış bakiyesi + zincir tutarlılığı bilgi amaçlıdır.
      */
     @Data
     @Builder
-    public static class PdfImportResult {
+    public static class ParsedPdfResult {
         @JsonProperty("opening_balance")
         private BigDecimal openingBalance;
         @JsonProperty("parsed_count")
         private int parsedCount;
-        @JsonProperty("imported_count")
-        private int importedCount;
+        @JsonProperty("flagged_count")
+        private int flaggedCount;
+        @JsonProperty("duplicate_count")
+        private int duplicateCount;
+        @JsonProperty("chain_consistent")
+        private boolean chainConsistent;
+        private List<ParsedPdfLine> lines;
+    }
+
+    /**
+     * Önizlemede gösterilen tek parse-edilmiş satır (DB'ye YAZILMAMIŞ).
+     * Magnitude değil işaretli tutar döner (display'de yön renklenir).
+     */
+    @Data
+    @Builder
+    public static class ParsedPdfLine {
+        @JsonProperty("parsed_date")
+        private LocalDate parsedDate;
+        private String channel;
+        @JsonProperty("raw_text")
+        private String rawText;
+        @JsonProperty("parsed_counterpart")
+        private String parsedCounterpart;
+        /** İşaretli: + giriş, − çıkış. */
+        @JsonProperty("parsed_amount")
+        private BigDecimal parsedAmount;
+        /** INCOME / EXPENSE. */
+        private String direction;
+        /** Hareketten sonraki yürüyen bakiye. */
+        @JsonProperty("parsed_balance")
+        private BigDecimal parsedBalance;
+        /** Bakiye zinciri tuttu mu (false → eklenince FLAGGED). */
+        @JsonProperty("chain_ok")
+        private boolean chainOk;
+        /** Parti içi dedupe anahtarı (eklemede aynen gönderilir). */
+        @JsonProperty("dedupe_hash")
+        private String dedupeHash;
+        /** Bu hash zaten bu partide var mı? (önizlemede "çıkar" önerilir) */
+        @JsonProperty("is_duplicate")
+        private boolean duplicate;
+    }
+
+    /** Toplu/tek satır ekleme sonucu (eklenen + atlanan + güncel parti). */
+    @Data
+    @Builder
+    public static class BulkAddResult {
+        @JsonProperty("added_count")
+        private int addedCount;
         @JsonProperty("skipped_duplicate_count")
         private int skippedDuplicateCount;
         @JsonProperty("flagged_count")
         private int flaggedCount;
-        @JsonProperty("chain_consistent")
-        private boolean chainConsistent;
         private BatchDto batch;
     }
 }

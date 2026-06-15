@@ -812,14 +812,42 @@ export interface BankImportBatch {
   lines?: BankImportLine[];
 }
 
-/** Banka ekstresi PDF import sonucu özeti. */
-export interface BankImportPdfResult {
+/**
+ * PDF parse-ONLY sonucu (persist YOK). Kullanıcı önizleme ekranında bu
+ * satırları görür/düzenler, sonra seçtiklerini bulkAddLines ile ekler.
+ */
+export interface BankStatementParseResult {
   opening_balance: number | null;
   parsed_count: number;
-  imported_count: number;
+  flagged_count: number;
+  duplicate_count: number;
+  chain_consistent: boolean;
+  lines: BankStatementPreviewLine[];
+}
+
+/** Önizlemede gösterilen tek parse-edilmiş satır (DB'ye YAZILMAMIŞ). */
+export interface BankStatementPreviewLine {
+  parsed_date: string | null;
+  channel: string | null;
+  raw_text: string | null;
+  parsed_counterpart: string | null;
+  /** İşaretli: + giriş, − çıkış. */
+  parsed_amount: number;
+  direction: string | null;
+  parsed_balance: number | null;
+  /** Bakiye zinciri tuttu mu (false → eklenince FLAGGED). */
+  chain_ok: boolean;
+  /** Parti içi dedupe anahtarı (eklemede aynen gönderilir). */
+  dedupe_hash: string | null;
+  /** Aynı PDF'te tekrar eden satır mı? (önizlemede "çıkar" önerilir) */
+  is_duplicate: boolean;
+}
+
+/** Toplu/tek satır ekleme sonucu. */
+export interface BankBulkAddResult {
+  added_count: number;
   skipped_duplicate_count: number;
   flagged_count: number;
-  chain_consistent: boolean;
   batch: BankImportBatch;
 }
 

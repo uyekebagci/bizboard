@@ -18,21 +18,27 @@ import { useBusinesses } from "@/hooks/useBusinesses";
 import { useBankImport } from "@/hooks/useBankImport";
 import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import type { BankAccountListItem, BankImportBatch, BankImportLine, BankImportPdfResult, Category } from "@/types";
+import type {
+  BankAccountListItem, BankImportBatch, BankImportLine, BankStatementParseResult,
+  BankStatementPreviewLine, Category,
+} from "@/types";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ListSkeleton } from "@/components/shared/Skeleton";
+import { BankStatementPreviewModal } from "@/components/bank/BankStatementPreviewModal";
 
 export default function BankaImportPage() {
   const { businesses } = useBusinesses();
   const businessId = businesses?.[0]?.id ?? null;
-  const { batches, loading, createBatch, getBatch, addLine, importPdf, categorize, flag, postLine } =
+  const { batches, loading, createBatch, getBatch, addLine, parsePdf, bulkAddLines, categorize, flag, postLine } =
     useBankImport(businessId);
 
   const [accounts, setAccounts] = useState<BankAccountListItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [active, setActive] = useState<BankImportBatch | null>(null);
+  // PDF parse-only sonucu → önizleme/düzenleme modalı (eklemeden önce).
+  const [preview, setPreview] = useState<BankStatementParseResult | null>(null);
 
   // BUG fix (banka-import "Aç" → 403 "Yetki yok"): hesap dropdown'ı SEÇİLİ
   // işletmeyle (businessId) DARALTILMALI. Aksi hâlde /bank-accounts param'sız
@@ -97,14 +103,27 @@ export default function BankaImportPage() {
       {active && (
         <ActiveBatchPanel batch={active} categories={categories}
           onAddLine={async (input) => { await addLine(active.id, input); await reloadActive(active.id); }}
-          onImportPdf={async (file) => {
-            const r = await importPdf(active.id, file);
-            await reloadActive(active.id);
-            return r;
+          onParsePdf={async (file) => {
+            // Parse-only: DB'ye yazmadan önizleme aç. Ekleme modalda yapılır.
+            const r = await parsePdf(file);
+            setPreview(r);
           }}
           onCategorize={async (lineId, catId) => { await categorize(lineId, catId); await reloadActive(active.id); }}
           onFlag={async (lineId) => { await flag(lineId); await reloadActive(active.id); }}
           onPost={async (lineId) => { await postLine(lineId); await reloadActive(active.id); }} />
+      )}
+
+      {/* PDF önizleme/düzenleme → seç → tek/toplu ekle */}
+      {preview && active && (
+        <BankStatementPreviewModal
+          result={preview}
+          onAdd={async (lines: BankStatementPreviewLine[]) => {
+            const r = await bulkAddLines(active.id, lines);
+            await reloadActive(active.id);
+            return r.added_count;
+          }}
+          onClose={() => setPreview(null)}
+        />
       )}
 
       {/* Parti listesi */}
@@ -135,11 +154,11 @@ export default function BankaImportPage() {
   );
 }
 
-function ActiveBatchPanel({ batch, categories, onAddLine, onImportPdf, onCategorize, onFlag, onPost }: {
+function ActiveBatchPanel({ batch, categories, onAddLine, onParsePdf, onCategorize, onFlag, onPost }: {
   batch: BankImportBatch;
   categories: Category[];
   onAddLine: (input: { parsedDate?: string | null; parsedAmount: number; parsedCounterpart?: string | null }) => Promise<void>;
-  onImportPdf: (file: File) => Promise<BankImportPdfResult>;
+  onParsePdf: (file: File) => Promise<void>;
   onCategorize: (lineId: string, catId: string) => Promise<void>;
   onFlag: (lineId: string) => Promise<void>;
   onPost: (lineId: string) => Promise<void>;
@@ -174,15 +193,8 @@ function ActiveBatchPanel({ batch, categories, onAddLine, onImportPdf, onCategor
     }
     setUploading(true);
     try {
-      const r = await onImportPdf(file);
-      const parts = [`${r.imported_count} satır eklendi`];
-      if (r.skipped_duplicate_count > 0) parts.push(`${r.skipped_duplicate_count} çift atlandı`);
-      if (r.flagged_count > 0) parts.push(`${r.flagged_count} işaretlendi`);
-      if (!r.chain_consistent) {
-        toast.error(`PDF okundu ama bakiye zinciri tutmadı — ${parts.join(", ")}. İşaretli satırları kontrol edin.`);
-      } else {
-        toast.success(`PDF okundu: ${parts.join(", ")}`);
-      }
+      // Parse-only → önizleme modalı açılır. Satırlar onaylanana dek partiye GİRMEZ.
+      await onParsePdf(file);
     } catch (err) { toast.error(err); } finally { setUploading(false); }
   }
 
@@ -198,7 +210,7 @@ function ActiveBatchPanel({ batch, categories, onAddLine, onImportPdf, onCategor
         <FileUp size={18} className="text-accent shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-[rgb(var(--v2-ink))]">Banka ekstresi PDF</p>
-          <p className="text-[11px] text-[rgb(var(--v2-muted))]">PDF yükle → hareketler otomatik satır olur</p>
+          <p className="text-[11px] text-[rgb(var(--v2-muted))]">PDF yükle → önizle/düzenle → seç → ekle</p>
         </div>
         <input ref={fileRef} type="file" accept="application/pdf,.pdf" onChange={handlePdf} className="hidden" />
         <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}

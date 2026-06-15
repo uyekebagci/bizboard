@@ -8,7 +8,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import type { BankImportBatch, BankImportLine, BankImportPdfResult } from "@/types";
+import type {
+  BankImportBatch, BankImportLine, BankStatementParseResult, BankBulkAddResult,
+  BankStatementPreviewLine,
+} from "@/types";
 
 export function useBankImport(businessId?: string | null) {
   const [batches, setBatches] = useState<BankImportBatch[]>([]);
@@ -53,14 +56,38 @@ export function useBankImport(businessId?: string | null) {
     });
   }, [businessId]);
 
-  /** Banka ekstresi PDF'ini parse edip partiye otomatik satır olarak ekle. */
-  const importPdf = useCallback(async (batchId: string, file: File): Promise<BankImportPdfResult> => {
+  /**
+   * Banka ekstresi PDF'ini parse eder ve satırları DB'ye YAZMADAN döndürür
+   * (önizleme için). Eklemek için bulkAddLines kullanılır.
+   */
+  const parsePdf = useCallback(async (file: File): Promise<BankStatementParseResult> => {
     if (!businessId) throw new Error("business_id zorunlu");
     const form = new FormData();
     form.append("file", file);
-    return api.upload<BankImportPdfResult>(
-      `/bank-imports/${batchId}/import-pdf?business_id=${businessId}`,
+    return api.upload<BankStatementParseResult>(
+      `/bank-imports/parse-pdf?business_id=${businessId}`,
       form,
+    );
+  }, [businessId]);
+
+  /** Önizlemeden seçilen satırları partiye toplu (veya tek) ekle. */
+  const bulkAddLines = useCallback(async (
+    batchId: string, lines: BankStatementPreviewLine[],
+  ): Promise<BankBulkAddResult> => {
+    if (!businessId) throw new Error("business_id zorunlu");
+    return api.post<BankBulkAddResult>(
+      `/bank-imports/${batchId}/lines/bulk?business_id=${businessId}`,
+      {
+        lines: lines.map((l) => ({
+          parsed_date: l.parsed_date,
+          parsed_amount: l.parsed_amount,
+          parsed_counterpart: l.parsed_counterpart,
+          parsed_balance: l.parsed_balance,
+          raw_text: l.raw_text,
+          dedupe_hash: l.dedupe_hash,
+          chain_ok: l.chain_ok,
+        })),
+      },
     );
   }, [businessId]);
 
@@ -83,5 +110,5 @@ export function useBankImport(businessId?: string | null) {
 
   useEffect(() => { void list(); }, [list]);
 
-  return { batches, loading, list, createBatch, getBatch, addLine, importPdf, categorize, flag, postLine };
+  return { batches, loading, list, createBatch, getBatch, addLine, parsePdf, bulkAddLines, categorize, flag, postLine };
 }
