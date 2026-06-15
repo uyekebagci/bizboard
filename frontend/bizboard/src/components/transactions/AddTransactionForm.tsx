@@ -180,13 +180,13 @@ export function AddTransactionForm({
   const [posTxSubtype, setPosTxSubtype] = useState<"NAKIT" | "TRANSFER">("NAKIT");
   const [relatedBankAccountId, setRelatedBankAccountId] = useState<string>("");
   const [relatedBankAccounts, setRelatedBankAccounts] = useState<
-    Array<{ id: string; name: string; type: string; current_balance?: number }>
+    Array<{ id: string; name: string; type: string; bank_name?: string | null; current_balance?: number }>
   >([]);
 
   useEffect(() => {
     // POS gider TRANSFER alt-tipinde dropdown için aktif banka hesapları.
     if (!businessId) { setRelatedBankAccounts([]); return; }
-    api.get<Array<{ id: string; name: string; type: string; current_balance?: number; is_active?: boolean; business_id?: string }>>(
+    api.get<Array<{ id: string; name: string; type: string; bank_name?: string | null; current_balance?: number; is_active?: boolean; business_id?: string }>>(
       `/bank-accounts`,
     )
       .then((accs) => {
@@ -670,7 +670,7 @@ export function AddTransactionForm({
                   searchable={relatedBankAccounts.length > 6}
                   options={relatedBankAccounts.map((a) => ({
                     value: a.id,
-                    label: a.name,
+                    label: a.bank_name ? `${a.name} — ${a.bank_name}` : a.name,
                     meta: a.type,
                   }))}
                 />
@@ -727,7 +727,7 @@ export function AddTransactionForm({
                     { value: "", label: "— (Atlanır)" },
                     ...relatedBankAccounts.map((b) => ({
                       value: b.id,
-                      label: b.name,
+                      label: b.bank_name ? `${b.name} — ${b.bank_name}` : b.name,
                       meta: b.type,
                     })),
                   ]}
