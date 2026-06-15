@@ -35,6 +35,28 @@ import { useViewMode } from "@/hooks/useViewMode";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 type SortMode = "amount_desc" | "due_asc" | "name_asc";
+type TabMode = "all" | "overdue";
+
+/** Bugünün başlangıcı (saat 00:00:00) — gecikme hesabı için. */
+function todayStart(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Son vade geçmiş mi? (last_due_date < bugün && last_due_date mevcut) */
+function isOverdue(r: ReceivableAggregate): boolean {
+  if (!r.last_due_date) return false;
+  return new Date(r.last_due_date) < todayStart();
+}
+
+/** Kaç gün gecikmiş (tamsayı, >= 1). last_due_date mevcut + geçmiş ise döner. */
+function overdueDays(r: ReceivableAggregate): number | null {
+  if (!r.last_due_date) return null;
+  const diff = todayStart().getTime() - new Date(r.last_due_date).getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  return days >= 1 ? days : null;
+}
 
 /**
  * İşletme filtresi (salt-görüntü): "ALL" = tüm erişilebilir işletmeler (mevcut
@@ -59,6 +81,8 @@ export default function AlacaklarPage() {
   // UX-08: ağ hatasını sessiz yutma yerine kullanıcıya göster + tekrar dene.
   const [loadError, setLoadError] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("amount_desc");
+  // Sekme: "Tümü" | "Vadesi Geçen"
+  const [tabMode, setTabMode] = useState<TabMode>("all");
   // UX-10: Kart/Tablo görünüm tercihi (localStorage'da kalıcı).
   const { mode: viewMode, setMode: setViewMode } = useViewMode("alacaklar", "card");
   // İşletme filtresi (salt-görüntü). "ALL" → konsolide; aksi → tek işletme.
@@ -162,6 +186,13 @@ export default function AlacaklarPage() {
   const total = visibleRows.reduce((a, r) => a + (r.total_amount || 0), 0);
   const totalCount = visibleRows.reduce((a, r) => a + (r.count || 0), 0);
 
+  // Vadesi geçen satırlar (sadece son_vade < bugün olanlar).
+  const overdueRows = useMemo(() => visibleRows.filter(isOverdue), [visibleRows]);
+  const overdueTotal = overdueRows.reduce((a, r) => a + (r.total_amount || 0), 0);
+
+  // Aktif sekmeye göre hangi satırlar gösterilecek.
+  const tabRows = tabMode === "overdue" ? overdueRows : visibleRows;
+
   // WP currency-display: TL toplamın USD + gram altın karşılığı için güncel kur.
   const { usdRate, goldRate } = useExchangeRates();
 
@@ -192,7 +223,16 @@ export default function AlacaklarPage() {
   }, [rows, businessFilter, businesses]);
 
   const sorted = useMemo(() => {
-    const out = [...visibleRows];
+    const out = [...tabRows];
+    // Vadesi Geçen sekmesinde: en çok geciken üstte (en eski vade = en büyük gecikme).
+    if (tabMode === "overdue") {
+      out.sort((a, b) => {
+        const ax = a.last_due_date ? new Date(a.last_due_date).getTime() : Number.POSITIVE_INFINITY;
+        const bx = b.last_due_date ? new Date(b.last_due_date).getTime() : Number.POSITIVE_INFINITY;
+        return ax - bx; // en eski vade (en küçük timestamp) → en çok gecikmiş → üste
+      });
+      return out;
+    }
     if (sortMode === "amount_desc") {
       out.sort((a, b) => b.total_amount - a.total_amount);
     } else if (sortMode === "due_asc") {
@@ -205,7 +245,7 @@ export default function AlacaklarPage() {
       out.sort((a, b) => a.counterpart_name.localeCompare(b.counterpart_name, "tr"));
     }
     return out;
-  }, [visibleRows, sortMode]);
+  }, [tabRows, sortMode, tabMode]);
 
   return (
     <div className="space-y-5 pb-24">
@@ -279,6 +319,58 @@ export default function AlacaklarPage() {
         </section>
       )}
 
+      {/* Sekme: Tümü | Vadesi Geçen — yalnız veri yüklenince göster. */}
+      {!loading && !loadError && rows.length > 0 && (
+        <section className="flex items-center gap-2">
+          {([
+            { v: "all" as TabMode, label: "Tümü" },
+            { v: "overdue" as TabMode, label: "Vadesi Geçen" },
+          ]).map((tab) => {
+            const isActive = tabMode === tab.v;
+            const badgeCount = tab.v === "overdue" ? overdueRows.length : visibleRows.length;
+            const badgeTotal = tab.v === "overdue" ? overdueTotal : total;
+            const hasOverdue = tab.v === "overdue" && overdueRows.length > 0;
+            return (
+              <button
+                key={tab.v}
+                type="button"
+                onClick={() => setTabMode(tab.v)}
+                aria-pressed={isActive}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                  isActive
+                    ? tab.v === "overdue" && hasOverdue
+                      ? "bg-status-danger/16 text-status-danger font-semibold"
+                      : "bg-accent/16 text-accent-strong dark:text-accent font-semibold"
+                    : "v2-sunken text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))]",
+                )}
+              >
+                <span>{tab.label}</span>
+                {badgeCount > 0 ? (
+                  <span className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                    tab.v === "overdue" && hasOverdue
+                      ? isActive
+                        ? "bg-status-danger/20 text-status-danger"
+                        : "bg-status-danger/12 text-status-danger"
+                      : isActive
+                        ? "bg-accent/20 text-accent-strong dark:text-accent"
+                        : "bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))]",
+                  )}>
+                    {badgeCount}
+                    {tab.v === "overdue" && (
+                      <span className={censorCls}> · {maskAmount(badgeTotal, censored, "TRY")}</span>
+                    )}
+                  </span>
+                ) : tab.v === "overdue" ? (
+                  <span className="rounded-full px-1.5 py-0.5 text-[10px] bg-[rgb(var(--v2-border))] text-[rgb(var(--v2-muted))]">0</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </section>
+      )}
+
       {loading ? (
         // UX-08: ilk yükleme = skeleton (spinner yerine).
         <ListSkeleton rows={6} />
@@ -315,6 +407,21 @@ export default function AlacaklarPage() {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
             >
               Tüm İşletmeleri Göster
+            </button>
+          }
+        />
+      ) : tabMode === "overdue" && overdueRows.length === 0 ? (
+        // Vadesi Geçen sekmesi açık ama gecikmiş alacak yok.
+        <EmptyState
+          icon={CalendarClock}
+          title="Vadesi geçen alacak yok"
+          description="Tüm açık alacakların son vadesi henüz geçmemiş."
+          action={
+            <button
+              onClick={() => setTabMode("all")}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl v2-sunken hover:border-accent/50 v2-press text-[rgb(var(--v2-ink))] text-sm font-semibold transition-colors"
+            >
+              Tümünü Göster
             </button>
           }
         />
@@ -436,11 +543,20 @@ export default function AlacaklarPage() {
                             {r.receivable_types.map((b) => b.label || b.type).join(", ") || "—"}
                           </td>
                           <td className="text-xs text-[rgb(var(--v2-muted))] whitespace-nowrap">
-                            {r.last_due_date
-                              ? new Date(r.last_due_date).toLocaleDateString("tr-TR", {
-                                  day: "2-digit", month: "2-digit", year: "numeric",
-                                })
-                              : "—"}
+                            <div className="flex flex-col gap-0.5">
+                              <span>
+                                {r.last_due_date
+                                  ? new Date(r.last_due_date).toLocaleDateString("tr-TR", {
+                                      day: "2-digit", month: "2-digit", year: "numeric",
+                                    })
+                                  : "—"}
+                              </span>
+                              {overdueDays(r) !== null && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-status-danger/12 text-status-danger border border-status-danger/25 w-fit">
+                                  {overdueDays(r)} gün gecikti
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className={cn("num v2-td-num font-semibold text-status-warning whitespace-nowrap", censorCls)}>
                             {maskAmount(r.total_amount, censored, "TRY")}
@@ -475,6 +591,11 @@ export default function AlacaklarPage() {
                             day: "numeric", month: "short", year: "numeric",
                           })}
                         </p>
+                      )}
+                      {overdueDays(r) !== null && (
+                        <span className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-status-danger/12 text-status-danger border border-status-danger/25">
+                          {overdueDays(r)} gün gecikti
+                        </span>
                       )}
                     </div>
                     <div className="text-right shrink-0">
