@@ -35,37 +35,62 @@ public class BusinessService {
     private final AuditLogService auditLogService;
     // v1.6.23.25 (UI Fix WP TODO 5cf7590b): yeni işletme → otomatik Ana Kasa.
     private final BankAccountService bankAccountService;
+    // İşletme kalıcı silme — scope'lu cascade motoru.
+    private final BusinessCascadeDeleteService cascadeDeleteService;
+    private final BusinessAccessGuard accessGuard;
 
     @Transactional(readOnly = true)
     public List<BusinessDto> getBusinessesForUser(UUID userId) {
+        // Varsayılan: arşivlenmiş işletmeler GİZLİ.
+        return getBusinessesForUser(userId, false);
+    }
+
+    /**
+     * Kullanıcının erişebildiği işletmeler.
+     *
+     * @param includeArchived {@code false} (varsayılan) → arşivlenmişler gizli;
+     *        {@code true} → arşivlenmişler de döner (Arşiv ekranı / geri yükleme
+     *        listesi için). Çağrı erişim filtresi (admin / accessible / legacy)
+     *        aynen korunur; arşiv yalnız ek bir post-filtre uygular.
+     */
+    @Transactional(readOnly = true)
+    public List<BusinessDto> getBusinessesForUser(UUID userId, boolean includeArchived) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String accessible = user.getAccessibleBusinesses();
 
+        List<Business> businesses;
         // Admin veya "all" ise tüm işletmeleri döndür
         if ("admin".equalsIgnoreCase(user.getRole())
                 || (accessible != null && "all".equalsIgnoreCase(accessible.trim()))) {
-            return businessRepository.findAll().stream()
-                    .map(DtoMapper::toBusinessDto)
-                    .toList();
-        }
-
-        // accessible_businesses sütunundaki UUID listesine göre filtrele
-        if (accessible != null && !accessible.isBlank()) {
+            businesses = businessRepository.findAll();
+        } else if (accessible != null && !accessible.isBlank()) {
+            // accessible_businesses sütunundaki UUID listesine göre filtrele
             List<UUID> ids = Arrays.stream(accessible.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .map(UUID::fromString)
                     .toList();
-            return businessRepository.findByIdIn(ids).stream()
-                    .map(DtoMapper::toBusinessDto)
-                    .toList();
+            businesses = businessRepository.findByIdIn(ids);
+        } else {
+            // Fallback: eski owner/member ilişkisine bak
+            businesses = businessRepository.findAllAccessibleByUser(userId);
         }
 
-        // Fallback: eski owner/member ilişkisine bak
-        return businessRepository.findAllAccessibleByUser(userId).stream()
+        return businesses.stream()
+                .filter(b -> includeArchived || !b.isArchived())
                 .map(DtoMapper::toBusinessDto)
+                .toList();
+    }
+
+    /**
+     * Yalnız arşivlenmiş işletmeler — "Arşivden Çıkar" ekranı / filtresi için.
+     */
+    @Transactional(readOnly = true)
+    public List<BusinessDto> getArchivedBusinessesForUser(UUID userId) {
+        return getBusinessesForUser(userId, true).stream()
+                .filter(BusinessDto::isArchived)
                 .toList();
     }
 
@@ -253,24 +278,83 @@ public class BusinessService {
     }
 
     /**
-     * v1.6.2: Admin-only işletme silme.
+     * Arşivle (soft-delete, VARSAYILAN). İşletme {@code archived=true} olur:
+     * varsayılan listelerden ve portföy/DGR agregalarından gizlenir, ancak
+     * verisi korunur ve {@link #unarchiveBusiness} ile geri yüklenebilir.
      *
-     * <p>Cascade davranışı: Business entity'sinde {@code @OneToMany cascade=ALL,
-     * orphanRemoval=true} olan ilişkiler (members, modules) otomatik silinir.
-     * Diğer FK'ler ({@code transactions.business_id}, {@code fixed_costs.business_id},
-     * vb.) Postgres ON DELETE davranışına bağlı. Bu sürümde basit kaskad:
-     * tüm bağlı transaction, fixed_cost, employee, vehicle, inventory, debt,
-     * note kayıtları otomatik repo cascade'i ile silinir.</p>
-     *
-     * <p>Audit log {@code BUSINESS_DELETE} action ile düşer; iş adı, type name,
-     * silen admin id'si metadata'da.</p>
+     * <p>Yetki: admin VEYA işletmeye erişimi olan kullanıcı
+     * ({@link BusinessAccessGuard#assertCanAccessBusiness}). Geri-alınabilir
+     * olduğu için arşive güçlü onay gerekmez (hafif onay FE'de).</p>
      */
     @Transactional
-    public void deleteBusiness(UUID businessId, UUID actorUserId) {
+    public BusinessDto archiveBusiness(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        Business b = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Isletme bulunamadi"));
+        User actor = userRepository.findById(actorUserId).orElse(null);
+
+        if (!b.isArchived()) {
+            b.setArchived(true);
+            businessRepository.save(b);
+            auditLogService.recordEntityAction(
+                    AuditAction.BUSINESS_ARCHIVE,
+                    actorUserId, actor != null ? actor.getUsername() : null,
+                    "BUSINESS", businessId,
+                    "Isletme arsivlendi: " + b.getName(),
+                    Map.of("businessName", b.getName()));
+        }
+        return DtoMapper.toBusinessDto(b);
+    }
+
+    /**
+     * Arşivden çıkar (geri yükleme). {@code archived=false} — işletme yeniden
+     * listelerde ve agregalarda görünür.
+     */
+    @Transactional
+    public BusinessDto unarchiveBusiness(UUID businessId, UUID actorUserId) {
+        accessGuard.assertCanAccessBusiness(actorUserId, businessId);
+        Business b = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Isletme bulunamadi"));
+        User actor = userRepository.findById(actorUserId).orElse(null);
+
+        if (b.isArchived()) {
+            b.setArchived(false);
+            businessRepository.save(b);
+            auditLogService.recordEntityAction(
+                    AuditAction.BUSINESS_UNARCHIVE,
+                    actorUserId, actor != null ? actor.getUsername() : null,
+                    "BUSINESS", businessId,
+                    "Isletme arsivden cikarildi: " + b.getName(),
+                    Map.of("businessName", b.getName()));
+        }
+        return DtoMapper.toBusinessDto(b);
+    }
+
+    /**
+     * KALICI SİL (admin-only, GERİ ALINAMAZ, scope'lu cascade).
+     *
+     * <p>İşletmeye bağlı TÜM veri ({@code ~50} entity, çocuk→ebeveyn sırasında,
+     * yalnız {@code business_id} kapsamında) {@link BusinessCascadeDeleteService}
+     * ile silinir; ardından {@code businesses} satırı (cascade=ALL members/
+     * modules ile) silinir. FK reddi olmaz; başka işletmenin/DGR'nin verisi
+     * etkilenmez.</p>
+     *
+     * <p><b>Güçlü onay:</b> {@code confirmationName} işletme adıyla TAM eşleşmeli
+     * (büyük/küçük harf duyarsız, trim). Eşleşmezse {@link IllegalArgumentException}.
+     * (FE'de kullanıcı işletme adını yazarak teyit eder; bu BE kontrolü ikinci
+     * savunma hattı.)</p>
+     *
+     * <p>Audit {@code BUSINESS_PURGE} ile düşer; tablo-başına silinen satır
+     * sayıları metadata'da.</p>
+     *
+     * @param confirmationName FE'den gelen ad-eşleşme teyidi (zorunlu)
+     */
+    @Transactional
+    public void purgeBusiness(UUID businessId, UUID actorUserId, String confirmationName) {
         User actor = userRepository.findById(actorUserId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!"admin".equalsIgnoreCase(actor.getRole())) {
-            throw new SecurityException("Sadece admin isletme silebilir");
+            throw new SecurityException("Sadece admin isletme kalici silebilir");
         }
         Business b = businessRepository.findById(businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Isletme bulunamadi"));
@@ -278,31 +362,41 @@ public class BusinessService {
         String name = b.getName();
         String typeName = b.getBusinessTypeName();
 
-        // Cascade silme: önce bağlı kayıtları temizle (FK constraint'lere göre)
-        // Hibernate cascade ALL bazı kayıtları otomatik temizler; geri kalanlar için
-        // explicit repo cleanup.
-        // Bağlı tüm transaction/fixed_cost/category vb. için repo silme çağrıları
-        // burada eklenebilir; şu an manuel SQL kullanmak yerine entity cascade'lere
-        // güveniyoruz. ORM cascade yoksa Postgres FK reddi olur → 409 dönüyor.
+        // Güçlü onay: ad-eşleşme (BE ikinci savunma hattı — FE de zorlar).
+        if (confirmationName == null
+                || !confirmationName.trim().equalsIgnoreCase(name == null ? "" : name.trim())) {
+            throw new IllegalArgumentException(
+                    "Onay basarisiz: silmek icin isletme adini ('" + name + "') birebir yazmalisiniz.");
+        }
+
+        // 1) Bağlı TÜM child veriyi scope'lu cascade ile sil (FK-güvenli sıra).
+        Map<String, Integer> deletedCounts = cascadeDeleteService.purgeBusinessChildren(businessId);
+
+        // 2) businesses satırı — members/modules @OneToMany cascade=ALL ile gider.
         try {
             businessRepository.delete(b);
             businessRepository.flush();
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-            log.warn("[business-delete] FK constraint engelledi: {}", ex.getMessage());
+            // Cascade'de atlanan bir FK kaldıysa burada yakalanır → teşhis logu.
+            log.error("[business-purge] FK reddi (cascade'de atlanan tablo?): {}", ex.getMessage());
             throw new IllegalStateException(
-                    "Bu isletmeye bagli kayitlar var (islem, sabit gider, personel vb.). " +
-                    "Once onlari temizleyin veya destek ekibine basvurun.");
+                    "Isletme silinemedi: bagli bir kayit cascade kapsaminda degil. " +
+                    "Hata detayi loglandi.");
         }
 
+        int totalRows = deletedCounts.values().stream().mapToInt(Integer::intValue).sum();
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("businessName", name);
+        meta.put("businessTypeName", typeName != null ? typeName : "");
+        meta.put("deletedRowsTotal", totalRows);
+        meta.put("deletedByTable", deletedCounts);
         auditLogService.recordEntityAction(
-                AuditAction.BUSINESS_DELETE,
+                AuditAction.BUSINESS_PURGE,
                 actor.getId(), actor.getUsername(),
                 "BUSINESS", businessId,
-                "Isletme silindi: " + name + " (" + typeName + ")",
-                Map.of(
-                        "businessName", name,
-                        "businessTypeName", typeName != null ? typeName : ""
-                ));
+                "Isletme KALICI silindi: " + name + " (" + typeName + ") — "
+                        + totalRows + " bagli kayit silindi",
+                meta);
     }
 
     /**

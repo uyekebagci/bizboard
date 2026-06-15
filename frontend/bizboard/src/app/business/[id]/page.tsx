@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon, ArrowLeftRight, Building2 } from "lucide-react";
+import { Settings, Plus, Trash2, Loader2, CreditCard, Banknote, Users as UsersIcon, ArrowLeftRight, Building2, Archive, AlertTriangle } from "lucide-react";
 import type { PaymentMethod } from "@/types";
 import { ConsolidatedWidgets } from "@/components/business/dashboard/ConsolidatedWidgets";
 import { QuickActionsWidget } from "@/components/business/dashboard/QuickActionsWidget";
@@ -38,10 +38,15 @@ export default function BusinessDetailPage() {
   const { profile, triggerRefresh } = useAppStore();
   const isAdmin = profile?.role === "admin";
 
-  // v1.6.2: admin-only sil
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Arşivle (soft-delete, herkese açık/geri-alınabilir) + Kalıcı Sil (admin).
+  const [archiveConfirm, setArchiveConfirm] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  // Kalıcı sil — admin, ad-yazma güçlü onayı, geri alınamaz.
+  const [purgeConfirm, setPurgeConfirm] = useState(false);
+  const [purging, setPurging] = useState(false);
+  const [purgeError, setPurgeError] = useState<string | null>(null);
+  const [purgeNameInput, setPurgeNameInput] = useState("");
 
   // v1.6.4: POS/NAKIT filter chips
   const [paymentFilter, setPaymentFilter] = useState<"ALL" | PaymentMethod>("ALL");
@@ -51,18 +56,40 @@ export default function BusinessDetailPage() {
   const { preview, refresh: refreshClosing } = useCashClosing(businessId);
   const [showCloseModal, setShowCloseModal] = useState(false);
 
-  async function handleDelete() {
-    setDeleting(true);
-    setDeleteError(null);
+  async function handleArchive() {
+    setArchiving(true);
     try {
-      await api.delete(`/businesses/${businessId}`);
-      toast.info("İşletme silindi");
+      await api.post(`/businesses/${businessId}/archive`, {});
+      toast.info("İşletme arşivlendi");
       triggerRefresh();
       router.push("/dashboard");
     } catch (e) {
-      setDeleteError(getErrorMessage(e));
       toast.error(e);
-      setDeleting(false);
+      setArchiving(false);
+    }
+  }
+
+  // Güçlü onay: işletme adı birebir (büyük/küçük harf duyarsız) yazılmalı.
+  const purgeNameMatches =
+    !!business &&
+    purgeNameInput.trim().toLowerCase() === business.name.trim().toLowerCase();
+
+  async function handlePurge() {
+    if (!purgeNameMatches) return;
+    setPurging(true);
+    setPurgeError(null);
+    try {
+      // DELETE body bazı proxy/CDN'lerce strip edilebildiği için POST /purge.
+      await api.post(`/businesses/${businessId}/purge`, {
+        confirmation_name: purgeNameInput.trim(),
+      });
+      toast.info("İşletme kalıcı olarak silindi");
+      triggerRefresh();
+      router.push("/dashboard");
+    } catch (e) {
+      setPurgeError(getErrorMessage(e));
+      toast.error(e);
+      setPurging(false);
     }
   }
 
@@ -97,11 +124,20 @@ export default function BusinessDetailPage() {
         size="sm"
         actions={
           <div className="flex items-center gap-1">
+            {/* Arşivle — güvenli/varsayılan, geri-alınabilir (erişimi olan herkes). */}
+            <button
+              onClick={() => setArchiveConfirm(true)}
+              className="p-2 rounded-xl hover:bg-[rgb(var(--v2-sunken))] text-[rgb(var(--v2-muted))] hover:text-[rgb(var(--v2-ink))] transition-colors"
+              title="İşletmeyi arşivle (geri alınabilir)"
+            >
+              <Archive size={20} />
+            </button>
+            {/* Kalıcı Sil — admin, belirgin-tehlikeli, ad-yazma onayı. */}
             {isAdmin && (
               <button
-                onClick={() => setDeleteConfirm(true)}
+                onClick={() => { setPurgeConfirm(true); setPurgeNameInput(""); setPurgeError(null); }}
                 className="p-2 rounded-xl hover:bg-red-500/10 text-[rgb(var(--v2-muted))] hover:text-status-danger transition-colors"
-                title="İşletmeyi sil (admin)"
+                title="İşletmeyi KALICI sil (admin, geri alınamaz)"
               >
                 <Trash2 size={20} />
               </button>
@@ -117,39 +153,92 @@ export default function BusinessDetailPage() {
         }
       />
 
-      {/* v1.6.2: Admin delete confirm modal */}
-      {deleteConfirm && (
+      {/* Arşivle — hafif onay, geri-alınabilir */}
+      {archiveConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="modal-surface p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))] mb-2">
-              İşletmeyi Sil
-            </h3>
+            <div className="flex items-center gap-2 mb-2">
+              <Archive size={20} className="text-[rgb(var(--v2-muted))]" />
+              <h3 className="text-lg font-semibold text-[rgb(var(--v2-ink))]">
+                İşletmeyi Arşivle
+              </h3>
+            </div>
             <p className="text-sm text-[rgb(var(--v2-muted))] mb-4">
-              <strong className="text-[rgb(var(--v2-ink))]">{business.name}</strong> işletmesini
-              silmek istediğinden emin misin? Bu işlem geri alınamaz. Bağlı
-              kayıtlar (işlemler, sabit giderler, personel, vb.) var ise silme
-              reddedilebilir.
+              <strong className="text-[rgb(var(--v2-ink))]">{business.name}</strong> arşivlenecek.
+              İşletme listelerden ve portföy toplamlarından gizlenir, ancak tüm
+              verileri korunur. İstediğin zaman <strong className="text-[rgb(var(--v2-ink))]">Arşivden Çıkar</strong> ile
+              geri yükleyebilirsin.
             </p>
-            {deleteError && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                {deleteError}
-              </div>
-            )}
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => { setDeleteConfirm(false); setDeleteError(null); }}
-                disabled={deleting}
+                onClick={() => setArchiveConfirm(false)}
+                disabled={archiving}
                 className="px-4 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-ink))] text-sm disabled:opacity-50"
               >
                 İptal
               </button>
               <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-semibold text-sm flex items-center gap-2"
+                onClick={handleArchive}
+                disabled={archiving}
+                className="px-4 py-2 rounded-xl v2-btn v2-btn--accent disabled:opacity-50 font-semibold text-sm flex items-center gap-2"
               >
-                {deleting && <Loader2 size={14} className="animate-spin" />}
-                Evet, Sil
+                {archiving && <Loader2 size={14} className="animate-spin" />}
+                Arşivle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Kalıcı Sil — admin, GÜÇLÜ ONAY (ad-yazma), geri alınamaz */}
+      {purgeConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="modal-surface p-6 max-w-md w-full border border-red-500/40">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle size={20} className="text-status-danger" />
+              <h3 className="text-lg font-semibold text-status-danger">
+                İşletmeyi Kalıcı Sil
+              </h3>
+            </div>
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-3">
+              Bu işlemi <strong className="text-status-danger">geri alamazsın</strong>.
+              <strong className="text-[rgb(var(--v2-ink))]"> {business.name}</strong> işletmesine
+              ait <strong className="text-[rgb(var(--v2-ink))]">TÜM veriler</strong> (işlemler,
+              hesaplar, borçlar, kasa kapanışları, çek/senet, faturalar, vb.)
+              kalıcı olarak silinecek.
+            </p>
+            <p className="text-sm text-[rgb(var(--v2-muted))] mb-2">
+              Onaylamak için işletme adını birebir yaz:
+              <strong className="text-[rgb(var(--v2-ink))]"> {business.name}</strong>
+            </p>
+            <input
+              type="text"
+              value={purgeNameInput}
+              onChange={(e) => setPurgeNameInput(e.target.value)}
+              placeholder={business.name}
+              autoFocus
+              className="w-full mb-4 px-3 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] border border-[rgb(var(--v2-border))] text-[rgb(var(--v2-ink))] text-sm focus:outline-none focus:border-status-danger"
+            />
+            {purgeError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                {purgeError}
+              </div>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setPurgeConfirm(false); setPurgeError(null); setPurgeNameInput(""); }}
+                disabled={purging}
+                className="px-4 py-2 rounded-xl bg-[rgb(var(--v2-sunken))] hover:opacity-80 text-[rgb(var(--v2-ink))] text-sm disabled:opacity-50"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handlePurge}
+                disabled={purging || !purgeNameMatches}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm flex items-center gap-2"
+              >
+                {purging && <Loader2 size={14} className="animate-spin" />}
+                Kalıcı Sil
               </button>
             </div>
           </div>

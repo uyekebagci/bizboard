@@ -43,9 +43,46 @@ public class BusinessController {
     /** WP 2786a36e (Beta v1.1): Elde Tutulan Nakitler widget endpoint. */
     private final com.bizboard.service.BankAccountService bankAccountService;
 
+    /**
+     * İşletme listesi. Varsayılan: arşivlenmiş işletmeler GİZLİ.
+     * {@code ?include_archived=true} ile arşivlenmişler de döner.
+     */
     @GetMapping
-    public ResponseEntity<List<BusinessDto>> getBusinesses(@AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(businessService.getBusinessesForUser(principal.getId()));
+    public ResponseEntity<List<BusinessDto>> getBusinesses(
+            @RequestParam(name = "include_archived", defaultValue = "false") boolean includeArchived,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(
+                businessService.getBusinessesForUser(principal.getId(), includeArchived));
+    }
+
+    /**
+     * Yalnız arşivlenmiş işletmeler — "Arşivden Çıkar" ekranı / filtresi için.
+     */
+    @GetMapping("/archived")
+    public ResponseEntity<List<BusinessDto>> getArchivedBusinesses(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(businessService.getArchivedBusinessesForUser(principal.getId()));
+    }
+
+    /**
+     * Arşivle (soft-delete, geri-alınabilir). Yetki: işletmeye erişimi olan
+     * kullanıcı ({@code assertCanAccessBusiness} servis içinde).
+     */
+    @PostMapping("/{id}/archive")
+    public ResponseEntity<BusinessDto> archiveBusiness(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(businessService.archiveBusiness(id, principal.getId()));
+    }
+
+    /**
+     * Arşivden çıkar (geri yükleme).
+     */
+    @PostMapping("/{id}/unarchive")
+    public ResponseEntity<BusinessDto> unarchiveBusiness(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(businessService.unarchiveBusiness(id, principal.getId()));
     }
 
     @PostMapping
@@ -306,18 +343,54 @@ public class BusinessController {
     }
 
     /**
-     * v1.6.2: İşletme silme — yalnız admin. Cascade: bağlı transaction/fixed_cost/
-     * member/module kayıtları otomatik temizlenir; FK kalan başka kayıt varsa
-     * 409 Conflict döner.
+     * KALICI SİL (admin-only, GERİ ALINAMAZ, scope'lu cascade).
+     *
+     * <p>İşletmeye bağlı TÜM veri silinir (scope'lu cascade). Güçlü onay:
+     * istek gövdesinde {@code confirmation_name} işletme adıyla TAM eşleşmeli
+     * (FE kullanıcıya işletme adını yazdırır). Eşleşmezse 400.</p>
+     *
+     * <p>Bazı proxy/CDN'ler DELETE body'sini strip edebildiğinden ad query
+     * param ({@code ?confirmation_name=}) ile de kabul edilir; body öncelikli.</p>
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBusiness(
+    public ResponseEntity<Void> purgeBusiness(
             @PathVariable UUID id,
+            @RequestParam(name = "confirmation_name", required = false) String confirmationParam,
+            @RequestBody(required = false) PurgeBusinessRequest body,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        businessService.deleteBusiness(id, principal.getId());
+        String confirmationName = (body != null && body.getConfirmationName() != null
+                && !body.getConfirmationName().isBlank())
+                ? body.getConfirmationName()
+                : confirmationParam;
+        businessService.purgeBusiness(id, principal.getId(), confirmationName);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * POST alternatifi — bazı proxy/CDN'ler DELETE method'una/body'sine WAF
+     * reject yapıyor (bkz. tx silme endpoint'leri). Aynı kalıcı-silme işlemini
+     * POST + {@code /purge} ile yapar.
+     */
+    @PostMapping("/{id}/purge")
+    public ResponseEntity<Void> purgeBusinessViaPost(
+            @PathVariable UUID id,
+            @RequestBody(required = false) PurgeBusinessRequest body,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        if (!principal.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        String confirmationName = body != null ? body.getConfirmationName() : null;
+        businessService.purgeBusiness(id, principal.getId(), confirmationName);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Kalıcı silme güçlü-onay gövdesi: işletme adı eşleşmesi. */
+    @lombok.Data
+    public static class PurgeBusinessRequest {
+        @com.fasterxml.jackson.annotation.JsonProperty("confirmation_name")
+        private String confirmationName;
     }
 }

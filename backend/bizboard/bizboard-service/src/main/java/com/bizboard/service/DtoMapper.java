@@ -21,6 +21,7 @@ public final class DtoMapper {
                 .color(b.getColor())
                 .currency(b.getCurrency())
                 .active(b.isActive())
+                .archived(b.isArchived())
                 .metadata(b.getMetadata())
                 .createdAt(b.getCreatedAt())
                 .updatedAt(b.getUpdatedAt())

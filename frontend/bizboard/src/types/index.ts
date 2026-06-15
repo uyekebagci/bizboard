@@ -97,6 +97,8 @@ export interface Business {
   color: string | null;
   currency: string;
   is_active: boolean;
+  /** Soft-delete / arşiv bayrağı — true ise işletme arşivlenmiş (listelerde gizli). */
+  archived: boolean;
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;

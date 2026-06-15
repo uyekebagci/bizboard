@@ -29,6 +29,15 @@ public final class AuditAction {
     public static final String BUSINESS_DELETE    = "BUSINESS_DELETE";
     public static final String BUSINESS_MODULE_ADD    = "BUSINESS_MODULE_ADD";
     public static final String BUSINESS_MODULE_REMOVE = "BUSINESS_MODULE_REMOVE";
+    /** İşletme arşivlendi (soft-delete; verisi korunur, listelerden gizlenir). */
+    public static final String BUSINESS_ARCHIVE   = "BUSINESS_ARCHIVE";
+    /** İşletme arşivden çıkarıldı (geri yükleme). */
+    public static final String BUSINESS_UNARCHIVE = "BUSINESS_UNARCHIVE";
+    /**
+     * İşletme KALICI silindi (scope'lu cascade — TÜM bağlı veri silindi).
+     * Geri alınamaz; metadata'da silinen kayıt sayıları (tablo başına) tutulur.
+     */
+    public static final String BUSINESS_PURGE     = "BUSINESS_PURGE";
 
     // ── Transactions (financial) ─────────────────────────────────────────
     public static final String TRANSACTION_CREATE = "TRANSACTION_CREATE";
