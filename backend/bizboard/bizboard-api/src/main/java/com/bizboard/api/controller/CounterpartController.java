@@ -34,7 +34,18 @@ public class CounterpartController {
     private final CounterpartLedgerService ledgerService;
 
     /**
-     * Karşı firma listesi — opsiyonel {@code role}/{@code kind}/{@code businessId} filtreli.
+     * Karşı firma listesi — opsiyonel {@code role}/{@code kind}/{@code business_id} filtreli.
+     *
+     * <p><b>P0 GÜVENLİK (cross-tenant cari sızıntısı):</b> Bu endpoint hem
+     * snake_case {@code business_id} hem camelCase {@code businessId} parametresini
+     * KABUL EDER. Önceden yalnızca bare {@code businessId} (camelCase) bind ediliyordu;
+     * bu API'nin baskın {@code business_id} (snake_case) konvansiyonuyla çağıran
+     * istemcilerin filtresi SESSİZCE düşüyordu → tenant filtresi {@code null}'a düşüp
+     * kullanıcının erişebildiği TÜM işletmelerin carileri dönüyordu (PARA-IZI
+     * modalında DGR carileri görünmesi). İki ad da coalesce edilerek filtrenin
+     * sessizce yutulması engellenir. Asıl izolasyon servis katmanında
+     * {@code resolveAllowedBusinessIds} + {@code assertCanReadBusiness} ile zorlanır
+     * (erişimsiz business_id istenirse 404, FE filtresine GÜVENİLMEZ).</p>
      *
      * <p>PERF (server-pagination, non-breaking): {@code page} parametresi GELMEZSE
      * eski davranış AYNEN korunur — {@code List<CounterpartDto>} JSON dizisi döner
@@ -47,19 +58,23 @@ public class CounterpartController {
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String kind,
-            @RequestParam(required = false) UUID businessId,
+            @RequestParam(value = "business_id", required = false) UUID businessId,
+            @RequestParam(value = "businessId", required = false) UUID businessIdCamel,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
 
+        // Casing'den bağımsız tek tenant filtresi — hangisi gelirse o (snake öncelikli).
+        UUID effectiveBusinessId = businessId != null ? businessId : businessIdCamel;
+
         if (page == null) {
-            return ResponseEntity.ok(service.list(role, kind, businessId, principal.getId()));
+            return ResponseEntity.ok(service.list(role, kind, effectiveBusinessId, principal.getId()));
         }
 
         int safePage = Math.max(0, page);
         int safeSize = Math.min(Math.max(size == null ? 50 : size, 1), 200);
         Pageable pageable = PageRequest.of(safePage, safeSize);
         return ResponseEntity.ok(PagedResponseDto.of(
-                service.list(role, kind, businessId, principal.getId(), pageable)));
+                service.list(role, kind, effectiveBusinessId, principal.getId(), pageable)));
     }
 
     @GetMapping("/{id}")
@@ -85,8 +100,10 @@ public class CounterpartController {
     public ResponseEntity<List<CounterpartDto>> children(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id,
-            @RequestParam(required = false) UUID businessId) {
-        return ResponseEntity.ok(service.children(id, businessId, principal.getId()));
+            @RequestParam(value = "business_id", required = false) UUID businessId,
+            @RequestParam(value = "businessId", required = false) UUID businessIdCamel) {
+        UUID effectiveBusinessId = businessId != null ? businessId : businessIdCamel;
+        return ResponseEntity.ok(service.children(id, effectiveBusinessId, principal.getId()));
     }
 
     @PostMapping
