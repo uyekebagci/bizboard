@@ -31,7 +31,13 @@ public class BusinessNote {
     /**
      * WP a9da4e9d fix: Not kapsamı. "BUSINESS" = işletme detay sayfası notları
      * (varsayılan, geriye uyumlu — mevcut tüm notlar bu kümede), "RECEIVABLES" =
-     * Alacaklar sayfasına özel notlar. İki küme tamamen ayrı listelenir.
+     * Alacaklar sayfasına özel notlar, "FIRMALARIM" = Firmalarım sayfasına özel
+     * notlar. Tüm kümeler tamamen ayrı listelenir.
+     *
+     * <p>Bu kolonda DB seviyesinde CHECK constraint YOKTUR — düz varchar(20).
+     * Geçerli scope kümesi yalnız uygulama katmanında
+     * ({@code BusinessNoteService.normalizeScope}) zorlanır. Bu yüzden yeni bir
+     * scope değeri eklemek (ör. FIRMALARIM) DDL/CHECK migration gerektirmez.</p>
      *
      * <p>{@code columnDefinition} ile NOT NULL DEFAULT 'BUSINESS' — Hibernate
      * ddl-auto=update kolonu eklerken mevcut satırları DEFAULT ile BUSINESS'a

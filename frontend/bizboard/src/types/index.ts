@@ -944,8 +944,11 @@ export interface BusinessNote {
   is_pinned: boolean;
   color: string | null;
   admin_only: boolean;
-  /** WP a9da4e9d fix: "BUSINESS" (işletme notları) veya "RECEIVABLES" (alacaklar). */
-  scope?: "BUSINESS" | "RECEIVABLES";
+  /**
+   * WP a9da4e9d fix: "BUSINESS" (işletme notları), "RECEIVABLES" (alacaklar)
+   * veya "FIRMALARIM" (Firmalarım sayfası). Her küme izole.
+   */
+  scope?: "BUSINESS" | "RECEIVABLES" | "FIRMALARIM";
   created_by_name: string | null;
   created_at: string;
   updated_at: string;

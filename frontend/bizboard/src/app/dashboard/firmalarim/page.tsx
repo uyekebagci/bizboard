@@ -31,12 +31,13 @@ import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useAppStore } from "@/lib/store";
-import type { MyCompany, MyCompanyGroup } from "@/types";
+import type { MyCompany, MyCompanyGroup, Business } from "@/types";
 import { FirmDetailModal } from "@/components/firms/FirmDetailModal";
 import { FirmAccessModal } from "@/components/firms/FirmAccessModal";
 import { CreateGroupModal } from "@/components/firms/CreateGroupModal";
 import { CreateFirmModal } from "@/components/firms/CreateFirmModal";
 import { EditGroupModal } from "@/components/firms/EditGroupModal";
+import { NotesModule } from "@/components/business/NotesModule";
 
 type ViewMode = "list" | "group";
 
@@ -78,6 +79,13 @@ export default function FirmalarimPage() {
   const [dragFirmId, setDragFirmId] = useState<string | null>(null);
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
 
+  // Firmalarım'a özel notlar (scope=FIRMALARIM). Alacaklar sayfasıyla AYNI desen:
+  // notlar business_id'ye bağlı → /businesses ile resolve. Tek işletme → auto-select
+  // (seçici gizli); çoklu işletme → basit seçici. Notlar Firmalarım kümesine izole;
+  // alacaklar/işletme notlarına sızmaz.
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [notesBusinessId, setNotesBusinessId] = useState<string>("");
+
   // ── Persisted view preference ──────────────────────────────
   useEffect(() => {
     try {
@@ -112,6 +120,17 @@ export default function FirmalarimPage() {
     }
   }, []);
   useEffect(() => { void fetchAll(); }, [fetchAll]);
+
+  // Notlar için işletme listesi (tek ise auto-select) — alacaklar sayfasıyla aynı.
+  useEffect(() => {
+    api.get<Business[]>("/businesses")
+      .then((r) => {
+        const list = r || [];
+        setBusinesses(list);
+        if (list.length >= 1) setNotesBusinessId((prev) => prev || list[0].id);
+      })
+      .catch(() => { /* sessiz — notlar bölümü görünmez */ });
+  }, []);
 
   // Modal refresh — selectedFirm güncellenince firms listesindeki versiyona referans tut
   useEffect(() => {
@@ -290,6 +309,12 @@ export default function FirmalarimPage() {
         </div>
       )}
 
+      {/* UI: lg+ iki kolon — SOL firma listesi/grupları, SAĞ Firmalarım'a özel
+          notlar (sticky, kendi içinde scroll). <lg tek kolon: notlar listenin
+          altına iner (DOM sırası: sol → sağ). Alacaklar sayfasıyla AYNI yerleşim. */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-start">
+        {/* SOL kolon: firma listesi / gruplar */}
+        <div className="space-y-4 min-w-0">
       {loading ? (
         <div className="py-12 flex justify-center">
           <Loader2 size={20} className="animate-spin text-[rgb(var(--v2-muted))]" />
@@ -368,6 +393,32 @@ export default function FirmalarimPage() {
           })}
         </div>
       )}
+        </div>
+
+        {/* SAĞ kolon: Firmalarım'a ÖZEL notlar (scope=FIRMALARIM). lg+ sticky +
+            kendi içinde scroll → ne kadar not olursa olsun sayfa aşağı uzamaz.
+            Tek işletme → seçici gizli; çoklu işletmede basit seçici. Alacaklar
+            sayfasıyla AYNI yerleşim + mobil davranış. */}
+        {notesBusinessId && (
+          <section className="space-y-2 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto no-scrollbar">
+            {businesses.length > 1 && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-[rgb(var(--v2-muted))]">Notlar — İşletme:</label>
+                <select
+                  value={notesBusinessId}
+                  onChange={(e) => setNotesBusinessId(e.target.value)}
+                  className="w-auto py-1.5 px-3 rounded-xl border border-[rgb(var(--v2-border))] bg-[rgb(var(--v2-sunken))] text-sm text-[rgb(var(--v2-ink))] focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                >
+                  {businesses.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <NotesModule businessId={notesBusinessId} scope="FIRMALARIM" />
+          </section>
+        )}
+      </div>
 
       {/* ── Modals ───────────────────────────────────────────── */}
       {selectedFirm && (

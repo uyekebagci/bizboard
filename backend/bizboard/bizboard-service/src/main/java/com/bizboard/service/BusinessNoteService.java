@@ -26,11 +26,22 @@ public class BusinessNoteService {
     private final UserRepository userRepository;
     private final BusinessAccessGuard accessGuard;
 
-    /** WP a9da4e9d fix: scope null/boş/geçersiz → BUSINESS (geriye uyum + savunma). */
+    /**
+     * WP a9da4e9d fix: scope null/boş/geçersiz → BUSINESS (geriye uyum + savunma).
+     *
+     * <p>Geçerli kümeler: "BUSINESS" (işletme detay notları), "RECEIVABLES"
+     * (Alacaklar sayfası notları), "FIRMALARIM" (Firmalarım sayfası notları).
+     * Her küme tamamen izole — bir scope'taki not yalnız o sayfada listelenir;
+     * tanınmayan değerler güvenli varsayılan olan BUSINESS'a düşer.</p>
+     */
     private static String normalizeScope(String raw) {
         if (raw == null || raw.isBlank()) return "BUSINESS";
         String upper = raw.trim().toUpperCase(java.util.Locale.ENGLISH);
-        return "RECEIVABLES".equals(upper) ? "RECEIVABLES" : "BUSINESS";
+        return switch (upper) {
+            case "RECEIVABLES" -> "RECEIVABLES";
+            case "FIRMALARIM" -> "FIRMALARIM";
+            default -> "BUSINESS";
+        };
     }
 
     @Transactional(readOnly = true)
