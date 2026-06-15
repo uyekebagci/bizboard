@@ -242,11 +242,14 @@ public class ConsolidatedDashboardService {
         // v1.7.0-beta (TODO d0567538): TRANSFER tx dışla (hesaplar arası taşıma).
         // Beta v1.1 hotfix v2: pos_tx_subtype set edilmiş tx'ler POS gider
         // olarak Closure sayfasında ayrı listeleniyor — buraya dahil edilmesin.
+        // FİNANSAL KURAL (Z, 2026-06): LOAN (cari ödeme/tahsilat) kasa çıkışı
+        // DEĞİL — bu listede gösterilmez (kasaya yansımıyor).
         List<Transaction> outflowsToday = transactionRepository
                 .findByBusinessIdAndDateAndPaymentMethodAndDirection(
                         businessId, today, "NAKIT", TransactionDirection.EXPENSE)
                 .stream()
-                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .filter(t -> t.getPosTxSubtype() == null)
                 .toList();
         List<ConsolidatedDashboardDto.TxRow> outflowRows = outflowsToday.stream()
@@ -505,12 +508,17 @@ public class ConsolidatedDashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** v1.6.23.21 + v1.7.0-beta (TODO d0567538): TRANSFER tx dışla. */
+    /**
+     * v1.6.23.21 + v1.7.0-beta (TODO d0567538): TRANSFER tx dışla.
+     * FİNANSAL KURAL (Z, 2026-06): LOAN (tahsilat/cari kapatma) "Bugünün Kasa
+     * Durumu" gelen/giden toplamına da GİRMEZ — operasyonel kasayı etkilemez.
+     */
     private BigDecimal sumByDirection(UUID businessId, LocalDate date, String pm, TransactionDirection dir) {
         return transactionRepository
                 .findByBusinessIdAndDateAndPaymentMethodAndDirection(businessId, date, pm, dir)
                 .stream()
-                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .map(Transaction::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -524,7 +532,9 @@ public class ConsolidatedDashboardService {
         return transactionRepository
                 .findByBusinessIdAndDateBetween(businessId, date, date)
                 .stream()
-                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER)
+                // FİNANSAL KURAL (Z, 2026-06): TRANSFER + LOAN kasa durumuna girmez.
+                .filter(t -> t.getKind() != com.bizboard.common.enums.TransactionKind.TRANSFER
+                        && t.getKind() != com.bizboard.common.enums.TransactionKind.LOAN)
                 .filter(t -> t.getDirection() == dir)
                 .filter(t -> t.getPaymentMethod() != null
                         && t.getPaymentMethod().toUpperCase(Locale.ENGLISH).startsWith("POS"))

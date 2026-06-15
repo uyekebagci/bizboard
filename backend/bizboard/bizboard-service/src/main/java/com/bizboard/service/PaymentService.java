@@ -223,13 +223,13 @@ public class PaymentService {
                         tx.getId(), e.getMessage());
             }
 
-            // Bank balance update
-            if (txBank != null) {
-                BigDecimal delta = "RECEIVED".equals(dir) ? req.getAmount() : req.getAmount().negate();
-                BigDecimal cur = txBank.getCurrentBalance() != null ? txBank.getCurrentBalance() : BigDecimal.ZERO;
-                txBank.setCurrentBalance(cur.add(delta));
-                bankAccountRepository.save(txBank);
-            }
+            // Bank balance update — FİNANSAL KURAL (kullanıcı onayı Z, 2026-06):
+            // bu tx kind=LOAN (cari tahsilat/ödeme = alacak/verecek KAPATMA).
+            // Tahsilat/LOAN OPERASYONEL KASAYA (Genel Kasa) YANSIMAZ — gelir/satış
+            // zaten orijinal işlemde tanındı. CASH_HOLDER/HESAPDAN current_balance
+            // BUMPLANMAZ; LedgerPostingService LOAN posting'i de kasaya yansımaz
+            // (her iki bacak account=NULL). Cari bakiye Debt entity'sinden okunur,
+            // değişmez. (Non-LOAN ödemeler bu metodda üretilmiyor — hepsi LOAN.)
         } else if ("CHEQUE".equals(pm)) {
             CreatePaymentRequest.ChequeDetails cd = req.getChequeDetails();
             PaymentInstrument inst = PaymentInstrument.builder()
@@ -426,12 +426,13 @@ public class PaymentService {
         User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
         LocalDateTime when = clearedAt != null ? clearedAt : LocalDateTime.now();
 
-        // Bank balance update
-        BigDecimal delta = "INCOMING".equals(inst.getDirection())
-                ? inst.getAmount() : inst.getAmount().negate();
-        BigDecimal cur = bank.getCurrentBalance() != null ? bank.getCurrentBalance() : BigDecimal.ZERO;
-        bank.setCurrentBalance(cur.add(delta));
-        bankAccountRepository.save(bank);
+        // FİNANSAL KURAL (kullanıcı onayı Z, 2026-06): çek/senet tahsili =
+        // cari kapatma = kind=LOAN. Tahsilat/LOAN OPERASYONEL KASAYA (Genel Kasa)
+        // YANSIMAZ — bu yüzden tahsil edilen hesabın current_balance'ı
+        // BUMPLANMAZ (createPayment ile simetrik). LedgerPostingService LOAN
+        // posting'i de kasaya yansımaz (her iki bacak account=NULL). Cari bakiye
+        // Debt entity'sinden okunur; instrument lifecycle (PORTFOLIO→CLEARED)
+        // ayrı izlenir.
 
         // tx açılır
         TransactionDirection txDir = "INCOMING".equals(inst.getDirection())
