@@ -19,8 +19,9 @@ public class CreateNoteRequest {
     private Boolean adminOnly;
 
     /**
-     * WP a9da4e9d fix: not kapsamı — "BUSINESS" (varsayılan) veya "RECEIVABLES".
-     * Null/boş gelirse service BUSINESS'a normalize eder (geriye uyum).
+     * WP a9da4e9d fix: not kapsamı — "BUSINESS" (varsayılan), "RECEIVABLES" veya
+     * "FIRMALARIM". Null/boş/geçersiz gelirse service BUSINESS'a normalize eder
+     * (geriye uyum).
      */
     private String scope;
 }

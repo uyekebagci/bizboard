@@ -47,8 +47,11 @@ function timeAgo(dateStr: string) {
   return d.toLocaleDateString("tr-TR");
 }
 
-/** WP a9da4e9d fix: not kapsamı — işletme notları vs alacaklara özel notlar. */
-type NoteScope = "BUSINESS" | "RECEIVABLES";
+/**
+ * WP a9da4e9d fix: not kapsamı — işletme notları, alacaklara özel notlar ve
+ * Firmalarım sayfasına özel notlar. Her küme tamamen izole listelenir.
+ */
+type NoteScope = "BUSINESS" | "RECEIVABLES" | "FIRMALARIM";
 
 interface Props {
   businessId: string;
