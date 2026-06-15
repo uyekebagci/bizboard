@@ -170,113 +170,137 @@ const TransactionRow = memo(function TransactionRow({
   // v1.7.0-beta (Bankalar WP TODO 6fcac2ef): transfer indicator
   const isTransfer = tx.kind === "TRANSFER" && !!tx.transfer_pair_id;
   return (
+    // UI Fix (dar kolon taşması): Notlar sağ panele alınınca ana içerik
+    // kolonu daraldı (~600px) + iç 2-kolon grid → satır genişliği bazen
+    // ~280px'e düşüyor. Eski tek-satır yatay layout (ikon+başlık+tarih+tutar+
+    // rozet+Para İzi+sil) dar genişliğe sığmıyor, tutar/tarih/rozet ÜST ÜSTE
+    // BİNİYORDU. Çözüm: sol blok (ikon+başlık+meta, min-w-0 ile kırpılır) ve
+    // sağ blok (tutar+Para İzi+sil) flex-wrap ile net ayrıldı → dar genişlikte
+    // sağ blok temiz şekilde alt satıra sarar, çakışma olmaz. items-start ile
+    // wrap sonrası dikey hizalama bozulmaz.
     <div
       onClick={() => onSelect(tx)}
       className={cn(
-        "row-hover flex items-center gap-3 p-4 transition-colors group cursor-pointer",
+        "row-hover flex flex-wrap items-start gap-x-3 gap-y-2 p-4 transition-colors group cursor-pointer",
         isTransfer && "bg-blue-500/[0.03]",
       )}
     >
-      <div
-        className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-          isTransfer
-            ? "bg-blue-500/15"
-            : isIncome ? "bg-emerald-500/15" : "bg-rose-500/15",
-        )}
-      >
-        {isTransfer ? (
-          <ArrowLeftRight size={18} className="text-blue-400" />
-        ) : isIncome ? (
-          <ArrowDownLeft size={18} className="text-emerald-400" />
-        ) : (
-          <ArrowUpRight size={18} className="text-rose-400" />
-        )}
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
-          {/* Beta v1.1: POS komisyon UI tamamen kaldırıldı — POS satırı
-              da normal title formatı kullanır (description / kategori). */}
-          {tx.description || tx.category?.name || (isTransfer ? "Transfer" : isPos ? "POS İşlemi" : "İşlem")}
-          {isTransfer && (
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40">
-              ⇄ {tx.direction === "expense" ? "OUT" : "IN"}
-            </span>
+      {/* Sol blok: ikon + başlık + meta. flex-1 basis-0 + min-w-0 → hipotetik
+          genişliği 0 kabul edilir, böylece sağ blok (flex-shrink-0) sığabildiği
+          sürece AYNI satırda kalır (erken/gereksiz wrap olmaz). Başlık min-w-0
+          sayesinde truncate olur; sadece sağ blok için yer GERÇEKTEN kalmayınca
+          (çok dar kolon) sağ blok temiz şekilde alt satıra sarar → çakışma yok. */}
+      <div className="flex items-start gap-3 min-w-0 flex-1 basis-0">
+        <div
+          className={cn(
+            "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+            isTransfer
+              ? "bg-blue-500/15"
+              : isIncome ? "bg-emerald-500/15" : "bg-rose-500/15",
           )}
-        </p>
-        <p className="text-xs text-surface-400 mt-0.5 flex items-center gap-1.5">
-          <span>{isTransfer ? "Hesaplar arası" : (tx.category?.name || "Kategorisiz")}</span>
-          <span>·</span>
-          <span>{formatRelativeDate(tx.date)}</span>
-          {!isTransfer && (
-            <span
-              className={cn(
-                "ml-1 inline-flex items-center gap-1 px-1.5 py-[1px] rounded-full text-[10px] font-medium",
-                isPos
-                  ? "bg-brand-500/15 text-brand-300 border border-brand-500/30"
-                  : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
-              )}
-              title={isPos ? "POS ödeme" : "Nakit ödeme"}
-            >
-              {isPos ? <CreditCard size={10} /> : <Banknote size={10} />}
-              {isPos ? "POS" : "Nakit"}
-            </span>
-          )}
-        </p>
-      </div>
-
-      <span
-        className={cn(
-          "num text-sm font-bold flex-shrink-0 text-right",
-          isIncome ? "text-emerald-300" : "text-rose-300",
-        )}
-      >
-        {/* Beta v1.1: POS komisyon UI kaldırıldı — sağdaki amount her
-            zaman tx.amount (POS Hacmi mantığı). */}
-        {isIncome ? "+" : "-"}{formatCurrency(tx.amount, currency)}
-      </span>
-
-      {/* Para İzi / Para Bağla — satır-içi KEŞFEDİLEBİLİR giriş noktası.
-          Hover-only DEĞİL: her zaman görünür (kullanıcı tek bakışta bulsun).
-          Geniş ekranda ikon+etiket pill, dar ekranda yalnız ikon. TRANSFER'de
-          fon-izi yok. Satır click'ini engeller → doğrudan bağlama akışı açılır. */}
-      {!isTransfer && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onBind(tx); }}
-          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0
-                     text-[11px] font-medium border transition-colors
-                     bg-brand-500/10 text-brand-300 border-brand-500/25
-                     hover:bg-brand-500/20 hover:text-brand-200"
-          title="Para İzi — bu işlemin parasını bir kaynağa bağla (bakiye değişmez)"
-          aria-label="Para bağla (para izi)"
         >
-          <Route size={13} />
-          <span className="hidden sm:inline">Para İzi</span>
-        </button>
-      )}
+          {isTransfer ? (
+            <ArrowLeftRight size={18} className="text-blue-400" />
+          ) : isIncome ? (
+            <ArrowDownLeft size={18} className="text-emerald-400" />
+          ) : (
+            <ArrowUpRight size={18} className="text-rose-400" />
+          )}
+        </div>
 
-      {/* Delete button */}
-      {/* v1.7.0-beta (TODO 3993f396): TRANSFER tek-yönlü silinemez.
-          Tx satırına tıklayınca TransferDetailModal açılır; oradan
-          pair delete edilebilir. */}
-      {isTransfer ? (
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-surface-100 truncate flex items-center gap-1.5">
+            {/* Beta v1.1: POS komisyon UI tamamen kaldırıldı — POS satırı
+                da normal title formatı kullanır (description / kategori). */}
+            <span className="truncate">
+              {tx.description || tx.category?.name || (isTransfer ? "Transfer" : isPos ? "POS İşlemi" : "İşlem")}
+            </span>
+            {isTransfer && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40 flex-shrink-0">
+                ⇄ {tx.direction === "expense" ? "OUT" : "IN"}
+              </span>
+            )}
+          </p>
+          {/* Meta satırı kendi içinde flex-wrap: tarih + Nakit/POS rozeti dar
+              genişlikte alt satıra sarar, hiçbir şey kırpılıp gizlenmez. */}
+          <p className="text-xs text-surface-400 mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <span className="truncate max-w-[120px]">{isTransfer ? "Hesaplar arası" : (tx.category?.name || "Kategorisiz")}</span>
+            <span>·</span>
+            <span className="whitespace-nowrap">{formatRelativeDate(tx.date)}</span>
+            {!isTransfer && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 px-1.5 py-[1px] rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0",
+                  isPos
+                    ? "bg-brand-500/15 text-brand-300 border border-brand-500/30"
+                    : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+                )}
+                title={isPos ? "POS ödeme" : "Nakit ödeme"}
+              >
+                {isPos ? <CreditCard size={10} /> : <Banknote size={10} />}
+                {isPos ? "POS" : "Nakit"}
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* Sağ blok: tutar + Para İzi + sil. flex-wrap ile dar genişlikte sol
+          bloğun altına temiz sarar; tutar her zaman görünür/okunur. ml-auto ile
+          geniş ekranda sağa yaslanır. */}
+      <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
         <span
-          className="p-1.5 rounded-lg text-surface-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 cursor-default"
-          title="Transfer pair'i silmek için satıra tıkla"
+          className={cn(
+            "num text-sm font-bold text-right whitespace-nowrap",
+            isIncome ? "text-emerald-300" : "text-rose-300",
+          )}
         >
-          <ArrowLeftRight size={14} />
+          {/* Beta v1.1: POS komisyon UI kaldırıldı — sağdaki amount her
+              zaman tx.amount (POS Hacmi mantığı). */}
+          {isIncome ? "+" : "-"}{formatCurrency(tx.amount, currency)}
         </span>
-      ) : (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(tx); }}
-          className="p-1.5 rounded-lg text-surface-300 hover:text-red-400 hover:bg-rose-500/10
-                     opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-          title="İşlemi sil"
-        >
-          <Trash2 size={16} />
-        </button>
-      )}
+
+        {/* Para İzi / Para Bağla — satır-içi KEŞFEDİLEBİLİR giriş noktası.
+            Hover-only DEĞİL: her zaman görünür (kullanıcı tek bakışta bulsun).
+            Geniş ekranda ikon+etiket pill, dar ekranda yalnız ikon. TRANSFER'de
+            fon-izi yok. Satır click'ini engeller → doğrudan bağlama akışı açılır. */}
+        {!isTransfer && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onBind(tx); }}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0
+                       text-[11px] font-medium border transition-colors
+                       bg-brand-500/10 text-brand-300 border-brand-500/25
+                       hover:bg-brand-500/20 hover:text-brand-200"
+            title="Para İzi — bu işlemin parasını bir kaynağa bağla (bakiye değişmez)"
+            aria-label="Para bağla (para izi)"
+          >
+            <Route size={13} />
+            <span className="hidden sm:inline">Para İzi</span>
+          </button>
+        )}
+
+        {/* Delete button */}
+        {/* v1.7.0-beta (TODO 3993f396): TRANSFER tek-yönlü silinemez.
+            Tx satırına tıklayınca TransferDetailModal açılır; oradan
+            pair delete edilebilir. */}
+        {isTransfer ? (
+          <span
+            className="p-1.5 rounded-lg text-surface-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 cursor-default"
+            title="Transfer pair'i silmek için satıra tıkla"
+          >
+            <ArrowLeftRight size={14} />
+          </span>
+        ) : (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(tx); }}
+            className="p-1.5 rounded-lg text-surface-300 hover:text-red-400 hover:bg-rose-500/10
+                       opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+            title="İşlemi sil"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
     </div>
   );
 });

@@ -262,13 +262,17 @@ export default function BusinessDetailPage() {
 
       {/* v1.6.23: BusinessHeader widget kaldırıldı — info "Geri" satırında. */}
 
-      {/* feat(notes): "alacaklar" pattern — lg+ iki kolon: SOL ana içerik
-          (banner + konsolide widget'lar + modüller + hızlı işlemler), SAĞ
-          Notlar sabit (sticky, kendi içinde scroll) panel. Notlar artık modül
-          sekmesi DEĞİL; tab seçiminden bağımsız her zaman sağda görünür.
-          <lg tek kolon → DOM sırası gereği Notlar ana içeriğin ALTINA yığılır
-          (mobilde sağa-fix YOK; alacaklar mobil davranışıyla birebir). */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
+      {/* feat(notes): "alacaklar" pattern — SOL ana içerik (banner + konsolide
+          widget'lar + modüller + hızlı işlemler), SAĞ Notlar sabit (sticky,
+          kendi içinde scroll) panel. Notlar artık modül sekmesi DEĞİL; tab
+          seçiminden bağımsız her zaman görünür.
+          UI Fix (deploy-25): side-by-side eşiği lg → xl'e taşındı + panel
+          340px → 320px. Sebep: lg (1024-1279px) ekranda 1fr+340px sol içeriği
+          aşırı daraltıyordu; sol içerik kendi içinde de 2-kolon olunca
+          widget'lar okunmaz hale geliyordu. Artık <xl ekranda Notlar ana
+          içeriğin ALTINA yığılır → sol içerik tam genişlik; xl+ ekranda
+          (geniş masaüstü) yan-sabit panel döner. Mobil davranışı aynı. */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5 items-start">
         {/* SOL kolon: işletmenin ana içeriği */}
         <div className="space-y-5 min-w-0">
           {/* v1.6.19 (WP-2): Dünden Kalan Eksik banner */}
@@ -318,11 +322,12 @@ export default function BusinessDetailPage() {
           )}
         </div>
 
-        {/* SAĞ kolon: işletme Notları (scope=BUSINESS). lg+ sticky + kendi
+        {/* SAĞ kolon: işletme Notları (scope=BUSINESS). xl+ sticky + kendi
             içinde scroll → ne kadar not olursa olsun sayfa aşağı uzamaz, panel
-            ana içeriğin altına binmez. <lg: grid tek kolona düşer → panel ana
-            içeriğin altına yığılır (mobil-uyumlu, alacaklar pattern). */}
-        <section className="space-y-2 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto no-scrollbar">
+            ana içeriğin altına binmez. <xl: grid tek kolona düşer → panel ana
+            içeriğin altına yığılır (mobil-uyumlu, alacaklar pattern).
+            UI Fix (deploy-25): eşik lg → xl ile hizalandı (üstteki grid ile). */}
+        <section className="space-y-2 xl:sticky xl:top-4 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto no-scrollbar">
           <NotesModule businessId={businessId} scope="BUSINESS" />
         </section>
       </div>

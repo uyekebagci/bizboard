@@ -67,8 +67,11 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
   return (
     <div className="space-y-4">
       {/* Row 1. "Bugünün Kasa Durumu" SADECE DAY_CYCLE modülü açıkken render olur
-          (Karar A); kapalıyken Konsolide DGR tam genişlik. */}
-      <div className={dayCycleEnabled ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
+          (Karar A); kapalıyken Konsolide DGR tam genişlik.
+          UI Fix (deploy-25): iç 2-kolon eşiği sm → xl. Sol içerik Notlar paneliyle
+          (xl+) yan yanayken bile widget'lar okunur kalsın; <xl tek kolon (notlar
+          alta yığılı, sol içerik tam genişlik) → küçülme yok. */}
+      <div className={dayCycleEnabled ? "grid grid-cols-1 xl:grid-cols-2 gap-3" : ""}>
         <ConsolidatedPositionCard d={data} />
         {dayCycleEnabled && <TodayClosingCard d={data} onCloseDay={onCloseDay} />}
       </div>
@@ -81,14 +84,15 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
           hemen altına, Row 2'nin üstüne. page.tsx'ten ModuleTabs geçirilir. */}
       {modulesSlot}
 
-      {/* Row 2 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+      {/* Row 2 — UI Fix (deploy-25): iç 2-kolon eşiği sm → xl (Son İşlemler +
+          Hesaptan Harcama; dar kolonda Son İşlemler satır taşmasını da rahatlatır). */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
         {recentTransactionsSlot ?? <div />}
         <CashOutflowsTodayCard d={data} />
       </div>
 
-      {/* Row 3 — Alt Kasalar + Çek/Hatırlatma combined */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+      {/* Row 3 — Alt Kasalar + Çek/Hatırlatma combined (eşik sm → xl) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
         <div className="space-y-3">
           <SubCashesCard d={data} onChange={onChange} />
           {/* WP 2786a36e (Beta v1.1): Alt Kasalar'ın hemen altında. */}
@@ -103,8 +107,8 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
         </div>
       </div>
 
-      {/* Row 4 — en altta */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Row 4 — en altta (eşik sm → xl) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
         <BankAccountsCard d={data} compact onChange={onChange} />
         <PosDevicesCard d={data} compact />
       </div>
