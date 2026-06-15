@@ -24,6 +24,7 @@ public class PhoneDeviceService {
     private final PhoneModelRepository modelRepository;
     private final BusinessRepository businessRepository;
     private final CounterpartRepository counterpartRepository;
+    private final EmployeeRepository employeeRepository;
     private final AuditLogService auditLogService;
     private final UserRepository userRepository;
     private final BusinessAccessGuard accessGuard;
@@ -123,15 +124,25 @@ public class PhoneDeviceService {
                         .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi"))
                 : null;
 
+        Employee assignedEmployee = resolveEmployee(req.getAssignedEmployeeId(), business.getId());
+
         int deviceNumber = req.getDeviceNumber() != null
                 ? req.getDeviceNumber()
                 : deviceRepository.findMaxDeviceNumberByBusinessId(business.getId()) + 1;
 
+        // Etiket (sticker) numarası: verilmezse max+1 öner (kullanıcı override edebilir).
+        Integer labelNo = req.getLabelNo() != null
+                ? req.getLabelNo()
+                : deviceRepository.findMaxLabelNoByBusinessId(business.getId()) + 1;
+        warnIfLabelDuplicate(business.getId(), labelNo, null);
+
         PhoneDevice device = PhoneDevice.builder()
                 .business(business)
                 .deviceNumber(deviceNumber)
+                .labelNo(labelNo)
                 .phoneNumber(req.getPhoneNumber())
                 .assignedCounterpart(assignee)
+                .assignedEmployee(assignedEmployee)
                 .brand(brand)
                 .model(model)
                 .customModel(req.getCustomModel())
@@ -172,12 +183,29 @@ public class PhoneDeviceService {
         if (req.getNotes() != null) device.setNotes(req.getNotes());
         if (req.getActive() != null) device.setActive(req.getActive());
 
-        // Assigned counterpart
+        // Etiket (sticker) numarası
+        if (Boolean.TRUE.equals(req.getClearLabelNo())) {
+            device.setLabelNo(null);
+        } else if (req.getLabelNo() != null) {
+            warnIfLabelDuplicate(device.getBusiness() != null ? device.getBusiness().getId() : null,
+                    req.getLabelNo(), device.getId());
+            device.setLabelNo(req.getLabelNo());
+        }
+
+        // Assigned counterpart (LEGACY — geriye-uyum)
         if (Boolean.TRUE.equals(req.getClearAssignedCounterpart())) {
             device.setAssignedCounterpart(null);
         } else if (req.getAssignedCounterpartId() != null) {
             device.setAssignedCounterpart(counterpartRepository.findById(req.getAssignedCounterpartId())
                     .orElseThrow(() -> new IllegalArgumentException("Karsi firma bulunamadi")));
+        }
+
+        // Assigned employee (v1.7.x birincil atama)
+        if (Boolean.TRUE.equals(req.getClearAssignedEmployee())) {
+            device.setAssignedEmployee(null);
+        } else if (req.getAssignedEmployeeId() != null) {
+            UUID bizId = device.getBusiness() != null ? device.getBusiness().getId() : null;
+            device.setAssignedEmployee(resolveEmployee(req.getAssignedEmployeeId(), bizId));
         }
 
         // Brand
@@ -272,6 +300,36 @@ public class PhoneDeviceService {
 
     // ── Helpers ───────────────────────────────────────────────
 
+    /**
+     * Personel atamasını çözer + tenant doğrular: personel telefonun işletmesine
+     * ait olmalı (cross-tenant atama engeli). {@code employeeId} null ise null döner.
+     */
+    private Employee resolveEmployee(UUID employeeId, UUID businessId) {
+        if (employeeId == null) return null;
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Personel bulunamadi"));
+        if (businessId != null && (employee.getBusiness() == null
+                || !businessId.equals(employee.getBusiness().getId()))) {
+            throw new IllegalArgumentException("Personel bu isletmeye ait degil");
+        }
+        return employee;
+    }
+
+    /**
+     * SOFT uniqueness: aynı işletmede aynı etiket numarası başka cihazda varsa
+     * UYAR (log) — hard-block YOK, mevcut veri bozulmaz. {@code excludeId} update'te
+     * cihazın kendisini dışlamak için (null = create).
+     */
+    private void warnIfLabelDuplicate(UUID businessId, Integer labelNo, UUID excludeId) {
+        if (businessId == null || labelNo == null) return;
+        boolean dup = deviceRepository.existsByBusinessIdAndLabelNoAndIdNot(
+                businessId, labelNo, excludeId != null ? excludeId : new UUID(0L, 0L));
+        if (dup) {
+            log.warn("Telefon etiket no #{} bu isletmede ({}) zaten kullanimda — yine de izin verildi (soft)",
+                    labelNo, businessId);
+        }
+    }
+
     private void validateBrandModel(UUID brandId, UUID modelId, String customModel) {
         boolean hasMaster = brandId != null || modelId != null;
         boolean hasCustom = customModel != null && !customModel.isBlank();
@@ -319,9 +377,12 @@ public class PhoneDeviceService {
                 .businessId(d.getBusiness().getId())
                 .businessName(d.getBusiness().getName())
                 .deviceNumber(d.getDeviceNumber())
+                .labelNo(d.getLabelNo())
                 .phoneNumber(d.getPhoneNumber())
                 .assignedCounterpartId(d.getAssignedCounterpart() != null ? d.getAssignedCounterpart().getId() : null)
                 .assignedCounterpartName(d.getAssignedCounterpart() != null ? d.getAssignedCounterpart().getName() : null)
+                .assignedEmployeeId(d.getAssignedEmployee() != null ? d.getAssignedEmployee().getId() : null)
+                .assignedEmployeeName(d.getAssignedEmployee() != null ? d.getAssignedEmployee().getFullName() : null)
                 .brandId(d.getBrand() != null ? d.getBrand().getId() : null)
                 .brandName(d.getBrand() != null ? d.getBrand().getName() : null)
                 .modelId(d.getModel() != null ? d.getModel().getId() : null)
