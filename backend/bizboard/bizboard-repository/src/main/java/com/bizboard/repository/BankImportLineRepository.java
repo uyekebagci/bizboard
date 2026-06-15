@@ -17,4 +17,14 @@ public interface BankImportLineRepository extends JpaRepository<BankImportLine, 
     List<BankImportLine> findByBatchIdAndStatus(UUID batchId, BankImportLineStatus status);
 
     long countByBatchIdAndStatus(UUID batchId, BankImportLineStatus status);
+
+    /** PDF import dedupe: aynı parti içinde bu hash zaten var mı? */
+    boolean existsByBatchIdAndDedupeHash(UUID batchId, String dedupeHash);
+
+    /** Var olan hash'ler (tek sorguda toplu dedupe için). */
+    @org.springframework.data.jpa.repository.Query(
+            "select l.dedupeHash from BankImportLine l "
+                    + "where l.batch.id = :batchId and l.dedupeHash is not null")
+    java.util.Set<String> findDedupeHashesByBatchId(
+            @org.springframework.data.repository.query.Param("batchId") UUID batchId);
 }

@@ -8,12 +8,16 @@ import com.bizboard.common.enums.BankImportLineStatus;
 import com.bizboard.common.enums.JournalSourceType;
 import com.bizboard.common.enums.PostingLegKind;
 import com.bizboard.repository.*;
+import com.bizboard.service.pdf.BankStatementPdfParser;
+import com.bizboard.service.pdf.ParsedStatement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -44,6 +48,7 @@ public class BankImportService {
     private final JournalEntryRepository journalEntryRepository;
     private final BusinessAccessGuard accessGuard;
     private final AuditLogService auditLogService;
+    private final BankStatementPdfParser pdfParser;
 
     // ──────────────────────────── BATCH ────────────────────────────
 
@@ -118,6 +123,105 @@ public class BankImportService {
         line = lineRepository.save(line);
         bumpCounts(b);
         return toLineDto(line);
+    }
+
+    // ──────────────────────────── PDF IMPORT ────────────────────────────
+
+    /**
+     * Banka ekstresi PDF'ini parse edip mevcut import akışına otomatik satır
+     * olarak ekler (PDFBox). Açılış bakiyesi ("DEVREDEN BAKİYE") hareket
+     * değildir, ayrı raporlanır. Çift-import dedupe: tarih+tutar+bakiye+desc
+     * hash'i aynı parti içinde tekrar görülürse satır atlanır. Bakiye zinciri
+     * tutmayan satır (parse şüphesi) FLAGGED işaretlenir.
+     *
+     * <p>Çıkan satırlar mevcut {@link #addLine} ile aynı entity/akışa girer:
+     * PARSED → (öğrenmeden öneri) → kategorile → postala.</p>
+     */
+    @Transactional
+    public PdfImportResult importPdf(UUID userId, UUID businessId, UUID batchId,
+                                     byte[] pdfBytes) {
+        accessGuard.assertCanAccessBusiness(userId, businessId);
+        BankImportBatch b = requireBatch(businessId, batchId);
+        if (b.getStatus() != BankImportBatchStatus.OPEN) {
+            throw new IllegalStateException("Kapalı partiye PDF import edilemez");
+        }
+
+        ParsedStatement parsed = pdfParser.parse(pdfBytes);
+
+        Set<String> existingHashes =
+                new HashSet<>(lineRepository.findDedupeHashesByBatchId(batchId));
+        int imported = 0, skipped = 0, flagged = 0;
+
+        for (ParsedStatement.ParsedMovement mv : parsed.getMovements()) {
+            if (mv.getAmount() == null || mv.getAmount().signum() == 0) {
+                continue; // sıfır tutar = hareket değil, atla
+            }
+            String hash = dedupeHash(mv);
+            if (existingHashes.contains(hash)) {
+                skipped++;
+                continue;
+            }
+            existingHashes.add(hash);
+
+            BankImportLine line = BankImportLine.builder()
+                    .batch(b)
+                    .parsedDate(mv.getDate() != null ? mv.getDate() : b.getStatementDate())
+                    .parsedAmount(mv.getAmount())
+                    .parsedCounterpart(mv.getCounterpartyName())
+                    .parsedBalance(mv.getBalance())
+                    .rawText(mv.getRawDescription())
+                    .dedupeHash(hash)
+                    // Bakiye zinciri tutmayan satır → FLAGGED (parse şüphesi).
+                    .status(mv.isChainOk()
+                            ? BankImportLineStatus.PARSED
+                            : BankImportLineStatus.FLAGGED)
+                    .build();
+            if (!mv.isChainOk()) flagged++;
+
+            Category suggested = suggestCategory(businessId, mv.getCounterpartyName());
+            if (suggested != null) line.setSuggestedCategory(suggested);
+
+            lineRepository.save(line);
+            imported++;
+        }
+        bumpCounts(b);
+
+        auditLogService.recordEntityAction(
+                AuditAction.BANK_IMPORT_PDF, userId, username(userId),
+                "BANK_IMPORT_BATCH", b.getId(),
+                "Banka ekstresi PDF import: " + imported + " satır eklendi"
+                        + (skipped > 0 ? " (" + skipped + " çift atlandı)" : ""),
+                Map.of("imported", imported, "skipped", skipped, "flagged", flagged), null);
+
+        List<LineDto> lines = lineRepository.findByBatchId(batchId).stream()
+                .map(this::toLineDto).toList();
+        return PdfImportResult.builder()
+                .openingBalance(parsed.getOpeningBalance())
+                .parsedCount(parsed.getMovementCount())
+                .importedCount(imported)
+                .skippedDuplicateCount(skipped)
+                .flaggedCount(flagged)
+                .chainConsistent(parsed.isChainConsistent())
+                .batch(toBatchDto(b, lines))
+                .build();
+    }
+
+    /** Dedupe anahtarı: tarih|tutar|bakiye|desc → SHA-256 (parti içi tekillik). */
+    private String dedupeHash(ParsedStatement.ParsedMovement mv) {
+        String raw = (mv.getDate() != null ? mv.getDate().toString() : "")
+                + "|" + (mv.getAmount() != null ? mv.getAmount().toPlainString() : "")
+                + "|" + (mv.getBalance() != null ? mv.getBalance().toPlainString() : "")
+                + "|" + (mv.getRawDescription() != null ? mv.getRawDescription() : "");
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(raw.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(64);
+            for (byte x : digest) sb.append(String.format("%02x", x));
+            return sb.toString();
+        } catch (Exception e) {
+            // SHA-256 her JVM'de var; pratikte buraya düşmez.
+            return Integer.toHexString(raw.hashCode());
+        }
     }
 
     @Transactional
@@ -312,6 +416,7 @@ public class BankImportService {
                 .parsedDate(l.getParsedDate())
                 .parsedAmount(l.getParsedAmount())
                 .parsedCounterpart(l.getParsedCounterpart())
+                .parsedBalance(l.getParsedBalance())
                 .rawText(l.getRawText())
                 .suggestedCategoryId(l.getSuggestedCategory() != null
                         ? l.getSuggestedCategory().getId() : null)

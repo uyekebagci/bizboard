@@ -88,6 +88,9 @@ public final class BankImportDtos {
         private BigDecimal parsedAmount;
         @JsonProperty("parsed_counterpart")
         private String parsedCounterpart;
+        /** Hareketten sonraki yürüyen bakiye (PDF import'ta dolar). */
+        @JsonProperty("parsed_balance")
+        private BigDecimal parsedBalance;
         @JsonProperty("raw_text")
         private String rawText;
         @JsonProperty("suggested_category_id")
@@ -99,5 +102,28 @@ public final class BankImportDtos {
         private String status;
         @JsonProperty("journal_entry_id")
         private UUID journalEntryId;
+    }
+
+    /**
+     * PDF import sonucu özeti: kaç satır oluşturuldu, kaçı atlandı (dedupe),
+     * kaçı flag'lendi (bakiye zinciri tutmadı), açılış bakiyesi ve güncel
+     * parti durumu (satırlarıyla).
+     */
+    @Data
+    @Builder
+    public static class PdfImportResult {
+        @JsonProperty("opening_balance")
+        private BigDecimal openingBalance;
+        @JsonProperty("parsed_count")
+        private int parsedCount;
+        @JsonProperty("imported_count")
+        private int importedCount;
+        @JsonProperty("skipped_duplicate_count")
+        private int skippedDuplicateCount;
+        @JsonProperty("flagged_count")
+        private int flaggedCount;
+        @JsonProperty("chain_consistent")
+        private boolean chainConsistent;
+        private BatchDto batch;
     }
 }
