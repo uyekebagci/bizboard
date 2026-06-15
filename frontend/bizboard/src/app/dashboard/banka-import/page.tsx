@@ -1,23 +1,24 @@
 "use client";
 
 /**
- * Ledger v2 (Faz B, §3.8 / §5): Banka Hareketi Import — MANUEL satır girişi.
+ * Ledger v2 (Faz B, §3.8 / §5): Banka Hareketi Import.
  *
- * <p>PDF auto-parse ERTELENDİ (KARAR A4). Bugün: parti aç (banka hesabı seç) →
- * elle satır ekle (tarih/tutar/karşı-taraf) → kategorile (karşı-taraf→kategori
- * öneri) → postala (ledger'a). Çift tema.</p>
+ * <p>İki giriş yolu: (1) banka ekstresi PDF yükle → otomatik satır (PDFBox
+ * parse), (2) elle satır ekle. Akış: parti aç (banka hesabı seç) → satır
+ * (PDF/elle) → kategorile (karşı-taraf→kategori öneri) → postala (ledger'a).
+ * Çift tema.</p>
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Loader2, Plus, Check, Flag, Send, Landmark,
+  Loader2, Plus, Flag, Send, Landmark, FileUp,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { useBankImport } from "@/hooks/useBankImport";
 import { formatCurrency, formatMoneyInput, parseMoneyInput, cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import type { BankAccountListItem, BankImportBatch, BankImportLine, Category } from "@/types";
+import type { BankAccountListItem, BankImportBatch, BankImportLine, BankImportPdfResult, Category } from "@/types";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ListSkeleton } from "@/components/shared/Skeleton";
@@ -25,7 +26,7 @@ import { ListSkeleton } from "@/components/shared/Skeleton";
 export default function BankaImportPage() {
   const { businesses } = useBusinesses();
   const businessId = businesses?.[0]?.id ?? null;
-  const { batches, loading, createBatch, getBatch, addLine, categorize, flag, postLine } =
+  const { batches, loading, createBatch, getBatch, addLine, importPdf, categorize, flag, postLine } =
     useBankImport(businessId);
 
   const [accounts, setAccounts] = useState<BankAccountListItem[]>([]);
@@ -70,7 +71,7 @@ export default function BankaImportPage() {
     <div className="space-y-5 pb-24">
       <PageHeader
         title="Banka Hareketi Import"
-        subtitle="Manuel satır girişi (PDF otomatik okuma yakında)"
+        subtitle="Banka ekstresi PDF yükle veya elle satır gir"
         icon={Landmark}
       />
 
@@ -96,6 +97,11 @@ export default function BankaImportPage() {
       {active && (
         <ActiveBatchPanel batch={active} categories={categories}
           onAddLine={async (input) => { await addLine(active.id, input); await reloadActive(active.id); }}
+          onImportPdf={async (file) => {
+            const r = await importPdf(active.id, file);
+            await reloadActive(active.id);
+            return r;
+          }}
           onCategorize={async (lineId, catId) => { await categorize(lineId, catId); await reloadActive(active.id); }}
           onFlag={async (lineId) => { await flag(lineId); await reloadActive(active.id); }}
           onPost={async (lineId) => { await postLine(lineId); await reloadActive(active.id); }} />
@@ -129,10 +135,11 @@ export default function BankaImportPage() {
   );
 }
 
-function ActiveBatchPanel({ batch, categories, onAddLine, onCategorize, onFlag, onPost }: {
+function ActiveBatchPanel({ batch, categories, onAddLine, onImportPdf, onCategorize, onFlag, onPost }: {
   batch: BankImportBatch;
   categories: Category[];
   onAddLine: (input: { parsedDate?: string | null; parsedAmount: number; parsedCounterpart?: string | null }) => Promise<void>;
+  onImportPdf: (file: File) => Promise<BankImportPdfResult>;
   onCategorize: (lineId: string, catId: string) => Promise<void>;
   onFlag: (lineId: string) => Promise<void>;
   onPost: (lineId: string) => Promise<void>;
@@ -142,6 +149,8 @@ function ActiveBatchPanel({ batch, categories, onAddLine, onCategorize, onFlag, 
   const [direction, setDirection] = useState<"IN" | "OUT">("IN");
   const [counterpart, setCounterpart] = useState("");
   const [adding, setAdding] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   async function add() {
     const raw = parseMoneyInput(amount);
@@ -155,11 +164,48 @@ function ActiveBatchPanel({ batch, categories, onAddLine, onCategorize, onFlag, 
     } catch (err) { toast.error(err); } finally { setAdding(false); }
   }
 
+  async function handlePdf(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (fileRef.current) fileRef.current.value = ""; // aynı dosya tekrar seçilebilsin
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("Lütfen bir PDF dosyası seçin");
+      return;
+    }
+    setUploading(true);
+    try {
+      const r = await onImportPdf(file);
+      const parts = [`${r.imported_count} satır eklendi`];
+      if (r.skipped_duplicate_count > 0) parts.push(`${r.skipped_duplicate_count} çift atlandı`);
+      if (r.flagged_count > 0) parts.push(`${r.flagged_count} işaretlendi`);
+      if (!r.chain_consistent) {
+        toast.error(`PDF okundu ama bakiye zinciri tutmadı — ${parts.join(", ")}. İşaretli satırları kontrol edin.`);
+      } else {
+        toast.success(`PDF okundu: ${parts.join(", ")}`);
+      }
+    } catch (err) { toast.error(err); } finally { setUploading(false); }
+  }
+
   return (
     <section className="card p-4 space-y-3 border border-brand-500/20">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-[rgb(var(--v2-ink))]">{batch.account_name} — Satırlar</p>
         <span className="text-[10px] uppercase text-[rgb(var(--v2-muted))]">{batch.status}</span>
+      </div>
+
+      {/* PDF yükle */}
+      <div className="flex items-center gap-2 rounded-xl bg-[rgb(var(--v2-sunken))] border border-dashed border-[rgb(var(--v2-border))] p-3">
+        <FileUp size={18} className="text-accent shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-[rgb(var(--v2-ink))]">Banka ekstresi PDF</p>
+          <p className="text-[11px] text-[rgb(var(--v2-muted))]">PDF yükle → hareketler otomatik satır olur</p>
+        </div>
+        <input ref={fileRef} type="file" accept="application/pdf,.pdf" onChange={handlePdf} className="hidden" />
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+          className="v2-btn v2-btn--accent px-3 py-2 text-xs font-semibold flex items-center gap-1.5 shrink-0 disabled:opacity-60">
+          {uploading ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
+          {uploading ? "Okunuyor..." : "PDF Yükle"}
+        </button>
       </div>
 
       {/* Yeni satır */}

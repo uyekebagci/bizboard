@@ -194,6 +194,8 @@ public final class AuditAction {
     // ── Ledger v2 (Faz B, §3.8 / §5): banka import (manuel satır iskeleti) ─────
     public static final String BANK_IMPORT_BATCH_CREATE = "BANK_IMPORT_BATCH_CREATE";
     public static final String BANK_IMPORT_LINE_POSTED  = "BANK_IMPORT_LINE_POSTED";
+    /** Banka ekstresi PDF parse edildi → otomatik satırlar oluşturuldu. */
+    public static final String BANK_IMPORT_PDF          = "BANK_IMPORT_PDF";
 
     // ── Ledger v2 (Faz C): POS kâr-payı motoru + gider/masraf + aylık kâr ─────
     /** POS işlem (deal) girişi — cihaz/getiren/müşteri oranı + kâr-payı şelalesi. */

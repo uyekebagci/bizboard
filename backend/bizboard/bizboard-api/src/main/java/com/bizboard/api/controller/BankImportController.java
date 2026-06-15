@@ -3,25 +3,29 @@ package com.bizboard.api.controller;
 import com.bizboard.common.dto.BankImportDtos.*;
 import com.bizboard.security.UserPrincipal;
 import com.bizboard.service.BankImportService;
+import com.bizboard.service.pdf.StatementParseException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Ledger v2 (Faz B, §3.8 / §5) — banka import (manuel satır iskeleti) API.
- * PDF auto-parse ERTELENDİ (KARAR A4); bugün elle satır girişi.
+ * Ledger v2 (Faz B, §3.8 / §5) — banka import API. Elle satır girişi +
+ * banka ekstresi PDF parse (PDFBox) → otomatik satır.
  *
  * <ul>
  *   <li>{@code GET  /bank-imports?business_id=}                 — parti listesi</li>
  *   <li>{@code POST /bank-imports?business_id=}                 — parti aç</li>
  *   <li>{@code GET  /bank-imports/{batchId}?business_id=}       — parti + satırlar</li>
  *   <li>{@code POST /bank-imports/{batchId}/lines?business_id=} — elle satır ekle</li>
+ *   <li>{@code POST /bank-imports/{batchId}/import-pdf?business_id=} — ekstre PDF parse (multipart)</li>
  *   <li>{@code POST /bank-imports/lines/{lineId}/categorize?business_id=} — kategori onayla</li>
  *   <li>{@code POST /bank-imports/lines/{lineId}/flag?business_id=}       — açıklanamayan (FLAGGED)</li>
  *   <li>{@code POST /bank-imports/lines/{lineId}/post?business_id=}       — ledger'a postala</li>
@@ -83,6 +87,38 @@ public class BankImportController {
         try {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(service.addLine(principal.getId(), businessId, batchId, req));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (SecurityException e) {
+            return forbidden();
+        }
+    }
+
+    /**
+     * Banka ekstresi PDF'ini parse edip mevcut partiye otomatik satır olarak
+     * ekler (multipart {@code file}). Açılış bakiyesi ayrı raporlanır; çift
+     * import dedupe edilir; bakiye zinciri tutmayan satır FLAGGED gelir.
+     */
+    @PostMapping(value = "/{batchId}/import-pdf", consumes = "multipart/form-data")
+    public ResponseEntity<?> importPdf(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(name = "business_id") UUID businessId,
+            @PathVariable UUID batchId,
+            @RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "PDF dosyası gerekli"));
+        }
+        try {
+            byte[] bytes = file.getBytes();
+            return ResponseEntity.ok(
+                    service.importPdf(principal.getId(), businessId, batchId, bytes));
+        } catch (IOException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Dosya okunamadı: " + e.getMessage()));
+        } catch (StatementParseException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {

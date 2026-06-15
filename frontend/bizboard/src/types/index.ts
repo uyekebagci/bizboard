@@ -789,6 +789,8 @@ export interface BankImportLine {
   parsed_date: string | null;
   parsed_amount: number;
   parsed_counterpart: string | null;
+  /** Hareketten sonraki yürüyen bakiye (PDF import'ta dolar). */
+  parsed_balance: number | null;
   raw_text: string | null;
   suggested_category_id: string | null;
   suggested_category_name: string | null;
@@ -808,6 +810,17 @@ export interface BankImportBatch {
   unexplained_count: number;
   created_at: string | null;
   lines?: BankImportLine[];
+}
+
+/** Banka ekstresi PDF import sonucu özeti. */
+export interface BankImportPdfResult {
+  opening_balance: number | null;
+  parsed_count: number;
+  imported_count: number;
+  skipped_duplicate_count: number;
+  flagged_count: number;
+  chain_consistent: boolean;
+  batch: BankImportBatch;
 }
 
 // ---- Debt Models ----

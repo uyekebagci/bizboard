@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import type { BankImportBatch, BankImportLine } from "@/types";
+import type { BankImportBatch, BankImportLine, BankImportPdfResult } from "@/types";
 
 export function useBankImport(businessId?: string | null) {
   const [batches, setBatches] = useState<BankImportBatch[]>([]);
@@ -53,6 +53,17 @@ export function useBankImport(businessId?: string | null) {
     });
   }, [businessId]);
 
+  /** Banka ekstresi PDF'ini parse edip partiye otomatik satır olarak ekle. */
+  const importPdf = useCallback(async (batchId: string, file: File): Promise<BankImportPdfResult> => {
+    if (!businessId) throw new Error("business_id zorunlu");
+    const form = new FormData();
+    form.append("file", file);
+    return api.upload<BankImportPdfResult>(
+      `/bank-imports/${batchId}/import-pdf?business_id=${businessId}`,
+      form,
+    );
+  }, [businessId]);
+
   const categorize = useCallback(async (lineId: string, categoryId: string): Promise<BankImportLine> => {
     if (!businessId) throw new Error("business_id zorunlu");
     return api.post<BankImportLine>(`/bank-imports/lines/${lineId}/categorize?business_id=${businessId}`, {
@@ -72,5 +83,5 @@ export function useBankImport(businessId?: string | null) {
 
   useEffect(() => { void list(); }, [list]);
 
-  return { batches, loading, list, createBatch, getBatch, addLine, categorize, flag, postLine };
+  return { batches, loading, list, createBatch, getBatch, addLine, importPdf, categorize, flag, postLine };
 }

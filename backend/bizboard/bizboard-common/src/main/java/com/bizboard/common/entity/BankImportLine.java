@@ -18,7 +18,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "bank_import_lines", indexes = {
         @Index(name = "idx_bil_batch", columnList = "batch_id"),
-        @Index(name = "idx_bil_status", columnList = "status")
+        @Index(name = "idx_bil_status", columnList = "status"),
+        @Index(name = "idx_bil_dedupe", columnList = "batch_id,dedupe_hash")
 })
 @Getter
 @Setter
@@ -49,6 +50,20 @@ public class BankImportLine {
     /** Karşı-taraf metni (kategori öğrenme/öneri anahtarı). */
     @Column(name = "parsed_counterpart", length = 255)
     private String parsedCounterpart;
+
+    /**
+     * Hareketten sonraki yürüyen bakiye (PDF parse'ta dolar; manuel girişte
+     * null). Mutabakat/dedupe için tutulur.
+     */
+    @Column(name = "parsed_balance", precision = 19, scale = 2)
+    private BigDecimal parsedBalance;
+
+    /**
+     * Çift-import dedupe anahtarı: tarih+tutar+bakiye+desc-hash (PDF
+     * importunda dolar). Aynı parti içinde aynı hash = aynı satır → atlanır.
+     */
+    @Column(name = "dedupe_hash", length = 64)
+    private String dedupeHash;
 
     /** Öğrenme kuralından gelen öneri (kullanıcı onaylayana dek confirmed != suggested). */
     @ManyToOne(fetch = FetchType.LAZY)
