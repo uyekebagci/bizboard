@@ -88,6 +88,11 @@ export function AddTransactionForm({
   // [DAY_NOT_OPEN]) "Günü Aç" yönlendirmesi göster (NON-BREAKING — flag kapalıyken
   // bu hata hiç oluşmaz).
   const [dayNotOpen, setDayNotOpen] = useState<string | null>(null);
+  // Gün Açılışı PROAKTİF gating: seçili işletmede DAY_CYCLE modülü AÇIK
+  // (enforcement_enabled) + gün AÇIK değilse (can_add_transaction=false) submit
+  // engellenir ve uyarı gösterilir — kullanıcı 409'a takılmadan önce uyarılır.
+  // Modül kapalı işletmelerde enforcement_enabled=false → hiç engel yok.
+  const [dayBlocked, setDayBlocked] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const [businessId, setBusinessId] = useState(preselectedBusinessId);
@@ -316,6 +321,24 @@ export function AddTransactionForm({
     fetchCategories();
   }, [businessId]);
 
+  // Gün Açılışı PROAKTİF gating: seçili işletme + tarih için birleşik gün
+  // durumunu çek. DAY_CYCLE modülü AÇIK (enforcement_enabled) ve gün AÇIK değilse
+  // (can_add_transaction=false) submit'i blokla + uyarı göster. Modül kapalıysa
+  // backend enforcement_enabled=false döner → dayBlocked hep false (hiç engel yok).
+  useEffect(() => {
+    let cancelled = false;
+    if (!businessId || !date) { setDayBlocked(false); return; }
+    api.get<{ enforcement_enabled: boolean; can_add_transaction: boolean }>(
+      `/day-opens/status?business_id=${businessId}&date=${date}`,
+    )
+      .then((s) => {
+        if (cancelled) return;
+        setDayBlocked(!!s?.enforcement_enabled && !s?.can_add_transaction);
+      })
+      .catch(() => { if (!cancelled) setDayBlocked(false); });
+    return () => { cancelled = true; };
+  }, [businessId, date]);
+
   // Ledger v2 (Faz A, §3.9): hibrit uygulanabilirlik süzme. Kategoriler
   // paylaşımlı (BOTH) ya da tek-tarafa kilitli (INCOME_ONLY/EXPENSE_ONLY)
   // olabilir. İşlem formu o anki yöne göre süzer: BOTH her zaman + yöne uygun
@@ -384,6 +407,11 @@ export function AddTransactionForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!businessId || !amount || !date || !time) return;
+    // Gün Açılışı gating: DAY_CYCLE modülü açık + gün açık değilse engelle.
+    if (dayBlocked) {
+      setDayNotOpen("Gün açılışı yapılmadı — önce günü açın.");
+      return;
+    }
     // Kategori artık ZORUNLU — seçilmeden kayıt yok.
     if (!categoryId) {
       setError("Lütfen bir kategori seçin (zorunlu).");
@@ -1049,7 +1077,24 @@ export function AddTransactionForm({
         )}
       </div>
 
-      {/* Gün Açılışı enforcement → "Günü Aç" yönlendirmesi */}
+      {/* Gün Açılışı PROAKTİF uyarısı: modül açık + gün açık değil → submit'ten
+          önce uyar (409'a takılmadan). dayNotOpen (409 sonrası) ayrı blok. */}
+      {dayBlocked && !dayNotOpen && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-amber-700 dark:text-amber-200 text-sm">
+              Gün açılışı yapılmadı — önce günü açın. Gün açık değilken yeni işlem
+              eklenemez.
+            </p>
+            <a href="/dashboard/gun-kapanisi"
+              className="inline-block mt-2 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition-colors">
+              Günü Aç sayfasına git
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Gün Açılışı enforcement → "Günü Aç" yönlendirmesi (409 sonrası) */}
       {dayNotOpen && (
         <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3 flex items-start gap-2">
           <div className="flex-1 min-w-0">

@@ -38,6 +38,12 @@ export default function BusinessDetailPage() {
   const { profile, triggerRefresh } = useAppStore();
   const isAdmin = profile?.role === "admin";
 
+  // Karar A: "Bugünün Kasa Durumu" widget'ı + gün açılış/kapanış UI'sı YALNIZ
+  // DAY_CYCLE modülü AÇIK işletmede görünür (per-işletme yetenek).
+  const dayCycleEnabled = !!business?.modules?.some(
+    (m) => m.module === "day_cycle" && m.is_enabled,
+  );
+
   // v1.6.2: admin-only sil
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -167,6 +173,7 @@ export default function BusinessDetailPage() {
       {consolidated && (
         <ConsolidatedWidgets
           data={consolidated}
+          dayCycleEnabled={dayCycleEnabled}
           onCloseDay={() => {
             // Beta v1.1: modal yerine dedicated /closure sayfası
             window.location.href = `/dashboard/closure?business_id=${consolidated.business_id}`;

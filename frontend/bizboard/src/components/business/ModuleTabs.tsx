@@ -75,10 +75,14 @@ function ModuleLoadingSkeleton() {
   );
 }
 
-const moduleConfig: Record<
+// NOT: day_cycle ("Gün Açılış/Kapanış") BİLİNÇLİ olarak burada YOK — içerik
+// sekmesi/picker öğesi değil. Yeni-işletme akışında seçilen bir YETENEK; UI'sı
+// (durum rozeti + Gün Açılışı/Kapanışı butonları) "Bugünün Kasa Durumu"
+// widget'ında. Bu yüzden moduleConfig Partial (day_cycle anahtarı atlanır).
+const moduleConfig: Partial<Record<
   ModuleType,
   { label: string; icon: LucideIcon }
-> = {
+>> = {
   finance: { label: "Finans", icon: Wallet },
   inventory: { label: "Envanter", icon: Package },
   staff: { label: "Personel", icon: Users },
@@ -309,6 +313,7 @@ function ModuleManagerModal({
 
           {allModules.map((mod) => {
             const config = moduleConfig[mod];
+            if (!config) return null;
             const Icon = config.icon;
             const isEnabled = localEnabled.has(mod);
             const isLoading = loading === mod;

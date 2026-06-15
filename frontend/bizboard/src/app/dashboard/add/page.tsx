@@ -30,6 +30,7 @@ import {
   Calculator,
   Plus,
   X,
+  Sunrise,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { api } from "@/lib/api/client";
@@ -63,6 +64,7 @@ const moduleIconMap: Record<string, LucideIcon> = {
   vehicles: CarFront,
   menu: UtensilsCrossed,
   crm: UserCircle,
+  day_cycle: Sunrise,
 };
 
 const moduleLabelMap: Record<string, string> = {
@@ -75,6 +77,7 @@ const moduleLabelMap: Record<string, string> = {
   vehicles: "Araçlar",
   menu: "Menü",
   crm: "Müşteriler",
+  day_cycle: "Gün Açılış/Kapanış Takibi",
 };
 
 // ===== COLOR PALETTE =====
@@ -798,6 +801,9 @@ function StepModules({
     "vehicles",
     "menu",
     "crm",
+    // Per-işletme yetenek: seçilirse o işletmede gün açılış/kapanış takibi +
+    // işlem-giriş enforcement (gün açık değilse işlem reddedilir) devreye girer.
+    "day_cycle",
   ];
 
   // v1.6.2: selectedType.default_modules kaldırıldı — wizard'ın "varsayılan" rozet

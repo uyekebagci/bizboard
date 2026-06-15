@@ -41,9 +41,15 @@ interface Props {
    * etmek için kullanılır.
    */
   onChange?: () => void;
+  /**
+   * Karar A: "Bugünün Kasa Durumu" widget'ı (gün açılış/kapanış UI'sı içerir)
+   * YALNIZ DAY_CYCLE modülü AÇIK işletmede render edilir. Kapalıysa widget HİÇ
+   * görünmez ve Konsolide DGR tam genişliğe yayılır.
+   */
+  dayCycleEnabled?: boolean;
 }
 
-export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, modulesSlot, onChange }: Props) {
+export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, modulesSlot, onChange, dayCycleEnabled = false }: Props) {
   // v1.6.23.29 (UI Fix WP): Layout reorg.
   //
   // Yeni sıra:
@@ -60,10 +66,11 @@ export function ConsolidatedWidgets({ data, onCloseDay, recentTransactionsSlot, 
   //     birleşik panel.
   return (
     <div className="space-y-4">
-      {/* Row 1 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Row 1. "Bugünün Kasa Durumu" SADECE DAY_CYCLE modülü açıkken render olur
+          (Karar A); kapalıyken Konsolide DGR tam genişlik. */}
+      <div className={dayCycleEnabled ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
         <ConsolidatedPositionCard d={data} />
-        <TodayClosingCard d={data} onCloseDay={onCloseDay} />
+        {dayCycleEnabled && <TodayClosingCard d={data} onCloseDay={onCloseDay} />}
       </div>
 
       {/* v1.7.x (dashboard reorg): Hızlı İşlemler widget'ı buradan KALDIRILDI;

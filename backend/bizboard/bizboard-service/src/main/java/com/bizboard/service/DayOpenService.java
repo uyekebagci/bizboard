@@ -11,6 +11,7 @@ import com.bizboard.common.enums.DayLifecycleStatus;
 import com.bizboard.common.enums.DayOpenCreatedVia;
 import com.bizboard.common.enums.DayOpenStatus;
 import com.bizboard.common.enums.JournalSourceType;
+import com.bizboard.common.enums.ModuleType;
 import com.bizboard.common.enums.PostingLegKind;
 import com.bizboard.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +67,10 @@ public class DayOpenService {
     private final DayCloseCalculator calculator;
     private final BusinessAccessGuard accessGuard;
     private final LedgerFeatureFlagService featureFlags;
+    // Per-işletme gün-açılış/kapanış: enforcement artık feature-flag yerine
+    // BusinessModule (ModuleType.DAY_CYCLE) AÇIK mı'ya bağlı. Modül kapalı
+    // işletmelerde HİÇBİR engelleme yok (mevcut işlem akışı korunur).
+    private final BusinessModuleRepository businessModuleRepository;
     private final AuditLogService auditLogService;
     private final jakarta.persistence.EntityManager entityManager;
 
@@ -269,16 +274,18 @@ public class DayOpenService {
     // ──────────────────────────── ENFORCEMENT ────────────────────────────
 
     /**
-     * İşlem-giriş enforcement: enforcement açıksa ve gün AÇIK değilse reddet.
-     * NON-BREAKING: enforcement kapalıyken her zaman geçer (mevcut akış korunur).
-     * TransactionMutationService create/update'te (tarih değişiminde) çağrılır.
+     * İşlem-giriş enforcement: DAY_CYCLE modülü AÇIK olan işletmede gün AÇIK
+     * değilse işlemi reddet. <b>NON-BREAKING:</b> modül kapalı (veya yok)
+     * işletmelerde HİÇBİR engelleme yapılmaz — mevcut işlem-ekleme akışı aynen
+     * çalışır. {@link TransactionMutationService} create/update'te (tarih
+     * değişiminde) çağrılır.
      *
-     * @throws DayNotOpenException gün AÇIK değil (AÇILMAMIŞ/KAPALI) + enforcement açık.
+     * @throws DayNotOpenException gün AÇIK değil (AÇILMAMIŞ/KAPALI) + modül açık.
      */
     @Transactional(readOnly = true)
     public void assertDayOpenForEntry(UUID businessId, LocalDate date) {
-        if (businessId == null || date == null) return;             // defansif — gating'e takılmasın
-        if (!featureFlags.isDayOpenEnforceEnabled(businessId)) return; // o işletmenin flag'i kapalı → serbest
+        if (businessId == null || date == null) return;          // defansif — gating'e takılmasın
+        if (!isDayCycleModuleEnabled(businessId)) return;        // modül kapalı/yok → serbest (NON-BREAKING)
         DayLifecycleStatus status = lifecycleStatus(businessId, date);
         if (status == DayLifecycleStatus.OPEN) return;
         if (status == DayLifecycleStatus.CLOSED) {
@@ -356,7 +363,8 @@ public class DayOpenService {
         accessGuard.assertCanReadBusiness(userId, businessId);
         LocalDate d = date != null ? date : LocalDate.now();
         DayLifecycleStatus lifecycle = lifecycleStatus(businessId, d);
-        boolean enforce = featureFlags.isDayOpenEnforceEnabled(businessId);
+        // enforcement = DAY_CYCLE modülü AÇIK mı (feature-flag değil — per-işletme modül).
+        boolean enforce = isDayCycleModuleEnabled(businessId);
         boolean canAdd = !enforce || lifecycle == DayLifecycleStatus.OPEN;
         return DayStatusDto.builder()
                 .date(d)
@@ -367,6 +375,21 @@ public class DayOpenService {
     }
 
     // ──────────────────────────── HELPERS ────────────────────────────
+
+    /**
+     * Per-işletme gün-açılış/kapanış: işletmede {@link ModuleType#DAY_CYCLE}
+     * modülü AÇIK (enabled) mı? Açıksa gün-açılış butonları + durum rozeti
+     * görünür ve işlem-giriş enforcement'i devreye girer. Modül yoksa veya
+     * disabled ise false → HİÇBİR engelleme yapılmaz (NON-BREAKING).
+     */
+    @Transactional(readOnly = true)
+    public boolean isDayCycleModuleEnabled(UUID businessId) {
+        if (businessId == null) return false;
+        return businessModuleRepository
+                .findByBusinessIdAndModule(businessId, ModuleType.DAY_CYCLE)
+                .map(BusinessModule::isEnabled)
+                .orElse(false);
+    }
 
     /**
      * Birleşik durum: DayClose CLOSED → KAPALI; DayOpen OPEN → AÇIK; aksi
