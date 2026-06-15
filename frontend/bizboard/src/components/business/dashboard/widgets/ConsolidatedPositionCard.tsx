@@ -22,11 +22,9 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
   // aksi halde sansür atlanmış oluyordu. SSR/CSR uyumu için flag mount sonrası okunur
   // (default sansürsüz → hydration mismatch yok).
   const [payableCensor, setPayableCensor] = useState(false);
-  const [receivableCensor, setReceivableCensor] = useState(false);
   useEffect(() => {
     try {
       setPayableCensor(localStorage.getItem("cati-verecekler-censor") === "1");
-      setReceivableCensor(localStorage.getItem("cati-alacaklar-censor") === "1");
     } catch { /* ignore */ }
   }, []);
   // v1.6.23.9 (TODO 8c7ffaac): bekleyen POS tahsilatı (settle olunca eklenecek).
@@ -96,7 +94,6 @@ export function ConsolidatedPositionCard({ d }: { d: ConsolidatedDashboard }) {
           <DetailRow label="Toplam Nakit (kasa + cebde)" value={c.total_cash} tone="pos" />
           <DetailRow label="Banka Bakiyeleri (CHECKING+SAVINGS)" value={c.total_bank_balance ?? 0} tone="neutral" />
           <DetailRow label="Bekleyen POS Tahsilatı (settle bekliyor)" value={pendingPos} tone={pendingPos > 0 ? "warn" : "neutral"} />
-          <DetailRow label="Alacaklar (DGR'ye gelecek)" value={c.receivables} tone="pos" censor={receivableCensor} />
           <DetailRow label="Verecekler (DGR'den gidecek)" value={-Math.abs(c.payables)} tone="neg" censor={payableCensor} />
           <DetailRow label="KK Borcu" value={-Math.abs(c.credit_card_debt)} tone="neg" censor={payableCensor} />
           <DetailRow label="Kredi Anapara" value={-Math.abs(c.loan_principal)} tone="neg" censor={payableCensor} />
