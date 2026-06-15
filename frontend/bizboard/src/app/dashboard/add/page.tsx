@@ -293,17 +293,13 @@ export default function AddBusinessPage() {
         );
       }
       case 4: {
-        // Aylık sabit masraflar: applicable=true olan tüm zorunlu kategorilerde amount > 0
-        // Geçerli değil olanlar atlanır
+        // Aylık sabit masraflar OPSİYONEL — boş/0 bırakılarak "Devam" edilebilir
+        // veya "Atla" ile tamamen geçilebilir. Sadece dolu (amount > 0) kalemlerin
+        // tutarı geçerli (>= 0) olmalı; "Geçerli değil" olanlar atlanır.
         const items = form.monthlyFixedCostItems ?? [];
-        for (const it of items) {
-          if (!it.applicable) continue;
-          const amt = parseMoneyInput(it.amount ?? "");
-          if (!it.required && amt <= 0) continue;
-          if (amt <= 0) return false;
-          if (it.category === "OTHER" && !(it.customName ?? "").trim()) return false;
-        }
-        return true;
+        return items.every(
+          (it) => !it.applicable || parseMoneyInput(it.amount ?? "") >= 0
+        );
       }
       default:
         return true;
@@ -525,6 +521,15 @@ export default function AddBusinessPage() {
             className="btn-secondary flex-1"
           >
             Geri
+          </button>
+        )}
+        {/* v1.6.3: Aylık Gider (Adım 4) opsiyonel — bu adımı tamamen atla. */}
+        {step === 4 && (
+          <button
+            onClick={() => setStep(step + 1)}
+            className="btn-secondary flex-1"
+          >
+            Atla
           </button>
         )}
         {step < STEPS.length ? (
@@ -1245,9 +1250,10 @@ function StepMonthlyFixedCosts({
           Aylık sabit masraflar
         </p>
         <p className="text-xs text-[rgb(var(--v2-muted))] mt-1">
-          Her ay düzenli olarak ödenen giderler. Uygulanmayanlar için
-          &quot;Geçerli değil&quot; togglesini kullan — o kategori bu işletmede
-          oluşturulmaz.
+          Her ay düzenli olarak ödenen giderler. Bu adım opsiyoneldir — boş
+          bırakıp devam edebilir veya tamamen atlayabilirsin. Uygulanmayanlar
+          için &quot;Geçerli değil&quot; togglesini kullan — o kategori bu
+          işletmede oluşturulmaz.
         </p>
       </div>
 
@@ -1267,9 +1273,9 @@ function StepMonthlyFixedCosts({
                   <p className="text-sm font-medium text-[rgb(var(--v2-ink))]">
                     {it.label}
                   </p>
-                  {it.required && (
-                    <p className="text-[10px] text-[rgb(var(--v2-muted))]">Zorunlu</p>
-                  )}
+                  <p className="text-[10px] text-[rgb(var(--v2-muted))]">
+                    Opsiyonel
+                  </p>
                 </div>
                 <label className="flex items-center gap-2 text-[11px] text-[rgb(var(--v2-muted))] cursor-pointer shrink-0">
                   <input
