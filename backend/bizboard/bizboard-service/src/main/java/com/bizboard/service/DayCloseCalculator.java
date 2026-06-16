@@ -3,11 +3,13 @@ package com.bizboard.service;
 import com.bizboard.common.entity.BankAccount;
 import com.bizboard.common.entity.DayClose;
 import com.bizboard.common.entity.DayOpen;
+import com.bizboard.common.entity.Transaction;
 import com.bizboard.common.enums.DayCloseStatus;
 import com.bizboard.repository.BankAccountRepository;
 import com.bizboard.repository.DayCloseRepository;
 import com.bizboard.repository.DayOpenRepository;
 import com.bizboard.repository.PostingRepository;
+import com.bizboard.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,12 @@ public class DayCloseCalculator {
     private final DayCloseRepository dayCloseRepository;
     /** Gün Açılışı: opening artık DayOpen'ın yuvarlanmış değerinden gelir (varsa). */
     private final DayOpenRepository dayOpenRepository;
+    /**
+     * fix(cash) Kural Z: per-hesap "computed/devir" bakiyesi posting-Σ yerine
+     * tx-türevli authoritative formülden ({@link CashHolderBalanceCalculator})
+     * okunur → tahsilat(LOAN)/transfer kasaya yansımaz, consolidated ile tutarlı.
+     */
+    private final TransactionRepository transactionRepository;
 
     /**
      * Bir işletmenin gün-kapanışına dahil edilecek "parası olan" (posting-
@@ -127,11 +135,33 @@ public class DayCloseCalculator {
     }
 
     /**
-     * Bir hesabın {@code date}'e kadarki (dahil) posting-türetilen bakiyesi —
-     * o gün kapanırken hesap özelinde drill-down için "computed" bakiye.
+     * Bir hesabın {@code date}'e kadarki (dahil) "computed" bakiyesi — gün açılışı
+     * "devir" ve gün-kapanışı hesap-özelinde drill-down için.
+     *
+     * <p><b>fix(cash) Kural Z (P0):</b> CASH_HOLDER hesapları için bakiye artık ham
+     * posting-Σ ({@code sumAmountByAccountIdAsOf}) YERİNE tx-türevli authoritative
+     * formülden ({@link CashHolderBalanceCalculator#authoritativeBalanceAsOf})
+     * okunur. Kök neden: tahsilat (kind=LOAN) eski deploy'da hesaba REAL
+     * LOCATION_MOVE bacağı bırakmıştı (Kural Z öncesi {@code LedgerPostingService});
+     * bu legacy bacaklar yeniden-türetilmediği için posting-Σ devre HAYALİ tahsilatı
+     * (8.269.000) DAHİL ediyordu — consolidated {@code total_cash}=0 (current_balance
+     * snapshot, tx-türevli) ile TUTARSIZ. Authoritative formül LOAN/TRANSFER'i
+     * dışlar → devir = consolidated ile birebir.</p>
+     *
+     * <p>Posting-türetilen banka hesapları (CHECKING/SAVINGS vb.) için ham posting-Σ
+     * KORUNUR — bu bug'dan etkilenmediler ve bakiyeleri posting omurgasından doğru
+     * türetilir.</p>
      */
     @Transactional(readOnly = true)
     public BigDecimal accountComputedAsOf(UUID accountId, LocalDate date) {
+        if (accountId == null) return BigDecimal.ZERO;
+        BankAccount account = bankAccountRepository.findById(accountId).orElse(null);
+        if (account != null
+                && account.getType() == com.bizboard.common.enums.BankAccountType.CASH_HOLDER) {
+            // Kural Z: tx-türevli authoritative (LOAN/TRANSFER hariç), asOf=date.
+            List<Transaction> txs = transactionRepository.findByBankAccountId(accountId);
+            return CashHolderBalanceCalculator.authoritativeBalanceAsOf(txs, date);
+        }
         BigDecimal v = postingRepository.sumAmountByAccountIdAsOf(accountId, date);
         return v != null ? v : BigDecimal.ZERO;
     }

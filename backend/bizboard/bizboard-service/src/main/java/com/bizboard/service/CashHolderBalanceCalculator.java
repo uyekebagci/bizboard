@@ -6,6 +6,7 @@ import com.bizboard.common.enums.TransactionKind;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
@@ -49,6 +50,28 @@ final class CashHolderBalanceCalculator {
         BigDecimal sum = BigDecimal.ZERO;
         if (txForAccount == null) return sum;
         for (Transaction t : txForAccount) {
+            sum = sum.add(cashContribution(t));
+        }
+        return sum;
+    }
+
+    /**
+     * fix(cash) Kural Z: bir hesaba routed tx listesinin {@code asOf} tarihine
+     * KADAR (dahil) authoritative bakiyesi (LOAN/TRANSFER hariç). Tarihi null
+     * tx'ler hariç tutulur (tarihsiz hareket bir güne ait sayılamaz).
+     *
+     * <p>Gün Açılışı "devir" (önceki günden devreden açılış) ve gün-kapanışı
+     * "computed" bakiyesi için: posting-Σ yerine bu authoritative formül kullanılır
+     * → tahsilat (LOAN) ve transfer kasaya yansımaz, consolidated {@code total_cash}
+     * (= Σ CASH_HOLDER.current_balance) ile BİREBİR tutarlı kalır.</p>
+     */
+    static BigDecimal authoritativeBalanceAsOf(List<Transaction> txForAccount, LocalDate asOf) {
+        BigDecimal sum = BigDecimal.ZERO;
+        if (txForAccount == null) return sum;
+        for (Transaction t : txForAccount) {
+            if (asOf != null && (t.getDate() == null || t.getDate().isAfter(asOf))) {
+                continue; // asOf'tan sonraki (veya tarihsiz) hareketler devre girmez
+            }
             sum = sum.add(cashContribution(t));
         }
         return sum;
